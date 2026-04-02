@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pmef.org/schemas/0.9/pmef-hierarchy.schema.json",
+  "title": "PMEF Plant Hierarchy",
+  "description": "Canonical schema for the plant hierarchy entities: FileHeader, Plant, Unit, Area.",
+
+  "$defs": {
+
+    "FileHeader": {
+      "title": "PMEF File Header",
+      "description": "Required first line of every PMEF NDJSON file. Declares format version, authoring tool, and project context.",
+      "type": "object",
+      "required": ["@type", "@id", "pmefVersion", "createdAt"],
+      "properties": {
+        "@type": {
+          "const": "pmef:FileHeader",
+          "description": "Entity type. MUST be 'pmef:FileHeader'."
+        },
+        "@id": {
+          "$ref": "pmef-base.schema.json#/$defs/PmefId",
+          "description": "Unique identifier for this file/package."
+        },
+        "pmefVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "PMEF specification version this file conforms to."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Person or organisation that created this file."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when this file was created."
+        },
+        "toolName": {
+          "type": "string",
+          "description": "Name of the authoring/export tool, e.g. 'PMEF Reference Generator'."
+        },
+        "toolVersion": {
+          "type": "string",
+          "description": "Version of the authoring/export tool."
+        },
+        "projectId": {
+          "type": "string",
+          "description": "Project code or identifier, e.g. 'EAF-2026'."
+        },
+        "projectName": {
+          "type": "string",
+          "description": "Human-readable project name."
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Free-text description of the file contents."
+        },
+        "plantId": {
+          "$ref": "pmef-base.schema.json#/$defs/PmefId",
+          "description": "Reference to the primary Plant object in this file."
+        },
+        "coordinateSystem": {
+          "type": "string",
+          "enum": ["Z-up", "Y-up"],
+          "default": "Z-up",
+          "description": "Coordinate system orientation. Default is Z-up (right-handed)."
+        },
+        "units": {
+          "type": "string",
+          "default": "mm",
+          "description": "Base linear unit for all coordinates. Default: millimetres."
+        },
+        "revisionId": {
+          "type": "string",
+          "pattern": "^r\\d{4}-\\d{2}-\\d{2}-\\d{3}$",
+          "description": "Revision identifier for this file export."
+        },
+        "changeState": {
+          "$ref": "pmef-base.schema.json#/$defs/ChangeState"
+        },
+        "authoringTool": {
+          "type": "string",
+          "description": "Legacy alias for toolName. Prefer toolName + toolVersion."
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "Plant": {
+      "title": "Plant",
+      "description": "Top-level container representing an industrial plant or facility. All Units and Areas are children of a Plant.",
+      "type": "object",
+      "required": ["@type", "@id", "pmefVersion"],
+      "properties": {
+        "@type": {
+          "const": "pmef:Plant",
+          "description": "Entity type. MUST be 'pmef:Plant'."
+        },
+        "@id": {
+          "$ref": "pmef-base.schema.json#/$defs/PmefId",
+          "description": "Globally unique plant identifier."
+        },
+        "pmefVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "PMEF specification version."
+        },
+        "plantName": {
+          "type": "string",
+          "description": "Human-readable plant name, e.g. 'Electric Arc Furnace Line 3'."
+        },
+        "name": {
+          "type": "string",
+          "description": "Alias for plantName. Kept for backward compatibility with v0.9 examples."
+        },
+        "location": {
+          "type": "string",
+          "description": "Geographic location description, e.g. 'Duisburg, Germany'."
+        },
+        "epsgCode": {
+          "type": "integer",
+          "description": "EPSG code for the plant coordinate reference system, e.g. 32632 for UTM zone 32N."
+        },
+        "origin": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D",
+          "description": "Project origin in the EPSG coordinate system (easting, northing, elevation in mm)."
+        },
+        "revision": {
+          "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "Unit": {
+      "title": "Unit",
+      "description": "A process unit within a plant, e.g. a cooling water unit, a distillation train, or a utility section.",
+      "type": "object",
+      "required": ["@type", "@id", "pmefVersion", "isPartOf"],
+      "properties": {
+        "@type": {
+          "const": "pmef:Unit",
+          "description": "Entity type. MUST be 'pmef:Unit'."
+        },
+        "@id": {
+          "$ref": "pmef-base.schema.json#/$defs/PmefId",
+          "description": "Globally unique unit identifier."
+        },
+        "pmefVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "PMEF specification version."
+        },
+        "isPartOf": {
+          "$ref": "pmef-base.schema.json#/$defs/PmefId",
+          "description": "Reference to the parent Plant."
+        },
+        "unitNumber": {
+          "type": "string",
+          "description": "Unit designation code, e.g. 'U-100'."
+        },
+        "unitName": {
+          "type": "string",
+          "description": "Human-readable unit name, e.g. 'Cooling Water Unit'."
+        },
+        "name": {
+          "type": "string",
+          "description": "Alias for unitName. Kept for backward compatibility with v0.9 examples."
+        },
+        "processType": {
+          "type": "string",
+          "description": "Process classification, e.g. 'UTILITIES', 'DISTILLATION', 'REACTION'."
+        },
+        "revision": {
+          "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "Area": {
+      "title": "Area",
+      "description": "A physical area or zone within a plant, used for spatial partitioning of equipment and piping.",
+      "type": "object",
+      "required": ["@type", "@id", "pmefVersion", "isPartOf"],
+      "properties": {
+        "@type": {
+          "const": "pmef:Area",
+          "description": "Entity type. MUST be 'pmef:Area'."
+        },
+        "@id": {
+          "$ref": "pmef-base.schema.json#/$defs/PmefId",
+          "description": "Globally unique area identifier."
+        },
+        "pmefVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "PMEF specification version."
+        },
+        "isPartOf": {
+          "$ref": "pmef-base.schema.json#/$defs/PmefId",
+          "description": "Reference to the parent Plant or Unit."
+        },
+        "areaName": {
+          "type": "string",
+          "description": "Human-readable area name, e.g. 'Pump Alley'."
+        },
+        "areaCode": {
+          "type": "string",
+          "description": "Short area designation code, e.g. 'A-01'."
+        },
+        "revision": {
+          "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

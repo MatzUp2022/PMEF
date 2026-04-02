@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <AssemblyName>PmefPlant3d</AssemblyName>
+    <RootNamespace>PmefPlant3d</RootNamespace>
+    <Version>0.9.0</Version>
+    <Authors>PMEF Technical Steering Committee</Authors>
+    <Description>PMEF adapter for AutoCAD Plant 3D</Description>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <LangVersion>12</LangVersion>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <!-- AutoCAD / Plant 3D API references -->
+  <!-- Adjust the path below to match your AutoCAD Plant 3D installation directory -->
+  <PropertyGroup>
+    <!-- <Plant3dInstallDir>C:\Program Files\Autodesk\AutoCAD 2024</Plant3dInstallDir> -->
+  </PropertyGroup>
+
+  <!--
+  <ItemGroup>
+    <Reference Include="Autodesk.AutoCAD.Interop">
+      <HintPath>$(Plant3dInstallDir)\Autodesk.AutoCAD.Interop.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  -->
+
+</Project>

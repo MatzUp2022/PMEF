@@ -35,6 +35,8 @@ pub enum RvmError {
     Io(#[from] std::io::Error),
     #[error("Unexpected chunk type '{0}' at offset {1}")]
     UnexpectedChunk(String, u64),
+    #[error("Unsupported RVM primitive type: {0}")]
+    UnsupportedPrimitive(u32),
 }
 
 /// An axis-aligned bounding box from the RVM file [mm].
@@ -380,13 +382,8 @@ fn parse_primitive(cursor: &mut Cursor<&[u8]>) -> Result<RvmPrimitive, RvmError>
             let h  = cursor.read_f32::<BigEndian>()?;
             RvmPrimitive::Dish { origin: [ox, oy, oz], radius: r, height: h }
         }
-        _ => {
-            // Skip unknown primitive body
-            let remaining = (len as i64 - 3) * 4; // -3 for version+kind already read
-            if remaining > 0 {
-                cursor.seek(SeekFrom::Current(remaining))?;
-            }
-            RvmPrimitive::Box { origin: [0.,0.,0.], extents: [1.,1.,1.] } // placeholder
+        other => {
+            return Err(RvmError::UnsupportedPrimitive(other));
         }
     };
     Ok(prim)

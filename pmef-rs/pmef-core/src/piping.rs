@@ -187,7 +187,7 @@ pub struct PipingSegment {
 // ── Macro for piping component boilerplate ────────────────────────────────
 
 macro_rules! piping_component_base {
-    ($name:ident { $($field:ident : $ty:ty),* $(,)? }) => {
+    ($name:ident { $($(#[$field_meta:meta])* $field:ident : $ty:ty),* $(,)? }) => {
         #[derive(Debug, Clone, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct $name {
@@ -214,7 +214,7 @@ macro_rules! piping_component_base {
             pub revision: Option<RevisionMetadata>,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
-            $( pub $field: $ty ),*
+            $( $(#[$field_meta])* pub $field: $ty ),*
         }
     };
 }
