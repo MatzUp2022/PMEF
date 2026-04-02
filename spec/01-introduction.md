@@ -205,16 +205,22 @@ A repository of standardised class definitions, accessible via URI. In PMEF, the
 the PCA-RDL (ISO 15926-4 reference data), accessed via SPARQL endpoint.
 
 **3.21 relationship object**  
-A first-class PMEF object that explicitly models a typed relationship between two other PMEF objects, such as `pmef:IsDerivedFrom` or `pmef:ControlledBy`.
+A first-class PMEF object that explicitly models a typed relationship between two other PMEF
+objects, such as `pmef:IsDerivedFrom` or `pmef:ControlledBy`.
 
 **3.22 revision**  
-A specific version of a PMEF object, identified by `revisionId` and linked to its predecessor via `pmef:IsRevisionOf`.
+A specific version of a PMEF object, identified by `revisionId` and linked to its predecessor
+via `pmef:IsRevisionOf`.
 
 **3.23 round-trip**  
-The process of exporting a PMEF package from one tool, importing it into PMEF, and re-importing it into the same or a different tool, with verification that attribute fidelity meets the specified threshold.
+The process of exporting a PMEF package from one tool, importing it into PMEF, and re-importing
+it into the same or a different tool, with verification that attribute fidelity meets the
+specified threshold.
 
 **3.24 tag number**  
-The identifier assigned to an instrument, piece of equipment, or pipeline in the engineering design documentation. Tag numbers follow conventions defined in ISA 5.1, ISO 10628, or project-specific tag numbering systems.
+The identifier assigned to an instrument, piece of equipment, or pipeline in the engineering
+design documentation. Tag numbers follow conventions defined in ISA 5.1, ISO 10628, or
+project-specific tag numbering systems.
 
 ---
 
@@ -279,7 +285,8 @@ The identifier assigned to an instrument, piece of equipment, or pipeline in the
 
 ### 5.1 The Interoperability Gap in Plant Engineering
 
-Industrial plant engineering involves ten or more discipline-specific software tools per project, none of which shares a common data format. A typical large EPC project produces:
+Industrial plant engineering involves ten or more discipline-specific software tools per
+project, none of which shares a common data format. A typical large EPC project produces:
 
 - P&ID models in DEXPI XML (from COMOS, AVEVA Diagrams, or similar)
 - 3D piping and equipment models in proprietary databases (AVEVA E3D, Hexagon Smart 3D, AutoCAD Plant 3D, CADMATIC)
@@ -289,7 +296,9 @@ Industrial plant engineering involves ten or more discipline-specific software t
 - Equipment datasheets in Excel or CFIHOS XML
 - As-built data in ERP/EAM systems (SAP PM, IBM Maximo)
 
-Translating data between these tools is manual, error-prone, and extremely expensive. Industry studies consistently estimate that 20–30% of engineering project costs are attributable to rework caused by data translation errors and model inconsistencies.
+Translating data between these tools is manual, error-prone, and extremely expensive. Industry
+studies consistently estimate that 20–30% of engineering project costs are attributable to
+rework caused by data translation errors and model inconsistencies.
 
 Existing standards address parts of this problem but none addresses the whole:
 
@@ -299,7 +308,8 @@ Existing standards address parts of this problem but none addresses the whole:
 - **IFC** addresses building and infrastructure but lacks process plant specifics (pipe stress, instrument loops, MTP).
 - **PCF** handles piping component geometry but has no semantics and no equipment or E&I.
 
-PMEF fills this gap by providing a practical, open, standard exchange format that is grounded in the above standards but adds the pragmatic detail needed for real-world interoperability.
+PMEF fills this gap by providing a practical, open, standard exchange format that is grounded
+in the above standards but adds the pragmatic detail needed for real-world interoperability.
 
 ### 5.2 Existing Format Landscape
 
@@ -323,33 +333,53 @@ The table below summarises the coverage of existing formats relevant to PMEF:
 
 ### 6.1 Design Goals
 
-**G-01 Open and non-proprietary.** The specification, schemas, and reference implementation are published under open licences (CC BY 4.0 and Apache 2.0). No patent encumbrances.
+**G-01 Open and non-proprietary.** The specification, schemas, and reference implementation
+are published under open licences (CC BY 4.0 and Apache 2.0). No patent encumbrances.
 
-**G-02 Semantically grounded.** Every PMEF entity type is grounded in an upstream standard (ISO 15926, DEXPI 2.0, CFIHOS, IEC 81346). PMEF does not invent new semantics where existing standards apply.
+**G-02 Semantically grounded.** Every PMEF entity type is grounded in an upstream standard
+(ISO 15926, DEXPI 2.0, CFIHOS, IEC 81346). PMEF does not invent new semantics where existing
+standards apply.
 
-**G-03 Cross-discipline.** PMEF covers Piping, Equipment, E&I, Structural Steel, Pipe Stress, Process Simulation, ERP/EAM, and Civil in a unified information model with explicit cross-domain relationship objects.
+**G-03 Cross-discipline.** PMEF covers Piping, Equipment, E&I, Structural Steel, Pipe Stress,
+Process Simulation, ERP/EAM, and Civil in a unified information model with explicit cross-domain
+relationship objects.
 
-**G-04 Git-friendly.** The primary serialisation (NDJSON) is designed for version control: one object per line, deterministic key ordering, stable identifiers. Adding, modifying, or removing one object produces a minimal, readable diff.
+**G-04 Git-friendly.** The primary serialisation (NDJSON) is designed for version control: one
+object per line, deterministic key ordering, stable identifiers. Adding, modifying, or removing
+one object produces a minimal, readable diff.
 
-**G-05 Practical for implementors.** Schemas are expressed in JSON Schema Draft 2020-12, widely supported by tooling. Property sets use familiar engineering terminology. Units are unambiguous (SI: mm, Pa, K).
+**G-05 Practical for implementors.** Schemas are expressed in JSON Schema Draft 2020-12, widely
+supported by tooling. Property sets use familiar engineering terminology. Units are unambiguous
+(SI: mm, Pa, K).
 
-**G-06 Round-trip fidelity.** A Level 3 conformant implementation must achieve ≥98% attribute fidelity on the normative benchmark dataset when performing a complete export → PMEF → import cycle.
+**G-06 Round-trip fidelity.** A Level 3 conformant implementation must achieve ≥98% attribute
+fidelity on the normative benchmark dataset when performing a complete export → PMEF → import
+cycle.
 
-**G-07 Extensible.** The `customAttributes` extension mechanism and the RFC process allow project-specific and industry-specific extensions without breaking the core schema.
+**G-07 Extensible.** The `customAttributes` extension mechanism and the RFC process allow
+project-specific and industry-specific extensions without breaking the core schema.
 
-**G-08 Scalable.** The streaming NDJSON format and the split-file PMEFX container support plant models with millions of objects. PMEF makes no assumptions about maximum model size.
+**G-08 Scalable.** The streaming NDJSON format and the split-file PMEFX container support plant
+models with millions of objects. PMEF makes no assumptions about maximum model size.
 
-**G-09 Lifecycle-aware.** Every PMEF object carries ISO 19650 CDE workflow state and revision history, enabling PMEF to serve as the neutral data backbone for design, construction, and operations.
+**G-09 Lifecycle-aware.** Every PMEF object carries ISO 19650 CDE workflow state and revision
+history, enabling PMEF to serve as the neutral data backbone for design, construction, and
+operations.
 
 ### 6.2 Non-Goals
 
-**NG-01 Not a database.** PMEF is a file exchange format, not a database schema. Storing PMEF data in a database is an implementation choice, not a PMEF requirement.
+**NG-01 Not a database.** PMEF is a file exchange format, not a database schema. Storing PMEF
+data in a database is an implementation choice, not a PMEF requirement.
 
-**NG-02 Not a workflow engine.** PMEF does not define how data flows between tools, who can modify what, or when. These are CDE and project management concerns.
+**NG-02 Not a workflow engine.** PMEF does not define how data flows between tools, who can
+modify what, or when. These are CDE and project management concerns.
 
-**NG-03 Not a process simulation language.** PMEF references simulation results and links to simulation models (FMU, Plant Simulation files) but does not define simulation algorithms or process models.
+**NG-03 Not a process simulation language.** PMEF references simulation results and links to
+simulation models (FMU, Plant Simulation files) but does not define simulation algorithms or
+process models.
 
-**NG-04 Not a replacement for existing standards.** PMEF complements DEXPI, IFC, CIS/2, and AutomationML. It does not intend to replace them in their primary domains.
+**NG-04 Not a replacement for existing standards.** PMEF complements DEXPI, IFC, CIS/2, and
+AutomationML. It does not intend to replace them in their primary domains.
 
 ---
 
@@ -359,7 +389,7 @@ The table below summarises the coverage of existing formats relevant to PMEF:
 
 PMEF is structured as five interdependent layers:
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────┐
 │  Layer 5 — Adapters                                          │
 │  Tool-specific import/export plugins                         │
@@ -381,13 +411,16 @@ PMEF is structured as five interdependent layers:
 └──────────────────────────────────────────────────────────────┘
 ```
 
-Layer 1 (Core Ontology) defines what things *mean*. Layer 2 (Information Model) defines what *data* is exchanged. Layer 3 (Serialisation) defines *how* data is encoded in files. Layer 4 (Geometry) defines how 3D shapes are represented. Layer 5 (Adapters) defines how data is translated to and from specific tools.
+Layer 1 (Core Ontology) defines what things *mean*. Layer 2 (Information Model) defines what
+*data* is exchanged. Layer 3 (Serialisation) defines *how* data is encoded in files. Layer 4
+(Geometry) defines how 3D shapes are represented. Layer 5 (Adapters) defines how data is
+translated to and from specific tools.
 
 ### 7.2 Domain Structure
 
 PMEF organises plant objects into eight engineering disciplines, each with its own schema module:
 
-```
+```text
 pmef-base.schema.json          — shared types (IDs, coords, revisions)
 pmef-piping-component.schema.json  — Piping domain
 pmef-equipment.schema.json         — Equipment domain
@@ -404,7 +437,7 @@ Additional modules (Pipe Stress, Simulation, ERP/EAM, Civil) will be added in su
 
 Every PMEF object has a globally unique identifier:
 
-```
+```text
 @id: "urn:pmef:<domain>:<project>:<local-id>"
 
 Examples:
@@ -435,9 +468,11 @@ The `<domain>` segment uses the following conventions:
 
 ### 7.4 The P&ID–3D–EAM Linking Model
 
-The central value proposition of PMEF is enabling traceability from P&ID to 3D model to EAM system. This is achieved through the `isDerivedFrom` field and the `pmef:IsDerivedFrom` relationship object:
+The central value proposition of PMEF is enabling traceability from P&ID to 3D model to EAM
+system. This is achieved through the `isDerivedFrom` field and the `pmef:IsDerivedFrom`
+relationship object:
 
-```
+```text
 P&ID Layer (DEXPI 2.0)
   └── FunctionalObject (P-201A tag)
           │
@@ -452,7 +487,9 @@ EAM Layer (SAP PM / IBM Maximo)
   └── Equipment Master Record (P-201A)
 ```
 
-This three-way link enables automated completeness checking ("every P&ID tag has a 3D object"), change management ("this 3D object was modified — which P&ID tag does it affect?"), and handover verification.
+This three-way link enables automated completeness checking ("every P&ID tag has a 3D object"),
+change management ("this 3D object was modified — which P&ID tag does it affect?"), and handover
+verification.
 
 ---
 
@@ -462,7 +499,9 @@ This three-way link enables automated completeness checking ("every P&ID tag has
 
 PMEF is not an ISO 15926 implementation but uses ISO 15926 as its semantic foundation:
 
-- `rdlType` on every PMEF object carries a URI that resolves in the PCA-RDL (ISO 15926-4 reference data). This provides semantic grounding without requiring implementors to understand the full ISO 15926-2 data model.
+- `rdlType` on every PMEF object carries a URI that resolves in the PCA-RDL (ISO 15926-4
+  reference data). This provides semantic grounding without requiring implementors to understand
+  the full ISO 15926-2 data model.
 - The PMEF ontology (`pmef-ontology.owl`, published separately) maps PMEF entity types to ISO 15926-14 IDO classes.
 - The `isDerivedFrom` relationship corresponds to ISO 15926-14 `ClassificationOfIndividual`.
 
@@ -495,7 +534,8 @@ PMEF and IFC 4.3 are complementary. IFC 4.3 Infra/MEP covers:
 - MEP systems (IfcDistributionSystem, IfcPipeSegment) — PMEF provides richer piping detail.
 - Structural elements (IfcBeam, IfcColumn) — PMEF's SteelMember is semantically aligned.
 
-PMEF provides an IFC export adapter that generates IfcPipeSegment, IfcFlowTerminal, and IfcEquipment objects from PMEF piping and equipment objects.
+PMEF provides an IFC export adapter that generates IfcPipeSegment, IfcFlowTerminal, and
+IfcEquipment objects from PMEF piping and equipment objects.
 
 ### 8.5 AutomationML / CAEX
 
@@ -507,7 +547,10 @@ PMEF's E&I domain (Chapter 14 of the Extended Specification) is aligned with Aut
 
 ### 8.6 OpenUSD
 
-OpenUSD is supported as the third PMEF geometry layer (alongside parametric primitives and glTF 2.0). The PMEF-USD adapter maps PMEF objects to USD prims with a custom `pmef:` schema namespace, enabling integration with NVIDIA Omniverse, Emulate3D Factory Test, and other Omniverse-connected tools.
+OpenUSD is supported as the third PMEF geometry layer (alongside parametric primitives and
+glTF 2.0). The PMEF-USD adapter maps PMEF objects to USD prims with a custom `pmef:` schema
+namespace, enabling integration with NVIDIA Omniverse, Emulate3D Factory Test, and other
+Omniverse-connected tools.
 
 ---
 
@@ -515,21 +558,28 @@ OpenUSD is supported as the third PMEF geometry layer (alongside parametric prim
 
 ### 9.1 Specification Licence
 
-The PMEF Specification (Markdown text, JSON Schemas, UML diagrams) is published under the **Creative Commons Attribution 4.0 International (CC BY 4.0)** licence.
+The PMEF Specification (Markdown text, JSON Schemas, UML diagrams) is published under the
+**Creative Commons Attribution 4.0 International (CC BY 4.0)** licence.
 
-You are free to reproduce, adapt, and build upon this specification provided you give appropriate attribution: "Based on the PMEF Specification, https://github.com/pmef/specification, CC BY 4.0."
+You are free to reproduce, adapt, and build upon this specification provided you give
+appropriate attribution: "Based on the PMEF Specification,
+<https://github.com/pmef/specification>, CC BY 4.0."
 
 ### 9.2 Reference Implementation Licence
 
-The PMEF reference implementation (Rust crates `pmef-core`, `pmef-io`, `pmef-validate`, `pmef-cli`) is published under the **Apache License 2.0**.
+The PMEF reference implementation (Rust crates `pmef-core`, `pmef-io`, `pmef-validate`,
+`pmef-cli`) is published under the **Apache License 2.0**.
 
 ### 9.3 Example Data Licence
 
-The example datasets in `examples/` are published under **CC0 1.0 Universal (Public Domain Dedication)**. They may be used freely without attribution.
+The example datasets in `examples/` are published under **CC0 1.0 Universal (Public Domain
+Dedication)**. They may be used freely without attribution.
 
 ### 9.4 Governance
 
-PMEF is governed by a Technical Steering Committee (TSC) operating under the rules defined in [GOVERNANCE.md](../GOVERNANCE.md). The specification evolves through a public RFC process documented in [CONTRIBUTING.md](../CONTRIBUTING.md).
+PMEF is governed by a Technical Steering Committee (TSC) operating under the rules defined in
+[GOVERNANCE.md](../GOVERNANCE.md). The specification evolves through a public RFC process
+documented in [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ---
 
