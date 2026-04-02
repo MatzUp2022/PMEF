@@ -23,13 +23,18 @@
 
 ## 1 Scope
 
-This specification defines the **Plant Model Exchange Format (PMEF)**, an open, semantically rich, cross-discipline data exchange format for industrial plant models.
+This specification defines the **Plant Model Exchange Format (PMEF)**, an open, semantically rich,
+cross-discipline data exchange format for industrial plant models.
 
 PMEF specifies:
 
-- An **information model** grounded in ISO 15926-14 (Industrial Data Ontology), DEXPI 2.0, CFIHOS V2.0, and IEC 81346, covering eight engineering disciplines: Piping, Equipment, Structural Steel, Electrical and Instrumentation, Pipe Stress Analysis, Process Simulation, ERP/EAM, and Civil/Architecture.
+- An **information model** grounded in ISO 15926-14 (Industrial Data Ontology), DEXPI 2.0,
+  CFIHOS V2.0, and IEC 81346, covering eight engineering disciplines: Piping, Equipment,
+  Structural Steel, Electrical and Instrumentation, Pipe Stress Analysis, Process Simulation,
+  ERP/EAM, and Civil/Architecture.
 - A **parametric geometry library** of 15 primitive types for lossless 3D shape representation at five levels of detail.
-- A **serialisation format** based on Newline-Delimited JSON (NDJSON) as the primary encoding, with CAEX XML as a secondary encoding.
+- A **serialisation format** based on Newline-Delimited JSON (NDJSON) as the primary encoding,
+  with CAEX XML as a secondary encoding.
 - A **typed relationship model** for explicit, versioned cross-discipline links.
 - A **conformance framework** with three levels (PMEF-Basic, PMEF-Full, PMEF-RoundTrip) and a normative test suite.
 
@@ -77,7 +82,8 @@ Supporting documents:
 
 ## 2 Normative References
 
-The following documents are referenced normatively in this specification. For dated references, only the edition cited applies.
+The following documents are referenced normatively in this specification.
+For dated references, only the edition cited applies.
 
 | Reference | Title |
 |-----------|-------|
@@ -119,19 +125,23 @@ The following documents are referenced normatively in this specification. For da
 
 ## 3 Terms and Definitions
 
-For the purposes of this document, the following terms and definitions apply. Where a term is defined in a referenced standard, that definition applies unless otherwise stated.
+For the purposes of this document, the following terms and definitions apply. Where a term is
+defined in a referenced standard, that definition applies unless otherwise stated.
 
 **3.1 adapter**  
-A software component that translates between a PMEF package and the native format of a specific engineering tool. Adapters may be bidirectional (export and import) or unidirectional.
+A software component that translates between a PMEF package and the native format of a specific
+engineering tool. Adapters may be bidirectional (export and import) or unidirectional.
 
 **3.2 asset**  
 A physical item of plant or equipment that is described by a PMEF object.
 
 **3.3 benchmark dataset**  
-A normative NDJSON file containing a representative selection of PMEF objects, used for conformance testing. Identified as PMEF-DS-NNN.
+A normative NDJSON file containing a representative selection of PMEF objects, used for
+conformance testing. Identified as PMEF-DS-NNN.
 
 **3.4 catalog reference**  
-A link from a PMEF object to an entry in a piping specification catalog, equipment class catalog, or steel profile catalog.
+A link from a PMEF object to an entry in a piping specification catalog, equipment class
+catalog, or steel profile catalog.
 
 **3.5 change state**  
 The ISO 19650 Common Data Environment (CDE) workflow status of a PMEF object: WIP, SHARED, PUBLISHED, or ARCHIVED.
@@ -143,10 +153,13 @@ A branch of plant engineering, such as Piping, Equipment, Structural Steel, or E
 A named class of PMEF objects, identified by the `@type` property (e.g. `pmef:Pump`, `pmef:PipingNetworkSystem`).
 
 **3.8 functional object**  
-An object that represents a function or service in the P&ID or process design, without specifying a physical realisation. Corresponds to ISO 15926-14 `FunctionalObject` and DEXPI functional entities.
+An object that represents a function or service in the P&ID or process design, without specifying
+a physical realisation. Corresponds to ISO 15926-14 `FunctionalObject` and DEXPI functional
+entities.
 
 **3.9 geometry layer**  
-One of three complementary representations of the physical shape of a PMEF object: parametric primitives, glTF 2.0 mesh, or STEP AP242 B-Rep (and optionally OpenUSD).
+One of three complementary representations of the physical shape of a PMEF object: parametric
+primitives, glTF 2.0 mesh, or STEP AP242 B-Rep (and optionally OpenUSD).
 
 **3.10 information model**  
 The set of entity types, properties, property sets, and relationships that constitute the PMEF data model.
@@ -155,31 +168,41 @@ The set of entity types, properties, property sets, and relationships that const
 A categorisation of geometry representation fidelity: BBOX_ONLY, LOD1_COARSE, LOD2_MEDIUM, LOD3_FINE, LOD4_FABRICATION.
 
 **3.12 nozzle**  
-A physical connection point on a piece of equipment, through which the equipment connects to a piping system. In PMEF, the nozzle acts as the cross-domain connector between the Equipment and Piping domains.
+A physical connection point on a piece of equipment, through which the equipment connects to a
+piping system. In PMEF, the nozzle acts as the cross-domain connector between the Equipment and
+Piping domains.
 
 **3.13 NDJSON**  
-Newline-Delimited JSON. A format for encoding sequences of JSON values, one per line, as defined in RFC 7464. Used as the primary PMEF serialisation format.
+Newline-Delimited JSON. A format for encoding sequences of JSON values, one per line, as defined
+in RFC 7464. Used as the primary PMEF serialisation format.
 
 **3.14 PMEF object**  
-An instance of a PMEF entity type, serialised as a single JSON object on one line of an NDJSON file. Every PMEF object has a globally unique `@id` and a `@type`.
+An instance of a PMEF entity type, serialised as a single JSON object on one line of an NDJSON
+file. Every PMEF object has a globally unique `@id` and a `@type`.
 
 **3.15 PMEF package**  
-A collection of PMEF objects that together represent a plant model or a portion thereof. May be serialised as a single NDJSON file or as a PMEFX container.
+A collection of PMEF objects that together represent a plant model or a portion thereof. May be
+serialised as a single NDJSON file or as a PMEFX container.
 
 **3.16 PMEFX**  
-The PMEF package container format. A ZIP archive containing one or more NDJSON files plus associated geometry assets (glTF, STEP, USD) and a manifest.
+The PMEF package container format. A ZIP archive containing one or more NDJSON files plus
+associated geometry assets (glTF, STEP, USD) and a manifest.
 
 **3.17 physical object**  
-An object that represents a physical item of plant, as opposed to a functional object. Corresponds to ISO 15926-14 `InanimatePhysicalObject`.
+An object that represents a physical item of plant, as opposed to a functional object.
+Corresponds to ISO 15926-14 `InanimatePhysicalObject`.
 
 **3.18 port**  
-A named, typed connection point on a piping component. Ports carry geometric coordinates, direction vectors, and topology references (`connectedTo`).
+A named, typed connection point on a piping component. Ports carry geometric coordinates,
+direction vectors, and topology references (`connectedTo`).
 
 **3.19 property set**  
-A named, typed collection of attributes for a specific engineering purpose, such as `PipingDesignConditions` or `PumpSpec`.
+A named, typed collection of attributes for a specific engineering purpose, such as
+`PipingDesignConditions` or `PumpSpec`.
 
 **3.20 reference data library (RDL)**  
-A repository of standardised class definitions, accessible via URI. In PMEF, the primary RDL is the PCA-RDL (ISO 15926-4 reference data), accessed via SPARQL endpoint.
+A repository of standardised class definitions, accessible via URI. In PMEF, the primary RDL is
+the PCA-RDL (ISO 15926-4 reference data), accessed via SPARQL endpoint.
 
 **3.21 relationship object**  
 A first-class PMEF object that explicitly models a typed relationship between two other PMEF objects, such as `pmef:IsDerivedFrom` or `pmef:ControlledBy`.

@@ -26,11 +26,17 @@
 
 ### 1.1 Normative Requirement Level
 
-The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**, **SHOULD**, **SHOULD NOT**, **RECOMMENDED**, **MAY**, and **OPTIONAL** in this chapter are to be interpreted as described in RFC 2119.
+The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**,
+**SHOULD**, **SHOULD NOT**, **RECOMMENDED**, **MAY**, and **OPTIONAL** in this
+chapter are to be interpreted as described in RFC 2119.
 
 ### 1.2 Schema Binding
 
-The PMEF information model is expressed normatively as JSON Schema Draft 2020-12 files located in the `schemas/` directory of the specification repository. This chapter provides prose descriptions of the model; the schemas are the authoritative normative reference. Where this chapter and the schemas conflict, the schemas prevail.
+The PMEF information model is expressed normatively as JSON Schema
+Draft 2020-12 files located in the `schemas/` directory of the
+specification repository. This chapter provides prose descriptions
+of the model; the schemas are the authoritative normative reference.
+Where this chapter and the schemas conflict, the schemas prevail.
 
 Every PMEF object **MUST** validate against the corresponding schema before being considered a conformant PMEF instance.
 
@@ -56,19 +62,33 @@ The following `@type` values are normatively defined in PMEF v0.9:
 
 **Plant Hierarchy:** `pmef:FileHeader`, `pmef:Plant`, `pmef:Unit`, `pmef:Area`
 
-**Piping:** `pmef:PipingNetworkSystem`, `pmef:PipingSegment`, `pmef:Pipe`, `pmef:Elbow`, `pmef:Tee`, `pmef:Reducer`, `pmef:Flange`, `pmef:Valve`, `pmef:Olet`, `pmef:Gasket`, `pmef:Weld`, `pmef:PipeSupport`, `pmef:Spool`
+**Piping:** `pmef:PipingNetworkSystem`, `pmef:PipingSegment`,
+`pmef:Pipe`, `pmef:Elbow`, `pmef:Tee`, `pmef:Reducer`, `pmef:Flange`,
+`pmef:Valve`, `pmef:Olet`, `pmef:Gasket`, `pmef:Weld`,
+`pmef:PipeSupport`, `pmef:Spool`
 
-**Equipment:** `pmef:Vessel`, `pmef:Tank`, `pmef:Pump`, `pmef:Compressor`, `pmef:HeatExchanger`, `pmef:Column`, `pmef:Reactor`, `pmef:Filter`, `pmef:Turbine`, `pmef:GenericEquipment`
+**Equipment:** `pmef:Vessel`, `pmef:Tank`, `pmef:Pump`,
+`pmef:Compressor`, `pmef:HeatExchanger`, `pmef:Column`,
+`pmef:Reactor`, `pmef:Filter`, `pmef:Turbine`,
+`pmef:GenericEquipment`
 
-**E&I:** `pmef:InstrumentObject`, `pmef:InstrumentLoop`, `pmef:PLCObject`, `pmef:CableObject`, `pmef:CableTrayRun`, `pmef:MTPModule`
+**E&I:** `pmef:InstrumentObject`, `pmef:InstrumentLoop`,
+`pmef:PLCObject`, `pmef:CableObject`, `pmef:CableTrayRun`,
+`pmef:MTPModule`
 
 **Structural Steel:** `pmef:SteelSystem`, `pmef:SteelMember`, `pmef:SteelNode`, `pmef:SteelConnection`
 
 **Geometry:** `pmef:ParametricGeometry`
 
-**Relationships:** `pmef:IsPartOf`, `pmef:IsConnectedTo`, `pmef:IsDerivedFrom`, `pmef:Supports`, `pmef:ControlledBy`, `pmef:IsDocumentedBy`, `pmef:IsRevisionOf`, `pmef:HasEquivalentIn`, `pmef:IsCollocatedWith`, `pmef:ReplacedBy`
+**Relationships:** `pmef:IsPartOf`, `pmef:IsConnectedTo`,
+`pmef:IsDerivedFrom`, `pmef:Supports`, `pmef:ControlledBy`,
+`pmef:IsDocumentedBy`, `pmef:IsRevisionOf`,
+`pmef:HasEquivalentIn`, `pmef:IsCollocatedWith`,
+`pmef:ReplacedBy`
 
-A PMEF reader encountering an unknown `@type` value **MUST NOT** fail. It **SHOULD** preserve the object as-is and **SHOULD** issue a warning.
+A PMEF reader encountering an unknown `@type` value **MUST NOT**
+fail. It **SHOULD** preserve the object as-is and **SHOULD** issue
+a warning.
 
 ---
 
@@ -91,7 +111,9 @@ A globally unique, stable identifier for a PMEF object.
 
 **Requirements:**
 - The `@id` of every PMEF object within a package **MUST** be unique within that package.
-- The `@id` **SHOULD** be stable across revisions of the same physical object (i.e., it is the identity of the object, not of the revision).
+- The `@id` **SHOULD** be stable across revisions of the same
+  physical object (i.e., it is the identity of the object, not of
+  the revision).
 - Adapters **MUST** preserve `@id` values on re-import (round-trip).
 
 ### 2.2 RdlUri
@@ -100,7 +122,9 @@ A URI pointing to a class in the ISO 15926-4 PCA-RDL, CFIHOS-RDL, or a project-l
 
 **Requirements:**
 - `rdlType` is **RECOMMENDED** on all physical and functional objects.
-- When present, `rdlType` **SHOULD** resolve via the PCA-RDL SPARQL endpoint (`https://data.posccaesar.org/rdl/sparql`) or equivalent.
+- When present, `rdlType` **SHOULD** resolve via the PCA-RDL
+  SPARQL endpoint
+  (`https://data.posccaesar.org/rdl/sparql`) or equivalent.
 - Project-level catalog URIs **MUST** use the `urn:pmef:catalog:` prefix.
 
 ### 2.3 RevisionMetadata
@@ -130,11 +154,15 @@ Links a PMEF object to one or more geometry representations.
 | `boundingBox` | MAY | object | Axis-aligned bounding box in project coordinates [mm]. |
 | `lod` | SHOULD | enum | Level of detail: `BBOX_ONLY`, `LOD1_COARSE`, `LOD2_MEDIUM`, `LOD3_FINE`, `LOD4_FABRICATION`. |
 
-A PMEF object **MAY** have multiple geometry representations at different LOD levels. In this case, the `geometry` field carries the highest-LOD representation available, and lower-LOD representations are referenced via `pmef:ParametricGeometry` objects.
+A PMEF object **MAY** have multiple geometry representations at
+different LOD levels. In this case, the `geometry` field carries the
+highest-LOD representation available, and lower-LOD representations
+are referenced via `pmef:ParametricGeometry` objects.
 
 ### 2.5 CatalogReference
 
-Links a PMEF object to a catalog entry in a piping specification catalog, equipment class catalog, or steel profile catalog.
+Links a PMEF object to a catalog entry in a piping specification
+catalog, equipment class catalog, or steel profile catalog.
 
 | Field | Description |
 |-------|-------------|
@@ -159,8 +187,13 @@ A physical connection point on a piping component or equipment nozzle.
 | `connectedTo` | MAY | `PmefId` of the adjacent component's port. |
 
 **Topology rules:**
-- `connectedTo` **MUST** reference the `@id` of an adjacent `PipingComponent` or `Nozzle`, not a `Port` directly. The adjacent object is expected to have a reciprocal `connectedTo` reference.
-- `connectedTo` references **MUST** resolve within the same PMEF package unless the reference carries the `urn:pmef:external:` prefix.
+- `connectedTo` **MUST** reference the `@id` of an adjacent
+  `PipingComponent` or `Nozzle`, not a `Port` directly. The
+  adjacent object is expected to have a reciprocal `connectedTo`
+  reference.
+- `connectedTo` references **MUST** resolve within the same PMEF
+  package unless the reference carries the
+  `urn:pmef:external:` prefix.
 
 ### 2.7 Coordinate System
 
@@ -172,7 +205,8 @@ All PMEF 3D coordinates are expressed in the project coordinate system with the 
 | Y | North (or project North) | mm |
 | Z | Up (elevation) | mm |
 
-The coordinate system is right-handed. This convention is consistent with AVEVA E3D, CADMATIC, AutoCAD Plant 3D, and PDMS.
+The coordinate system is right-handed. This convention is consistent
+with AVEVA E3D, CADMATIC, AutoCAD Plant 3D, and PDMS.
 
 **Conversion to other systems:**
 - glTF 2.0 uses Y-up: apply a +90° rotation about the X axis when converting.
@@ -258,7 +292,8 @@ An optional subdivision of a Unit into physical areas.
 
 ### 4.1 PipingNetworkSystem
 
-Represents a complete piping line from the P&ID. Corresponds to DEXPI `PipingNetworkSystem` and ISO 15926-14 `ProcessSystem`.
+Represents a complete piping line from the P&ID. Corresponds to
+DEXPI `PipingNetworkSystem` and ISO 15926-14 `ProcessSystem`.
 
 **Required fields:** `@type`, `@id`, `pmefVersion`, `lineNumber`, `isPartOf`
 
@@ -285,7 +320,9 @@ The `components` field carries an ordered list of `PipingComponent` IDs in routi
 
 ### 4.3 PipingComponent (Abstract Base)
 
-All physical piping components inherit from this abstract base type. Direct instantiation of `pmef:PipingComponent` is not permitted; use the specific subtypes.
+All physical piping components inherit from this abstract base type.
+Direct instantiation of `pmef:PipingComponent` is not permitted;
+use the specific subtypes.
 
 **Required fields for all subtypes:** `@type`, `@id`, `pmefVersion`, `isPartOf`, `componentSpec`
 
@@ -312,9 +349,14 @@ The following piping component subtypes are defined in v0.9:
 ### 4.5 Topology Rules for Piping
 
 1. Every `PipingComponent` that has physical connection points **MUST** have at least one `Port` in its `ports` array.
-2. `Port.connectedTo` **MUST** reference the `@id` of an adjacent component. The fragment `#portId` MAY be appended to identify the specific port on the target object.
-3. Connections between a piping component and an equipment nozzle are expressed via `Nozzle.connectedLineId` and `Nozzle.connectedPortId` on the equipment side.
-4. The `Weld.connects` array **MUST** contain exactly two `PmefId` values identifying the two components joined by the weld.
+2. `Port.connectedTo` **MUST** reference the `@id` of an adjacent
+   component. The fragment `#portId` MAY be appended to identify
+   the specific port on the target object.
+3. Connections between a piping component and an equipment nozzle
+   are expressed via `Nozzle.connectedLineId` and
+   `Nozzle.connectedPortId` on the equipment side.
+4. The `Weld.connects` array **MUST** contain exactly two `PmefId`
+   values identifying the two components joined by the weld.
 
 ---
 
@@ -330,7 +372,8 @@ The `equipmentBasic` carries an `EquipmentBasic` property set with at minimum `t
 
 ### 5.2 Nozzle
 
-The nozzle is the cross-domain connector between Equipment and Piping. It is embedded as an array on each `EquipmentObject`.
+The nozzle is the cross-domain connector between Equipment and
+Piping. It is embedded as an array on each `EquipmentObject`.
 
 **Required nozzle fields:** `nozzleId`, `nozzleMark`, `coordinate`, `direction`
 
@@ -362,9 +405,15 @@ The nozzle is the cross-domain connector between Equipment and Piping. It is emb
 
 ### 5.4 Equipment Topology Rules
 
-1. An equipment object's `nozzles` array **MAY** be empty for equipment without process connections (e.g. electrical panels).
-2. `Nozzle.connectedLineId` **SHOULD** reference a `PipingNetworkSystem` present in the same PMEF package. If the line is in another package, the reference carries the `urn:pmef:external:` prefix.
-3. The `isDerivedFrom` field on an equipment object **SHOULD** reference the DEXPI `Equipment` entity that represents the same functional position.
+1. An equipment object's `nozzles` array **MAY** be empty for
+   equipment without process connections (e.g. electrical panels).
+2. `Nozzle.connectedLineId` **SHOULD** reference a
+   `PipingNetworkSystem` present in the same PMEF package. If the
+   line is in another package, the reference carries the
+   `urn:pmef:external:` prefix.
+3. The `isDerivedFrom` field on an equipment object **SHOULD**
+   reference the DEXPI `Equipment` entity that represents the same
+   functional position.
 
 ---
 

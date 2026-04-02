@@ -71,7 +71,6 @@ references, enabling:
 - Clear flow direction (`portType`: INLET/OUTLET/BIDIRECTIONAL)
 - Nozzle-to-piping linking without coordinate matching
 
-
 ---
 
 ## DD-005: Nozzle as Cross-Domain Connector
@@ -97,7 +96,6 @@ are optional and can coexist on the same object.
 - Spatial clash detection: LOD2 parametric or glTF mesh
 - Construction/fabrication: LOD4 parametric + STEP B-Rep
 - Simulation/Digital Twin: OpenUSD prims
-
 
 The `GeometryReference.lod` field communicates what detail level is provided, so consumers can request
 the appropriate layer.
@@ -125,7 +123,6 @@ As-Built models.
 - Values are restricted to scalar types (string, number, boolean, null)
 - Keys must not shadow defined PMEF properties
 - Custom attributes should eventually be promoted to standard PMEF properties via RFC
-
 
 **Rationale:** Real plant projects always have project-specific attributes (procurement codes, PBS
 references, material class codes). Refusing to model them forces users to use parallel spreadsheets.
