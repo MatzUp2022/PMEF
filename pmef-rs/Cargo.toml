@@ -1,0 +1,70 @@
+[workspace]
+resolver = "2"
+members = [
+    "pmef-core",
+    "pmef-io",
+    "pmef-validate",
+    "pmef-geom",
+    "pmef-cli",
+    "pmef-adapter-plant3d",
+    "pmef-adapter-cadmatic",
+    "pmef-adapter-e3d",
+    "pmef-adapter-tekla",
+    "pmef-adapter-comos",
+    "pmef-adapter-creo",
+    "pmef-adapter-inventor",
+    "pmef-adapter-navisworks",
+    "pmef-adapter-advanced-steel",
+    "pmef-adapter-revit",
+]
+
+[workspace.package]
+version     = "0.9.0"
+edition     = "2021"
+license     = "Apache-2.0"
+repository  = "https://github.com/pmef/specification"
+homepage    = "https://pmef.org"
+authors     = ["PMEF Technical Steering Committee <tsc@pmef.org>"]
+rust-version = "1.75"
+
+[workspace.dependencies]
+# Serialisation
+serde         = { version = "1",  features = ["derive"] }
+serde_json    = { version = "1",  features = ["preserve_order"] }
+
+# Error handling
+thiserror     = "1"
+anyhow        = "1"
+
+# Async runtime
+tokio         = { version = "1", features = ["full"] }
+
+# Logging / tracing
+tracing       = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Validation
+jsonschema    = "0.18"
+
+# UUID generation
+uuid          = { version = "1", features = ["v4"] }
+
+# Date / time
+chrono        = { version = "0.4", features = ["serde"] }
+
+# CLI
+clap          = { version = "4", features = ["derive"] }
+
+# Numeric / geometry
+nalgebra      = "0.32"
+
+# Internal crates
+pmef-core     = { path = "pmef-core" }
+pmef-io       = { path = "pmef-io" }
+pmef-validate = { path = "pmef-validate" }
+pmef-geom     = { path = "pmef-geom" }
+
+[profile.release]
+opt-level = 3
+lto       = "thin"
+codegen-units = 1

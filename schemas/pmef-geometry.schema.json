@@ -1,0 +1,794 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pmef.org/schemas/0.9/pmef-geometry.schema.json",
+  "title": "PMEF Parametric Geometry Primitives",
+  "description": "Parametric 3D geometry primitive library. All dimensions in millimetres, all coordinates in the project coordinate system (X=East, Y=North, Z=Up, right-handed).",
+  "$defs": {
+    "ParametricGeometryObject": {
+      "title": "Parametric Geometry Object",
+      "description": "A single named parametric primitive linked to a PMEF object.",
+      "type": "object",
+      "required": [
+        "@type",
+        "@id",
+        "primitive",
+        "ownerRef"
+      ],
+      "properties": {
+        "@type": {
+          "const": "pmef:ParametricGeometry"
+        },
+        "@id": {
+          "$ref": "pmef-base.schema.json#/$defs/PmefId"
+        },
+        "ownerRef": {
+          "$ref": "pmef-base.schema.json#/$defs/PmefId",
+          "description": "PMEF object this geometry belongs to"
+        },
+        "lod": {
+          "type": "string",
+          "enum": [
+            "LOD1_COARSE",
+            "LOD2_MEDIUM",
+            "LOD3_FINE",
+            "LOD4_FABRICATION"
+          ],
+          "default": "LOD2_MEDIUM"
+        },
+        "primitive": {
+          "$ref": "#/$defs/AnyPrimitive"
+        },
+        "revision": {
+          "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata"
+        }
+      },
+      "additionalProperties": false
+    },
+    "AnyPrimitive": {
+      "title": "Any Parametric Primitive",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/Cylinder"
+        },
+        {
+          "$ref": "#/$defs/Cone"
+        },
+        {
+          "$ref": "#/$defs/Sphere"
+        },
+        {
+          "$ref": "#/$defs/Dish"
+        },
+        {
+          "$ref": "#/$defs/CircTorus"
+        },
+        {
+          "$ref": "#/$defs/Snout"
+        },
+        {
+          "$ref": "#/$defs/Box"
+        },
+        {
+          "$ref": "#/$defs/Extrusion"
+        },
+        {
+          "$ref": "#/$defs/Revolution"
+        },
+        {
+          "$ref": "#/$defs/ValvePrimitive"
+        },
+        {
+          "$ref": "#/$defs/NozzlePrimitive"
+        },
+        {
+          "$ref": "#/$defs/SteelProfilePrimitive"
+        },
+        {
+          "$ref": "#/$defs/CableTrayPrimitive"
+        },
+        {
+          "$ref": "#/$defs/MeshRef"
+        },
+        {
+          "$ref": "#/$defs/Composite"
+        }
+      ]
+    },
+    "Cylinder": {
+      "title": "Cylinder",
+      "description": "Right circular cylinder. Used for: straight pipe runs, vessel shells, nozzle barrels.",
+      "type": "object",
+      "required": [
+        "type",
+        "center",
+        "axis",
+        "radius",
+        "length"
+      ],
+      "properties": {
+        "type": {
+          "const": "CYLINDER"
+        },
+        "center": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D",
+          "description": "Centre of one circular face [mm]"
+        },
+        "axis": {
+          "$ref": "pmef-base.schema.json#/$defs/UnitVector3D",
+          "description": "Axis direction (from center toward other face)"
+        },
+        "radius": {
+          "type": "number",
+          "description": "Outer radius [mm]",
+          "exclusiveMinimum": 0
+        },
+        "innerRadius": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Inner radius [mm] for hollow cylinders (pipe); null=solid"
+        },
+        "length": {
+          "type": "number",
+          "description": "Length along axis [mm]",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "Cone": {
+      "title": "Cone / Frustum",
+      "description": "Truncated cone (frustum). Used for: concentric reducers, cone-roof tanks, nozzle necks.",
+      "type": "object",
+      "required": [
+        "type",
+        "center",
+        "axis",
+        "r1",
+        "r2",
+        "length"
+      ],
+      "properties": {
+        "type": {
+          "const": "CONE"
+        },
+        "center": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D",
+          "description": "Centre of the r1-end face"
+        },
+        "axis": {
+          "$ref": "pmef-base.schema.json#/$defs/UnitVector3D",
+          "description": "Points from r1 to r2"
+        },
+        "r1": {
+          "type": "number",
+          "description": "Radius at start face [mm]",
+          "minimum": 0
+        },
+        "r2": {
+          "type": "number",
+          "description": "Radius at end face [mm]",
+          "minimum": 0
+        },
+        "innerR1": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Inner radius at r1 for hollow (reducer)"
+        },
+        "innerR2": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Inner radius at r2 for hollow (reducer)"
+        },
+        "length": {
+          "type": "number",
+          "description": "Axial length [mm]",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "Sphere": {
+      "title": "Sphere",
+      "description": "Used for: spherical storage tanks, ball valve bodies (simplified).",
+      "type": "object",
+      "required": [
+        "type",
+        "center",
+        "radius"
+      ],
+      "properties": {
+        "type": {
+          "const": "SPHERE"
+        },
+        "center": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D"
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "Dish": {
+      "title": "Dish (Vessel Head)",
+      "description": "A vessel dished/domed head. Used for: pressure vessel heads, tank bottoms.",
+      "type": "object",
+      "required": [
+        "type",
+        "center",
+        "axis",
+        "shellRadius",
+        "dishType"
+      ],
+      "properties": {
+        "type": {
+          "const": "DISH"
+        },
+        "center": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D",
+          "description": "Centre of the knuckle circle (shell-to-head junction)"
+        },
+        "axis": {
+          "$ref": "pmef-base.schema.json#/$defs/UnitVector3D",
+          "description": "Points outward from vessel"
+        },
+        "shellRadius": {
+          "type": "number",
+          "description": "Shell inside radius [mm]",
+          "exclusiveMinimum": 0
+        },
+        "dishType": {
+          "type": "string",
+          "enum": [
+            "HEMISPHERICAL",
+            "ELLIPTICAL_2:1",
+            "TORISPHERICAL",
+            "FLAT",
+            "CONICAL"
+          ]
+        },
+        "depth": {
+          "type": "number",
+          "description": "Overall head depth (tangent to crown) [mm]"
+        },
+        "knuckleRadius": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Knuckle radius [mm] for torispherical heads"
+        },
+        "crownRadius": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Crown radius [mm] for torispherical heads"
+        },
+        "coneAngle": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Half-apex angle [degrees] for conical heads"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CircTorus": {
+      "title": "Circular Torus Segment (Pipe Elbow/Bend)",
+      "description": "A section of a torus with circular cross-section. Used for: pipe elbows and bends.",
+      "type": "object",
+      "required": [
+        "type",
+        "center",
+        "axis",
+        "torusRadius",
+        "tubeRadius",
+        "angleDeg"
+      ],
+      "properties": {
+        "type": {
+          "const": "CIRC_TORUS"
+        },
+        "center": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D",
+          "description": "Centre of the bend arc (at the start of the arc)"
+        },
+        "axis": {
+          "$ref": "pmef-base.schema.json#/$defs/UnitVector3D",
+          "description": "Normal to the plane of the arc"
+        },
+        "startDir": {
+          "$ref": "pmef-base.schema.json#/$defs/UnitVector3D",
+          "description": "Unit vector from torus center toward the first port"
+        },
+        "torusRadius": {
+          "type": "number",
+          "description": "Centreline bend radius R [mm]",
+          "exclusiveMinimum": 0
+        },
+        "tubeRadius": {
+          "type": "number",
+          "description": "Pipe outside radius r [mm]",
+          "exclusiveMinimum": 0
+        },
+        "innerTubeRadius": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Pipe inside radius for hollow (wall-thickness aware)"
+        },
+        "angleDeg": {
+          "type": "number",
+          "description": "Bend angle [degrees]",
+          "exclusiveMinimum": 0,
+          "maximum": 360
+        }
+      },
+      "additionalProperties": false
+    },
+    "Snout": {
+      "title": "Snout (Eccentric Reducer)",
+      "description": "Eccentric frustum with lateral offset. Used for: eccentric reducers, off-centre nozzle barrels.",
+      "type": "object",
+      "required": [
+        "type",
+        "center",
+        "axis",
+        "r1",
+        "r2",
+        "length"
+      ],
+      "properties": {
+        "type": {
+          "const": "SNOUT"
+        },
+        "center": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D"
+        },
+        "axis": {
+          "$ref": "pmef-base.schema.json#/$defs/UnitVector3D"
+        },
+        "r1": {
+          "type": "number",
+          "description": "Radius at start [mm]",
+          "minimum": 0
+        },
+        "r2": {
+          "type": "number",
+          "description": "Radius at end [mm]",
+          "minimum": 0
+        },
+        "length": {
+          "type": "number",
+          "description": "[mm]",
+          "exclusiveMinimum": 0
+        },
+        "offsetX": {
+          "type": "number",
+          "description": "Lateral offset of r2 centre in local X [mm]",
+          "default": 0
+        },
+        "offsetY": {
+          "type": "number",
+          "description": "Lateral offset of r2 centre in local Y [mm]",
+          "default": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "Box": {
+      "title": "Box (Rectangular Cuboid)",
+      "description": "Used for: rectangular tanks, junction boxes, schematic equipment outlines.",
+      "type": "object",
+      "required": [
+        "type",
+        "center",
+        "xLen",
+        "yLen",
+        "zLen"
+      ],
+      "properties": {
+        "type": {
+          "const": "BOX"
+        },
+        "center": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D",
+          "description": "Geometric centre of the box"
+        },
+        "xLen": {
+          "type": "number",
+          "description": "[mm]",
+          "exclusiveMinimum": 0
+        },
+        "yLen": {
+          "type": "number",
+          "description": "[mm]",
+          "exclusiveMinimum": 0
+        },
+        "zLen": {
+          "type": "number",
+          "description": "[mm]",
+          "exclusiveMinimum": 0
+        },
+        "rotationX": {
+          "type": "number",
+          "description": "Rotation about X axis [degrees]",
+          "default": 0
+        },
+        "rotationY": {
+          "type": "number",
+          "description": "Rotation about Y axis [degrees]",
+          "default": 0
+        },
+        "rotationZ": {
+          "type": "number",
+          "description": "Rotation about Z axis [degrees]",
+          "default": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "Extrusion": {
+      "title": "Linear Extrusion",
+      "description": "A 2D profile extruded along a path. Used for: structural steel members (I-beams, UPE, RHS, etc.).",
+      "type": "object",
+      "required": [
+        "type",
+        "startPt",
+        "endPt",
+        "profileId"
+      ],
+      "properties": {
+        "type": {
+          "const": "EXTRUSION"
+        },
+        "startPt": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D"
+        },
+        "endPt": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D"
+        },
+        "profileId": {
+          "type": "string",
+          "description": "PMEF profile catalog ID, e.g. 'EN:HEA200', 'AISC:W12x53', 'EN:RHS200x100x6'"
+        },
+        "rotationDeg": {
+          "type": "number",
+          "description": "Roll rotation of profile around axis [degrees]",
+          "default": 0
+        },
+        "material": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Revolution": {
+      "title": "Surface of Revolution",
+      "description": "A 2D profile rotated about an axis. Used for: flanges, dished heads (alternative), nozzle flanges.",
+      "type": "object",
+      "required": [
+        "type",
+        "axisPoint",
+        "axis",
+        "profile2d",
+        "angleDeg"
+      ],
+      "properties": {
+        "type": {
+          "const": "REVOLUTION"
+        },
+        "axisPoint": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D",
+          "description": "A point on the rotation axis"
+        },
+        "axis": {
+          "$ref": "pmef-base.schema.json#/$defs/UnitVector3D"
+        },
+        "profile2d": {
+          "type": "array",
+          "description": "2D polyline in the (r, z) half-plane (r=radial, z=along axis). Each item is [r_mm, z_mm].",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 2
+        },
+        "angleDeg": {
+          "type": "number",
+          "description": "Sweep angle [degrees]; 360 for full revolution",
+          "exclusiveMinimum": 0,
+          "maximum": 360
+        }
+      },
+      "additionalProperties": false
+    },
+    "ValvePrimitive": {
+      "title": "Valve Compound Primitive",
+      "description": "Simplified parametric representation of a valve body (face-to-face, bore diameter).",
+      "type": "object",
+      "required": [
+        "type",
+        "center",
+        "direction",
+        "boreD",
+        "faceToFace",
+        "valveBodyType"
+      ],
+      "properties": {
+        "type": {
+          "const": "VALVE_BODY"
+        },
+        "valveBodyType": {
+          "type": "string",
+          "enum": [
+            "GATE",
+            "GLOBE",
+            "BALL",
+            "BUTTERFLY",
+            "CHECK",
+            "DIAPHRAGM",
+            "PLUG",
+            "CONTROL",
+            "KNIFE"
+          ]
+        },
+        "center": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D",
+          "description": "Centreline midpoint"
+        },
+        "direction": {
+          "$ref": "pmef-base.schema.json#/$defs/UnitVector3D",
+          "description": "Flow axis direction"
+        },
+        "boreD": {
+          "type": "number",
+          "description": "Bore / nominal diameter [mm]",
+          "exclusiveMinimum": 0
+        },
+        "faceToFace": {
+          "type": "number",
+          "description": "Face-to-face length [mm]",
+          "exclusiveMinimum": 0
+        },
+        "bodyHeight": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Overall height of body+bonnet [mm]"
+        },
+        "actuatorHeight": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Actuator height above centreline [mm]"
+        },
+        "actuatorDir": {
+          "$ref": "pmef-base.schema.json#/$defs/UnitVector3D"
+        }
+      },
+      "additionalProperties": false
+    },
+    "NozzlePrimitive": {
+      "title": "Nozzle Primitive",
+      "description": "Parametric nozzle: flange + barrel cylinder.",
+      "type": "object",
+      "required": [
+        "type",
+        "origin",
+        "axis",
+        "nomDN",
+        "projection"
+      ],
+      "properties": {
+        "type": {
+          "const": "NOZZLE"
+        },
+        "origin": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D",
+          "description": "Face of flange at shell [mm]"
+        },
+        "axis": {
+          "$ref": "pmef-base.schema.json#/$defs/UnitVector3D",
+          "description": "Points outward from vessel"
+        },
+        "nomDN": {
+          "type": "number",
+          "description": "[mm]",
+          "exclusiveMinimum": 0
+        },
+        "projection": {
+          "type": "number",
+          "description": "Distance from shell face to flange face [mm]"
+        },
+        "flangeOD": {
+          "type": "number",
+          "description": "Flange outside diameter [mm]"
+        },
+        "flangeThickness": {
+          "type": "number",
+          "description": "[mm]"
+        },
+        "flangeStandard": {
+          "type": "string",
+          "description": "e.g. 'ANSI_B16.5_150', 'EN_1092-1_PN16'"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SteelProfilePrimitive": {
+      "title": "Structural Steel Member Primitive",
+      "description": "Structural steel beam/column/brace as axis + profile.",
+      "type": "object",
+      "required": [
+        "type",
+        "startPt",
+        "endPt",
+        "profileId"
+      ],
+      "properties": {
+        "type": {
+          "const": "STEEL_PROFILE"
+        },
+        "startPt": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D"
+        },
+        "endPt": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D"
+        },
+        "profileId": {
+          "type": "string"
+        },
+        "rollDeg": {
+          "type": "number",
+          "default": 0
+        },
+        "material": {
+          "type": "string"
+        },
+        "grade": {
+          "type": "string",
+          "description": "Steel grade, e.g. 'S355JR', 'A572 Gr.50'"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CableTrayPrimitive": {
+      "title": "Cable Tray Primitive",
+      "description": "Cable tray or conduit routing segment.",
+      "type": "object",
+      "required": [
+        "type",
+        "centerline",
+        "width"
+      ],
+      "properties": {
+        "type": {
+          "const": "CABLE_TRAY"
+        },
+        "centerline": {
+          "type": "array",
+          "description": "Ordered list of 3D centreline waypoints [mm]",
+          "items": {
+            "$ref": "pmef-base.schema.json#/$defs/Coordinate3D"
+          },
+          "minItems": 2
+        },
+        "width": {
+          "type": "number",
+          "description": "[mm]",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "description": "[mm]",
+          "exclusiveMinimum": 0
+        },
+        "trayType": {
+          "type": "string",
+          "enum": [
+            "LADDER",
+            "SOLID_BOTTOM",
+            "PERFORATED",
+            "WIRE_MESH",
+            "CONDUIT",
+            "DUCT"
+          ]
+        },
+        "material": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "MeshRef": {
+      "title": "Mesh Reference",
+      "description": "Reference to a pre-computed mesh (glTF, OpenUSD, or STEP). Fallback when no parametric primitive is available.",
+      "type": "object",
+      "required": [
+        "type",
+        "meshUri"
+      ],
+      "properties": {
+        "type": {
+          "const": "MESH_REF"
+        },
+        "meshUri": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI to the mesh file (glTF feature ID, USD prim path, or STEP file)"
+        },
+        "meshFormat": {
+          "type": "string",
+          "enum": [
+            "GLTF",
+            "USD",
+            "STEP_AP242",
+            "OBJ",
+            "STL"
+          ]
+        },
+        "featureId": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "glTF EXT_mesh_features feature ID for semantic annotation"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Composite": {
+      "title": "Composite Geometry",
+      "description": "A named collection of primitives forming a compound shape (e.g. vessel = shell + heads + supports).",
+      "type": "object",
+      "required": [
+        "type",
+        "children"
+      ],
+      "properties": {
+        "type": {
+          "const": "COMPOSITE"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "partName",
+              "primitive"
+            ],
+            "properties": {
+              "partName": {
+                "type": "string"
+              },
+              "primitive": {
+                "$ref": "#/$defs/AnyPrimitive"
+              }
+            }
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "$ref": "#/$defs/ParametricGeometryObject"
+}

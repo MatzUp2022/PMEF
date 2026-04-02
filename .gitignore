@@ -1,0 +1,45 @@
+# PMEF Specification — .gitignore
+
+# Build outputs
+dist/
+build/
+*.zip
+*.pdf
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Node (diagram rendering)
+node_modules/
+*.log
+
+# Editor
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Temporary validation artifacts
+/tmp/
+*.tmp
+*.bak
+
+# Rendered diagrams (generated, not source)
+diagrams/*.png
+diagrams/*.svg
+
+# Large binary test data (use Git LFS instead)
+*.glb
+*.usdc
+*.usdz
+*.stp
+*.step
+*.rvt
+*.dwg

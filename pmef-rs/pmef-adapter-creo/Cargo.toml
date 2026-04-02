@@ -1,0 +1,24 @@
+[package]
+name        = "pmef-adapter-creo"
+description = "PMEF adapter for PTC Creo Parametric — envelope geometry + Windchill PDM"
+version.workspace    = true
+edition.workspace    = true
+license.workspace    = true
+repository.workspace = true
+
+[dependencies]
+serde.workspace      = true
+serde_json.workspace = true
+thiserror.workspace  = true
+anyhow.workspace     = true
+tokio.workspace      = true
+tracing.workspace    = true
+pmef-core.workspace  = true
+pmef-io.workspace    = true
+pmef-validate.workspace = true
+
+# STEP AP203/AP214/AP242 parsing for Creo STEP export
+quick-xml = { version = "0.36" }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }

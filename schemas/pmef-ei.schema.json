@@ -1,0 +1,297 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pmef.org/schemas/0.9/pmef-ei.schema.json",
+  "title": "PMEF E&I Domain — Electrical, Instrumentation & Control",
+  "description": "Schema for InstrumentObject, InstrumentLoop, PLCObject, CableObject and related E&I types. Aligned with AutomationML/CAEX, DEXPI 2.0, IEC 81346 and PA-DIM.",
+
+  "$defs": {
+
+    "InstrumentObject": {
+      "title": "Instrument Object",
+      "description": "A physical instrument, sensor, actuator or field device. Corresponds to the PhysicalObject realising a DEXPI ProcessInstrumentationFunction. Aligns with PA-DIM DeviceType.",
+      "type": "object",
+      "required": ["@type","@id","pmefVersion","isPartOf","tagNumber","instrumentClass"],
+      "properties": {
+        "@type":        { "const": "pmef:InstrumentObject" },
+        "@id":          { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "pmefVersion":  { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "isPartOf":     { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Parent Unit/Area/System" },
+        "isDerivedFrom":{ "type": ["string","null"], "description": "DEXPI ProcessInstrumentationFunction URI (functional tag)" },
+
+        "tagNumber": {
+          "type": "string",
+          "description": "Instrument tag per ISA 5.1 / IEC 62424, e.g. 'FIC-10101', 'XV-20201', 'TE-30101'",
+          "examples": ["FIC-10101","XV-20201","TE-30101","PSV-40501"]
+        },
+        "instrumentClass": {
+          "type": "string",
+          "description": "PMEF instrument class (superset of DEXPI instrument types)",
+          "enum": [
+            "TRANSMITTER","INDICATING_TRANSMITTER","CONTROLLER","INDICATING_CONTROLLER",
+            "RECORDER","INDICATOR","SWITCH","ALARM","SAFETY_ELEMENT",
+            "VALVE_CONTROL","VALVE_RELIEF","VALVE_ISOLATION_ACTUATED",
+            "ACTUATOR","MOTOR_OPERATED_VALVE","SOLENOID_VALVE",
+            "ANALYSER","ANALYSER_SYSTEM","DETECTOR","CONVERTER",
+            "TOTALIZER","INTEGRATOR","COMPUTING_ELEMENT",
+            "WELL_TEST_SEPARATOR","SAMPLER","PROBE",
+            "JUNCTION_BOX","MARSHALLING_CABINET","FIELD_PANEL",
+            "OTHER"
+          ]
+        },
+        "serviceDescription": { "type": "string", "description": "Process service, e.g. 'Cooling water flow control'" },
+        "loopNumber":  { "type": "string", "description": "Parent loop number, e.g. 'FIC-101'" },
+        "processVariable": {
+          "type": "string",
+          "enum": ["FLOW","LEVEL","PRESSURE","TEMPERATURE","DENSITY","VISCOSITY","PH","CONDUCTIVITY",
+                   "POSITION","SPEED","VIBRATION","CURRENT","VOLTAGE","POWER","FREQUENCY","OTHER"],
+          "description": "Measured/controlled process variable"
+        },
+        "measuredRange": {
+          "type": "object",
+          "description": "Instrument measurement/control range",
+          "properties": {
+            "min":  { "type": "number" },
+            "max":  { "type": "number" },
+            "unit": { "type": "string", "description": "QUDT unit symbol, e.g. 'm³/h', 'Pa', 'K'" }
+          },
+          "required": ["min","max","unit"],
+          "additionalProperties": false
+        },
+        "alarmLimits": {
+          "type": "object",
+          "description": "Process alarm and trip setpoints",
+          "properties": {
+            "LL":  { "type": "number", "description": "Low-Low alarm" },
+            "L":   { "type": "number", "description": "Low alarm" },
+            "H":   { "type": "number", "description": "High alarm" },
+            "HH":  { "type": "number", "description": "High-High alarm / trip" },
+            "unit":{ "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "safetySpec": {
+          "type": "object",
+          "description": "Functional safety attributes per IEC 61508/61511",
+          "properties": {
+            "safetyIntegrityLevel": { "type": "integer", "minimum": 0, "maximum": 4, "description": "SIL 0–4" },
+            "safetyFunction":       { "type": "string", "description": "Described safety function, e.g. 'High pressure shutdown'" },
+            "architectureType":     { "type": "string", "enum": ["1oo1","1oo2","2oo3","1oo1D","1oo2D"], "description": "Voting architecture" },
+            "pfh":                  { "type": "number", "description": "Probability of Failure per Hour [1/h]" },
+            "pfd":                  { "type": "number", "description": "Probability of Failure on Demand" },
+            "proofTestInterval":    { "type": "number", "description": "Proof-test interval [hours]" },
+            "safeState":            { "type": "string", "description": "Required safe state on failure" }
+          },
+          "additionalProperties": false
+        },
+        "connectionSpec": {
+          "type": "object",
+          "description": "Electrical connection and signal specification",
+          "properties": {
+            "signalType":    { "type": "string", "enum": ["4_20MA","0_10V","HART","PROFIBUS_PA","FOUNDATION_FIELDBUS","MODBUS","PROFINET","EIP","DISCRETE_24VDC","DISCRETE_120VAC","THERMOCOUPLE","RTD","PULSE","FREQUENCY"] },
+            "failSafe":      { "type": "boolean", "description": "True if signal fails to safe value on break/short" },
+            "loopPowered":   { "type": "boolean" },
+            "intrinsicSafe": { "type": "boolean", "description": "ATEX/IECEx intrinsically safe approved" },
+            "hazardousArea": { "type": "string", "description": "ATEX zone, e.g. 'Zone 1', 'Zone 2'" },
+            "protectionType":{ "type": "string", "description": "ATEX protection concept, e.g. 'Ex ia', 'Ex d'" },
+            "ipRating":      { "type": "string", "description": "IP rating, e.g. 'IP67'" }
+          },
+          "additionalProperties": false
+        },
+        "opcuaSpec": {
+          "type": "object",
+          "description": "OPC UA runtime reference (PA-DIM alignment)",
+          "properties": {
+            "nodeRef":    { "type": "string", "format": "uri", "description": "OPC UA Node URI, e.g. 'opc.tcp://plant:4840/ns=2;i=1001'" },
+            "padimType":  { "type": "string", "description": "PA-DIM DeviceType reference URI" },
+            "mtpDataAssemblyRef": { "type": "string", "description": "MTP 2.0 DataAssembly URI for modular plants" }
+          },
+          "additionalProperties": false
+        },
+        "comosCUID":        { "type": "string", "description": "COMOS object UID for round-trip" },
+        "eplanBKZ":         { "type": "string", "description": "EPLAN Betriebsmittelkennzeichen (IEC 81346 formatted)" },
+        "tiaPLCAddress": {
+          "type": "object",
+          "description": "TIA Portal PLC I/O address for E-CAD/PLC synchronisation",
+          "properties": {
+            "rack":    { "type": "integer", "minimum": 0 },
+            "slot":    { "type": "integer", "minimum": 0 },
+            "channel": { "type": "integer", "minimum": 0 },
+            "symbol":  { "type": "string", "description": "PLC symbolic address, e.g. 'FIC_10101_PV'" },
+            "dataType":{ "type": "string", "description": "PLC data type, e.g. 'REAL', 'BOOL', 'INT'" }
+          },
+          "additionalProperties": false
+        },
+        "iec81346":  { "$ref": "pmef-base.schema.json#/$defs/Iec81346Designation" },
+        "rdlType":   { "$ref": "pmef-base.schema.json#/$defs/RdlUri" },
+        "eclassIRDI":{ "type": "string", "description": "eCl@ss IRDI classification code" },
+        "geometry":  { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
+        "documents": { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/DocumentLink" } },
+        "revision":  { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "customAttributes": { "type": "object", "additionalProperties": { "type": ["string","number","boolean","null"] } }
+      },
+      "additionalProperties": false
+    },
+
+    "InstrumentLoop": {
+      "title": "Instrument Loop",
+      "description": "A functional control or safety loop grouping one or more InstrumentObjects. Corresponds to DEXPI ProcessControlLoop.",
+      "type": "object",
+      "required": ["@type","@id","loopNumber","isPartOf"],
+      "properties": {
+        "@type":      { "const": "pmef:InstrumentLoop" },
+        "@id":        { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "loopNumber": { "type": "string", "description": "Loop tag, e.g. 'FIC-101', 'PAHH-501'" },
+        "loopType": {
+          "type": "string",
+          "enum": ["CONTROL","INDICATION","ALARM","SAFETY_INSTRUMENTED","MONITORING","SHUTDOWN","METERING"],
+          "description": "Functional loop type"
+        },
+        "isPartOf":  { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "memberIds": {
+          "type": "array",
+          "description": "IDs of InstrumentObjects that are members of this loop",
+          "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" }
+        },
+        "controllerTagId":   { "type": "string", "description": "ID of the primary controller instrument" },
+        "finalElementTagId": { "type": "string", "description": "ID of the final element (control valve, motor)" },
+        "setpoint": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "number" },
+            "unit":  { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "silLevel": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+      },
+      "additionalProperties": false
+    },
+
+    "PLCObject": {
+      "title": "PLC / DCS Hardware Object",
+      "description": "A PLC rack, CPU module, or I/O module. Derived from AutomationML AR APC hardware configuration.",
+      "type": "object",
+      "required": ["@type","@id","isPartOf","plcClass"],
+      "properties": {
+        "@type":    { "const": "pmef:PLCObject" },
+        "@id":      { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "isPartOf": { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "plcClass": {
+          "type": "string",
+          "enum": ["PLC_RACK","CPU_MODULE","IO_MODULE_DI","IO_MODULE_DO","IO_MODULE_AI","IO_MODULE_AO",
+                   "IO_MODULE_MIXED","COMMUNICATIONS_MODULE","SAFETY_CPU","SAFETY_IO","REMOTE_IO",
+                   "HMI_PANEL","DRIVE_INVERTER","MOTION_CONTROLLER"]
+        },
+        "vendor":         { "type": "string", "description": "e.g. 'Siemens', 'Rockwell', 'Beckhoff', 'ABB'" },
+        "family":         { "type": "string", "description": "e.g. 'S7-1500', 'ControlLogix 5580', 'CX5230'" },
+        "articleNumber":  { "type": "string" },
+        "firmwareVersion":{ "type": "string" },
+        "rack":           { "type": "integer", "minimum": 0 },
+        "slot":           { "type": "integer", "minimum": 0 },
+        "ipAddress":      { "type": "string", "format": "ipv4" },
+        "profibusAddress":{ "type": "integer", "minimum": 1, "maximum": 126 },
+        "profinetName":   { "type": "string" },
+        "totalIOChannels":{ "type": "integer", "minimum": 0 },
+        "safetyCPU":      { "type": "boolean", "description": "True if this is an F-CPU (fail-safe)" },
+        "opcuaNodeRef":   { "type": "string", "format": "uri" },
+        "amlRef":         { "type": "string", "description": "AutomationML InternalElement ID for round-trip" },
+        "iec81346":  { "$ref": "pmef-base.schema.json#/$defs/Iec81346Designation" },
+        "geometry":  { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
+        "revision":  { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+      },
+      "additionalProperties": false
+    },
+
+    "CableObject": {
+      "title": "Cable / Cable Run",
+      "description": "An electrical cable or cable bundle between two termination points.",
+      "type": "object",
+      "required": ["@type","@id","isPartOf","cableNumber"],
+      "properties": {
+        "@type":      { "const": "pmef:CableObject" },
+        "@id":        { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "isPartOf":   { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "cableNumber":{ "type": "string", "description": "Cable tag/number, e.g. 'C-10101-U01'" },
+        "cableType": {
+          "type": "string",
+          "enum": ["SIGNAL_ANALOG","SIGNAL_DISCRETE","POWER_LV","POWER_MV","INSTRUMENTATION_PAIR",
+                   "MULTIPAIR","MULTICORE","PROFIBUS_PA","PROFIBUS_DP","PROFINET","FIELDBUS_FF",
+                   "HART","FIBER_OPTIC","COAXIAL","EARTHING","CONTROL_SHIELDED"]
+        },
+        "crossSection":   { "type": "number", "description": "Conductor cross-section [mm²]" },
+        "numberOfCores":  { "type": "integer", "minimum": 1 },
+        "numberOfPairs":  { "type": "integer", "minimum": 0 },
+        "voltageRating":  { "type": "number", "description": "Rated voltage [V AC or V DC]" },
+        "currentCapacity":{ "type": "number", "description": "Current carrying capacity [A]" },
+        "insulationType": { "type": "string", "description": "e.g. 'XLPE', 'PVC', 'LSZH'" },
+        "screenType":     { "type": "string", "enum": ["UNSCREENED","INDIVIDUALLY_SCREENED","OVERALL_SCREENED","DOUBLE_SCREENED"] },
+        "armoured":       { "type": "boolean" },
+        "intrinsicSafe":  { "type": "boolean" },
+        "fromId":         { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Source: JunctionBox, Terminal, PLCObject, InstrumentObject" },
+        "fromTerminal":   { "type": "string", "description": "Terminal designation at source" },
+        "toId":           { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Destination: same types as fromId" },
+        "toTerminal":     { "type": "string" },
+        "cableTrayId":    { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Primary cable tray/route" },
+        "routeLength":    { "type": "number", "description": "Routed cable length [m]" },
+        "iec81346":  { "$ref": "pmef-base.schema.json#/$defs/Iec81346Designation" },
+        "geometry":  { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
+        "revision":  { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+      },
+      "additionalProperties": false
+    },
+
+    "CableTrayRun": {
+      "title": "Cable Tray / Conduit Run",
+      "description": "A physical cable tray, conduit, or cable duct routing segment. The geometry is stored via CableTrayPrimitive.",
+      "type": "object",
+      "required": ["@type","@id","isPartOf","trayMark"],
+      "properties": {
+        "@type":    { "const": "pmef:CableTrayRun" },
+        "@id":      { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "isPartOf": { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "trayMark": { "type": "string", "description": "Tray reference mark, e.g. 'CT-U100-01'" },
+        "trayType": { "type": "string", "enum": ["LADDER","SOLID_BOTTOM","PERFORATED","WIRE_MESH","CONDUIT","DUCT","UNDERGROUND"] },
+        "width":    { "type": "number", "description": "[mm]" },
+        "height":   { "type": "number", "description": "[mm]" },
+        "material": { "type": "string" },
+        "fillLevel":{ "type": "number", "description": "Current fill percentage [%]", "minimum": 0, "maximum": 100 },
+        "reserveCapacity": { "type": "number", "description": "Reserved fill [%]", "minimum": 0, "maximum": 100 },
+        "structuralSupportId": { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Steel member or civil structure supporting this tray" },
+        "geometry": { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
+        "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+      },
+      "additionalProperties": false
+    },
+
+    "MTPModule": {
+      "title": "MTP Process Equipment Assembly (PEA Module)",
+      "description": "A modular process unit described by an MTP 2.0 file (VDI/VDE/NAMUR 2658, IEC 63280). The AML file is referenced as a document.",
+      "type": "object",
+      "required": ["@type","@id","isPartOf","moduleName"],
+      "properties": {
+        "@type":      { "const": "pmef:MTPModule" },
+        "@id":        { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "isPartOf":   { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "moduleName": { "type": "string", "description": "Module name as declared in MTP file" },
+        "mtpVersion": { "type": "string", "description": "MTP spec version, e.g. '2.0'" },
+        "mtpFileRef": { "$ref": "pmef-base.schema.json#/$defs/DocumentLink", "description": "Reference to AML/AASX MTP file" },
+        "polEndpoint":{ "type": "string", "format": "uri", "description": "OPC UA endpoint for POL (Process Orchestration Layer)" },
+        "peaVendor":  { "type": "string" },
+        "peaModel":   { "type": "string" },
+        "memberIds":  { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" }, "description": "InstrumentObjects + EquipmentObjects in this PEA" },
+        "revision":   { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+      },
+      "additionalProperties": false
+    }
+  },
+
+  "oneOf": [
+    { "$ref": "#/$defs/InstrumentObject" },
+    { "$ref": "#/$defs/InstrumentLoop" },
+    { "$ref": "#/$defs/PLCObject" },
+    { "$ref": "#/$defs/CableObject" },
+    { "$ref": "#/$defs/CableTrayRun" },
+    { "$ref": "#/$defs/MTPModule" }
+  ]
+}

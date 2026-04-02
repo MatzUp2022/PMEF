@@ -1,0 +1,18 @@
+[package]
+name        = "pmef-core"
+description = "PMEF data model — entity types, property sets, relationships"
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+
+[dependencies]
+serde.workspace     = true
+serde_json.workspace = true
+thiserror.workspace = true
+uuid.workspace      = true
+chrono.workspace    = true
+tracing.workspace   = true
+
+[dev-dependencies]
+serde_json = { version = "1" }

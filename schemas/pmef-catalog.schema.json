@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pmef.org/schemas/0.9/pmef-catalog.schema.json",
+  "title": "PMEF Catalog",
+  "description": "Schema for PMEF open catalog files (steel profiles, piping classes, pipe dimensions).",
+  "type": "object",
+  "required": [
+    "catalogId",
+    "catalogType",
+    "version",
+    "description",
+    "entries"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "catalogId": {
+      "type": "string",
+      "description": "Unique catalog identifier, e.g. 'profiles-en'"
+    },
+    "catalogType": {
+      "type": "string",
+      "enum": [
+        "STEEL_PROFILES",
+        "PIPING_CLASS",
+        "PIPE_DIMENSIONS",
+        "FLANGE_DIMENSIONS",
+        "INSTRUMENT_CATALOG"
+      ],
+      "description": "Catalog domain type"
+    },
+    "standard": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "units": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "families": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "note": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": true
+}

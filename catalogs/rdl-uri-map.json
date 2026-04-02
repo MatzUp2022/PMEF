@@ -1,0 +1,219 @@
+{
+  "$schema": "https://pmef.org/schemas/0.9/pmef-catalog.schema.json",
+  "catalogId": "rdl-uri-map",
+  "catalogType": "INSTRUMENT_CATALOG",
+  "version": "2024.1",
+  "description": "Cross-reference between PMEF entity types, piping class component classes, and PCA-RDL (ISO 15926-4) URIs. Use rdlType on PMEF objects to point to these URIs.",
+  "sparqlEndpoint": "https://data.posccaesar.org/rdl/sparql",
+  "entries": [
+    {
+      "pmefType": "pmef:Pump",
+      "equipmentClass": "CENTRIFUGAL_PUMP",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354645",
+      "label": "Centrifugal Pump"
+    },
+    {
+      "pmefType": "pmef:Pump",
+      "equipmentClass": "RECIPROCATING_PUMP",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354653",
+      "label": "Reciprocating Pump"
+    },
+    {
+      "pmefType": "pmef:Pump",
+      "equipmentClass": "GEAR_PUMP",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354661",
+      "label": "Gear Pump"
+    },
+    {
+      "pmefType": "pmef:Compressor",
+      "equipmentClass": "CENTRIFUGAL_COMPRESSOR",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354669",
+      "label": "Centrifugal Compressor"
+    },
+    {
+      "pmefType": "pmef:Compressor",
+      "equipmentClass": "RECIPROCATING_COMPRESSOR",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354677",
+      "label": "Reciprocating Compressor"
+    },
+    {
+      "pmefType": "pmef:Vessel",
+      "equipmentClass": "PRESSURE_VESSEL",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS327255",
+      "label": "Pressure Vessel"
+    },
+    {
+      "pmefType": "pmef:Tank",
+      "equipmentClass": "STORAGE_TANK",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS327248",
+      "label": "Storage Tank"
+    },
+    {
+      "pmefType": "pmef:HeatExchanger",
+      "equipmentClass": "SHELL_AND_TUBE_HEAT_EXCHANGER",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS327274",
+      "label": "Shell and Tube Heat Exchanger"
+    },
+    {
+      "pmefType": "pmef:HeatExchanger",
+      "equipmentClass": "PLATE_HEAT_EXCHANGER",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS327282",
+      "label": "Plate Heat Exchanger"
+    },
+    {
+      "pmefType": "pmef:Column",
+      "equipmentClass": "DISTILLATION_COLUMN",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS327290",
+      "label": "Distillation Column"
+    },
+    {
+      "pmefType": "pmef:Reactor",
+      "equipmentClass": "FIXED_BED_REACTOR",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS327298",
+      "label": "Fixed Bed Reactor"
+    },
+    {
+      "pmefType": "pmef:Filter",
+      "equipmentClass": "BASKET_STRAINER",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354760",
+      "label": "Basket Strainer"
+    },
+    {
+      "pmefType": "pmef:Filter",
+      "equipmentClass": "Y_STRAINER",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354768",
+      "label": "Y Strainer"
+    },
+    {
+      "pmefType": "pmef:Turbine",
+      "equipmentClass": "STEAM_TURBINE",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354775",
+      "label": "Steam Turbine"
+    },
+    {
+      "pmefType": "pmef:Pipe",
+      "componentClass": "PIPE",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354580",
+      "label": "Straight Pipe"
+    },
+    {
+      "pmefType": "pmef:Elbow",
+      "componentClass": "ELBOW",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354588",
+      "label": "Pipe Elbow"
+    },
+    {
+      "pmefType": "pmef:Tee",
+      "componentClass": "TEE",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354596",
+      "label": "Tee"
+    },
+    {
+      "pmefType": "pmef:Flange",
+      "componentClass": "FLANGE",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354604",
+      "label": "Flange"
+    },
+    {
+      "pmefType": "pmef:Flange",
+      "componentClass": "BLIND_FLANGE",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354612",
+      "label": "Blind Flange"
+    },
+    {
+      "pmefType": "pmef:Gasket",
+      "componentClass": "GASKET",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354620",
+      "label": "Gasket"
+    },
+    {
+      "pmefType": "pmef:Reducer",
+      "componentClass": "REDUCER_CONCENTRIC",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354628",
+      "label": "Concentric Reducer"
+    },
+    {
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_GATE",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354636",
+      "label": "Gate Valve"
+    },
+    {
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_GLOBE",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354644",
+      "label": "Globe Valve"
+    },
+    {
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_BALL",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354700",
+      "label": "Ball Valve"
+    },
+    {
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_BUTTERFLY",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354708",
+      "label": "Butterfly Valve"
+    },
+    {
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_CHECK",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354652",
+      "label": "Check Valve"
+    },
+    {
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_CONTROL",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354716",
+      "label": "Control Valve"
+    },
+    {
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_RELIEF",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354724",
+      "label": "Relief Valve (PSV)"
+    },
+    {
+      "pmefType": "pmef:Olet",
+      "componentClass": "OLET_WELDOLET",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354732",
+      "label": "Weldolet"
+    },
+    {
+      "pmefType": "pmef:PipeSupport",
+      "componentClass": "PIPE_SUPPORT",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354740",
+      "label": "Pipe Support"
+    },
+    {
+      "pmefType": "pmef:PipingNetworkSystem",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354748",
+      "label": "Piping Network System (Line)"
+    },
+    {
+      "pmefType": "pmef:InstrumentObject",
+      "instrumentClass": "TRANSMITTER",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354780",
+      "label": "Transmitter"
+    },
+    {
+      "pmefType": "pmef:InstrumentObject",
+      "instrumentClass": "CONTROLLER",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354788",
+      "label": "Controller"
+    },
+    {
+      "pmefType": "pmef:InstrumentObject",
+      "instrumentClass": "VALVE_CONTROL",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354716",
+      "label": "Control Valve (instrument)"
+    },
+    {
+      "pmefType": "pmef:InstrumentObject",
+      "instrumentClass": "SAFETY_ELEMENT",
+      "rdlUri": "http://data.posccaesar.org/rdl/RDS354796",
+      "label": "Safety Instrumented Element"
+    }
+  ]
+}

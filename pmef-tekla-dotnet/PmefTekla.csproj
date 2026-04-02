@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</Targ:TargetFramework>
+    <AssemblyName>PmefTekla</AssemblyName>
+    <RootNamespace>PmefTekla</RootNamespace>
+    <Version>0.9.0</Version>
+    <Authors>PMEF Technical Steering Committee</Authors>
+    <Description>PMEF ↔ Tekla Structures Open API connector</Description>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <LangVersion>12</LangVersion>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <!-- Tekla Open API references (installed with Tekla Structures) -->
+  <!-- Adjust path to match your Tekla version installation directory -->
+  <PropertyGroup>
+    <TeklaInstallDir>C:\Program Files\Tekla Structures\2024.0\bin\plugins</TeklaInstallDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Tekla.Structures">
+      <HintPath>$(TeklaInstallDir)\Tekla.Structures.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Tekla.Structures.Model">
+      <HintPath>$(TeklaInstallDir)\Tekla.Structures.Model.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Tekla.Structures.Drawing">
+      <HintPath>$(TeklaInstallDir)\Tekla.Structures.Drawing.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Tekla.Structures.Geometry3d">
+      <HintPath>$(TeklaInstallDir)\Tekla.Structures.Geometry3d.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- No external NuGet packages — only BCL + Tekla assemblies -->
+
+</Project>

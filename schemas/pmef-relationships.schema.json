@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pmef.org/schemas/0.9/pmef-relationships.schema.json",
+  "title": "PMEF Typed Relationships",
+  "description": "Explicit, typed relationship objects between PMEF entities. Relationships are first-class objects stored in the NDJSON stream, enabling graph traversal, provenance tracking and cross-discipline linking without modifying the related objects themselves.",
+
+  "$defs": {
+
+    "BaseRelationship": {
+      "title": "Relationship Base",
+      "description": "Abstract base for all PMEF typed relationships. Never instantiated directly.",
+      "type": "object",
+      "required": ["@type","@id","relationType","sourceId","targetId"],
+      "properties": {
+        "@type":        { "type": "string", "description": "Concrete relationship type, e.g. pmef:IsPartOf" },
+        "@id":          { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "relationType": { "type": "string", "description": "Relationship type code (mirrors @type suffix)" },
+        "sourceId":     { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "ID of the source object" },
+        "targetId":     { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "ID of the target object" },
+        "sourceType":   { "type": "string", "description": "Expected @type of source, for validation" },
+        "targetType":   { "type": "string", "description": "Expected @type of target, for validation" },
+        "validFrom":    { "type": ["string","null"], "format": "date-time" },
+        "validTo":      { "type": ["string","null"], "format": "date-time" },
+        "confidence":   { "type": "number", "minimum": 0, "maximum": 1, "description": "Mapping confidence 0–1 (1=exact, <1=derived/inferred)" },
+        "derivedBy":    { "type": "string", "description": "How this relationship was established: MANUAL, ADAPTER_IMPORT, AI_INFERRED, RULE_BASED" },
+        "notes":        { "type": "string", "description": "Free-text annotation" },
+        "revision":     { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+      }
+    },
+
+    "IsPartOf": {
+      "title": "Is Part Of",
+      "description": "Compositional containment. sourceId is a part of targetId. Directed: child → parent. Used for explicit cross-file references when isPartOf inline field is insufficient.",
+      "allOf": [
+        { "$ref": "#/$defs/BaseRelationship" },
+        { "properties": { "@type": { "const": "pmef:IsPartOf" }, "relationType": { "const": "IS_PART_OF" } } }
+      ]
+    },
+
+    "IsConnectedTo": {
+      "title": "Is Connected To",
+      "description": "Physical topological connection between two PMEF objects (piping, nozzle, cable). Complements Port.connectedTo for cross-type connections.",
+      "allOf": [
+        { "$ref": "#/$defs/BaseRelationship" },
+        {
+          "properties": {
+            "@type":        { "const": "pmef:IsConnectedTo" },
+            "relationType": { "const": "IS_CONNECTED_TO" },
+            "connectionMedium": { "type": "string", "description": "Medium at connection point, e.g. 'COOLING_WATER', 'PROCESS_GAS', 'SIGNAL_4_20MA'" },
+            "connectionPointSource": { "type": "string", "description": "Port or nozzle ID on source object" },
+            "connectionPointTarget": { "type": "string", "description": "Port or nozzle ID on target object" }
+          }
+        }
+      ]
+    },
+
+    "IsDerivedFrom": {
+      "title": "Is Derived From",
+      "description": "Derivation from a functional/logical object. The source physical object is derived from the target functional object (P&ID tag, DEXPI entity). Core mechanism for P&ID→3D linking.",
+      "allOf": [
+        { "$ref": "#/$defs/BaseRelationship" },
+        {
+          "properties": {
+            "@type":          { "const": "pmef:IsDerivedFrom" },
+            "relationType":   { "const": "IS_DERIVED_FROM" },
+            "sourceStandard": { "type": "string", "description": "Standard of the target functional object, e.g. 'DEXPI_2.0', 'ISO_15926', 'PCA_RDL'" },
+            "mappingVersion": { "type": "string", "description": "Version of the mapping rule that created this derivation" }
+          }
+        }
+      ]
+    },
+
+    "Supports": {
+      "title": "Supports",
+      "description": "Physical support relationship. sourceId physically supports or carries targetId. E.g. SteelMember supports PipeSupport; PipeSupport supports PipingSegment.",
+      "allOf": [
+        { "$ref": "#/$defs/BaseRelationship" },
+        {
+          "properties": {
+            "@type":        { "const": "pmef:Supports" },
+            "relationType": { "const": "SUPPORTS" },
+            "loadTransferred": {
+              "type": "object",
+              "description": "Load transferred at this support point",
+              "properties": {
+                "Fx": { "type": "number", "description": "[N]" },
+                "Fy": { "type": "number", "description": "[N]" },
+                "Fz": { "type": "number", "description": "[N]" },
+                "Mx": { "type": "number", "description": "[N·m]" },
+                "My": { "type": "number", "description": "[N·m]" },
+                "Mz": { "type": "number", "description": "[N·m]" }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ]
+    },
+
+    "ControlledBy": {
+      "title": "Controlled By",
+      "description": "Control relationship. sourceId (equipment, valve) is controlled by targetId (instrument, PLC, loop). Bridges physical and E&I domains.",
+      "allOf": [
+        { "$ref": "#/$defs/BaseRelationship" },
+        {
+          "properties": {
+            "@type":        { "const": "pmef:ControlledBy" },
+            "relationType": { "const": "CONTROLLED_BY" },
+            "controlMode":  { "type": "string", "enum": ["CASCADE","RATIO","FEEDFORWARD","FEEDBACK","MANUAL","ON_OFF","PID","SAFETY_SHUTDOWN"], "description": "Control mode" },
+            "signalPath":   { "type": "string", "description": "Signal path description, e.g. 'FIC-101 → XV-101 (4-20mA)'" }
+          }
+        }
+      ]
+    },
+
+    "IsDocumentedBy": {
+      "title": "Is Documented By",
+      "description": "Links a PMEF object to a document. Complements the inline documents[] array for cross-file document management.",
+      "allOf": [
+        { "$ref": "#/$defs/BaseRelationship" },
+        {
+          "properties": {
+            "@type":        { "const": "pmef:IsDocumentedBy" },
+            "relationType": { "const": "IS_DOCUMENTED_BY" },
+            "documentType": { "type": "string", "description": "CFIHOS document type, e.g. 'DATASHEET', 'ISOMETRIC', 'P_AND_ID', 'GA_DRAWING', 'CERTIFICATE'" },
+            "documentId":   { "type": "string" },
+            "documentUri":  { "type": "string", "format": "uri" },
+            "documentRevision": { "type": "string" }
+          }
+        }
+      ]
+    },
+
+    "IsRevisionOf": {
+      "title": "Is Revision Of",
+      "description": "Version history link. sourceId is a newer revision of targetId. Enables full provenance chains across revisions.",
+      "allOf": [
+        { "$ref": "#/$defs/BaseRelationship" },
+        {
+          "properties": {
+            "@type":        { "const": "pmef:IsRevisionOf" },
+            "relationType": { "const": "IS_REVISION_OF" },
+            "changeReason": { "type": "string", "description": "Why this revision was created" },
+            "changeType":   { "type": "string", "enum": ["MINOR","MAJOR","CORRECTION","AS_BUILT","ISSUED_FOR_CONSTRUCTION"] }
+          }
+        }
+      ]
+    },
+
+    "HasEquivalentIn": {
+      "title": "Has Equivalent In",
+      "description": "Cross-format equivalence. sourceId in PMEF is equivalent to targetId in another system or standard. Used by adapters to record native tool IDs.",
+      "allOf": [
+        { "$ref": "#/$defs/BaseRelationship" },
+        {
+          "properties": {
+            "@type":          { "const": "pmef:HasEquivalentIn" },
+            "relationType":   { "const": "HAS_EQUIVALENT_IN" },
+            "targetSystem":   { "type": "string", "description": "Target system, e.g. 'AVEVA_E3D', 'PLANT_3D', 'SAP_EAM', 'TEKLA', 'COMOS'" },
+            "targetSystemId": { "type": "string", "description": "Native ID in the target system" },
+            "targetSystemVersion": { "type": "string" },
+            "mappingType":    { "type": "string", "enum": ["EXACT","APPROXIMATE","DERIVED","PLACEHOLDER"] }
+          }
+        }
+      ]
+    },
+
+    "IsCollocatedWith": {
+      "title": "Is Collocated With",
+      "description": "Spatial co-location. Both objects share the same physical location or mounting point. Useful for grouped instruments, skid-mounted equipment.",
+      "allOf": [
+        { "$ref": "#/$defs/BaseRelationship" },
+        {
+          "properties": {
+            "@type":        { "const": "pmef:IsCollocatedWith" },
+            "relationType": { "const": "IS_COLLOCATED_WITH" }
+          }
+        }
+      ]
+    },
+
+    "ReplacedBy": {
+      "title": "Replaced By",
+      "description": "Equipment substitution. sourceId is replaced by targetId (spare, upgrade, re-rating). Used in as-built / maintenance records.",
+      "allOf": [
+        { "$ref": "#/$defs/BaseRelationship" },
+        {
+          "properties": {
+            "@type":           { "const": "pmef:ReplacedBy" },
+            "relationType":    { "const": "REPLACED_BY" },
+            "replacementDate": { "type": "string", "format": "date" },
+            "workOrderRef":    { "type": "string" }
+          }
+        }
+      ]
+    }
+  },
+
+  "oneOf": [
+    { "$ref": "#/$defs/IsPartOf" },
+    { "$ref": "#/$defs/IsConnectedTo" },
+    { "$ref": "#/$defs/IsDerivedFrom" },
+    { "$ref": "#/$defs/Supports" },
+    { "$ref": "#/$defs/ControlledBy" },
+    { "$ref": "#/$defs/IsDocumentedBy" },
+    { "$ref": "#/$defs/IsRevisionOf" },
+    { "$ref": "#/$defs/HasEquivalentIn" },
+    { "$ref": "#/$defs/IsCollocatedWith" },
+    { "$ref": "#/$defs/ReplacedBy" }
+  ]
+}

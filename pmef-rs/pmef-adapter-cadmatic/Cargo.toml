@@ -1,0 +1,31 @@
+[package]
+name        = "pmef-adapter-cadmatic"
+description = "PMEF adapter for CADMATIC Plant Design — REST Web API"
+version.workspace    = true
+edition.workspace    = true
+license.workspace    = true
+repository.workspace = true
+
+[dependencies]
+serde.workspace      = true
+serde_json.workspace = true
+thiserror.workspace  = true
+anyhow.workspace     = true
+tokio.workspace      = true
+tracing.workspace    = true
+pmef-core.workspace  = true
+pmef-io.workspace    = true
+pmef-validate.workspace = true
+
+# HTTP client for CADMATIC REST API
+reqwest   = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+# URL building
+url       = "2"
+# Retry logic
+tokio-retry = "0.3"
+# Base64 for auth header
+base64    = "0.22"
+
+[dev-dependencies]
+tokio     = { version = "1", features = ["rt-multi-thread", "macros"] }
+mockito   = "1"          # HTTP mocking for unit tests

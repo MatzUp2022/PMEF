@@ -1,0 +1,1012 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pmef.org/schemas/0.9/pmef-property-sets.schema.json",
+  "title": "PMEF Property Sets",
+  "description": "All standardised property-set definitions for Piping and Equipment domains.",
+  "$defs": {
+    "PipingDesignConditions": {
+      "title": "Piping Design Conditions",
+      "description": "Process design envelope for a piping segment or line. Based on CFIHOS piping attributes.",
+      "type": "object",
+      "properties": {
+        "designPressure": {
+          "type": "number",
+          "description": "Maximum allowable design pressure [Pa]",
+          "minimum": 0
+        },
+        "designTemperature": {
+          "type": "number",
+          "description": "Maximum allowable design temperature [K]"
+        },
+        "operatingPressure": {
+          "type": "number",
+          "description": "Normal operating pressure [Pa]",
+          "minimum": 0
+        },
+        "operatingTemperature": {
+          "type": "number",
+          "description": "Normal operating temperature [K]"
+        },
+        "minOperatingTemp": {
+          "type": "number",
+          "description": "Minimum operating temperature (for MDMT) [K]"
+        },
+        "testPressure": {
+          "type": "number",
+          "description": "Hydrostatic or pneumatic test pressure [Pa]",
+          "minimum": 0
+        },
+        "testMedium": {
+          "type": "string",
+          "enum": [
+            "WATER",
+            "AIR",
+            "NITROGEN",
+            "PROCESS_FLUID",
+            "OTHER"
+          ]
+        },
+        "vacuumService": {
+          "type": "boolean",
+          "default": false
+        },
+        "fluidCategory": {
+          "type": "string",
+          "description": "PED fluid category: 1, 2 or STEAM",
+          "enum": [
+            "1",
+            "2",
+            "STEAM",
+            "N/A"
+          ]
+        },
+        "pedCategory": {
+          "type": "string",
+          "description": "PED category (I, II, III, IV, N/A)",
+          "enum": [
+            "I",
+            "II",
+            "III",
+            "IV",
+            "N/A"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "PipingSpecification": {
+      "title": "Piping Specification",
+      "description": "Pipe class and material specification.",
+      "type": "object",
+      "required": [
+        "nominalDiameter",
+        "pipeClass"
+      ],
+      "properties": {
+        "nominalDiameter": {
+          "type": "number",
+          "description": "DN nominal diameter [mm]",
+          "minimum": 1
+        },
+        "nominalDiameterInch": {
+          "type": "number",
+          "description": "NPS (nominal pipe size) in inches — informational",
+          "minimum": 0.125
+        },
+        "outsideDiameter": {
+          "type": "number",
+          "description": "Actual outside diameter [mm]",
+          "minimum": 0
+        },
+        "wallThickness": {
+          "type": "number",
+          "description": "Nominal wall thickness [mm]",
+          "minimum": 0
+        },
+        "schedule": {
+          "type": "string",
+          "description": "Pipe schedule, e.g. 'SCH40', 'SCH80', 'XS', 'XXS'"
+        },
+        "pipeClass": {
+          "type": "string",
+          "description": "Piping class identifier, e.g. 'A1A2', '300-CS-N'"
+        },
+        "material": {
+          "type": "string",
+          "description": "Material designation, e.g. 'ASTM A106 Gr. B'"
+        },
+        "materialGroup": {
+          "type": "string",
+          "description": "Material group per EN 13480 / ASME B31.3"
+        },
+        "pressureRating": {
+          "type": "string",
+          "description": "ANSI/ASME pressure class, e.g. 'ANSI-150', 'ANSI-300', 'PN16'"
+        },
+        "corrosionAllowance": {
+          "type": "number",
+          "description": "Corrosion allowance [mm]",
+          "minimum": 0
+        },
+        "lineNumber": {
+          "type": "string",
+          "description": "Full line number tag, e.g. '8\"-CW-101-A1A2'"
+        },
+        "mediumCode": {
+          "type": "string",
+          "description": "Service medium code, e.g. 'CW' (cooling water), 'SS' (steam)'"
+        },
+        "paintingSystem": {
+          "type": "string"
+        },
+        "insulationType": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "THERMAL_HOT",
+            "THERMAL_COLD",
+            "ACOUSTIC",
+            "FIRE_PROTECTION",
+            "PERSONNEL_PROTECTION"
+          ]
+        },
+        "insulationThickness": {
+          "type": "number",
+          "description": "[mm]",
+          "minimum": 0
+        },
+        "heatTracingType": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "ELECTRIC",
+            "STEAM_TRACED",
+            "HOT_WATER"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "PipingComponentSpec": {
+      "title": "Piping Component Specification",
+      "description": "Component-level attributes shared by all PipingComponent subtypes.",
+      "type": "object",
+      "required": [
+        "componentClass"
+      ],
+      "properties": {
+        "componentClass": {
+          "type": "string",
+          "description": "PMEF component class (superset of PCF component types)",
+          "enum": [
+            "PIPE",
+            "ELBOW",
+            "TEE",
+            "CROSS",
+            "LATERAL",
+            "REDUCER_CONCENTRIC",
+            "REDUCER_ECCENTRIC",
+            "FLANGE",
+            "BLIND_FLANGE",
+            "SPECTACLE_BLIND",
+            "SPACER",
+            "VALVE_GATE",
+            "VALVE_GLOBE",
+            "VALVE_BALL",
+            "VALVE_BUTTERFLY",
+            "VALVE_CHECK",
+            "VALVE_CONTROL",
+            "VALVE_RELIEF",
+            "VALVE_NEEDLE",
+            "VALVE_PLUG",
+            "VALVE_DIAPHRAGM",
+            "VALVE_KNIFE",
+            "OLET_WELDOLET",
+            "OLET_SOCKOLET",
+            "OLET_THREADOLET",
+            "OLET_NIPOLET",
+            "GASKET",
+            "BOLT_SET",
+            "WELD_BUTT",
+            "WELD_FILLET",
+            "WELD_SOCKET",
+            "COUPLING",
+            "UNION",
+            "CAP",
+            "PLUG",
+            "STRAINER_Y",
+            "STRAINER_BASKET",
+            "EXPANSION_JOINT",
+            "FLEXIBLE_HOSE",
+            "INSTRUMENT_CONNECTION",
+            "DRAIN_VENT",
+            "SPOOL",
+            "SPECIAL",
+            "PIPE_SUPPORT"
+          ]
+        },
+        "skey": {
+          "type": "string",
+          "maxLength": 8,
+          "description": "PMEF shape key (extension of PCF SKEY). First 2 chars=type, next 2=end-type, optional 4=variant. e.g. 'ELBW' (elbow butt-weld)"
+        },
+        "endType1": {
+          "type": "string",
+          "enum": [
+            "BW",
+            "FL",
+            "SW",
+            "SC",
+            "STUB",
+            "GROOVED",
+            "PLAIN",
+            "CLAMP"
+          ],
+          "description": "End connection type at port 1"
+        },
+        "endType2": {
+          "type": "string",
+          "enum": [
+            "BW",
+            "FL",
+            "SW",
+            "SC",
+            "STUB",
+            "GROOVED",
+            "PLAIN",
+            "CLAMP"
+          ],
+          "description": "End connection type at port 2 (where applicable)"
+        },
+        "facingType": {
+          "type": "string",
+          "enum": [
+            "RF",
+            "FF",
+            "RTJ",
+            "AARH",
+            "TG",
+            "MF",
+            "BW",
+            "PLAIN"
+          ],
+          "description": "Flange facing type"
+        },
+        "faceToFace": {
+          "type": "number",
+          "description": "Face-to-face or end-to-end dimension [mm]"
+        },
+        "centreToFace": {
+          "type": "number",
+          "description": "Centre-to-face dimension [mm]"
+        },
+        "weight": {
+          "type": "number",
+          "description": "Component weight [kg]"
+        },
+        "itemNumber": {
+          "type": "string",
+          "description": "Spool/isometric item number"
+        },
+        "spoolId": {
+          "type": "string",
+          "description": "Fabrication spool reference"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ValveSpec": {
+      "title": "Valve Specification",
+      "description": "Additional attributes for valve-type components.",
+      "type": "object",
+      "properties": {
+        "actuatorType": {
+          "type": "string",
+          "enum": [
+            "MANUAL",
+            "PNEUMATIC",
+            "ELECTRIC",
+            "HYDRAULIC",
+            "SOLENOID",
+            "HANDWHEEL",
+            "CHAIN_WHEEL"
+          ]
+        },
+        "failPosition": {
+          "type": "string",
+          "enum": [
+            "FO",
+            "FC",
+            "FL",
+            "FI"
+          ],
+          "description": "Fail-open/closed/locked/in-position"
+        },
+        "leakageClass": {
+          "type": "string",
+          "description": "ANSI/FCI 70-2 leakage class: I..VI"
+        },
+        "kvValue": {
+          "type": "number",
+          "description": "Flow coefficient Kv [m³/h at 1 bar ΔP]",
+          "minimum": 0
+        },
+        "shutoffPressure": {
+          "type": "number",
+          "description": "Maximum differential shut-off pressure [Pa]",
+          "minimum": 0
+        },
+        "signalRange": {
+          "type": "string",
+          "description": "Control signal range, e.g. '4..20mA', '0..10V'"
+        },
+        "positionFeedback": {
+          "type": "boolean"
+        },
+        "handwheelOverride": {
+          "type": "boolean"
+        },
+        "lockable": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "WeldSpec": {
+      "title": "Weld Specification",
+      "description": "Weld record attributes for piping fabrication.",
+      "type": "object",
+      "required": [
+        "weldNumber"
+      ],
+      "properties": {
+        "weldNumber": {
+          "type": "string",
+          "description": "Unique weld number within spool/isometric"
+        },
+        "weldType": {
+          "type": "string",
+          "enum": [
+            "BW",
+            "FW",
+            "SW",
+            "BRZ",
+            "SLD",
+            "OTHER"
+          ],
+          "description": "Butt/Fillet/Socket/Braze/Solder"
+        },
+        "weldingProcess": {
+          "type": "string",
+          "description": "WPS welding process, e.g. 'GTAW', 'SMAW', 'GMAW'"
+        },
+        "wpsNumber": {
+          "type": "string"
+        },
+        "pwht": {
+          "type": "boolean",
+          "description": "Post-weld heat treatment required"
+        },
+        "ndeMethod": {
+          "type": "string",
+          "enum": [
+            "VT",
+            "RT",
+            "UT",
+            "PT",
+            "MT",
+            "ET",
+            "NONE"
+          ],
+          "description": "NDE/NDT method"
+        },
+        "ndePercentage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "inspectionLevel": {
+          "type": "string",
+          "enum": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ]
+        },
+        "weldorId": {
+          "type": "string"
+        },
+        "inspectionStatus": {
+          "type": "string",
+          "enum": [
+            "PENDING",
+            "ACCEPTED",
+            "REJECTED",
+            "REPAIRED",
+            "WAIVED"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "EquipmentBasic": {
+      "title": "Equipment Basic Attributes",
+      "description": "Common attributes for all equipment types. Based on CFIHOS Tag/Equipment class.",
+      "type": "object",
+      "required": [
+        "tagNumber",
+        "equipmentClass"
+      ],
+      "properties": {
+        "tagNumber": {
+          "type": "string",
+          "description": "Equipment tag per ISA 5.1 / ISO 10628, e.g. 'V-101', 'P-201A'"
+        },
+        "equipmentClass": {
+          "type": "string",
+          "description": "CFIHOS Equipment Class, e.g. 'CENTRIFUGAL_PUMP'"
+        },
+        "serviceDescription": {
+          "type": "string",
+          "description": "Process service description, e.g. 'Cooling water supply pump'"
+        },
+        "designCode": {
+          "type": "string",
+          "description": "Applicable design code, e.g. 'ASME VIII Div.1', 'EN 13445', 'API 610'"
+        },
+        "manufacturer": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "serialNumber": {
+          "type": "string"
+        },
+        "purchaseOrderRef": {
+          "type": "string"
+        },
+        "installationDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "unitArea": {
+          "type": "string",
+          "description": "Plant unit/area where the equipment is located"
+        },
+        "trainId": {
+          "type": "string",
+          "description": "Train identifier for parallel trains, e.g. 'A', 'B', 'SPARE'"
+        },
+        "nsss": {
+          "type": "boolean",
+          "description": "Nuclear Safety System: true if safety-classified"
+        }
+      },
+      "additionalProperties": false
+    },
+    "VesselDesign": {
+      "title": "Pressure Vessel Design Data",
+      "description": "Design attributes for pressure vessels, tanks, columns, reactors.",
+      "type": "object",
+      "properties": {
+        "designPressureInternal": {
+          "type": "number",
+          "description": "[Pa]"
+        },
+        "designPressureExternal": {
+          "type": "number",
+          "description": "[Pa] (for vacuum/external pressure)"
+        },
+        "designTemperatureMax": {
+          "type": "number",
+          "description": "[K]"
+        },
+        "designTemperatureMin": {
+          "type": "number",
+          "description": "MDMT — Minimum Design Metal Temperature [K]"
+        },
+        "volume": {
+          "type": "number",
+          "description": "Total internal volume [m³]"
+        },
+        "shellMaterial": {
+          "type": "string"
+        },
+        "headMaterial": {
+          "type": "string"
+        },
+        "liningMaterial": {
+          "type": "string"
+        },
+        "shellThickness": {
+          "type": "number",
+          "description": "[mm]"
+        },
+        "corrosionAllowance": {
+          "type": "number",
+          "description": "[mm]"
+        },
+        "shellInsideDiameter": {
+          "type": "number",
+          "description": "[mm]"
+        },
+        "tangentToTangent": {
+          "type": "number",
+          "description": "T-T length [mm]"
+        },
+        "headType": {
+          "type": "string",
+          "enum": [
+            "HEMISPHERICAL",
+            "ELLIPTICAL_2:1",
+            "TORISPHERICAL",
+            "FLAT",
+            "CONICAL"
+          ]
+        },
+        "orientation": {
+          "type": "string",
+          "enum": [
+            "VERTICAL",
+            "HORIZONTAL"
+          ]
+        },
+        "numberOfShells": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "xrayRequirement": {
+          "type": "string",
+          "enum": [
+            "FULL",
+            "SPOT",
+            "NONE"
+          ]
+        },
+        "stressRelief": {
+          "type": "boolean"
+        },
+        "fireproofingRequired": {
+          "type": "boolean"
+        },
+        "insulationType": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "HOT",
+            "COLD",
+            "ACOUSTIC",
+            "FIRE"
+          ]
+        },
+        "insulationThickness": {
+          "type": "number",
+          "description": "[mm]"
+        },
+        "safetyValveSetPressure": {
+          "type": "number",
+          "description": "[Pa] (if integral PSV)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PumpSpec": {
+      "title": "Pump Specification",
+      "description": "Design data for centrifugal, positive displacement and other pump types.",
+      "type": "object",
+      "properties": {
+        "pumpType": {
+          "type": "string",
+          "enum": [
+            "CENTRIFUGAL",
+            "AXIAL",
+            "RECIPROCATING",
+            "GEAR",
+            "SCREW",
+            "DIAPHRAGM",
+            "PERISTALTIC",
+            "SUBMERSIBLE"
+          ]
+        },
+        "arrangementType": {
+          "type": "string",
+          "enum": [
+            "OVERHUNG",
+            "BETWEEN_BEARINGS",
+            "VERTICAL_INLINE",
+            "VERTICAL_SUMP",
+            "HORIZONTAL_SPLIT"
+          ]
+        },
+        "apiStandard": {
+          "type": "string",
+          "description": "e.g. 'API 610', 'API 674', 'API 675'"
+        },
+        "designFlow": {
+          "type": "number",
+          "description": "Normal/rated flow [m³/h]"
+        },
+        "minFlow": {
+          "type": "number",
+          "description": "Minimum continuous stable flow [m³/h]"
+        },
+        "maxFlow": {
+          "type": "number",
+          "description": "Maximum flow [m³/h]"
+        },
+        "designHead": {
+          "type": "number",
+          "description": "Design differential head [m]"
+        },
+        "shutoffHead": {
+          "type": "number",
+          "description": "Shut-off head [m]"
+        },
+        "efficiency": {
+          "type": "number",
+          "description": "Pump efficiency at BEP [%]",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "npshRequired": {
+          "type": "number",
+          "description": "NPSH required [m]"
+        },
+        "npshAvailable": {
+          "type": "number",
+          "description": "NPSH available at pump inlet [m]"
+        },
+        "ratedSpeed": {
+          "type": "number",
+          "description": "[rpm]"
+        },
+        "motorPower": {
+          "type": "number",
+          "description": "Installed motor shaft power [kW]"
+        },
+        "motorVoltage": {
+          "type": "number",
+          "description": "[V]"
+        },
+        "motorFrequency": {
+          "type": "number",
+          "description": "[Hz]",
+          "enum": [
+            50,
+            60
+          ]
+        },
+        "drivetype": {
+          "type": "string",
+          "enum": [
+            "DIRECT",
+            "VFD",
+            "GEARBOX",
+            "BELT",
+            "COUPLING"
+          ]
+        },
+        "sealType": {
+          "type": "string",
+          "enum": [
+            "SINGLE_MECHANICAL",
+            "DOUBLE_MECHANICAL",
+            "GLAND_PACKING",
+            "MAGNETIC_COUPLING",
+            "CANNED_MOTOR"
+          ]
+        },
+        "impellerDiameter": {
+          "type": "number",
+          "description": "[mm]"
+        },
+        "fluidDensity": {
+          "type": "number",
+          "description": "Design fluid density [kg/m³]"
+        },
+        "fluidViscosity": {
+          "type": "number",
+          "description": "Design kinematic viscosity [cSt]"
+        },
+        "fluidTemperature": {
+          "type": "number",
+          "description": "Design fluid temperature [K]"
+        },
+        "sparePump": {
+          "type": "boolean",
+          "description": "True if this is the standby/spare unit"
+        },
+        "hqCurveRef": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI to H-Q performance curve document"
+        }
+      },
+      "additionalProperties": false
+    },
+    "HeatExchangerSpec": {
+      "title": "Heat Exchanger Specification",
+      "description": "Design data for shell-and-tube, plate, and air-cooled heat exchangers.",
+      "type": "object",
+      "properties": {
+        "hxType": {
+          "type": "string",
+          "enum": [
+            "SHELL_AND_TUBE",
+            "PLATE",
+            "DOUBLE_PIPE",
+            "AIR_COOLED",
+            "SPIRAL",
+            "SCRAPED_SURFACE",
+            "KETTLE"
+          ]
+        },
+        "tema": {
+          "type": "string",
+          "description": "TEMA type designation, e.g. 'BEM', 'AES', 'NEN'"
+        },
+        "dutyType": {
+          "type": "string",
+          "enum": [
+            "COOLER",
+            "HEATER",
+            "CONDENSER",
+            "REBOILER",
+            "VAPORISER",
+            "PREHEATER",
+            "WASTE_HEAT"
+          ]
+        },
+        "heatDuty": {
+          "type": "number",
+          "description": "Design heat duty [W]"
+        },
+        "shellSideMedium": {
+          "type": "string"
+        },
+        "tubeSideMedium": {
+          "type": "string"
+        },
+        "shellSideInletTemp": {
+          "type": "number",
+          "description": "[K]"
+        },
+        "shellSideOutletTemp": {
+          "type": "number",
+          "description": "[K]"
+        },
+        "tubeSideInletTemp": {
+          "type": "number",
+          "description": "[K]"
+        },
+        "tubeSideOutletTemp": {
+          "type": "number",
+          "description": "[K]"
+        },
+        "shellSideFlow": {
+          "type": "number",
+          "description": "[kg/s]"
+        },
+        "tubeSideFlow": {
+          "type": "number",
+          "description": "[kg/s]"
+        },
+        "shellSideDesignPressure": {
+          "type": "number",
+          "description": "[Pa]"
+        },
+        "tubeSideDesignPressure": {
+          "type": "number",
+          "description": "[Pa]"
+        },
+        "overallHeatTransferCoeff": {
+          "type": "number",
+          "description": "U-value [W/m²K]"
+        },
+        "heatTransferArea": {
+          "type": "number",
+          "description": "[m²]"
+        },
+        "numberOfShellPasses": {
+          "type": "integer"
+        },
+        "numberOfTubePasses": {
+          "type": "integer"
+        },
+        "tubeOutsideDiameter": {
+          "type": "number",
+          "description": "[mm]"
+        },
+        "tubeWallThickness": {
+          "type": "number",
+          "description": "[mm]"
+        },
+        "tubeLength": {
+          "type": "number",
+          "description": "[mm]"
+        },
+        "numberOfTubes": {
+          "type": "integer"
+        },
+        "tubeMaterial": {
+          "type": "string"
+        },
+        "shellMaterial": {
+          "type": "string"
+        },
+        "foulingFactorShell": {
+          "type": "number",
+          "description": "[m²K/W]"
+        },
+        "foulingFactorTube": {
+          "type": "number",
+          "description": "[m²K/W]"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CompressorSpec": {
+      "title": "Compressor Specification",
+      "type": "object",
+      "properties": {
+        "compressorType": {
+          "type": "string",
+          "enum": [
+            "CENTRIFUGAL",
+            "AXIAL",
+            "RECIPROCATING",
+            "SCREW",
+            "SCROLL",
+            "LOBE",
+            "DIAPHRAGM"
+          ]
+        },
+        "apiStandard": {
+          "type": "string",
+          "description": "e.g. 'API 617', 'API 618', 'API 619'"
+        },
+        "designInletFlow": {
+          "type": "number",
+          "description": "Actual inlet volumetric flow [m³/h]"
+        },
+        "designInletPressure": {
+          "type": "number",
+          "description": "[Pa]"
+        },
+        "designOutletPressure": {
+          "type": "number",
+          "description": "[Pa]"
+        },
+        "pressureRatio": {
+          "type": "number",
+          "description": "Overall compression ratio"
+        },
+        "polytropic_efficiency": {
+          "type": "number",
+          "description": "[%]"
+        },
+        "numberOfStages": {
+          "type": "integer"
+        },
+        "ratedSpeed": {
+          "type": "number",
+          "description": "[rpm]"
+        },
+        "shaftPower": {
+          "type": "number",
+          "description": "Design shaft power [kW]"
+        },
+        "driverType": {
+          "type": "string",
+          "enum": [
+            "ELECTRIC_MOTOR",
+            "STEAM_TURBINE",
+            "GAS_TURBINE",
+            "COMBUSTION_ENGINE",
+            "EXPANDER"
+          ]
+        },
+        "gasMedium": {
+          "type": "string"
+        },
+        "inletTemperature": {
+          "type": "number",
+          "description": "[K]"
+        },
+        "molecularWeight": {
+          "type": "number"
+        },
+        "sealType": {
+          "type": "string",
+          "enum": [
+            "DRY_GAS",
+            "WET",
+            "LABYRINTH",
+            "MAGNETIC_BEARING"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "SupportSpec": {
+      "title": "Pipe Support Specification",
+      "type": "object",
+      "properties": {
+        "supportType": {
+          "type": "string",
+          "enum": [
+            "ANCHOR",
+            "GUIDE",
+            "DIRECTIONAL",
+            "SPRING_VARIABLE",
+            "SPRING_CONSTANT",
+            "HANGER",
+            "RESTING",
+            "TRUNNION",
+            "CLAMP",
+            "STRAP",
+            "SADDLE",
+            "DUMMY_LEG",
+            "SLIDE_PLATE"
+          ]
+        },
+        "designLoadFx": {
+          "type": "number",
+          "description": "Design load in X direction [N]"
+        },
+        "designLoadFy": {
+          "type": "number",
+          "description": "Design load in Y direction [N]"
+        },
+        "designLoadFz": {
+          "type": "number",
+          "description": "Design load in Z direction [N]"
+        },
+        "designMomentMx": {
+          "type": "number",
+          "description": "[N·m]"
+        },
+        "designMomentMy": {
+          "type": "number",
+          "description": "[N·m]"
+        },
+        "designMomentMz": {
+          "type": "number",
+          "description": "[N·m]"
+        },
+        "springRate": {
+          "type": "number",
+          "description": "Spring rate [N/mm] for variable/constant spring hangers"
+        },
+        "hotLoad": {
+          "type": "number",
+          "description": "Operating load for spring hanger [N]"
+        },
+        "coldLoad": {
+          "type": "number",
+          "description": "Cold/installed load for spring hanger [N]"
+        },
+        "travelRange": {
+          "type": "number",
+          "description": "Travel range [mm]"
+        },
+        "attachmentType": {
+          "type": "string",
+          "enum": [
+            "WELDED",
+            "BOLTED",
+            "CLAMPED",
+            "BONDED"
+          ]
+        },
+        "structuralRef": {
+          "type": "string",
+          "description": "Reference to the SteelObject or CivilObject this support is attached to"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

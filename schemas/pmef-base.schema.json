@@ -1,0 +1,361 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pmef.org/schemas/0.9/pmef-base.schema.json",
+  "title": "PMEF Base Types",
+  "description": "Shared primitive types, enumerations and reusable definitions for all PMEF schemas.",
+  "$defs": {
+    "PmefId": {
+      "title": "PMEF Object URI",
+      "description": "Globally unique, stable identifier for a PMEF object. MUST be a URN in the pmef namespace. Format: urn:pmef:<domain>:<project>:<local-id>",
+      "type": "string",
+      "format": "uri",
+      "pattern": "^urn:pmef:[a-z0-9\\-]+:[a-z0-9\\-]+:[a-zA-Z0-9\\-\\._]+$",
+      "examples": [
+        "urn:pmef:obj:eaf-2026:valve-XV-10101",
+        "urn:pmef:line:eaf-2026:CW-101",
+        "urn:pmef:plant:eaf-2026:EAF-LINE-3"
+      ]
+    },
+    "RdlUri": {
+      "title": "Reference Data Library URI",
+      "description": "URI pointing to a class in ISO 15926-4 (PCA-RDL), CFIHOS-RDL or a project-level catalog. Must be resolvable via SPARQL endpoint.",
+      "type": "string",
+      "format": "uri",
+      "examples": [
+        "http://data.posccaesar.org/rdl/RDS327239",
+        "http://rds.posccaesar.org/ontology/plm/rdl/PCA_100003595",
+        "urn:pmef:catalog:project-X:valve-gate-DN200"
+      ]
+    },
+    "Iec81346Designation": {
+      "title": "IEC 81346 Reference Designation",
+      "description": "Reference designation according to IEC 81346. Prefix defines the aspect: '=' function, '-' product, '+' location.",
+      "type": "object",
+      "properties": {
+        "functionalAspect": {
+          "type": "string",
+          "pattern": "^=.+",
+          "description": "Functional aspect, e.g. =U100.Q01.A"
+        },
+        "productAspect": {
+          "type": "string",
+          "pattern": "^-.+",
+          "description": "Product aspect, e.g. -XV10101"
+        },
+        "locationAspect": {
+          "type": "string",
+          "pattern": "^\\+.+",
+          "description": "Location aspect, e.g. +F01.R03"
+        },
+        "combinedCode": {
+          "type": "string",
+          "description": "Full combined designation string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CfihosDiscipline": {
+      "title": "CFIHOS Discipline Code",
+      "description": "Discipline code as defined in CFIHOS V2.0 (42 disciplines).",
+      "type": "string",
+      "enum": [
+        "PIPING",
+        "MECHANICAL",
+        "STRUCTURAL",
+        "ELECTRICAL",
+        "INSTRUMENTATION",
+        "CIVIL",
+        "HVAC",
+        "PROCESS",
+        "SAFETY",
+        "TELECOM",
+        "ARCHITECTURAL",
+        "MARINE",
+        "SUBSEA",
+        "ROTATING",
+        "STATIC",
+        "PACKAGE_UNITS",
+        "FIRE_GAS",
+        "CATHODIC_PROTECTION",
+        "INSULATION",
+        "PAINTING",
+        "HEAT_TRACING",
+        "REFRACTORY",
+        "SUPPORT_ENGINEERING"
+      ]
+    },
+    "ChangeState": {
+      "title": "CDE Change State",
+      "description": "ISO 19650 Common Data Environment workflow status.",
+      "type": "string",
+      "enum": [
+        "WIP",
+        "SHARED",
+        "PUBLISHED",
+        "ARCHIVED"
+      ],
+      "default": "WIP"
+    },
+    "RevisionMetadata": {
+      "title": "Revision Metadata",
+      "description": "Versioning and lifecycle metadata for every PMEF object.",
+      "type": "object",
+      "required": [
+        "revisionId",
+        "changeState"
+      ],
+      "properties": {
+        "revisionId": {
+          "type": "string",
+          "description": "Monotonically increasing revision identifier. Format: r<ISO-date>-<seq>",
+          "pattern": "^r\\d{4}-\\d{2}-\\d{2}-\\d{3}$",
+          "examples": [
+            "r2026-03-15-001"
+          ]
+        },
+        "parentRevisionId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "RevisionId of the predecessor version. Null for initial revisions.",
+          "pattern": "^r\\d{4}-\\d{2}-\\d{2}-\\d{3}$"
+        },
+        "changeState": {
+          "$ref": "#/$defs/ChangeState"
+        },
+        "changeReason": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "changedBy": {
+          "type": "string"
+        },
+        "changedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "authoringTool": {
+          "type": "string",
+          "description": "Source CAD/engineering tool, e.g. 'AVEVA E3D 4.2'"
+        },
+        "authoringToolObjectId": {
+          "type": "string",
+          "description": "Native object ID in the authoring tool (for round-trip)"
+        },
+        "validFrom": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "validTo": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "checksum": {
+          "type": "string",
+          "description": "SHA-256 hash of the serialized object (excluding this field)",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "GeometryReference": {
+      "title": "Geometry Reference",
+      "description": "Link from a PMEF object to one or more geometry representations.",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "parametric",
+            "mesh_ref",
+            "step_ref",
+            "usd_ref",
+            "none"
+          ],
+          "description": "parametric=PMEF primitive; mesh_ref=glTF feature; step_ref=STEP AP242 file; usd_ref=OpenUSD prim; none=no geometry"
+        },
+        "ref": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI to the geometry object: urn:pmef:geom:... for parametric, glTF feature ID, STEP file URI, or USD path"
+        },
+        "boundingBox": {
+          "type": "object",
+          "description": "Axis-aligned bounding box in project coordinates (mm)",
+          "properties": {
+            "xMin": {
+              "type": "number"
+            },
+            "xMax": {
+              "type": "number"
+            },
+            "yMin": {
+              "type": "number"
+            },
+            "yMax": {
+              "type": "number"
+            },
+            "zMin": {
+              "type": "number"
+            },
+            "zMax": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "xMin",
+            "xMax",
+            "yMin",
+            "yMax",
+            "zMin",
+            "zMax"
+          ]
+        },
+        "lod": {
+          "type": "string",
+          "enum": [
+            "BBOX_ONLY",
+            "SCHEMATIC",
+            "LOD1_COARSE",
+            "LOD2_MEDIUM",
+            "LOD3_FINE",
+            "LOD4_FABRICATION"
+          ],
+          "description": "Level of Detail / Level of Information"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CatalogReference": {
+      "title": "Catalog / Norm Reference",
+      "description": "Reference to a piping spec catalog entry, standard profile or equipment datasheet.",
+      "type": "object",
+      "properties": {
+        "catalogId": {
+          "type": "string",
+          "description": "Internal catalog ID, e.g. 'A1A2' for pipe class"
+        },
+        "standard": {
+          "type": "string",
+          "description": "Applicable standard, e.g. 'ASME B16.5', 'EN 10253-2'"
+        },
+        "rdlTypeUri": {
+          "$ref": "#/$defs/RdlUri"
+        },
+        "eclassIRDI": {
+          "type": "string",
+          "description": "eCl@ss IRDI code, e.g. '0173-1#01-AAB329#003'"
+        },
+        "vendorMappings": {
+          "type": "array",
+          "description": "Vendor-specific catalog IDs for round-trip imports",
+          "items": {
+            "type": "object",
+            "required": [
+              "vendorSystem",
+              "vendorId"
+            ],
+            "properties": {
+              "vendorSystem": {
+                "type": "string",
+                "examples": [
+                  "E3D",
+                  "Smart3D",
+                  "Plant3D",
+                  "CADMATIC"
+                ]
+              },
+              "vendorId": {
+                "type": "string"
+              },
+              "vendorPartFamily": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "Coordinate3D": {
+      "title": "3D Coordinate",
+      "description": "Point in project coordinate system. Units: millimetres. Axes: X=East, Y=North, Z=Up (right-handed).",
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "UnitVector3D": {
+      "title": "Unit Vector",
+      "description": "Direction vector (need not be normalised; PMEF normalises on read).",
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "Quantity": {
+      "title": "Quantity with unit",
+      "type": "object",
+      "required": [
+        "value",
+        "unit"
+      ],
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "description": "QUDT unit symbol, e.g. 'mm', 'Pa', 'K', 'kg'"
+        }
+      },
+      "additionalProperties": false
+    },
+    "DocumentLink": {
+      "title": "Document Link",
+      "description": "Reference to an engineering document (datasheet, drawing, certificate).",
+      "type": "object",
+      "required": [
+        "documentId",
+        "documentType"
+      ],
+      "properties": {
+        "documentId": {
+          "type": "string"
+        },
+        "documentType": {
+          "type": "string",
+          "description": "CFIHOS document type code, e.g. 'DATASHEET', 'ISOMETRIC', 'GA_DRAWING'"
+        },
+        "title": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "mimeType": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

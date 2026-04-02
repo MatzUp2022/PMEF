@@ -1,0 +1,32 @@
+// PMEF-DS-04: E&I Instrument Loop Example
+// Flow control loop FIC-10101 on cooling water line CW-201
+// Objects: FIC-10101 (flow transmitter+controller), XV-10101 (control valve),
+//          PLC-U100-01 (S7-1500 CPU), Cable C-10101, InstrumentLoop
+// -------------------------------------------------------------------
+
+// Instrument: Flow Indicating Controller (transmitter side)
+{"@type":"pmef:InstrumentObject","@id":"urn:pmef:obj:eaf-2026:FIC-10101","pmefVersion":"0.9.0","isPartOf":"urn:pmef:unit:eaf-2026:U-100","isDerivedFrom":"urn:pmef:functional:eaf-2026:FIC-10101-func","tagNumber":"FIC-10101","instrumentClass":"INDICATING_CONTROLLER","serviceDescription":"Cooling water flow indication and control — EAF electrode circuit","processVariable":"FLOW","loopNumber":"FIC-101","measuredRange":{"min":0,"max":600,"unit":"m³/h"},"alarmLimits":{"L":90,"LL":50,"H":550,"HH":590,"unit":"m³/h"},"connectionSpec":{"signalType":"HART","failSafe":true,"loopPowered":true,"intrinsicSafe":false,"hazardousArea":"Zone 2","protectionType":"Ex ia","ipRating":"IP67"},"opcuaSpec":{"nodeRef":"opc.tcp://plant-opc:4840/ns=3;i=1101","padimType":"http://opcfoundation.org/UA/PA/DIM/FlowTransmitter"},"comosCUID":"COMOS-EAF2026-FIC10101","eplanBKZ":"=U100.FIC10101","tiaPLCAddress":{"rack":0,"slot":2,"channel":0,"symbol":"FIC_10101_PV","dataType":"REAL"},"iec81346":{"functionalAspect":"=U100.FIC10101","locationAspect":"+F01.R02"},"revision":{"revisionId":"r2026-03-31-001","changeState":"SHARED","authoringTool":"COMOS 10.6","changedAt":"2026-03-31T12:00:00Z"}}
+
+// Instrument: Control Valve (actuated isolation valve, final element)
+{"@type":"pmef:InstrumentObject","@id":"urn:pmef:obj:eaf-2026:XV-10101","pmefVersion":"0.9.0","isPartOf":"urn:pmef:unit:eaf-2026:U-100","isDerivedFrom":"urn:pmef:functional:eaf-2026:XV-10101-func","tagNumber":"XV-10101","instrumentClass":"VALVE_CONTROL","serviceDescription":"CW flow control valve — EAF electrode circuit","processVariable":"FLOW","loopNumber":"FIC-101","measuredRange":{"min":0,"max":100,"unit":"%"},"safetySpec":{"safetyIntegrityLevel":1,"safetyFunction":"Low flow shutdown — EAF protection","architectureType":"1oo1","proofTestInterval":8760,"safeState":"CLOSED"},"connectionSpec":{"signalType":"4_20MA","failSafe":true,"loopPowered":false,"intrinsicSafe":false,"hazardousArea":"Zone 2","protectionType":"Ex d","ipRating":"IP66"},"opcuaSpec":{"nodeRef":"opc.tcp://plant-opc:4840/ns=3;i=1102"},"comosCUID":"COMOS-EAF2026-XV10101","eplanBKZ":"=U100.XV10101","tiaPLCAddress":{"rack":0,"slot":3,"channel":4,"symbol":"XV_10101_OUT","dataType":"REAL"},"iec81346":{"functionalAspect":"=U100.XV10101","locationAspect":"+F01.P01"},"revision":{"revisionId":"r2026-03-31-001","changeState":"SHARED"}}
+
+// PLC: Siemens S7-1500 CPU module
+{"@type":"pmef:PLCObject","@id":"urn:pmef:obj:eaf-2026:PLC-U100-CPU","isPartOf":"urn:pmef:unit:eaf-2026:U-100","plcClass":"CPU_MODULE","vendor":"Siemens","family":"S7-1500","articleNumber":"6ES7515-2AM02-0AB0","firmwareVersion":"V3.1","rack":0,"slot":1,"ipAddress":"192.168.1.10","profinetName":"PLC-U100-01","totalIOChannels":0,"safetyCPU":false,"opcuaNodeRef":"opc.tcp://plant-opc:4840/ns=3;i=100","amlRef":"AML-EAF2026-PLC-CPU-U100","iec81346":{"functionalAspect":"=U100.K01","locationAspect":"+F01.S01"},"revision":{"revisionId":"r2026-03-31-001","changeState":"SHARED"}}
+
+// Analog Input Module
+{"@type":"pmef:PLCObject","@id":"urn:pmef:obj:eaf-2026:PLC-U100-AI1","isPartOf":"urn:pmef:unit:eaf-2026:U-100","plcClass":"IO_MODULE_AI","vendor":"Siemens","family":"S7-1500","articleNumber":"6ES7531-7KF00-0AB0","rack":0,"slot":2,"totalIOChannels":8,"safetyCPU":false,"amlRef":"AML-EAF2026-PLC-AI1-U100","iec81346":{"functionalAspect":"=U100.K01.A01","locationAspect":"+F01.S01"},"revision":{"revisionId":"r2026-03-31-001","changeState":"SHARED"}}
+
+// Cable: Signal cable FIC-10101 to PLC AI module
+{"@type":"pmef:CableObject","@id":"urn:pmef:obj:eaf-2026:C-10101","isPartOf":"urn:pmef:unit:eaf-2026:U-100","cableNumber":"C-10101-U01","cableType":"INSTRUMENTATION_PAIR","crossSection":0.5,"numberOfCores":2,"numberOfPairs":1,"voltageRating":250,"currentCapacity":2.5,"insulationType":"LSZH","screenType":"OVERALL_SCREENED","armoured":false,"intrinsicSafe":false,"fromId":"urn:pmef:obj:eaf-2026:FIC-10101","fromTerminal":"+/-","toId":"urn:pmef:obj:eaf-2026:PLC-U100-AI1","toTerminal":"CH0","cableTrayId":"urn:pmef:obj:eaf-2026:CT-U100-01","routeLength":45.5,"iec81346":{"productAspect":"-C10101"},"revision":{"revisionId":"r2026-03-31-001","changeState":"SHARED"}}
+
+// Cable tray carrying the signal cables
+{"@type":"pmef:CableTrayRun","@id":"urn:pmef:obj:eaf-2026:CT-U100-01","isPartOf":"urn:pmef:unit:eaf-2026:U-100","trayMark":"CT-U100-01","trayType":"LADDER","width":300,"height":100,"material":"STAINLESS_STEEL_316","fillLevel":35,"reserveCapacity":30,"geometry":{"type":"parametric","ref":"urn:pmef:geom:eaf-2026:CT-U100-01","lod":"LOD2_MEDIUM"},"revision":{"revisionId":"r2026-03-31-001","changeState":"SHARED"}}
+
+// Instrument Loop grouping FIC-10101 + XV-10101
+{"@type":"pmef:InstrumentLoop","@id":"urn:pmef:loop:eaf-2026:FIC-101","loopNumber":"FIC-101","loopType":"CONTROL","isPartOf":"urn:pmef:unit:eaf-2026:U-100","memberIds":["urn:pmef:obj:eaf-2026:FIC-10101","urn:pmef:obj:eaf-2026:XV-10101"],"controllerTagId":"urn:pmef:obj:eaf-2026:FIC-10101","finalElementTagId":"urn:pmef:obj:eaf-2026:XV-10101","setpoint":{"value":400,"unit":"m³/h"},"silLevel":1,"revision":{"revisionId":"r2026-03-31-001","changeState":"SHARED"}}
+
+// Relationship: XV-10101 ControlledBy FIC-10101
+{"@type":"pmef:ControlledBy","@id":"urn:pmef:rel:eaf-2026:XV-10101-ctrl","relationType":"CONTROLLED_BY","sourceId":"urn:pmef:obj:eaf-2026:XV-10101","targetId":"urn:pmef:obj:eaf-2026:FIC-10101","controlMode":"PID","signalPath":"FIC-10101 output (4-20mA) → XV-10101 positioner","derivedBy":"MANUAL","confidence":1.0,"revision":{"revisionId":"r2026-03-31-001","changeState":"SHARED"}}
+
+// Relationship: FIC-10101 IsDerivedFrom DEXPI functional tag
+{"@type":"pmef:IsDerivedFrom","@id":"urn:pmef:rel:eaf-2026:FIC-10101-derived","relationType":"IS_DERIVED_FROM","sourceId":"urn:pmef:obj:eaf-2026:FIC-10101","targetId":"urn:pmef:functional:eaf-2026:FIC-10101-func","sourceStandard":"DEXPI_2.0","mappingVersion":"2.0","derivedBy":"ADAPTER_IMPORT","confidence":1.0,"revision":{"revisionId":"r2026-03-31-001","changeState":"SHARED"}}
