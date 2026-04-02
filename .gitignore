@@ -6,6 +6,10 @@ build/
 *.zip
 *.pdf
 
+# Rust
+target/
+Cargo.lock
+
 # Python
 __pycache__/
 *.py[cod]
