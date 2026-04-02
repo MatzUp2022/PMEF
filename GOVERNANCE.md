@@ -11,6 +11,7 @@ recorded votes by the Technical Steering Committee (TSC).
 ## Technical Steering Committee (TSC)
 
 The TSC is responsible for:
+
 - Approving breaking/normative specification changes
 - Releasing new versions
 - Approving new working groups
@@ -69,6 +70,7 @@ TSC approval required. WGs need at least 3 participants to be chartered.
 See [CONTRIBUTING.md — RFC Process](CONTRIBUTING.md#specification-change-process-rfc).
 
 Summary:
+
 1. Open RFC issue → 30-day discussion period
 2. WG review and approval
 3. TSC approval for merging

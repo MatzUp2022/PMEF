@@ -34,7 +34,7 @@ Examples of unacceptable behaviour:
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behaviour may be
-reported to the conduct committee at **conduct@pmef.org**.
+reported to the conduct committee at **<conduct@pmef.org>**.
 
 All complaints will be reviewed and investigated promptly and fairly.
 All community leaders are obligated to respect the privacy and security of

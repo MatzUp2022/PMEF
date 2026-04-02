@@ -4,7 +4,9 @@
 
 # PMEF — Plant Model Exchange Format
 
+<!-- markdownlint-disable MD036 -->
 **The open, cross-discipline 3D plant model exchange format**
+<!-- markdownlint-enable MD036 -->
 
 [![Spec Version](https://img.shields.io/badge/spec-v0.9--rc-blue?style=flat-square)](CHANGELOG.md)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-green?style=flat-square)](LICENSE-APACHE)
@@ -13,7 +15,8 @@
 [![Discord](https://img.shields.io/badge/community-Discord-7289DA?style=flat-square)](https://discord.gg/pmef)
 [![OpenSSF Best Practices](https://img.shields.io/badge/OpenSSF-Best%20Practices-orange?style=flat-square)](https://bestpractices.coreinfrastructure.org)
 
-[**Specification**](spec/) · [**JSON Schemas**](schemas/) · [**Examples**](examples/) · [**Adapters**](adapters/) · [**Roadmap**](ROADMAP.md) · [**Discord**](https://discord.gg/pmef)
+[**Specification**](spec/) · [**JSON Schemas**](schemas/) · [**Examples**](examples/) ·
+[**Adapters**](adapters/) · [**Roadmap**](ROADMAP.md) · [**Discord**](https://discord.gg/pmef)
 
 </div>
 
@@ -21,7 +24,9 @@
 
 ## What is PMEF?
 
-PMEF is an **open, semantically rich, cross-discipline 3D plant model exchange format** for industrial facilities. It solves a problem that has cost the engineering industry billions in rework: every major plant design tool uses a completely isolated, proprietary data format.
+PMEF is an **open, semantically rich, cross-discipline 3D plant model exchange format** for industrial
+facilities. It solves a problem that has cost the engineering industry billions in rework: every major
+plant design tool uses a completely isolated, proprietary data format.
 
 | Tool | Format | Open? | 3D + Semantics? | Cross-discipline? |
 |------|--------|-------|-----------------|-------------------|
@@ -33,6 +38,7 @@ PMEF is an **open, semantically rich, cross-discipline 3D plant model exchange f
 | **PMEF** | **NDJSON + PMEFX** | **✅ 100%** | **✅** | **✅** |
 
 PMEF provides:
+
 - **Canonical information model** grounded in ISO 15926-14/IDO, DEXPI 2.0, CFIHOS V2.0
 - **Parametric geometry library** (15 primitive types, RVM-inspired)
 - **Three geometry layers**: parametric primitives · glTF 2.0 mesh · STEP AP242 B-Rep
@@ -42,7 +48,7 @@ PMEF provides:
 
 ### Disciplines covered
 
-```
+```text
 Piping · Equipment · Structural Steel · E&I · Pipe Stress · ERP/EAM · Simulation · Civil
 ```
 
@@ -65,6 +71,7 @@ docker run --rm -v $(pwd):/data ghcr.io/pmef/pmef-cli:latest validate /data/my-p
 
 The [examples/pump-skid-complete.ndjson](examples/pump-skid-complete.ndjson) contains
 a fully annotated pump skid (P-201A + V-201 + lines CW-201/202) with:
+
 - `pmef:Pump` with API 610 spec, 3 nozzles, VFD drive
 - `pmef:Vessel` with EN 13445 design, composite geometry
 - Full piping run: Pipe → Elbow → Flange → Gasket → Valve
@@ -85,7 +92,7 @@ All schemas live in [`schemas/`](schemas/). Open them in any JSON Schema-aware e
 ([VS Code](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml),
 [Insomnia](https://insomnia.rest/), [Stoplight Studio](https://stoplight.io/)) for autocomplete.
 
-```
+```text
 schemas/
   pmef-base.schema.json            — shared primitives (IDs, coordinates, revisions)
   pmef-piping-component.schema.json— PipingNetworkSystem → PipingSegment → 12 component types
@@ -98,7 +105,7 @@ schemas/
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────┐
 │                  PMEF Package (.pmefx)               │
 │                                                     │
@@ -130,7 +137,7 @@ schemas/
 
 ## Repository Structure
 
-```
+```text
 pmef/specification
 ├── CHANGELOG.md               — version history
 ├── CONTRIBUTING.md            — how to contribute
@@ -207,6 +214,7 @@ PMEF is designed to complement, not replace, existing standards:
 We welcome contributions of all kinds — see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 **Quick links:**
+
 - 🐛 [Report a bug](.github/ISSUE_TEMPLATE/bug_report.md)
 - 💡 [Propose a feature](.github/ISSUE_TEMPLATE/feature_request.md)
 - 📝 [Submit an RFC](.github/ISSUE_TEMPLATE/rfc.md)

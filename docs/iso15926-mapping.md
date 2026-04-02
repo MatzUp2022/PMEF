@@ -34,7 +34,7 @@
 The `isDerivedFrom` relationship is the PMEF mechanism for linking the functional
 (P&ID) world to the physical (3D) world:
 
-```
+```text
 DEXPI FunctionalObject                PMEF PhysicalObject
 ──────────────────────                ───────────────────
 PipingNetworkSystem                   pmef:PipingNetworkSystem
@@ -47,6 +47,7 @@ Pump (DEXPI tag)                      pmef:Pump
 ```
 
 This mapping enables:
+
 1. Tag-based cross-referencing (P&ID tag = 3D equipment tag)
 2. Completeness checking (every DEXPI tag should have a PMEF PhysicalObject)
 3. Round-trip to ERP/EAM (SAP Equipment = PMEF PhysicalObject = DEXPI FunctionalObject)

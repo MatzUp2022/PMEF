@@ -204,7 +204,7 @@ classDiagram
 
 ## Coordinate System Convention
 
-```
+```text
 Z (Up / Elevation)
 │
 │

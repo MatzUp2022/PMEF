@@ -86,7 +86,7 @@ python scripts/ci-local.py
 
 ## Contribution Workflow
 
-```
+```text
 1. Open / find an issue  →  discuss scope and approach
 2. Fork the repository
 3. Create a feature branch:  git checkout -b feat/your-topic
@@ -137,7 +137,7 @@ All schema changes must:
 
 ### Property naming convention
 
-```
+```text
 camelCase                        # standard
 nominalDiameter                  # quantity: "nominal" prefix for design values
 designPressure                   # design envelope value
@@ -149,7 +149,7 @@ cfihos...                        # CFIHOS-specific attributes
 
 ### Enum value convention
 
-```
+```text
 SCREAMING_SNAKE_CASE             # all enum values
 CENTRIFUGAL_PUMP                 # descriptive, not abbreviated
 SHELL_AND_TUBE                   # full name preferred
@@ -196,7 +196,7 @@ or [Discord #working-groups](https://discord.gg/pmef).
 
 PMEF uses [Conventional Commits](https://www.conventionalcommits.org/):
 
-```
+```text
 <type>(<scope>): <short description>
 
 [optional body]
@@ -216,7 +216,7 @@ PMEF uses [Conventional Commits](https://www.conventionalcommits.org/):
 
 **Examples:**
 
-```
+```text
 feat(piping): add EccentricFlat field to Reducer schema
 
 fix(equipment): correct VesselDesign headType enum — add FLAT
