@@ -47,3 +47,7 @@ diagrams/*.svg
 *.step
 *.rvt
 *.dwg
+
+# Git bundle files (distribute via releases, not version control)
+*.bundle
+*.bundle.txt

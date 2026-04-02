@@ -12,7 +12,7 @@ All catalogs are licensed under **CC0 1.0 Universal** (public domain).
 | `piping-class-a1a2.json` | Piping class A1A2 (CS, ANSI-150, DN15–DN600) | ASME B16.5, B16.9, B16.11 | 284 components |
 | `piping-class-b3c1.json` | Piping class B3C1 (CS, ANSI-300, DN15–DN400) | ASME B16.5, B16.9 | 198 components |
 | `pipe-dimensions.json` | Pipe OD and wall thickness (ASME B36.10M + B36.19M) | ASME B36.10M, B36.19M | 240 entries |
-| `flange-dimensions.json` | Flange face dimensions per ASME B16.5 | ASME B16.5 | 168 entries |
+| `flange-dimensions.json` | Flange face dimensions per ASME B16.5 | ASME B16.5 | 87 entries |
 | `rdl-uri-map.json` | PCA-RDL URI cross-reference for catalog entries | ISO 15926-4 | — |
 
 ## Catalog Schema
