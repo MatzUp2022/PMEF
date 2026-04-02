@@ -24,7 +24,9 @@
 
 ## 1 General
 
-An **adapter** is a software component that translates between the native data format of an engineering tool and PMEF. This chapter defines:
+An **adapter** is a software component that translates between
+the native data format of an engineering tool and PMEF. This
+chapter defines:
 
 - The mandatory and optional capabilities of PMEF adapters.
 - The normative mapping rules for each supported engineering domain.
@@ -57,7 +59,7 @@ Each adapter **MUST** declare its identity in the `pmef:FileHeader.authoringTool
 
 The PMEF reference implementation provides adapters as Rust crates under the Apache 2.0 licence:
 
-```
+```text
 pmef-core          — data model structs and validation
 pmef-io            — NDJSON streaming reader/writer
 pmef-validate      — JSON Schema validation
@@ -70,7 +72,7 @@ pmef-adapter-*     — tool-specific adapters (one crate per tool)
 
 The normative adapter pipeline for export (tool → PMEF):
 
-```
+```text
 1. Connect      Connect to the native tool API or file.
 2. Read         Read native objects into an intermediate representation.
 3. Map          Apply field mapping rules (§4–§7).
@@ -83,7 +85,7 @@ The normative adapter pipeline for export (tool → PMEF):
 
 For import (PMEF → tool):
 
-```
+```text
 1. Read         Read PMEF NDJSON (streaming).
 2. Resolve      Use pmef:HasEquivalentIn to find existing native objects.
 3. Map          Apply reverse field mapping.
@@ -96,9 +98,15 @@ For import (PMEF → tool):
 
 Adapters **MUST** implement identity resolution to enable incremental updates:
 
-**Export:** Before creating a new PMEF object, check whether a `pmef:HasEquivalentIn` relationship already exists for the native object's ID. If found, reuse the existing `@id`. If not, generate a new `urn:pmef:obj:...` URI.
+**Export:** Before creating a new PMEF object, check whether a
+`pmef:HasEquivalentIn` relationship already exists for the native
+object's ID. If found, reuse the existing `@id`. If not, generate
+a new `urn:pmef:obj:...` URI.
 
-**Import:** Before writing to the native tool, scan `pmef:HasEquivalentIn` objects for the target system. If a matching `targetSystemId` is found, update the existing native object. If not found, create a new native object.
+**Import:** Before writing to the native tool, scan
+`pmef:HasEquivalentIn` objects for the target system. If a
+matching `targetSystemId` is found, update the existing native
+object. If not found, create a new native object.
 
 ---
 
@@ -110,11 +118,16 @@ All PMEF adapters **MUST**:
 
 - **R-GEN-01:** Write a `pmef:FileHeader` as the first line of every exported NDJSON file.
 - **R-GEN-02:** Assign stable `@id` values to all exported objects, reusing existing IDs on re-export.
-- **R-GEN-03:** Write a `pmef:HasEquivalentIn` relationship for every exported object, identifying the native tool and the native object ID.
-- **R-GEN-04:** Write `RevisionMetadata` including `authoringTool`, `authoringToolObjectId`, and `changedAt` on every exported object.
+- **R-GEN-03:** Write a `pmef:HasEquivalentIn` relationship for
+  every exported object, identifying the native tool and the
+  native object ID.
+- **R-GEN-04:** Write `RevisionMetadata` including
+  `authoringTool`, `authoringToolObjectId`, and `changedAt` on
+  every exported object.
 - **R-GEN-05:** Convert all values to PMEF units before writing (§10).
 - **R-GEN-06:** Validate every PMEF object against the schema before writing. Do not write invalid objects.
-- **R-GEN-07:** Report, in the adapter log, the number of objects exported, the number of fields unmapped, and any errors.
+- **R-GEN-07:** Report, in the adapter log, the number of objects
+  exported, the number of fields unmapped, and any errors.
 - **R-GEN-08:** Preserve `customAttributes` on round-trip import without modification.
 
 ### 3.2 Recommended Capabilities
@@ -128,7 +141,9 @@ Adapters **SHOULD**:
 
 ### 3.3 Error Handling
 
-- An adapter **MUST NOT** write an object that fails schema validation. Instead, it **MUST** write an error log entry and continue.
+- An adapter **MUST NOT** write an object that fails schema
+  validation. Instead, it **MUST** write an error log entry and
+  continue.
 - An adapter **MUST NOT** halt processing when a single object fails. It **MUST** process all remaining objects.
 - At the end of processing, the adapter **MUST** report the total number of successful and failed objects.
 
@@ -156,7 +171,10 @@ For an adapter to claim piping support, it **MUST** export the following fields:
 
 ### 4.2 Component Class Mapping
 
-Adapters **MUST** map native component types to PMEF `componentClass` values. When a precise match is not available, the adapter **MUST** use `"SPECIAL"` and record the unmapped native type in `customAttributes.nativeComponentType`.
+Adapters **MUST** map native component types to PMEF
+`componentClass` values. When a precise match is not available,
+the adapter **MUST** use `"SPECIAL"` and record the unmapped
+native type in `customAttributes.nativeComponentType`.
 
 ### 4.3 PCF Compatibility
 
@@ -164,7 +182,12 @@ Adapters that consume or produce PCF files **MUST** implement the PCF mapping de
 
 ### 4.4 Port Topology
 
-Export adapters **MUST** attempt to populate `Port.connectedTo` by resolving the native tool's pipe routing topology. When the native tool does not provide explicit connectivity, adapters **SHOULD** use coordinate-based matching (ports closer than 1 mm are assumed connected) and write the inferred connections with `confidence < 1.0` in a `pmef:IsConnectedTo` relationship.
+Export adapters **MUST** attempt to populate `Port.connectedTo`
+by resolving the native tool's pipe routing topology. When the
+native tool does not provide explicit connectivity, adapters
+**SHOULD** use coordinate-based matching (ports closer than 1 mm
+are assumed connected) and write the inferred connections with
+`confidence < 1.0` in a `pmef:IsConnectedTo` relationship.
 
 ---
 
@@ -197,7 +220,11 @@ Native equipment types **MUST** be mapped to PMEF `@type` values. The following 
 
 ### 5.3 Nozzle Export
 
-Nozzle `coordinate` and `direction` **MUST** be expressed in the project coordinate system (Z-up, mm). The adapter **MUST** transform from the tool's local equipment coordinate system to the project coordinate system using the equipment's placement transformation.
+Nozzle `coordinate` and `direction` **MUST** be expressed in the
+project coordinate system (Z-up, mm). The adapter **MUST**
+transform from the tool's local equipment coordinate system to
+the project coordinate system using the equipment's placement
+transformation.
 
 ---
 
@@ -260,7 +287,11 @@ Adapters for Siemens TIA Portal **MUST**:
 
 ### 7.2 Profile ID Mapping
 
-Native profile designations **MUST** be mapped to PMEF profile IDs (`<standard>:<designation>`). The adapter **MUST** maintain a profile mapping table. When a profile cannot be mapped, the adapter **MUST** use `"CUSTOM:<native-designation>"` and record the native name in `customAttributes.nativeProfileName`.
+Native profile designations **MUST** be mapped to PMEF profile
+IDs (`<standard>:<designation>`). The adapter **MUST** maintain a
+profile mapping table. When a profile cannot be mapped, the
+adapter **MUST** use `"CUSTOM:<native-designation>"` and record
+the native name in `customAttributes.nativeProfileName`.
 
 ### 7.3 CIS/2 Adapters
 
@@ -289,11 +320,16 @@ Adapters for tools using CIS/2 (Tekla Structures, Advance Steel) **MUST**:
 | `PipingDesignConditions` | Line attributes (TEMP, PRES) | PML |
 | `PipingSpecification` | SPEC and BORESIZE | PML |
 
-**Identity:** E3D database address (e.g. `/SITE/ZONE/PIPE/...`) stored in `authoringToolObjectId` and `pmef:HasEquivalentIn.targetSystemId`.
+**Identity:** E3D database address (e.g. `/SITE/ZONE/PIPE/...`)
+stored in `authoringToolObjectId` and
+`pmef:HasEquivalentIn.targetSystemId`.
 
 **Known limitations:**
-- E3D RVM does not carry piping class data; class must be read via PML.
-- Instrument tags in E3D are stored on nozzle elements, not as separate objects; the adapter creates `InstrumentObject` stubs.
+
+- E3D RVM does not carry piping class data; class must be read
+  via PML.
+- Instrument tags in E3D are stored on nozzle elements, not as
+  separate objects; the adapter creates `InstrumentObject` stubs.
 
 ### 8.2 AutoCAD Plant 3D Adapter (`pmef-adapter-plant3d`)
 
@@ -309,7 +345,9 @@ Adapters for tools using CIS/2 (Tekla Structures, Advance Steel) **MUST**:
 **Identity:** Plant 3D object handle (64-bit) stored in `authoringToolObjectId`.
 
 **Known limitations:**
-- PCF carries limited semantic data; design conditions must be read from line spec.
+
+- PCF carries limited semantic data; design conditions must be
+  read from line spec.
 - Curved pipes in Plant 3D export as multiple PCF segments.
 
 ### 8.3 CADMATIC Adapter (`pmef-adapter-cadmatic`)
@@ -338,7 +376,9 @@ Adapters for tools using CIS/2 (Tekla Structures, Advance Steel) **MUST**:
 | `SteelSystem` | `Assembly` | `Assembly.GetObjects()` |
 | Geometry | `Solid.ToBrep()` | STEP AP242 export |
 
-**Identity:** Tekla GUID (`ModelObject.GetReference().GlobalId`) stored in `SteelMember.teklaGUID` and `authoringToolObjectId`.
+**Identity:** Tekla GUID
+(`ModelObject.GetReference().GlobalId`) stored in
+`SteelMember.teklaGUID` and `authoringToolObjectId`.
 
 ### 8.5 Siemens COMOS Adapter (`pmef-adapter-comos`)
 
@@ -373,7 +413,10 @@ Adapters for tools using CIS/2 (Tekla Structures, Advance Steel) **MUST**:
 
 ### 9.1 PCF File Structure
 
-A PCF (Piping Component File) is a text file format used by isometric drawing software (Alias IsoDraft, Caesar II, AutoCAD Plant 3D). PCF uses a flat structure with component-type keywords and coordinate triplets.
+A PCF (Piping Component File) is a text file format used by
+isometric drawing software (Alias IsoDraft, Caesar II, AutoCAD
+Plant 3D). PCF uses a flat structure with component-type keywords
+and coordinate triplets.
 
 ### 9.2 PCF → PMEF Field Mapping
 
@@ -392,7 +435,9 @@ A PCF (Piping Component File) is a text file format used by isometric drawing so
 
 ### 9.3 PCF Unit Handling
 
-PCF files may use either metric (mm) or imperial (inch) units. The unit system is declared in the PCF header (`UNITS-BORE MILLIMETERS` or `UNITS-BORE INCHES`).
+PCF files may use either metric (mm) or imperial (inch) units.
+The unit system is declared in the PCF header
+(`UNITS-BORE MILLIMETERS` or `UNITS-BORE INCHES`).
 
 Converters **MUST** detect the unit system declaration and convert all coordinates and bores to mm before writing PMEF.
 
@@ -451,7 +496,9 @@ Adapters **MUST** convert from native tool units to PMEF units. The following co
 | kPa | × 1000 |
 | atm | × 101325 |
 
-**Note:** PMEF stores absolute pressures in Pa. Adapters **MUST** convert gauge pressures to absolute by adding 101325 Pa (1 atm).
+**Note:** PMEF stores absolute pressures in Pa. Adapters
+**MUST** convert gauge pressures to absolute by adding
+101325 Pa (1 atm).
 
 ### 10.3 Temperature
 

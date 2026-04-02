@@ -246,7 +246,9 @@ PMEF provides a CAEX XML secondary serialisation based on
 AutomationML 2.10 (IEC 62714). The CAEX serialisation is
 primarily intended for E&I data exchange and MTP integration.
 
-The CAEX serialisation is **OPTIONAL** for Level 1 and Level 2 implementations. It is **RECOMMENDED** for Level 3 implementations targeting E&I tools (COMOS, EPLAN, TIA Portal).
+The CAEX serialisation is **OPTIONAL** for Level 1 and Level 2
+implementations. It is **RECOMMENDED** for Level 3
+implementations targeting E&I tools (COMOS, EPLAN, TIA Portal).
 
 ### 4.2 CAEX Document Structure
 
@@ -339,7 +341,11 @@ JSON Schema files follow the naming pattern: `pmef-<domain>.schema.json`.
 
 - PMEF NDJSON files **MUST** be encoded in **UTF-8** without BOM.
 - PMEF NDJSON files **MUST** use **LF** (`\n`, 0x0A) as the line terminator. CRLF is not permitted.
-- Tag numbers and attribute values **MAY** contain characters outside the ASCII range (e.g. German umlauts in equipment descriptions). These **MUST** be encoded as UTF-8, not as JSON Unicode escape sequences (`\uXXXX`), unless required by JSON encoding rules.
+- Tag numbers and attribute values **MAY** contain characters
+  outside the ASCII range (e.g. German umlauts in equipment
+  descriptions). These **MUST** be encoded as UTF-8, not as JSON
+  Unicode escape sequences (`\uXXXX`), unless required by JSON
+  encoding rules.
 - File paths within PMEFX manifests **MUST** use forward slashes and **MUST NOT** contain non-ASCII characters.
 
 ---
@@ -348,7 +354,10 @@ JSON Schema files follow the naming pattern: `pmef-<domain>.schema.json`.
 
 ### 7.1 Object-Level Version
 
-Every PMEF physical and functional object **SHOULD** carry a `pmefVersion` field specifying the PMEF version against which it was serialised. The value **MUST** follow Semantic Versioning (`MAJOR.MINOR.PATCH`).
+Every PMEF physical and functional object **SHOULD** carry a
+`pmefVersion` field specifying the PMEF version against which it
+was serialised. The value **MUST** follow Semantic Versioning
+(`MAJOR.MINOR.PATCH`).
 
 ### 7.2 Package-Level Version
 
@@ -356,7 +365,8 @@ The `pmef:FileHeader` object **MUST** carry the `pmefVersion` field.
 
 ### 7.3 Version Compatibility
 
-- A reader conformant to PMEF version `M.N.x` **MUST** be able to read any PMEF file with version `M.N'.x'` where `N' ≤ N`.
+- A reader conformant to PMEF version `M.N.x` **MUST** be able
+  to read any PMEF file with version `M.N'.x'` where `N' ≤ N`.
 - A reader **MUST NOT** fail on encountering unknown optional fields (introduced in later minor versions).
 - A reader **MUST** fail or report an error on encountering a PMEF file with a higher MAJOR version.
 
@@ -366,11 +376,17 @@ The `pmef:FileHeader` object **MUST** carry the `pmefVersion` field.
 
 ### 8.1 Streaming Reading
 
-Implementations **SHOULD** read PMEF NDJSON files as a stream, processing one object per line, without loading the entire file into memory. This enables processing of plant models with millions of objects.
+Implementations **SHOULD** read PMEF NDJSON files as a stream,
+processing one object per line, without loading the entire file
+into memory. This enables processing of plant models with
+millions of objects.
 
 ### 8.2 Line Length
 
-PMEF does not impose a maximum line length. However, objects with large embedded geometry arrays (e.g. mesh coordinates) **SHOULD** use external geometry references (`MeshRef`, `step_ref`, `usd_ref`) rather than inlining geometry data.
+PMEF does not impose a maximum line length. However, objects with
+large embedded geometry arrays (e.g. mesh coordinates) **SHOULD**
+use external geometry references (`MeshRef`, `step_ref`,
+`usd_ref`) rather than inlining geometry data.
 
 A line exceeding 1 MB (1,048,576 bytes) **SHOULD** be split by externalising its geometry or large arrays.
 

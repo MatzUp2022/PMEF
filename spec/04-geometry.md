@@ -23,7 +23,9 @@
 
 ## 1 General
 
-PMEF geometry is **optional**. A PMEF package that contains only semantic data (no geometry) is valid. The `geometry` field on any PMEF object **MAY** be omitted or set to `{"type": "none"}`.
+PMEF geometry is **optional**. A PMEF package that contains only
+semantic data (no geometry) is valid. The `geometry` field on any
+PMEF object **MAY** be omitted or set to `{"type": "none"}`.
 
 When geometry is present, PMEF supports three independent geometry layers that can coexist on the same object:
 
@@ -77,11 +79,17 @@ Every PMEF physical object carries a `geometry` field of type `GeometryReference
 
 When `type` is `"parametric"`, `ref` points to the `@id` of a `pmef:ParametricGeometry` object in the same package.
 
-When `type` is `"mesh_ref"`, `"step_ref"`, or `"usd_ref"`, `ref` is a file URI or package-relative path to the external geometry file.
+When `type` is `"mesh_ref"`, `"step_ref"`, or `"usd_ref"`, `ref`
+is a file URI or package-relative path to the external geometry
+file.
 
 ### 2.2 Multiple Geometry Layers per Object
 
-A single PMEF object **MAY** carry geometry in multiple layers. This is expressed by having the primary `geometry` field point to the highest-LOD representation, with additional lower-LOD or alternative-format representations linked via `pmef:ParametricGeometry` objects:
+A single PMEF object **MAY** carry geometry in multiple layers.
+This is expressed by having the primary `geometry` field point to
+the highest-LOD representation, with additional lower-LOD or
+alternative-format representations linked via
+`pmef:ParametricGeometry` objects:
 
 ```jsonc
 // Primary geometry (LOD3, parametric)
@@ -111,8 +119,11 @@ PMEF defines five LOD levels:
 | `LOD4_FABRICATION` | Fabrication | Weld preps, bevel angles, all dimensions | Shop drawing, spool fabrication |
 
 **Requirements:**
-- The `lod` field on a `GeometryReference` **MUST** accurately represent the detail level of the referenced geometry.
-- Implementations **MUST NOT** claim a higher LOD than the actual geometry supports.
+
+- The `lod` field on a `GeometryReference` **MUST** accurately
+  represent the detail level of the referenced geometry.
+- Implementations **MUST NOT** claim a higher LOD than the actual
+  geometry supports.
 
 ---
 
@@ -164,7 +175,9 @@ Truncated cone (frustum). Used for concentric reducers, cone-roof tanks, nozzle 
 | `innerR2` | number \| null | Inner radius at `r2` for hollow |
 | `length` | number | Axial length [mm], > 0 |
 
-**Constraints:** `r1 ≠ r2` (use CYLINDER for a cylinder); when `innerR1` present, `innerR1 < r1`; when `innerR2` present, `innerR2 < r2`.
+**Constraints:** `r1 ≠ r2` (use CYLINDER for a cylinder); when
+`innerR1` present, `innerR1 < r1`; when `innerR2` present,
+`innerR2 < r2`.
 
 #### SPHERE
 
@@ -192,7 +205,9 @@ Vessel dished head. Used for pressure vessel heads, tank domes.
 | `crownRadius` | number \| null | Crown radius [mm] for torispherical heads |
 | `coneAngle` | number \| null | Half-apex angle [°] for conical heads |
 
-For `ELLIPTICAL_2:1` heads, `depth = shellRadius / 2` (implied; may be provided explicitly). For `HEMISPHERICAL`, `depth = shellRadius`.
+For `ELLIPTICAL_2:1` heads, `depth = shellRadius / 2` (implied;
+may be provided explicitly). For `HEMISPHERICAL`,
+`depth = shellRadius`.
 
 #### CIRC_TORUS
 
@@ -226,7 +241,9 @@ Eccentric frustum with lateral offset. Used for eccentric reducers, off-centre n
 | `offsetX` | number | Lateral offset of r2 centre in local X [mm]. Default 0. |
 | `offsetY` | number | Lateral offset of r2 centre in local Y [mm]. Default 0. |
 
-The total lateral offset vector `(offsetX, offsetY)` expresses how the r2 circle centre is shifted relative to the r1 circle centre.
+The total lateral offset vector `(offsetX, offsetY)` expresses
+how the r2 circle centre is shifted relative to the r1 circle
+centre.
 
 #### BOX
 
@@ -362,11 +379,14 @@ When a PMEF package includes a glTF geometry file, the following requirements ap
 
 - The file **MUST** conform to the glTF 2.0 specification (Khronos Group, 2017).
 - The binary GLB container format (`.glb`) **SHOULD** be used in preference to the JSON `.gltf` format.
-- All geometry **MUST** use the project coordinate system (Z-up; see §8). The glTF Y-up convention requires the application of a +90° rotation about the X axis on load.
+- All geometry **MUST** use the project coordinate system (Z-up;
+  see §8). The glTF Y-up convention requires the application of
+  a +90° rotation about the X axis on load.
 
 ### 5.2 Semantic Annotation
 
-PMEF uses the `EXT_mesh_features` glTF extension for semantic annotation. Each mesh feature corresponds to one PMEF object:
+PMEF uses the `EXT_mesh_features` glTF extension for semantic
+annotation. Each mesh feature corresponds to one PMEF object:
 
 - The `featureId` in a `MESH_REF` primitive **MUST** match the feature index in the glTF `EXT_mesh_features` extension.
 - The feature table **MUST** include a `pmefId` property containing the `@id` of the corresponding PMEF object.
@@ -396,6 +416,7 @@ Example glTF feature table:
 ### 5.3 Coordinate Conversion
 
 PMEF (Z-up, mm) → glTF (Y-up, m) conversion:
+
 - Divide all coordinates by 1000 (mm → m).
 - Apply rotation matrix `Rx(+90°)`: swap Y and Z, negate new Z.
 - `pmef(x, y, z)_mm → gltf(x/1000, z/1000, -y/1000)_m`
@@ -414,7 +435,10 @@ When a PMEF package includes STEP AP242 geometry:
 
 ### 6.2 Object Identity in STEP
 
-The PMEF `@id` **MUST** be recorded in the STEP file as a `PRODUCT_DEFINITION_CONTEXT` descriptor or equivalent user-defined attribute, enabling round-trip identification of STEP entities from PMEF objects.
+The PMEF `@id` **MUST** be recorded in the STEP file as a
+`PRODUCT_DEFINITION_CONTEXT` descriptor or equivalent user-defined
+attribute, enabling round-trip identification of STEP entities
+from PMEF objects.
 
 ### 6.3 Recommended STEP Use Cases
 
@@ -429,7 +453,9 @@ The PMEF `@id` **MUST** be recorded in the STEP file as a `PRODUCT_DEFINITION_CO
 
 ### 7.1 Overview
 
-OpenUSD (Universal Scene Description, Alliance for OpenUSD) is supported as a fourth geometry layer for simulation and Digital Twin applications. The OpenUSD layer enables integration with:
+OpenUSD (Universal Scene Description, Alliance for OpenUSD) is
+supported as a fourth geometry layer for simulation and Digital
+Twin applications. The OpenUSD layer enables integration with:
 
 - NVIDIA Omniverse (industrial Digital Twin platform).
 - Emulate3D Factory Test (virtual commissioning with OpenUSD).
@@ -439,7 +465,7 @@ OpenUSD (Universal Scene Description, Alliance for OpenUSD) is supported as a fo
 
 PMEF defines a custom USD schema namespace `pmef:` for annotating USD prims with PMEF semantics:
 
-```
+```text
 // PMEF USD Schema (pmef-schema.usda)
 class PMEFObject "PMEFObject" {
     string pmef:id = ""           // @id URI
@@ -456,7 +482,7 @@ Every PMEF USD prim **MUST** have a `PMEFObject` applied schema with the `pmef:i
 
 The USD scene hierarchy mirrors the PMEF plant hierarchy:
 
-```
+```text
 /Plant
   /Unit_U100 {pmef:type = "pmef:Unit", pmef:id = "urn:pmef:unit:..."}
     /Equipment
@@ -484,7 +510,7 @@ For simulation applications, PMEF USD prims **SHOULD** include USD Physics schem
 
 All PMEF 3D coordinates are expressed in the project coordinate system:
 
-```
+```text
 Z (Up / Elevation, positive upward)
 │
 │    Y (North, or project North)
@@ -501,14 +527,19 @@ Z (Up / Elevation, positive upward)
 
 ### 8.2 Plant North
 
-Plant North is typically aligned with the Y-axis. When Plant North differs from geographic North, a rotation angle **SHOULD** be declared in the `pmef:Plant` object via `customAttributes.plantNorthAngleDeg`.
+Plant North is typically aligned with the Y-axis. When Plant
+North differs from geographic North, a rotation angle **SHOULD**
+be declared in the `pmef:Plant` object via
+`customAttributes.plantNorthAngleDeg`.
 
 ### 8.3 Georeferencing
 
 When PMEF coordinates are referenced to a geographic coordinate system:
 
 - The EPSG code of the projected coordinate system **SHOULD** be declared in `pmef:Plant.epsgCode`.
-- The origin of the PMEF coordinate system in the projected CRS **SHOULD** be declared in `pmef:Plant.geoOrigin` as `{easting_m, northing_m, elevation_m}`.
+- The origin of the PMEF coordinate system in the projected CRS
+  **SHOULD** be declared in `pmef:Plant.geoOrigin` as
+  `{easting_m, northing_m, elevation_m}`.
 
 ---
 

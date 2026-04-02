@@ -22,7 +22,10 @@
 
 ## 1 General
 
-This chapter defines the conformance requirements that an implementation **MUST** satisfy to claim conformance with this specification. Conformance is assessed against three levels, each building on the previous.
+This chapter defines the conformance requirements that an
+implementation **MUST** satisfy to claim conformance with this
+specification. Conformance is assessed against three levels, each
+building on the previous.
 
 ### 1.1 Conformance Target
 
@@ -35,7 +38,8 @@ Web viewers, validation tools, command-line utilities, and programming library A
 
 ### 1.2 Conformance Statement
 
-An implementation claiming conformance with this specification **MUST** provide a written conformance statement identifying:
+An implementation claiming conformance with this specification
+**MUST** provide a written conformance statement identifying:
 
 1. The conformance level claimed (Basic, Full, or RoundTrip).
 2. The domains covered (Piping, Equipment, E&I, Structural Steel).
@@ -66,6 +70,7 @@ An implementation claiming PMEF-Basic conformance **MUST**:
 | CL1-09 | Pass all conformance tests in the `unit` and `roundtrip` categories at Level 1. |
 
 An implementation claiming PMEF-Basic conformance is **exempt** from:
+
 - Writing geometry.
 - Resolving cross-file references.
 - Writing `pmef:HasEquivalentIn` relationships.
@@ -239,7 +244,11 @@ The matrix below lists all normatively defined PMEF entity types and their requi
 **Disciplines:** Piping + Equipment  
 **Required for:** Level 2 and Level 3 conformance.
 
-Includes: `pmef:Pump` P-201A (API 610, 3 nozzles, VFD), `pmef:Vessel` V-201 (EN 13445, composite geometry), `pmef:PipingNetworkSystem` CW-201 and CW-202, piping components (Pipe, Elbow, Flange, Gasket), Weld record, PipeSupport, Spool, and ParametricGeometry.
+Includes: `pmef:Pump` P-201A (API 610, 3 nozzles, VFD),
+`pmef:Vessel` V-201 (EN 13445, composite geometry),
+`pmef:PipingNetworkSystem` CW-201 and CW-202, piping components
+(Pipe, Elbow, Flange, Gasket), Weld record, PipeSupport, Spool,
+and ParametricGeometry.
 
 **Round-trip test:** 18 individual assertions (RT-001 through RT-018). See `tests/roundtrip/test_roundtrip.py`.
 
@@ -250,7 +259,9 @@ Includes: `pmef:Pump` P-201A (API 610, 3 nozzles, VFD), `pmef:Vessel` V-201 (EN 
 **Disciplines:** Piping + Equipment  
 **Required for:** Level 3 conformance (alternative to DS-03, DS-04, DS-05).
 
-Includes: Shell-and-tube heat exchangers (TEMA BEM), associated piping (shell-side and tube-side), isolation valves, control valves with instrument loops, piping supports on steel structure.
+Includes: Shell-and-tube heat exchangers (TEMA BEM), associated
+piping (shell-side and tube-side), isolation valves, control
+valves with instrument loops, piping supports on steel structure.
 
 ### 4.3 PMEF-DS-03 — Compressor Train
 
@@ -259,7 +270,9 @@ Includes: Shell-and-tube heat exchangers (TEMA BEM), associated piping (shell-si
 **Disciplines:** Piping + Equipment  
 **Required for:** Level 3 conformance (alternative).
 
-Includes: API 617 compressor, API 611 turbine driver, inter-stage coolers, suction/discharge piping with spectacle blinds and pressure safety valves, lube oil system outline.
+Includes: API 617 compressor, API 611 turbine driver, inter-stage
+coolers, suction/discharge piping with spectacle blinds and
+pressure safety valves, lube oil system outline.
 
 ### 4.4 PMEF-DS-04 — Instrument Loop FIC-10101
 
@@ -268,7 +281,10 @@ Includes: API 617 compressor, API 611 turbine driver, inter-stage coolers, sucti
 **Disciplines:** E&I  
 **Required for:** Level 3 E&I conformance.
 
-Includes: HART flow transmitter-controller (SIL1), pneumatic control valve (SIL1, FC), Siemens S7-1500 CPU and AI module, instrumentation cable, instrument loop, and ControlledBy / IsDerivedFrom relationships.
+Includes: HART flow transmitter-controller (SIL1), pneumatic
+control valve (SIL1, FC), Siemens S7-1500 CPU and AI module,
+instrumentation cable, instrument loop, and
+ControlledBy / IsDerivedFrom relationships.
 
 ### 4.5 PMEF-DS-05 — EAF Cooling Circuit Segment
 
@@ -277,7 +293,9 @@ Includes: HART flow transmitter-controller (SIL1), pneumatic control valve (SIL1
 **Disciplines:** Piping + Equipment + E&I  
 **Required for:** Level 3 mixed-discipline conformance.
 
-Includes: Electric Arc Furnace (pmef:Reactor, EAF subtype), cooling water piping circuit, cooling water pumps, instrumentation, structural steel supports.
+Includes: Electric Arc Furnace (pmef:Reactor, EAF subtype),
+cooling water piping circuit, cooling water pumps,
+instrumentation, structural steel supports.
 
 ---
 
@@ -318,10 +336,18 @@ python run_tests.py --report json > conformance-report.json
 The following test IDs are normative for conformance claims at each level:
 
 **Level 1 (Piping + Equipment):**
-PIPE-U-001, PIPE-U-002, PIPE-U-003, PIPE-U-004, PIPE-U-005, PIPE-U-006, PIPE-U-007, PIPE-U-011, PIPE-U-013, PIPE-U-014, PIPE-U-015, EQUIP-U-001, EQUIP-U-002, EQUIP-U-003, EQUIP-U-004, EQUIP-U-006, EQUIP-U-009, EQUIP-U-011, EQUIP-U-012, RT-001, RT-002, RT-003, RT-004, RT-005, RT-006, RT-007, RT-013, RT-017
+PIPE-U-001, PIPE-U-002, PIPE-U-003, PIPE-U-004, PIPE-U-005,
+PIPE-U-006, PIPE-U-007, PIPE-U-011, PIPE-U-013, PIPE-U-014,
+PIPE-U-015, EQUIP-U-001, EQUIP-U-002, EQUIP-U-003, EQUIP-U-004,
+EQUIP-U-006, EQUIP-U-009, EQUIP-U-011, EQUIP-U-012, RT-001,
+RT-002, RT-003, RT-004, RT-005, RT-006, RT-007, RT-013, RT-017
 
 **Level 2 (adds):**
-PIPE-U-008, PIPE-U-009, PIPE-U-010, PIPE-U-016, EQUIP-U-005, EQUIP-U-007, EQUIP-U-008, EQUIP-U-010, EI-U-001 through EI-U-008, STEEL-U-001 through STEEL-U-006, REL-U-001 through REL-U-008, GEOM-U-001 through GEOM-U-008, RT-008 through RT-018, INTG-001 through INTG-006
+PIPE-U-008, PIPE-U-009, PIPE-U-010, PIPE-U-016, EQUIP-U-005,
+EQUIP-U-007, EQUIP-U-008, EQUIP-U-010, EI-U-001 through
+EI-U-008, STEEL-U-001 through STEEL-U-006, REL-U-001 through
+REL-U-008, GEOM-U-001 through GEOM-U-008, RT-008 through
+RT-018, INTG-001 through INTG-006
 
 **Level 3 (adds):**
 All tests; plus RT fidelity ≥ 98% on DS-01 and one additional benchmark dataset.
@@ -334,7 +360,7 @@ All tests; plus RT fidelity ≥ 98% on DS-01 and one additional benchmark datase
 
 Round-trip fidelity for a given attribute `A` on entity type `T` is defined as:
 
-```
+```text
 RT_fidelity(A, T) =
   |{objects of type T where exported(A) == imported(A)}|
   ÷
@@ -372,12 +398,13 @@ The following fields **MUST** achieve exactly 100% round-trip fidelity (no toler
 
 Aggregate fidelity is calculated across all tested attributes for all objects in the benchmark:
 
-```
+```text
 Aggregate_RT_fidelity =
   Σ(tested attributes that pass) ÷ Σ(total tested attributes)
 ```
 
 **Thresholds:**
+
 - Level 2: Aggregate fidelity ≥ 0.95 (95%)
 - Level 3: Aggregate fidelity ≥ 0.98 (98%)
 
@@ -395,7 +422,9 @@ The following attribute types are exempt from round-trip fidelity measurement:
 
 ### 7.1 Machine-Readable Report
 
-A conformance report **MUST** be generated in JSON format when `pmef-cli conformance` is run or when the test suite is executed with `--report json`.
+A conformance report **MUST** be generated in JSON format when
+`pmef-cli conformance` is run or when the test suite is executed
+with `--report json`.
 
 Mandatory report fields:
 
@@ -433,7 +462,7 @@ Mandatory report fields:
 
 The test runner also produces a human-readable summary:
 
-```
+```text
 PMEF Conformance Test Suite  (v0.9)
 ────────────────────────────────────────────────────────────
   Total: 82  │  ✓ 82  ✗ 0  ○ 0
@@ -466,15 +495,18 @@ Implementations **MAY** self-certify at any conformance level by:
 
 To have a self-certification reviewed by the PMEF community:
 
-1. Submit the conformance report as a GitHub issue using the [Conformance Report template](../.github/ISSUE_TEMPLATE/conformance.md).
+1. Submit the conformance report as a GitHub issue using the
+   [Conformance Report template](../.github/ISSUE_TEMPLATE/conformance.md).
 2. The PMEF TSC or a designated WG will review the report within 30 days.
-3. Upon acceptance, the implementation is listed on the PMEF website's [Certified Implementations](https://pmef.org/certified) page.
+3. Upon acceptance, the implementation is listed on the PMEF
+   website's [Certified Implementations](https://pmef.org/certified)
+   page.
 
 ### 8.3 Conformance Badges
 
 The following badges are available for use in documentation after self-certification:
 
-```
+```text
 PMEF-Basic     (Level 1)
 PMEF-Full      (Level 2)
 PMEF-RoundTrip (Level 3)
