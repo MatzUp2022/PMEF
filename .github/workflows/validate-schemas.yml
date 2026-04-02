@@ -90,9 +90,18 @@ jobs:
         run: |
           for f in diagrams/*.md; do
             echo "Checking $f ..."
-            python scripts/extract-mermaid.py "$f" > /tmp/mermaid-input.mmd
-            mmdc --input /tmp/mermaid-input.mmd --output /tmp/mermaid-output.svg \
-              --puppeteerConfigFile /tmp/puppeteer-config.json
+            outdir="/tmp/mermaid-blocks"
+            rm -rf "$outdir"
+            count=$(python scripts/extract-mermaid.py "$f" "$outdir")
+            if [ "$count" -eq 0 ]; then
+              echo "  No mermaid blocks found, skipping."
+              continue
+            fi
+            for block in "$outdir"/*.mmd; do
+              echo "  Validating $(basename "$block") ..."
+              mmdc --input "$block" --output /tmp/mermaid-output.svg \
+                --puppeteerConfigFile /tmp/puppeteer-config.json
+            done
           done
 
   # ──────────────────────────────────────────────────────────
