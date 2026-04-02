@@ -1,7 +1,7 @@
 {
   "$schema": "https://pmef.org/schemas/0.9/pmef-catalog.schema.json",
   "catalogId": "caesarII-cii-mapping",
-  "catalogType": "INSTRUMENT_CATALOG",
+  "catalogType": "PIPE_STRESS_MAPPING",
   "version": "2024.1",
   "description": "PMEF ↔ CAESAR II .cii (Piping Input File) field mapping specification. Covers all piping, material, load, boundary condition and result fields. Adapter: pmef-stress crate (Rust).",
   "ciiVersion": "CAESAR II 2024 (v14.0)",
@@ -356,7 +356,7 @@
       "conversionRule": "springRate: N/mm → lb/in: × 5.7102. hotLoad: N → lb: × 0.2248.",
       "cii_to_pmef": {
         "supportType": "SPRING_VARIABLE",
-        "springRate_N_per_mm": "CII_k_lb_in × 175.127",
+        "springRate_N_per_mm": "CII_k_lb_in × 0.175127",
         "hotLoad_N": "CII_hot_lb × 4.448"
       }
     },
@@ -467,7 +467,7 @@
       "direction": "import",
       "conversionRule": "After CII hanger sizing run, import selected spring specs: k [lb/in] → N/mm, loads [lb] → N.",
       "cii_to_pmef": {
-        "springRate_N_per_mm": "k_lb_in × 175.127",
+        "springRate_N_per_mm": "k_lb_in × 0.175127",
         "hotLoad_N": "hot_lb × 4.448",
         "coldLoad_N": "cold_lb × 4.448",
         "travelRange_mm": "travel_in × 25.4",

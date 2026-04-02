@@ -15,14 +15,15 @@
         "redhat.vscode-yaml",
         "bierner.markdown-mermaid",
         "davidanson.vscode-markdownlint",
+        "esbenp.prettier-vscode",
         "ms-python.python",
         "rust-lang.rust-analyzer",
         "tamasfe.even-better-toml"
       ],
       "settings": {
         "yaml.schemas": {
-          "./schemas/pmef-piping-component.schema.json": "examples/*.ndjson",
-          "./schemas/pmef-equipment.schema.json": "examples/*.ndjson"
+          "./schemas/pmef-piping-component.schema.json": "examples/pump-skid-complete.ndjson",
+          "./schemas/pmef-equipment.schema.json": "examples/heat-exchanger-station.ndjson"
         },
         "editor.formatOnSave": true,
         "editor.rulers": [120],
