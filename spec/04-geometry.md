@@ -35,7 +35,7 @@ When geometry is present, PMEF supports three independent geometry layers that c
 
 An optional fourth layer is defined:
 
-4. **OpenUSD** — for simulation, virtual commissioning, and Omniverse integration.
+1. **OpenUSD** — for simulation, virtual commissioning, and Omniverse integration.
 
 ### 1.1 Scope of This Chapter
 

@@ -86,7 +86,8 @@ jobs:
         run: |
           for f in diagrams/*.md; do
             echo "Checking $f ..."
-            python scripts/extract-mermaid.py "$f" | mmdc --input /dev/stdin --output /dev/null
+            python scripts/extract-mermaid.py "$f" > /tmp/mermaid-input.mmd
+            mmdc --input /tmp/mermaid-input.mmd --output /tmp/mermaid-output.svg
           done
 
   # ──────────────────────────────────────────────────────────
