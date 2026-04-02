@@ -81,7 +81,7 @@ def check_required_fields(schema: dict, path: Path) -> list[str]:
 
 def find_internal_refs(schema_text: str) -> list[str]:
     """Find all $ref values that reference other schema files."""
-    refs = re.findall(r'"\\$ref":\\s*"([^"#][^"]*)"', schema_text)
+    refs = re.findall(r'"\$ref":\s*"([^"#][^"]*)"', schema_text)
     return [r for r in refs if not r.startswith("#")]
 
 
