@@ -110,6 +110,7 @@ A globally unique, stable identifier for a PMEF object.
 | `<local-id>` | Alphanumeric + hyphens + dots + underscores. Case-sensitive. |
 
 **Requirements:**
+
 - The `@id` of every PMEF object within a package **MUST** be unique within that package.
 - The `@id` **SHOULD** be stable across revisions of the same
   physical object (i.e., it is the identity of the object, not of
@@ -121,6 +122,7 @@ A globally unique, stable identifier for a PMEF object.
 A URI pointing to a class in the ISO 15926-4 PCA-RDL, CFIHOS-RDL, or a project-level catalog.
 
 **Requirements:**
+
 - `rdlType` is **RECOMMENDED** on all physical and functional objects.
 - When present, `rdlType` **SHOULD** resolve via the PCA-RDL
   SPARQL endpoint
@@ -187,6 +189,7 @@ A physical connection point on a piping component or equipment nozzle.
 | `connectedTo` | MAY | `PmefId` of the adjacent component's port. |
 
 **Topology rules:**
+
 - `connectedTo` **MUST** reference the `@id` of an adjacent
   `PipingComponent` or `Nozzle`, not a `Port` directly. The
   adjacent object is expected to have a reciprocal `connectedTo`
@@ -209,6 +212,7 @@ The coordinate system is right-handed. This convention is consistent
 with AVEVA E3D, CADMATIC, AutoCAD Plant 3D, and PDMS.
 
 **Conversion to other systems:**
+
 - glTF 2.0 uses Y-up: apply a +90° rotation about the X axis when converting.
 - OpenUSD uses Y-up by default but supports Z-up via stage metadata.
 - STEP AP242 uses no fixed orientation; the world coordinate system is defined per file.
@@ -426,6 +430,7 @@ Represents a physical field instrument, sensor, actuator, or transmitter.
 **Required fields:** `@type`, `@id`, `pmefVersion`, `isPartOf`, `tagNumber`, `instrumentClass`
 
 Key property groups:
+
 - `measuredRange` — measurement/control range with unit.
 - `alarmLimits` — L, LL, H, HH setpoints.
 - `safetySpec` — SIL level, PFH, architecture (IEC 61508/61511).
@@ -433,7 +438,9 @@ Key property groups:
 - `opcuaSpec` — OPC UA node reference and PA-DIM device type.
 - `tiaPLCAddress` — TIA Portal I/O address for E-CAD synchronisation.
 
-The `instrumentClass` field uses a controlled vocabulary of 30+ values based on DEXPI instrument types (TRANSMITTER, CONTROLLER, VALVE_CONTROL, SAFETY_ELEMENT, etc.).
+The `instrumentClass` field uses a controlled vocabulary of 30+ values
+based on DEXPI instrument types (TRANSMITTER, CONTROLLER,
+VALVE_CONTROL, SAFETY_ELEMENT, etc.).
 
 ### 6.2 InstrumentLoop
 
@@ -452,17 +459,24 @@ Groups the instruments in a functional control or safety loop.
 
 Represents a PLC rack, CPU module, or I/O module. Derived from AutomationML AML AR APC hardware configuration.
 
-The `amlRef` field carries the AutomationML `InternalElement` GUID, enabling synchronisation with TIA Portal, Rockwell Studio 5000, and Beckhoff TwinCAT AML exports.
+The `amlRef` field carries the AutomationML `InternalElement` GUID,
+enabling synchronisation with TIA Portal, Rockwell Studio 5000,
+and Beckhoff TwinCAT AML exports.
 
 ### 6.4 CableObject
 
 Represents an electrical cable or cable bundle between two termination points.
 
-`fromId` and `toId` reference any PMEF object that can be a termination point: `InstrumentObject`, `PLCObject`, `CableTrayRun`, or another `CableObject` (for cable joints).
+`fromId` and `toId` reference any PMEF object that can be a
+termination point: `InstrumentObject`, `PLCObject`,
+`CableTrayRun`, or another `CableObject` (for cable joints).
 
 ### 6.5 MTPModule
 
-Represents a modular process unit described by an MTP 2.0 file. The MTP AML/AASX file is referenced via `mtpFileRef`. The `polEndpoint` carries the OPC UA endpoint URI for the Process Orchestration Layer.
+Represents a modular process unit described by an MTP 2.0 file.
+The MTP AML/AASX file is referenced via `mtpFileRef`.
+The `polEndpoint` carries the OPC UA endpoint URI for the
+Process Orchestration Layer.
 
 ---
 
@@ -474,17 +488,25 @@ The central structural entity. Represents a single beam, column, brace, or other
 
 **Profile identifier convention:** `<standard>:<designation>`, e.g. `"EN:HEA200"`, `"AISC:W12x53"`, `"EN:RHS200x100x6"`.
 
-The `cis2Ref` field carries the CIS/2 member identifier for round-trip with Tekla Structures and Advance Steel. The `teklaGUID` field carries the Tekla Open API GUID.
+The `cis2Ref` field carries the CIS/2 member identifier for
+round-trip with Tekla Structures and Advance Steel.
+The `teklaGUID` field carries the Tekla Open API GUID.
 
 ### 7.2 SteelConnection
 
-Represents a structural connection — bolted, welded, or pinned. The `memberIds` array **MUST** contain at least two `SteelMember` IDs.
+Represents a structural connection — bolted, welded, or pinned.
+The `memberIds` array **MUST** contain at least two
+`SteelMember` IDs.
 
-For bolted connections, `boltSpec` carries the bolt grade, diameter, and count. For welded connections, `weldSpec` carries weld type and size.
+For bolted connections, `boltSpec` carries the bolt grade,
+diameter, and count. For welded connections, `weldSpec` carries
+weld type and size.
 
 ### 7.3 SteelNode
 
-A topology node (joint) at which members connect. Used for FEM export and for associating boundary conditions with physical locations.
+A topology node (joint) at which members connect. Used for FEM
+export and for associating boundary conditions with physical
+locations.
 
 `supportType` defines the boundary condition: `FIXED`, `PINNED`, `ROLLER_X/Y/Z`, `SPRING`, `FREE`.
 
@@ -498,7 +520,8 @@ PMEF relationship objects are first-class NDJSON objects (not just fields). This
 
 - **Versionability:** each relationship carries its own `RevisionMetadata`.
 - **Provenance:** `derivedBy` and `confidence` fields document how the relationship was established.
-- **Discoverability:** all relationships can be found by scanning for objects whose `@type` starts with `pmef:Is` or `pmef:Has`.
+- **Discoverability:** all relationships can be found by scanning
+  for objects whose `@type` starts with `pmef:Is` or `pmef:Has`.
 - **Cross-domain linking:** relationships connect objects from any two domains without modifying either object.
 
 ### 8.2 Base Relationship Fields
@@ -534,7 +557,11 @@ All relationship types extend a base structure:
 
 ### 8.4 HasEquivalentIn — Adapter Round-Trip
 
-The `pmef:HasEquivalentIn` relationship **MUST** be written by every PMEF adapter for every exported object. It records the native tool's object identifier, enabling the adapter to find the object on re-import without coordinate-based or name-based matching.
+The `pmef:HasEquivalentIn` relationship **MUST** be written by
+every PMEF adapter for every exported object. It records the
+native tool's object identifier, enabling the adapter to find
+the object on re-import without coordinate-based or name-based
+matching.
 
 ```jsonc
 {
@@ -557,7 +584,9 @@ A Level 3 conformant adapter **MUST** write a `pmef:HasEquivalentIn` relationshi
 
 ## 9 Property Sets
 
-Property sets are reusable, typed collections of attributes. They are defined in `pmef-property-sets.schema.json` and referenced by entity types.
+Property sets are reusable, typed collections of attributes.
+They are defined in `pmef-property-sets.schema.json` and
+referenced by entity types.
 
 ### 9.1 PipingDesignConditions
 
@@ -565,53 +594,89 @@ Carries the process design envelope for a piping line or segment.
 
 All pressure values are in **Pa**. All temperature values are in **K**.
 
-Key attributes: `designPressure`, `designTemperature`, `operatingPressure`, `operatingTemperature`, `testPressure`, `testMedium`, `vacuumService`, `fluidCategory` (PED), `pedCategory`.
+Key attributes: `designPressure`, `designTemperature`,
+`operatingPressure`, `operatingTemperature`, `testPressure`,
+`testMedium`, `vacuumService`, `fluidCategory` (PED),
+`pedCategory`.
 
 ### 9.2 PipingSpecification
 
 Carries the pipe class and material specification.
 
-Key attributes: `nominalDiameter` [mm], `outsideDiameter` [mm], `wallThickness` [mm], `schedule`, `pipeClass`, `material`, `pressureRating`, `corrosionAllowance` [mm], `insulationType`, `heatTracingType`.
+Key attributes: `nominalDiameter` [mm], `outsideDiameter` [mm],
+`wallThickness` [mm], `schedule`, `pipeClass`, `material`,
+`pressureRating`, `corrosionAllowance` [mm], `insulationType`,
+`heatTracingType`.
 
 ### 9.3 PipingComponentSpec
 
 Carries attributes common to all piping component subtypes.
 
-Key attributes: `componentClass` (controlled vocabulary of 40+ values), `skey` (8-char PCF++ shape key), `endType1`, `endType2`, `facingType`, `faceToFace` [mm], `weight` [kg].
+Key attributes: `componentClass` (controlled vocabulary of 40+
+values), `skey` (8-char PCF++ shape key), `endType1`, `endType2`,
+`facingType`, `faceToFace` [mm], `weight` [kg].
 
-**SKEY convention:** 8 characters, format `<2-char type><2-char end-type><4-char variant>`. Example: `"ELBWLR90"` = elbow, butt-weld ends, long-radius 90°. The first 4 characters are PCF-compatible.
+**SKEY convention:** 8 characters, format
+`<2-char type><2-char end-type><4-char variant>`.
+Example: `"ELBWLR90"` = elbow, butt-weld ends, long-radius 90°.
+The first 4 characters are PCF-compatible.
 
 ### 9.4 ValveSpec
 
-Carries valve-specific attributes: `actuatorType`, `failPosition` (FO/FC/FL/FI), `leakageClass` (ANSI/FCI 70-2), `kvValue` [m³/h], `shutoffPressure` [Pa], `signalRange`, `positionFeedback`, `handwheelOverride`.
+Carries valve-specific attributes: `actuatorType`, `failPosition`
+(FO/FC/FL/FI), `leakageClass` (ANSI/FCI 70-2), `kvValue` [m³/h],
+`shutoffPressure` [Pa], `signalRange`, `positionFeedback`,
+`handwheelOverride`.
 
 ### 9.5 WeldSpec
 
-Carries weld record attributes: `weldNumber`, `weldType` (BW/FW/SW), `weldingProcess`, `wpsNumber`, `pwht`, `ndeMethod`, `ndePercentage`, `inspectionLevel`, `inspectionStatus`.
+Carries weld record attributes: `weldNumber`, `weldType`
+(BW/FW/SW), `weldingProcess`, `wpsNumber`, `pwht`, `ndeMethod`,
+`ndePercentage`, `inspectionLevel`, `inspectionStatus`.
 
 ### 9.6 EquipmentBasic
 
-Carries tag number, class, service description, design code, manufacturer, model, serial number, and train identifier. This property set is common to all equipment subtypes.
+Carries tag number, class, service description, design code,
+manufacturer, model, serial number, and train identifier. This
+property set is common to all equipment subtypes.
 
 ### 9.7 VesselDesign
 
-Carries pressure vessel design data per ASME VIII or EN 13445: design pressures (internal and external) [Pa], design temperatures [K], volume [m³], shell material, shell inside diameter [mm], tangent-to-tangent length [mm], head type, orientation, corrosion allowance [mm], NDE requirements, and fire protection.
+Carries pressure vessel design data per ASME VIII or EN 13445:
+design pressures (internal and external) [Pa], design
+temperatures [K], volume [m³], shell material, shell inside
+diameter [mm], tangent-to-tangent length [mm], head type,
+orientation, corrosion allowance [mm], NDE requirements,
+and fire protection.
 
 ### 9.8 PumpSpec
 
-Carries centrifugal and positive displacement pump data per API 610/674/675: flow rates [m³/h], head [m], NPSH [m], efficiency [%], motor power [kW], speed [rpm], drive type, seal type, and H-Q curve reference.
+Carries centrifugal and positive displacement pump data per
+API 610/674/675: flow rates [m³/h], head [m], NPSH [m],
+efficiency [%], motor power [kW], speed [rpm], drive type,
+seal type, and H-Q curve reference.
 
 ### 9.9 HeatExchangerSpec
 
-Carries shell-and-tube and other heat exchanger data per TEMA and ASME VIII: duty [W], heat transfer area [m²], overall U-value [W/m²K], tube details (OD, thickness, count, material), shell details, operating conditions for shell side and tube side, fouling factors.
+Carries shell-and-tube and other heat exchanger data per TEMA
+and ASME VIII: duty [W], heat transfer area [m²], overall
+U-value [W/m²K], tube details (OD, thickness, count, material),
+shell details, operating conditions for shell side and tube side,
+fouling factors.
 
 ### 9.10 CompressorSpec
 
-Carries centrifugal and reciprocating compressor data per API 617/618/619: inlet flow [m³/h], pressure ratio, polytropic efficiency [%], shaft power [kW], driver type, number of stages, seal type.
+Carries centrifugal and reciprocating compressor data per
+API 617/618/619: inlet flow [m³/h], pressure ratio, polytropic
+efficiency [%], shaft power [kW], driver type, number of stages,
+seal type.
 
 ### 9.11 SupportSpec
 
-Carries pipe support design data: support type (13 types including spring hangers, constant hanger, anchor, guide), design loads [N, N·m], spring rate [N/mm], hot and cold loads [N], travel range [mm], attachment type.
+Carries pipe support design data: support type (13 types including
+spring hangers, constant hanger, anchor, guide), design loads
+[N, N·m], spring rate [N/mm], hot and cold loads [N],
+travel range [mm], attachment type.
 
 ---
 
@@ -619,7 +684,9 @@ Carries pipe support design data: support type (13 types including spring hanger
 
 ### 10.1 customAttributes
 
-Every PMEF physical and functional object has an optional `customAttributes` field that accepts a JSON object with string, number, boolean, or null values:
+Every PMEF physical and functional object has an optional
+`customAttributes` field that accepts a JSON object with string,
+number, boolean, or null values:
 
 ```jsonc
 "customAttributes": {
@@ -632,6 +699,7 @@ Every PMEF physical and functional object has an optional `customAttributes` fie
 ```
 
 **Requirements:**
+
 - Keys **MUST** be strings.
 - Values **MUST** be one of: string, number, boolean, null.
 - Keys **MUST NOT** shadow defined PMEF property names.
@@ -639,11 +707,19 @@ Every PMEF physical and functional object has an optional `customAttributes` fie
 
 ### 10.2 RFC Process for Promoting Extensions
 
-Custom attributes that prove useful across multiple projects **SHOULD** be proposed for promotion to the PMEF information model via the RFC process (see [CONTRIBUTING.md](../CONTRIBUTING.md)). Once an RFC is accepted, the attribute moves from `customAttributes` to a named field in the relevant schema.
+Custom attributes that prove useful across multiple projects
+**SHOULD** be proposed for promotion to the PMEF information
+model via the RFC process (see
+[CONTRIBUTING.md](../CONTRIBUTING.md)). Once an RFC is accepted,
+the attribute moves from `customAttributes` to a named field in
+the relevant schema.
 
 ### 10.3 Custom Entity Types
 
-Custom `@type` values **MAY** be used in PMEF packages, provided they are prefixed with a project- or vendor-specific namespace (not `pmef:`). PMEF readers **MUST NOT** fail on encountering unknown `@type` values.
+Custom `@type` values **MAY** be used in PMEF packages, provided
+they are prefixed with a project- or vendor-specific namespace
+(not `pmef:`). PMEF readers **MUST NOT** fail on encountering
+unknown `@type` values.
 
 ```jsonc
 {

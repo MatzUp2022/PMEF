@@ -29,17 +29,26 @@ PMEF defines two serialisation formats:
 
 A PMEF implementation that claims Level 1 or higher conformance **MUST** support reading and writing NDJSON.
 
-Support for CAEX XML is **RECOMMENDED** for implementations targeting E&I interoperability and is **REQUIRED** for MTP 2.0 integration.
+Support for CAEX XML is **RECOMMENDED** for implementations
+targeting E&I interoperability and is **REQUIRED** for MTP 2.0
+integration.
 
 ### 1.1 Design Rationale for NDJSON
 
 NDJSON was chosen as the primary format for the following reasons:
 
-- **Git-friendliness.** One object per line means that adding, modifying, or deleting one object produces a single changed line in a `git diff`, enabling meaningful version control of plant models.
-- **Streamability.** Large models (millions of objects) can be read and written without loading the full document into memory.
+- **Git-friendliness.** One object per line means that adding,
+  modifying, or deleting one object produces a single changed
+  line in a `git diff`, enabling meaningful version control of
+  plant models.
+- **Streamability.** Large models (millions of objects) can be
+  read and written without loading the full document into memory.
 - **No special parser.** Any JSON library plus a line-split suffices for reading.
 - **Human-readable.** Plant engineers can inspect objects directly, without requiring a specialised viewer.
-- **Deterministic serialisation.** PMEF mandates alphabetical key ordering and canonical number formatting (see §2.5), ensuring that semantically identical objects produce byte-identical serialisations.
+- **Deterministic serialisation.** PMEF mandates alphabetical key
+  ordering and canonical number formatting (see §2.5), ensuring
+  that semantically identical objects produce byte-identical
+  serialisations.
 
 ---
 
@@ -56,12 +65,15 @@ A PMEF NDJSON file **MUST** conform to the following structure:
 A PMEF NDJSON file **MUST NOT** be empty.
 
 **Permitted non-object lines (for annotated example files only):**
-- Lines beginning with `//` are comment lines. Comment lines **MUST NOT** appear in production PMEF files. They are permitted only in files in the `examples/` directory.
+
+- Lines beginning with `//` are comment lines. Comment lines
+  **MUST NOT** appear in production PMEF files. They are
+  permitted only in files in the `examples/` directory.
 - Empty lines are permitted.
 
 Example structure:
 
-```
+```text
 {"@type":"pmef:FileHeader","@id":"urn:pmef:pkg:proj:ds01",...}\n
 {"@type":"pmef:Plant","@id":"urn:pmef:plant:proj:EAF",...}\n
 {"@type":"pmef:Unit","@id":"urn:pmef:unit:proj:U-100",...}\n
@@ -71,7 +83,8 @@ Example structure:
 
 ### 2.2 One Object Per Line
 
-Each non-comment, non-empty line in a PMEF NDJSON file **MUST** contain exactly one complete, self-contained JSON object.
+Each non-comment, non-empty line in a PMEF NDJSON file **MUST**
+contain exactly one complete, self-contained JSON object.
 
 - Multi-line pretty-printed objects are **NOT** permitted in PMEF NDJSON files.
 - A line **MUST NOT** contain more than one JSON object.
@@ -80,12 +93,16 @@ Each non-comment, non-empty line in a PMEF NDJSON file **MUST** contain exactly 
 ### 2.3 Required Object Fields
 
 Every line-level PMEF object **MUST** contain:
+
 - `"@type"` — the entity type string.
 - `"@id"` — the unique object identifier.
 
 ### 2.4 Recommended Object Ordering
 
-While PMEF does not mandate a specific ordering of objects within an NDJSON file (except that `pmef:FileHeader` is first), the following ordering is **RECOMMENDED** to improve human readability and streaming processing:
+While PMEF does not mandate a specific ordering of objects within
+an NDJSON file (except that `pmef:FileHeader` is first), the
+following ordering is **RECOMMENDED** to improve human readability
+and streaming processing:
 
 1. `pmef:FileHeader`
 2. `pmef:Plant`
@@ -102,25 +119,41 @@ While PMEF does not mandate a specific ordering of objects within an NDJSON file
 
 ### 2.5 Canonical Serialisation
 
-For deterministic serialisation (required for checksum computation and meaningful diffs), PMEF objects **SHOULD** be serialised with the following rules:
+For deterministic serialisation (required for checksum computation
+and meaningful diffs), PMEF objects **SHOULD** be serialised with
+the following rules:
 
-1. **Key ordering:** JSON object keys **MUST** be sorted alphabetically (Unicode code point order) at all levels of nesting.
-2. **Number formatting:** Floating-point numbers **MUST** be serialised with sufficient precision to preserve the original value (use Python `repr()` or equivalent). Trailing zeros after the decimal point **SHOULD** be omitted.
+1. **Key ordering:** JSON object keys **MUST** be sorted
+   alphabetically (Unicode code point order) at all levels of
+   nesting.
+2. **Number formatting:** Floating-point numbers **MUST** be
+   serialised with sufficient precision to preserve the original
+   value (use Python `repr()` or equivalent). Trailing zeros
+   after the decimal point **SHOULD** be omitted.
 3. **String escaping:** Use UTF-8 with minimal escaping (only escape characters that RFC 8259 requires to be escaped).
 4. **No trailing whitespace:** Lines **MUST NOT** contain trailing whitespace before the newline.
 5. **Newline character:** Lines **MUST** be terminated by `\n` (LF). `\r\n` (CRLF) is not permitted.
 
 ### 2.6 Validation Requirement
 
-Every PMEF object in an NDJSON file **MUST** validate against the JSON Schema corresponding to its `@type`. Implementations writing PMEF **MUST** validate objects before writing. Implementations reading PMEF **SHOULD** validate each object as it is read and report validation errors without halting processing.
+Every PMEF object in an NDJSON file **MUST** validate against
+the JSON Schema corresponding to its `@type`. Implementations
+writing PMEF **MUST** validate objects before writing.
+Implementations reading PMEF **SHOULD** validate each object as
+it is read and report validation errors without halting
+processing.
 
 ### 2.7 Reference Resolution
 
 References between PMEF objects are expressed via `@id` values. The following rules apply:
 
-- **Within-package references** (e.g. `isPartOf`, `Port.connectedTo`) **MUST** be resolvable within the same NDJSON file or PMEFX container.
+- **Within-package references** (e.g. `isPartOf`,
+  `Port.connectedTo`) **MUST** be resolvable within the same
+  NDJSON file or PMEFX container.
 - **Cross-package references** use the `urn:pmef:external:<package-id>:<object-id>` URI prefix.
-- A reader that encounters an unresolvable reference **MUST NOT** fail. It **SHOULD** report the unresolvable reference as a warning.
+- A reader that encounters an unresolvable reference **MUST NOT**
+  fail. It **SHOULD** report the unresolvable reference as a
+  warning.
 
 ### 2.8 Example: Minimal Valid PMEF NDJSON File
 
@@ -136,11 +169,13 @@ References between PMEF objects are expressed via `@id` values. The following ru
 
 ### 3.1 Overview
 
-A PMEFX file is a ZIP archive that bundles one or more PMEF NDJSON files with associated geometry assets. It uses the file extension `.pmefx`.
+A PMEFX file is a ZIP archive that bundles one or more PMEF
+NDJSON files with associated geometry assets. It uses the file
+extension `.pmefx`.
 
 ### 3.2 Archive Structure
 
-```
+```text
 my-plant.pmefx  (ZIP archive)
 ├── manifest.json           — package manifest (REQUIRED)
 ├── model/
@@ -193,7 +228,8 @@ Example manifest:
 
 ### 3.4 Split File Packages
 
-Large plant models **MAY** be split across multiple NDJSON files within a PMEFX archive. The rules for split packages are:
+Large plant models **MAY** be split across multiple NDJSON files
+within a PMEFX archive. The rules for split packages are:
 
 1. Each NDJSON file **MUST** have a valid `pmef:FileHeader` as its first line.
 2. All `pmef:FileHeader` objects in a split package **MUST** reference the same `plantId`.
@@ -206,7 +242,9 @@ Large plant models **MAY** be split across multiple NDJSON files within a PMEFX 
 
 ### 4.1 Overview
 
-PMEF provides a CAEX XML secondary serialisation based on AutomationML 2.10 (IEC 62714). The CAEX serialisation is primarily intended for E&I data exchange and MTP integration.
+PMEF provides a CAEX XML secondary serialisation based on
+AutomationML 2.10 (IEC 62714). The CAEX serialisation is
+primarily intended for E&I data exchange and MTP integration.
 
 The CAEX serialisation is **OPTIONAL** for Level 1 and Level 2 implementations. It is **RECOMMENDED** for Level 3 implementations targeting E&I tools (COMOS, EPLAN, TIA Portal).
 
