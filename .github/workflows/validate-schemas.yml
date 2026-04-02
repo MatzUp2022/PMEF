@@ -82,12 +82,17 @@ jobs:
       - name: Install Mermaid CLI
         run: npm install -g @mermaid-js/mermaid-cli
 
+      - name: Create puppeteer config
+        run: |
+          echo '{"args":["--no-sandbox","--disable-setuid-sandbox"]}' > /tmp/puppeteer-config.json
+
       - name: Validate all Mermaid diagrams
         run: |
           for f in diagrams/*.md; do
             echo "Checking $f ..."
             python scripts/extract-mermaid.py "$f" > /tmp/mermaid-input.mmd
-            mmdc --input /tmp/mermaid-input.mmd --output /tmp/mermaid-output.svg
+            mmdc --input /tmp/mermaid-input.mmd --output /tmp/mermaid-output.svg \
+              --puppeteerConfigFile /tmp/puppeteer-config.json
           done
 
   # ──────────────────────────────────────────────────────────
