@@ -22,6 +22,15 @@
 
 ---
 
+> **This project is under active development and not yet production-ready.**
+> All specifications, schemas, and catalogs are subject to change without notice.
+> **Use at your own risk.** We are actively looking for **supporters and contributors** —
+> whether you are an engineer, developer, standards expert, or domain specialist,
+> your input is welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) or join our
+> [Discord](https://discord.gg/pmef) to get involved.
+
+---
+
 ## What is PMEF?
 
 PMEF is an **open, semantically rich, cross-discipline 3D plant model exchange format** for industrial

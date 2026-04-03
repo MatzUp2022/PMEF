@@ -26,7 +26,8 @@
         "PIPING_CLASS",
         "PIPE_DIMENSIONS",
         "FLANGE_DIMENSIONS",
-        "INSTRUMENT_CATALOG"
+        "INSTRUMENT_CATALOG",
+        "MATERIAL_GRADES"
       ],
       "description": "Catalog domain type"
     },

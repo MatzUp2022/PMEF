@@ -13,6 +13,8 @@ All catalogs are licensed under **CC0 1.0 Universal** (public domain).
 | `piping-class-b3c1.json` | Piping class B3C1 (CS, ANSI-300, DN15–DN400) | ASME B16.5, B16.9 | 198 components |
 | `pipe-dimensions.json` | Pipe OD and wall thickness (ASME B36.10M + B36.19M) | ASME B36.10M, B36.19M | 240 entries |
 | `flange-dimensions.json` | Flange face dimensions per ASME B16.5 | ASME B16.5 | 87 entries |
+| `piping-class-en-p1a.json` | Piping class EN-P1A (CS, PN40, DN15–DN300) | EN 1092-1, EN 10253-2, EN 10216-2 | 120 components |
+| `materials-en.json` | European steel material grades (structural + piping) | EN 10025-2, EN 10028, EN 10216, EN 10217, EN 10222 | 33 grades |
 | `rdl-uri-map.json` | PCA-RDL URI cross-reference for catalog entries | ISO 15926-4 | — |
 
 ## Catalog Schema
@@ -23,7 +25,7 @@ Each catalog file follows a common JSON structure:
 {
   "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
   "catalogId": "<id>",
-  "catalogType": "STEEL_PROFILES | PIPING_CLASS | PIPE_DIMENSIONS | FLANGE_DIMENSIONS",
+  "catalogType": "STEEL_PROFILES | PIPING_CLASS | PIPE_DIMENSIONS | FLANGE_DIMENSIONS | MATERIAL_GRADES",
   "standard": "<applicable standard>",
   "version": "<version string>",
   "description": "<human-readable description>",
