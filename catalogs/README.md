@@ -21,7 +21,7 @@ Each catalog file follows a common JSON structure:
 
 ```jsonc
 {
-  "$schema": "https://pmef.org/schemas/0.9/pmef-catalog.schema.json",
+  "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
   "catalogId": "<id>",
   "catalogType": "STEEL_PROFILES | PIPING_CLASS | PIPE_DIMENSIONS | FLANGE_DIMENSIONS",
   "standard": "<applicable standard>",
@@ -58,3 +58,14 @@ Each piping class entry specifies for every component:
 - `catalogId` — unique ID within the class
 - `rdlUri` — ISO 15926-4 PCA-RDL URI (where available)
 - `vendorMappings` — tool-specific catalog IDs
+
+---
+
+## Disclaimer
+
+Dimensional data in these catalogs consists of factual values derived from the
+standards listed above, reformatted for machine-readable interoperability.
+These files are not a substitute for the official published standards. Users
+should verify against current editions for engineering and construction
+purposes. See [THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md) for full
+attribution and trademark notices.

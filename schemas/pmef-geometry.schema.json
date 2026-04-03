@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://pmef.org/schemas/0.9/pmef-geometry.schema.json",
+  "$id": "https://pmef.net/schemas/0.9/pmef-geometry.schema.json",
   "title": "PMEF Parametric Geometry Primitives",
   "description": "Parametric 3D geometry primitive library. All dimensions in millimetres, all coordinates in the project coordinate system (X=East, Y=North, Z=Up, right-handed).",
   "$defs": {

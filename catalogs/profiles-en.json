@@ -1,5 +1,5 @@
 {
-  "$schema": "https://pmef.org/schemas/0.9/pmef-catalog.schema.json",
+  "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
   "catalogId": "profiles-en",
   "catalogType": "STEEL_PROFILES",
   "standard": "EN 10034:1993, EN 10279:2000, EN 10210-2:2006, EN 10219-2:2006, EN 10055:1995, EN 10056-1:1998, EN 10058:2003",

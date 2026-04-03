@@ -1,5 +1,5 @@
 {
-  "$schema": "https://pmef.org/schemas/0.9/pmef-catalog.schema.json",
+  "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
   "catalogId": "pipe-dimensions",
   "catalogType": "PIPE_DIMENSIONS",
   "standard": "ASME B36.10M-2018 (Welded and Seamless Wrought Steel Pipe), ASME B36.19M-2018 (Stainless Steel Pipe)",

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://pmef.org/schemas/0.9/pmef-piping-component.schema.json",
+  "$id": "https://pmef.net/schemas/0.9/pmef-piping-component.schema.json",
   "title": "PMEF Piping Domain",
   "description": "Canonical schema for PipingNetworkSystem, PipingSegment, and all PipingComponent subtypes.",
 

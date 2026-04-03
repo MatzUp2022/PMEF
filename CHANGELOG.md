@@ -134,6 +134,6 @@ REL-U-001..008, GEOM-U-001..008, RT-001..018, INTG-001..006.
 
 - `cargo test --workspace` green (all Rust tests pass)
 - Published crates on crates.io
-- Published schemas on schema.pmef.org
-- pmef.org website with full documentation
+- Published schemas on schema.pmef.net
+- pmef.net website with full documentation
 - First vendor Level 2 certification

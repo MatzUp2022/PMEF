@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://pmef.org/schemas/0.9/pmef-equipment.schema.json",
+  "$id": "https://pmef.net/schemas/0.9/pmef-equipment.schema.json",
   "title": "PMEF Equipment Domain",
   "description": "Canonical schema for all EquipmentObject subtypes and the shared Nozzle type.",
 

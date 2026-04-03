@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://pmef.org/schemas/0.9/pmef-ei.schema.json",
+  "$id": "https://pmef.net/schemas/0.9/pmef-ei.schema.json",
   "title": "PMEF E&I Domain — Electrical, Instrumentation & Control",
   "description": "Schema for InstrumentObject, InstrumentLoop, PLCObject, CableObject and related E&I types. Aligned with AutomationML/CAEX, DEXPI 2.0, IEC 81346 and PA-DIM.",
 
