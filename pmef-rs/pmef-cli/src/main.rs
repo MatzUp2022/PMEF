@@ -184,13 +184,17 @@ async fn main() -> Result<()> {
 // ── Command implementations ───────────────────────────────────────────────
 
 async fn cmd_validate(
-    file: PathBuf, _schemas: PathBuf, level: u8, format: &str, _fail_fast: bool,
+    file: PathBuf, schemas: PathBuf, level: u8, format: &str, fail_fast: bool,
 ) -> Result<()> {
     use pmef_io::{NdjsonReader, ReaderConfig};
+    use pmef_validate::PmefValidator;
     use std::io::BufReader;
     use std::fs::File;
 
     info!("Validating {} (conformance level {})", file.display(), level);
+
+    let validator = PmefValidator::from_directory(&schemas)
+        .map_err(|e| anyhow::anyhow!("Failed to load schemas from {}: {}", schemas.display(), e))?;
 
     let f = File::open(&file).with_context(|| format!("Cannot open {}", file.display()))?;
     let reader = NdjsonReader::new(BufReader::new(f), ReaderConfig::default());
@@ -198,22 +202,43 @@ async fn cmd_validate(
     let mut ok = 0usize;
     let mut fail = 0usize;
     let mut skip = 0usize;
+    let mut all_errors: Vec<String> = Vec::new();
 
     for result in reader {
         match result {
             Ok(obj) => {
-                // In a full implementation: validate against JSON Schema
-                // using pmef_validate::schema_for_type(&obj.type_str)
-                if obj.type_str.starts_with("pmef:") {
+                if pmef_validate::schema_for_type(&obj.type_str).is_none() {
+                    skip += 1;
+                    warn!("No schema for type '{}' on line {}", obj.type_str, obj.line_number);
+                    continue;
+                }
+
+                let errors = validator.validate_object(&obj.type_str, &obj.value);
+                if errors.is_empty() {
                     ok += 1;
                 } else {
-                    skip += 1;
-                    warn!("Unknown type '{}' on line {}", obj.type_str, obj.line_number);
+                    fail += 1;
+                    for e in &errors {
+                        let msg = format!(
+                            "line {}: {} ({}): {}",
+                            obj.line_number, obj.id_str, obj.type_str, e
+                        );
+                        error!("{}", msg);
+                        all_errors.push(msg);
+                    }
+                    if fail_fast {
+                        break;
+                    }
                 }
             }
             Err(e) => {
                 fail += 1;
-                error!("Parse error: {e}");
+                let msg = format!("Parse error: {e}");
+                error!("{}", msg);
+                all_errors.push(msg);
+                if fail_fast {
+                    break;
+                }
             }
         }
     }
@@ -221,10 +246,15 @@ async fn cmd_validate(
     let total = ok + fail + skip;
     match format {
         "json" => {
-            println!(
-                r#"{{"total":{total},"ok":{ok},"fail":{fail},"skip":{skip},"pass_rate":{:.4}}}"#,
-                if total > 0 { ok as f64 / total as f64 } else { 1.0 }
-            );
+            let report = serde_json::json!({
+                "total": total,
+                "ok": ok,
+                "fail": fail,
+                "skip": skip,
+                "pass_rate": if total > 0 { ok as f64 / total as f64 } else { 1.0 },
+                "errors": all_errors,
+            });
+            println!("{}", serde_json::to_string_pretty(&report)?);
         }
         _ => {
             println!("PMEF Validation — {}", file.display());
@@ -237,6 +267,12 @@ async fn cmd_validate(
             println!("  Pass rate: {:.1}%", pass_rate * 100.0);
             let meets = pass_rate >= match level { 3 => 0.98, 2 => 0.95, _ => 1.0 };
             println!("  Conformance L{level}: {}", if meets { "✓ PASS" } else { "✗ FAIL" });
+            if !all_errors.is_empty() {
+                println!("\n  Errors:");
+                for e in &all_errors {
+                    println!("    - {e}");
+                }
+            }
         }
     }
     if fail > 0 { std::process::exit(1); }
