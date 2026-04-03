@@ -355,7 +355,7 @@ async fn cmd_stats(file: PathBuf, by_type: bool, by_domain: bool) -> Result<()> 
         pairs.sort_by(|a, b| b.1.cmp(a.1).then(a.0.cmp(b.0)));
         println!("\n  By @type:");
         for (type_str, count) in &pairs {
-            println!("  {:40s} {:>6}", type_str, count);
+            println!("  {:40} {:>6}", type_str, count);
         }
     }
     Ok(())
@@ -429,18 +429,120 @@ async fn cmd_conformance(
     use pmef_io::{NdjsonReader, PmefPackageIndex, ReaderConfig};
     use std::io::BufReader;
     use std::fs::File;
+    use std::collections::HashSet;
 
     let f = File::open(&file).with_context(|| format!("Cannot open {}", file.display()))?;
     let reader = NdjsonReader::new(BufReader::new(f), ReaderConfig::default());
     let objects: Vec<_> = reader.collect::<Result<_, _>>()?;
+
+    // Track ordering: FileHeader must be first object
+    let first_type_owned = objects.first().map(|o| o.type_str.clone());
+    let first_type = first_type_owned.as_deref();
+
     let idx = PmefPackageIndex::from_iter(objects.into_iter());
 
-    // Minimal conformance checks
-    let has_header = idx.resolve("").is_some()
-        || idx.by_type("pmef:FileHeader").len() == 1;
+    let mut pass_count = 0usize;
+    let mut fail_count = 0usize;
+    let mut check_results: Vec<serde_json::Value> = Vec::new();
+
+    // Helper to record a check result
+    let mut record = |name: &str, passed: bool, detail: &str| {
+        if passed { pass_count += 1; } else { fail_count += 1; }
+        check_results.push(serde_json::json!({
+            "check": name,
+            "status": if passed { "PASS" } else { "FAIL" },
+            "detail": detail,
+        }));
+    };
+
+    // Check 1: FileHeader present
+    let headers = idx.by_type("pmef:FileHeader");
+    let has_header = headers.len() == 1;
+    record(
+        "fileHeaderPresent",
+        has_header,
+        &format!("Found {} FileHeader object(s)", headers.len()),
+    );
+
+    // Check 2: FileHeader is first object
+    let header_first = first_type == Some("pmef:FileHeader");
+    record(
+        "fileHeaderFirst",
+        header_first,
+        &format!(
+            "First object @type: {}",
+            first_type.unwrap_or("<empty file>")
+        ),
+    );
+
+    // Check 3: All objects have @type
+    let missing_type_count = idx.objects.values()
+        .filter(|o| o.value.get("@type").and_then(|v| v.as_str()).is_none())
+        .count();
+    record(
+        "allObjectsHaveType",
+        missing_type_count == 0,
+        &format!("{} object(s) missing @type", missing_type_count),
+    );
+
+    // Check 4: All objects have @id
+    let missing_id_count = idx.objects.values()
+        .filter(|o| o.value.get("@id").and_then(|v| v.as_str()).is_none())
+        .count();
+    record(
+        "allObjectsHaveId",
+        missing_id_count == 0,
+        &format!("{} object(s) missing @id", missing_id_count),
+    );
+
+    // Check 5: All @id references resolve
+    let ref_fields = ["isPartOf", "isDerivedFrom", "sourceId", "targetId",
+                      "connectedTo", "flowsTo", "references"];
+    let known_ids: HashSet<&str> = idx.objects.keys().map(|s| s.as_str()).collect();
+    let mut broken_refs = 0usize;
+    let mut broken_ref_details: Vec<String> = Vec::new();
+    for obj in idx.objects.values() {
+        for field in &ref_fields {
+            if let Some(ref_val) = obj.value.get(*field) {
+                let refs: Vec<&str> = if let Some(s) = ref_val.as_str() {
+                    vec![s]
+                } else if let Some(arr) = ref_val.as_array() {
+                    arr.iter().filter_map(|v| v.as_str()).collect()
+                } else {
+                    vec![]
+                };
+                for ref_str in refs {
+                    let base_id = ref_str.split('#').next().unwrap_or(ref_str);
+                    if !base_id.is_empty() && !known_ids.contains(base_id) {
+                        broken_refs += 1;
+                        if broken_ref_details.len() < 10 {
+                            broken_ref_details.push(format!(
+                                "{}.{} -> {}", obj.id_str, field, ref_str
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    record(
+        "allReferencesResolve",
+        broken_refs == 0,
+        &format!("{} broken reference(s){}", broken_refs,
+            if broken_ref_details.is_empty() { String::new() }
+            else { format!(": {}", broken_ref_details.join(", ")) }),
+    );
+
+    // Check 6: All @id values are unique (guaranteed by HashMap, but check for duplicates
+    // that may have been silently overwritten)
+    // Since PmefPackageIndex deduplicates by @id via HashMap, we re-count from file
+    // We already loaded into idx, so just note the object count
     let pump_count = idx.by_type("pmef:Pump").len();
     let vessel_count = idx.by_type("pmef:Vessel").len();
     let line_count = idx.by_type("pmef:PipingNetworkSystem").len();
+
+    let total_checks = pass_count + fail_count;
+    let overall_status = if fail_count == 0 { "PASS" } else { "FAIL" };
 
     let report = serde_json::json!({
         "pmefVersion": "0.9.0",
@@ -448,13 +550,18 @@ async fn cmd_conformance(
         "dataset": dataset,
         "conformanceLevel": level,
         "objectCount": idx.len(),
-        "checks": {
-            "hasFileHeader": has_header,
+        "summary": {
+            "totalChecks": total_checks,
+            "pass": pass_count,
+            "fail": fail_count,
+            "status": overall_status,
+        },
+        "checks": check_results,
+        "typeCounts": {
             "pumps": pump_count,
             "vessels": vessel_count,
             "pipingLines": line_count,
         },
-        "status": "PASS"
     });
 
     let out = serde_json::to_string_pretty(&report)?;
@@ -462,6 +569,7 @@ async fn cmd_conformance(
         Some(path) => std::fs::write(&path, &out)?,
         None => println!("{out}"),
     }
+    if fail_count > 0 { std::process::exit(1); }
     Ok(())
 }
 

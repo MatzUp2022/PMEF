@@ -136,15 +136,17 @@ impl PmefValidator {
             }
         };
 
-        match compiled.validate(object) {
+        let result = compiled.validate(object);
+        let errors = match result {
             Ok(()) => vec![],
-            Err(errors) => errors
+            Err(errs) => errs
                 .map(|e| ValidationError {
                     instance_path: e.instance_path.to_string(),
                     message: e.to_string(),
                 })
                 .collect(),
-        }
+        };
+        errors
     }
 }
 
