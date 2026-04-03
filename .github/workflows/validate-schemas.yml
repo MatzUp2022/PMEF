@@ -7,12 +7,22 @@ on:
       - 'schemas/**'
       - 'examples/**'
       - 'scripts/**'
+      - 'diagrams/**'
+      - 'spec/**'
+      - 'docs/**'
+      - '*.md'
+      - '.markdownlint.jsonc'
   pull_request:
     branches: [main, develop]
     paths:
       - 'schemas/**'
       - 'examples/**'
       - 'scripts/**'
+      - 'diagrams/**'
+      - 'spec/**'
+      - 'docs/**'
+      - '*.md'
+      - '.markdownlint.jsonc'
   workflow_call:
 
 concurrency:
