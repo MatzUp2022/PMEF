@@ -1,0 +1,174 @@
+name: Validate Schemas and Examples
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'schemas/**'
+      - 'examples/**'
+      - 'scripts/**'
+      - 'diagrams/**'
+      - 'spec/**'
+      - 'docs/**'
+      - '*.md'
+      - '.markdownlint.jsonc'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'schemas/**'
+      - 'examples/**'
+      - 'scripts/**'
+      - 'diagrams/**'
+      - 'spec/**'
+      - 'docs/**'
+      - '*.md'
+      - '.markdownlint.jsonc'
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ──────────────────────────────────────────────────────────
+  # 1. Validate JSON Schema files are well-formed
+  # ──────────────────────────────────────────────────────────
+  validate-schemas:
+    name: JSON Schema syntax check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install jsonschema check-jsonschema
+
+      - name: Validate all schema files are valid JSON
+        run: python scripts/validate-schemas.py
+
+      - name: Check schema $ids match file paths
+        run: python scripts/check-schema-ids.py
+
+  # ──────────────────────────────────────────────────────────
+  # 2. Validate examples against schemas
+  # ──────────────────────────────────────────────────────────
+  validate-examples:
+    name: Validate NDJSON examples
+    runs-on: ubuntu-latest
+    needs: validate-schemas
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install jsonschema
+
+      - name: Validate all examples
+        run: python scripts/validate-examples.py
+
+      - name: Check example NDJSON is single-line-per-object
+        run: python scripts/check-ndjson-format.py
+
+  # ──────────────────────────────────────────────────────────
+  # 3. Check Mermaid diagrams are syntactically valid
+  # ──────────────────────────────────────────────────────────
+  validate-diagrams:
+    name: Validate Mermaid diagrams
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Mermaid CLI
+        run: npm install -g @mermaid-js/mermaid-cli
+
+      - name: Create puppeteer config
+        run: |
+          echo '{"args":["--no-sandbox","--disable-setuid-sandbox"]}' > /tmp/puppeteer-config.json
+
+      - name: Validate all Mermaid diagrams
+        run: |
+          for f in diagrams/*.md; do
+            echo "Checking $f ..."
+            outdir="/tmp/mermaid-blocks"
+            rm -rf "$outdir"
+            count=$(python scripts/extract-mermaid.py "$f" "$outdir")
+            if [ "$count" -eq 0 ]; then
+              echo "  No mermaid blocks found, skipping."
+              continue
+            fi
+            for block in "$outdir"/*.mmd; do
+              echo "  Validating $(basename "$block") ..."
+              mmdc --input "$block" --output /tmp/mermaid-output.svg \
+                --puppeteerConfigFile /tmp/puppeteer-config.json
+            done
+          done
+
+  # ──────────────────────────────────────────────────────────
+  # 4. Lint Markdown files
+  # ──────────────────────────────────────────────────────────
+  lint-markdown:
+    name: Lint Markdown
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: |
+            *.md
+            spec/*.md
+            docs/*.md
+            diagrams/*.md
+          config: .markdownlint.jsonc
+
+  # ──────────────────────────────────────────────────────────
+  # 5. Check for broken internal links
+  # ──────────────────────────────────────────────────────────
+  check-links:
+    name: Check internal links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: lycheeverse/lychee-action@v1
+        with:
+          args: >
+            --no-progress
+            --exclude-all-private
+            --exclude 'https://discord.gg'
+            --exclude 'https://pmef.org'
+            '**/*.md'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ──────────────────────────────────────────────────────────
+  # Summary job — required for branch protection
+  # ──────────────────────────────────────────────────────────
+  ci-success:
+    name: CI passed
+    runs-on: ubuntu-latest
+    needs: [validate-schemas, validate-examples, validate-diagrams, lint-markdown]
+    if: always()
+    steps:
+      - name: Check all jobs passed
+        run: |
+          if [[ "${{ needs.validate-schemas.result }}" != "success" ]] || \
+             [[ "${{ needs.validate-examples.result }}" != "success" ]] || \
+             [[ "${{ needs.validate-diagrams.result }}" != "success" ]] || \
+             [[ "${{ needs.lint-markdown.result }}" != "success" ]]; then
+            echo "One or more required checks failed"
+            exit 1
+          fi
+          echo "All checks passed"

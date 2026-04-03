@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <AssemblyName>PmefComos</AssemblyName>
+    <RootNamespace>PmefComos</RootNamespace>
+    <Version>0.9.0</Version>
+    <Authors>PMEF Technical Steering Committee</Authors>
+    <Description>PMEF adapter for Siemens COMOS</Description>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <LangVersion>12</LangVersion>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <!-- Siemens COMOS SDK references -->
+  <!-- Adjust the path below to match your COMOS SDK installation directory -->
+  <PropertyGroup>
+    <!-- <ComosInstallDir>C:\Program Files\Siemens\COMOS\bin</ComosInstallDir> -->
+  </PropertyGroup>
+
+  <!--
+  <ItemGroup>
+    <Reference Include="Comos.Interop">
+      <HintPath>$(ComosInstallDir)\Comos.Interop.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  -->
+
+</Project>

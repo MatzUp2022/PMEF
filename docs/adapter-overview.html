@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMEF Adapter Overview</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:       #0b0e14;
+    --surface:  #12161f;
+    --card:     #181d28;
+    --border:   #232b3a;
+    --accent:   #00d4a0;
+    --accent2:  #3b82f6;
+    --accent3:  #f59e0b;
+    --danger:   #ef4444;
+    --warn:     #f97316;
+    --text:     #e2e8f0;
+    --muted:    #64748b;
+    --l3:       #00d4a0;
+    --l2:       #3b82f6;
+    --bi:       #a78bfa;
+    --export:   #f59e0b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Background grid ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,160,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,160,.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  /* ── Header ── */
+  .header { margin-bottom: 56px; }
+  .header-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 60%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 16px;
+    font-weight: 400;
+    max-width: 640px;
+    line-height: 1.6;
+  }
+
+  /* ── KPI strip ── */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 2px;
+    margin-bottom: 56px;
+    background: var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .kpi {
+    background: var(--surface);
+    padding: 24px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .4s ease;
+  }
+  .kpi:hover::after { transform: scaleX(1); }
+  .kpi-val {
+    font-size: 40px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 6px;
+    letter-spacing: -2px;
+  }
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+  .kpi-val.blue  { color: var(--accent2); }
+  .kpi-val.amber { color: var(--accent3); }
+  .kpi-val.purple{ color: var(--bi); }
+
+  /* ── Section headers ── */
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Main adapter cards ── */
+  .adapters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 2px;
+    margin-bottom: 64px;
+    background: var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .adapter-card {
+    background: var(--card);
+    padding: 28px;
+    position: relative;
+    transition: background .2s;
+  }
+  .adapter-card:hover { background: #1e2535; }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+  .card-name {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -.5px;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .card-vendor {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .badge-l3     { background: rgba(0,212,160,.15);  color: var(--l3);  border: 1px solid rgba(0,212,160,.3);  }
+  .badge-l2     { background: rgba(59,130,246,.15); color: var(--l2);  border: 1px solid rgba(59,130,246,.3); }
+  .badge-bi     { background: rgba(167,139,250,.15);color: var(--bi);  border: 1px solid rgba(167,139,250,.3);}
+  .badge-export { background: rgba(245,158,11,.15); color: var(--export);border: 1px solid rgba(245,158,11,.3);}
+
+  .card-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 4px 12px;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+  .card-row-key {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    padding-top: 2px;
+  }
+  .card-row-val { color: var(--text); line-height: 1.5; }
+
+  /* Disciplines pills */
+  .disciplines {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+  .disc-pill {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+  }
+  .disc-piping   { background: rgba(59,130,246,.2);  color: #93c5fd; }
+  .disc-equipment{ background: rgba(245,158,11,.2);  color: #fcd34d; }
+  .disc-steel    { background: rgba(239,68,68,.2);   color: #fca5a5; }
+  .disc-ei       { background: rgba(168,85,247,.2);  color: #d8b4fe; }
+  .disc-cables   { background: rgba(20,184,166,.2);  color: #5eead4; }
+  .disc-plc      { background: rgba(236,72,153,.2);  color: #f9a8d4; }
+  .disc-clash    { background: rgba(251,146,60,.2);  color: #fdba74; }
+
+  /* Formats */
+  .formats {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+  .format-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .format-arrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .fa-in  { background: rgba(59,130,246,.2);  color: var(--accent2); }
+  .fa-out { background: rgba(0,212,160,.2);   color: var(--accent);  }
+  .format-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .format-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(255,255,255,.06);
+    color: #94a3b8;
+  }
+
+  /* Note */
+  .card-note {
+    font-size: 11px;
+    color: #475569;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  /* Code lines */
+  .code-lines {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .code-rs { color: #f97316; }
+  .code-cs { color: #60a5fa; }
+  .code-c  { color: #34d399; }
+
+  /* ── Direction matrix ── */
+  .matrix-section { margin-bottom: 64px; }
+
+  .matrix-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 2px;
+    font-size: 12px;
+  }
+  .matrix-table th {
+    background: var(--surface);
+    padding: 10px 14px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    white-space: nowrap;
+  }
+  .matrix-table th:first-child { border-radius: 8px 0 0 0; }
+  .matrix-table th:last-child  { border-radius: 0 8px 0 0; }
+
+  .matrix-table td {
+    background: var(--card);
+    padding: 10px 14px;
+    vertical-align: middle;
+  }
+  .matrix-table tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+  .matrix-table tr:last-child td:last-child  { border-radius: 0 0 8px 0; }
+  .matrix-table tr:hover td { background: #1a2033; }
+
+  .tool-name-cell {
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .tool-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .dir-cell { text-align: center; }
+  .dir-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .dir-bi   { background: rgba(167,139,250,.2); color: var(--bi); }
+  .dir-exp  { background: rgba(245,158,11,.2);  color: var(--export); }
+  .dir-none { background: transparent; color: #1e293b; }
+
+  .disc-cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .check { color: var(--accent);  font-size: 14px; }
+  .cross { color: var(--border);  font-size: 14px; }
+
+  .unit-cell {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #64748b;
+  }
+
+  /* ── Unit conversion table ── */
+  .conv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2px;
+    background: var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 64px;
+  }
+  .conv-card {
+    background: var(--card);
+    padding: 20px;
+  }
+  .conv-tool {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 12px;
+  }
+  .conv-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    font-size: 11px;
+  }
+  .conv-row:last-child { border-bottom: none; }
+  .conv-native { color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .conv-arrow  { color: var(--border); margin: 0 6px; }
+  .conv-pmef   { color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+  .conv-factor { color: #475569; font-size: 10px; font-style: italic; }
+
+  /* ── Identity key table ── */
+  .identity-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2px;
+    background: var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 64px;
+  }
+  .identity-card {
+    background: var(--card);
+    padding: 20px 24px;
+  }
+  .identity-tool { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .identity-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .identity-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+  /* ── Architecture diagram ── */
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+    margin-bottom: 64px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.9;
+    color: #64748b;
+    overflow-x: auto;
+  }
+  .arch-diagram .hl-green  { color: var(--accent); }
+  .arch-diagram .hl-blue   { color: var(--accent2); }
+  .arch-diagram .hl-amber  { color: var(--accent3); }
+  .arch-diagram .hl-purple { color: var(--bi); }
+  .arch-diagram .hl-red    { color: #ef4444; }
+  .arch-diagram .hl-white  { color: #e2e8f0; }
+
+  /* ── Discipline coverage matrix ── */
+  .coverage-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 2px;
+    margin-bottom: 64px;
+  }
+  .coverage-table th {
+    background: var(--surface);
+    padding: 8px 12px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+  }
+  .coverage-table td {
+    background: var(--card);
+    padding: 10px 12px;
+    text-align: center;
+    font-size: 12px;
+  }
+  .coverage-table .tool-col { text-align: left; font-weight: 700; color: #fff; white-space: nowrap; }
+  .coverage-table tr:hover td { background: #1a2033; }
+  .cov-yes { color: var(--accent); font-size: 16px; }
+  .cov-no  { color: #1e293b; font-size: 16px; }
+  .cov-partial { color: var(--accent3); font-size: 14px; }
+
+  /* ── Footer ── */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding-top: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: gap;
+    gap: 16px;
+  }
+  .footer-left {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .footer-left strong { color: var(--accent); }
+  .footer-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .page > * { animation: fadeUp .5s ease both; }
+  .page > *:nth-child(1) { animation-delay: .05s; }
+  .page > *:nth-child(2) { animation-delay: .1s; }
+  .page > *:nth-child(3) { animation-delay: .15s; }
+  .page > *:nth-child(4) { animation-delay: .2s; }
+  .page > *:nth-child(5) { animation-delay: .25s; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Header ── -->
+  <div class="header">
+    <div class="header-tag">Plant Model Exchange Format · v0.9.0-rc · SMS Group</div>
+    <h1>Adapter Overview</h1>
+    <p class="subtitle">Complete reference for all 10 PMEF adapters — directions, formats, data models, disciplines, identity keys, and unit conversions.</p>
+  </div>
+
+  <!-- ── KPI Strip ── -->
+  <div class="kpi-strip">
+    <div class="kpi"><div class="kpi-val">10</div><div class="kpi-label">Adapters</div></div>
+    <div class="kpi"><div class="kpi-val blue">5</div><div class="kpi-label">Bidirectional</div></div>
+    <div class="kpi"><div class="kpi-val amber">5</div><div class="kpi-label">Export only</div></div>
+    <div class="kpi"><div class="kpi-val" style="color:var(--l3)">2</div><div class="kpi-label">Level 3</div></div>
+    <div class="kpi"><div class="kpi-val blue">8</div><div class="kpi-label">Level 2</div></div>
+    <div class="kpi"><div class="kpi-val purple">15</div><div class="kpi-label">Rust Crates</div></div>
+    <div class="kpi"><div class="kpi-val" style="color:#f97316">17.9k</div><div class="kpi-label">Rust Lines</div></div>
+    <div class="kpi"><div class="kpi-val blue">6.2k</div><div class="kpi-label">C# Lines</div></div>
+    <div class="kpi"><div class="kpi-val" style="color:#34d399">624</div><div class="kpi-label">C Lines (Creo)</div></div>
+    <div class="kpi"><div class="kpi-val" style="color:#e2e8f0">68</div><div class="kpi-label">Tests passing</div></div>
+  </div>
+
+  <!-- ── Architecture Diagram ── -->
+  <div class="section-title">System Architecture</div>
+  <div class="arch-diagram">
+<span class="hl-white">                    ┌─────────────────────────────────────────────────────────────────┐</span>
+<span class="hl-white">                    │                    PMEF NDJSON Package                         │</span>
+<span class="hl-white">                    │   pmef:FileHeader · Plant · Unit · PipingNetworkSystem           │</span>
+<span class="hl-white">                    │   pmef:Pipe · Elbow · Tee · Valve · Flange · Weld · Support      │</span>
+<span class="hl-white">                    │   pmef:Pump · Vessel · HX · Reactor · Column · GenericEquipment  │</span>
+<span class="hl-white">                    │   pmef:SteelMember · SteelConnection · InstrumentObject · Loop    │</span>
+<span class="hl-white">                    │   pmef:CableObject · PLCObject · ClashResult · HasEquivalentIn    │</span>
+<span class="hl-white">                    └──────────────────────┬──────────────────────────────────────────┘</span>
+                                           │
+          ┌────────────┬──────────┬────────┴────────┬───────────┬──────────────────┐
+          │            │          │                  │           │                  │
+   <span class="hl-green">◆ PIPING</span>     <span class="hl-amber">◆ EQUIP</span>   <span class="hl-red">◆ STEEL</span>       <span class="hl-purple">◆ E&amp;I</span>      <span class="hl-blue">◆ CLASH</span>      <span class="hl-white">◆ MULTIDISC</span>
+          │            │          │                  │           │                  │
+   <span class="hl-green">Plant 3D</span>    <span class="hl-amber">Creo</span>      <span class="hl-red">Tekla</span>         <span class="hl-purple">COMOS</span>     <span class="hl-blue">Navisworks</span>   <span class="hl-white">AVEVA E3D</span>
+   <span class="hl-green">CADMATIC</span>    <span class="hl-amber">Inventor</span>  <span class="hl-red">Adv.Steel</span>     <span class="hl-purple">(+cables</span>              <span class="hl-white">Revit</span>
+   <span class="hl-green">AVEVA E3D</span>   <span class="hl-amber">COMOS</span>     <span class="hl-red">Tekla</span>          <span class="hl-purple">+PLC)</span>
+   <span class="hl-green">Revit</span>       <span class="hl-amber">Revit</span>     <span class="hl-red">Revit</span>
+                       <span class="hl-red">Inventor</span>
+                       <span class="hl-red">AVEVA E3D</span>
+
+<span class="hl-muted">   Direction:  <span class="hl-purple">↔ Bidirectional</span>  ·  <span class="hl-amber">→ Export only</span>  ·  Identity: HasEquivalentIn (CUID/GUID/Handle/DbAddress)</span>
+  </div>
+
+  <!-- ── Adapter Cards ── -->
+  <div class="section-title">Adapter Details</div>
+  <div class="adapters-grid">
+
+    <!-- Plant 3D -->
+    <div class="adapter-card">
+      <div class="card-top">
+        <div>
+          <div class="card-name">AutoCAD Plant 3D</div>
+          <div class="card-vendor">Autodesk · Plant 3D 2024</div>
+        </div>
+        <div class="badges">
+          <span class="badge badge-bi">↔ Bi</span>
+          <span class="badge badge-l2">L2</span>
+        </div>
+      </div>
+      <div class="disciplines">
+        <span class="disc-pill disc-piping">Piping</span>
+        <span class="disc-pill disc-equipment">Equipment</span>
+      </div>
+      <div class="formats">
+        <div class="format-row">
+          <span class="format-arrow fa-in">IN</span>
+          <div class="format-tags">
+            <span class="format-tag">PCF *.pcf</span>
+            <span class="format-tag">IDF *.idf</span>
+            <span class="format-tag">Plant SDK JSON</span>
+          </div>
+        </div>
+        <div class="format-row">
+          <span class="format-arrow fa-out">OUT</span>
+          <div class="format-tags">
+            <span class="format-tag">PMEF NDJSON</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="card-row-key">Identity</span><span class="card-row-val">DWG object handle (64-bit hex)</span>
+        <span class="card-row-key">Native units</span><span class="card-row-val">Inches (PCF/IDF) · Feet (SDK)</span>
+        <span class="card-row-key">Coord sys</span><span class="card-row-val">Z-up · no conversion needed</span>
+        <span class="card-row-key">Tech stack</span><span class="card-row-val">Rust PCF/IDF parser · AutoCAD Plant SDK (.NET)</span>
+      </div>
+      <div class="card-note">PCF pipeline runs offline — no live tool needed. SDK plugin required for equipment datasheets. Piping lines grouped by PIPELINE-REFERENCE → PipingNetworkSystem. Weld tracking via IDF.</div>
+      <div class="code-lines"><span class="code-rs">Rust 1,607 lines</span> · <span class="code-cs">C# 442 lines</span></div>
+    </div>
+
+    <!-- CADMATIC -->
+    <div class="adapter-card">
+      <div class="card-top">
+        <div>
+          <div class="card-name">CADMATIC</div>
+          <div class="card-vendor">CADMATIC · v2024.1</div>
+        </div>
+        <div class="badges">
+          <span class="badge badge-bi">↔ Bi</span>
+          <span class="badge badge-l2">L2</span>
+        </div>
+      </div>
+      <div class="disciplines">
+        <span class="disc-pill disc-piping">Piping</span>
+        <span class="disc-pill disc-equipment">Equipment</span>
+      </div>
+      <div class="formats">
+        <div class="format-row">
+          <span class="format-arrow fa-in">IN</span>
+          <div class="format-tags">
+            <span class="format-tag">REST /api/v1/pipelines</span>
+            <span class="format-tag">REST /api/v1/equipment</span>
+            <span class="format-tag">3DDX geometry</span>
+          </div>
+        </div>
+        <div class="format-row">
+          <span class="format-arrow fa-out">OUT</span>
+          <div class="format-tags">
+            <span class="format-tag">PMEF NDJSON</span>
+            <span class="format-tag">POST /api/v1/import/pmef</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="card-row-key">Identity</span><span class="card-row-val">CADMATIC objectGuid (UUID)</span>
+        <span class="card-row-key">Native units</span><span class="card-row-val">mm · bar-g · °C</span>
+        <span class="card-row-key">Coord sys</span><span class="card-row-val">Z-up · no conversion</span>
+        <span class="card-row-key">Tech stack</span><span class="card-row-val">Rust reqwest HTTP client · exp. backoff retry · pagination</span>
+      </div>
+      <div class="card-note">Only live-API adapter. Requires running CADMATIC server. Auth: Bearer token or HTTP Basic. Component batch size configurable (default 200). 30 component types + 40 equipment types mapped.</div>
+      <div class="code-lines"><span class="code-rs">Rust 2,033 lines</span> · <span class="code-cs">C# 0</span></div>
+    </div>
+
+    <!-- AVEVA E3D -->
+    <div class="adapter-card">
+      <div class="card-top">
+        <div>
+          <div class="card-name">AVEVA E3D</div>
+          <div class="card-vendor">AVEVA · E3D 2024 / PDMS</div>
+        </div>
+        <div class="badges">
+          <span class="badge badge-export">→ Export</span>
+          <span class="badge badge-l2">L2</span>
+        </div>
+      </div>
+      <div class="disciplines">
+        <span class="disc-pill disc-piping">Piping</span>
+        <span class="disc-pill disc-equipment">Equipment</span>
+        <span class="disc-pill disc-steel">Steel</span>
+      </div>
+      <div class="formats">
+        <div class="format-row">
+          <span class="format-arrow fa-in">IN</span>
+          <div class="format-tags">
+            <span class="format-tag">PML *.pml (text)</span>
+            <span class="format-tag">RVM *.rvm (binary)</span>
+          </div>
+        </div>
+        <div class="format-row">
+          <span class="format-arrow fa-out">OUT</span>
+          <div class="format-tags"><span class="format-tag">PMEF NDJSON</span></div>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="card-row-key">Identity</span><span class="card-row-val">E3D DB address (/SITE/ZONE/ELEM/…)</span>
+        <span class="card-row-key">Native units</span><span class="card-row-val">mm · K · Pa (E3D export)</span>
+        <span class="card-row-key">Coord sys</span><span class="card-row-val">Z-up · legacy PDMS Y-up swap included</span>
+        <span class="card-row-key">Tech stack</span><span class="card-row-val">Rust PML indent-parser · RVM binary (15 primitive types)</span>
+      </div>
+      <div class="card-note">Fully offline — no live E3D connection. PML export from AVEVA Engage or PML scripts. RVM provides 15 primitive geometry types (Box, Cyl, Sphere, Snout, Torus, Dish…). Port-based topology resolution.</div>
+      <div class="code-lines"><span class="code-rs">Rust 2,009 lines</span></div>
+    </div>
+
+    <!-- Tekla -->
+    <div class="adapter-card">
+      <div class="card-top">
+        <div>
+          <div class="card-name">Tekla Structures</div>
+          <div class="card-vendor">Trimble · Tekla 2024</div>
+        </div>
+        <div class="badges">
+          <span class="badge badge-bi">↔ Bi</span>
+          <span class="badge badge-l3">L3 ★</span>
+        </div>
+      </div>
+      <div class="disciplines">
+        <span class="disc-pill disc-steel">Steel</span>
+      </div>
+      <div class="formats">
+        <div class="format-row">
+          <span class="format-arrow fa-in">IN</span>
+          <div class="format-tags">
+            <span class="format-tag">Tekla Open API JSON</span>
+            <span class="format-tag">CIS/2 XML</span>
+          </div>
+        </div>
+        <div class="format-row">
+          <span class="format-arrow fa-out">OUT</span>
+          <div class="format-tags">
+            <span class="format-tag">PMEF NDJSON</span>
+            <span class="format-tag">Open API update</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="card-row-key">Identity</span><span class="card-row-val">Tekla GUID (stable) + numeric ID</span>
+        <span class="card-row-key">Native units</span><span class="card-row-val">mm · kg · degrees</span>
+        <span class="card-row-key">Coord sys</span><span class="card-row-val">Z-up · no conversion</span>
+        <span class="card-row-key">Tech stack</span><span class="card-row-val">Rust JSON processor · Tekla Open API (.NET) C# plugin</span>
+      </div>
+      <div class="card-note">Only Level 3 conformance in steel domain alongside Advanced Steel. Full profile mapping: EN/AISC/BS/AS section catalogs. Exports analysis results (utilisation ratio, critical check). Bidirectional UDA write-back.</div>
+      <div class="code-lines"><span class="code-rs">Rust 1,637 lines</span> · <span class="code-cs">C# 940 lines</span></div>
+    </div>
+
+    <!-- COMOS -->
+    <div class="adapter-card">
+      <div class="card-top">
+        <div>
+          <div class="card-name">Siemens COMOS</div>
+          <div class="card-vendor">Siemens · COMOS 10.4</div>
+        </div>
+        <div class="badges">
+          <span class="badge badge-export">→ Export</span>
+          <span class="badge badge-l2">L2</span>
+        </div>
+      </div>
+      <div class="disciplines">
+        <span class="disc-pill disc-equipment">Equipment</span>
+        <span class="disc-pill disc-piping">Piping</span>
+        <span class="disc-pill disc-ei">E&amp;I</span>
+        <span class="disc-pill disc-cables">Cables</span>
+        <span class="disc-pill disc-plc">PLC</span>
+      </div>
+      <div class="formats">
+        <div class="format-row">
+          <span class="format-arrow fa-in">IN</span>
+          <div class="format-tags">
+            <span class="format-tag">COMOS .NET API</span>
+            <span class="format-tag">@E/@I/@L/@K/@S classes</span>
+          </div>
+        </div>
+        <div class="format-row">
+          <span class="format-arrow fa-out">OUT</span>
+          <div class="format-tags"><span class="format-tag">PMEF NDJSON</span></div>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="card-row-key">Identity</span><span class="card-row-val">COMOS CUID (stable across renames)</span>
+        <span class="card-row-key">Native units</span><span class="card-row-val">bar-g · °C · kW · m³/h</span>
+        <span class="card-row-key">Coord sys</span><span class="card-row-val">N/A — P&amp;ID data model only, no 3D</span>
+        <span class="card-row-key">Tech stack</span><span class="card-row-val">Rust JSON processor · COMOS .NET API C# exporter</span>
+      </div>
+      <div class="card-note">Broadest discipline coverage of all adapters. No 3D geometry — position comes from 3D tool adapter (E3D/Plant3D). SIL/PFD/PFH for safety instruments. TIA Portal + EPLAN integration attributes. 30 CTA attribute fields per equipment class.</div>
+      <div class="code-lines"><span class="code-rs">Rust 1,817 lines</span> · <span class="code-cs">C# 640 lines</span></div>
+    </div>
+
+    <!-- Creo -->
+    <div class="adapter-card">
+      <div class="card-top">
+        <div>
+          <div class="card-name">Creo Parametric</div>
+          <div class="card-vendor">PTC · Creo 10</div>
+        </div>
+        <div class="badges">
+          <span class="badge badge-export">→ Export</span>
+          <span class="badge badge-l2">L2</span>
+        </div>
+      </div>
+      <div class="disciplines">
+        <span class="disc-pill disc-equipment">Equipment</span>
+        <span class="disc-pill disc-piping">Piping</span>
+        <span class="disc-pill disc-steel">Steel</span>
+      </div>
+      <div class="formats">
+        <div class="format-row">
+          <span class="format-arrow fa-in">IN</span>
+          <div class="format-tags">
+            <span class="format-tag">Creo Toolkit C JSON</span>
+            <span class="format-tag">STEP AP214/AP242 *.stp</span>
+          </div>
+        </div>
+        <div class="format-row">
+          <span class="format-arrow fa-out">OUT</span>
+          <div class="format-tags"><span class="format-tag">PMEF NDJSON</span></div>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="card-row-key">Identity</span><span class="card-row-val">Creo model_name + Windchill WTPart#</span>
+        <span class="card-row-key">Native units</span><span class="card-row-val">mm or inches (auto-detected)</span>
+        <span class="card-row-key">Coord sys</span><span class="card-row-val">Z-up</span>
+        <span class="card-row-key">Tech stack</span><span class="card-row-val">Rust JSON + STEP parser · Creo Toolkit C plugin</span>
+      </div>
+      <div class="card-note">SMS-specific equipment classes: EAF, Converter, Ladle, RollingMill, Gearbox, HPU. Nozzles from named CS (CS_NOZZLE_*) in Creo model. STEP provides LOD3 bounding box via CARTESIAN_POINT scan. Windchill WTPart# links PDM. Requires PROTK registration.</div>
+      <div class="code-lines"><span class="code-rs">Rust 1,731 lines</span> · <span class="code-c">C 624 lines</span></div>
+    </div>
+
+    <!-- Inventor -->
+    <div class="adapter-card">
+      <div class="card-top">
+        <div>
+          <div class="card-name">Autodesk Inventor</div>
+          <div class="card-vendor">Autodesk · Inventor 2024</div>
+        </div>
+        <div class="badges">
+          <span class="badge badge-export">→ Export</span>
+          <span class="badge badge-l2">L2</span>
+        </div>
+      </div>
+      <div class="disciplines">
+        <span class="disc-pill disc-equipment">Equipment</span>
+        <span class="disc-pill disc-piping">Piping</span>
+        <span class="disc-pill disc-steel">Steel</span>
+      </div>
+      <div class="formats">
+        <div class="format-row">
+          <span class="format-arrow fa-in">IN</span>
+          <div class="format-tags">
+            <span class="format-tag">Inventor COM JSON</span>
+            <span class="format-tag">iProperties + Parameters</span>
+          </div>
+        </div>
+        <div class="format-row">
+          <span class="format-arrow fa-out">OUT</span>
+          <div class="format-tags"><span class="format-tag">PMEF NDJSON</span></div>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="card-row-key">Identity</span><span class="card-row-val">OccurrencePath + Vault document#</span>
+        <span class="card-row-key">Native units</span><span class="card-row-val">cm internally → ×10 → mm output</span>
+        <span class="card-row-key">Coord sys</span><span class="card-row-val">Z-up</span>
+        <span class="card-row-key">Tech stack</span><span class="card-row-val">Rust JSON processor · Inventor COM .NET / iLogic rule</span>
+      </div>
+      <div class="card-note">PMEF_TAG/CLASS/DESIGN_PRESSURE/DESIGN_TEMP model parameters drive mapping. Nozzle convention: WorkPoints named PMEF_NOZZLE_*. Frame Generator → SteelMember; Tube &amp; Pipe → piping. Diagonal filter removes tiny hardware (bolts, washers). Vault PDM integration.</div>
+      <div class="code-lines"><span class="code-rs">Rust 1,487 lines</span> · <span class="code-cs">C# 603 lines</span></div>
+    </div>
+
+    <!-- Revit -->
+    <div class="adapter-card">
+      <div class="card-top">
+        <div>
+          <div class="card-name">Autodesk Revit</div>
+          <div class="card-vendor">Autodesk · Revit 2024</div>
+        </div>
+        <div class="badges">
+          <span class="badge badge-bi">↔ Bi</span>
+          <span class="badge badge-l2">L2</span>
+        </div>
+      </div>
+      <div class="disciplines">
+        <span class="disc-pill disc-piping">Piping</span>
+        <span class="disc-pill disc-equipment">Equipment</span>
+        <span class="disc-pill disc-steel">Steel</span>
+      </div>
+      <div class="formats">
+        <div class="format-row">
+          <span class="format-arrow fa-in">IN</span>
+          <div class="format-tags">
+            <span class="format-tag">Revit API JSON</span>
+            <span class="format-tag">FilteredElementCollector</span>
+          </div>
+        </div>
+        <div class="format-row">
+          <span class="format-arrow fa-out">OUT</span>
+          <div class="format-tags"><span class="format-tag">PMEF NDJSON</span></div>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="card-row-key">Identity</span><span class="card-row-val">Revit UniqueId (stable GUID) + ElementId</span>
+        <span class="card-row-key">Native units</span><span class="card-row-val">Feet internally → ×304.8 → mm</span>
+        <span class="card-row-key">Coord sys</span><span class="card-row-val">Z-up</span>
+        <span class="card-row-key">Tech stack</span><span class="card-row-val">Rust JSON processor · Revit API .NET add-in</span>
+      </div>
+      <div class="card-note">Covers: Pipes (by system → PipingNetworkSystem), Pipe Fittings (8 PartTypes), Pipe Accessories (9 valve families), Mechanical Equipment (OmniClass-based), Structural Framing + Columns. System type → medium code (HW/CW/ST/PROC…). Min diameter filter removes domestic plumbing.</div>
+      <div class="code-lines"><span class="code-rs">Rust 1,232 lines</span> · <span class="code-cs">C# 320 lines (combined)</span></div>
+    </div>
+
+    <!-- Advanced Steel -->
+    <div class="adapter-card">
+      <div class="card-top">
+        <div>
+          <div class="card-name">Advanced Steel</div>
+          <div class="card-vendor">Autodesk · Advanced Steel 2024</div>
+        </div>
+        <div class="badges">
+          <span class="badge badge-bi">↔ Bi</span>
+          <span class="badge badge-l3">L3 ★</span>
+        </div>
+      </div>
+      <div class="disciplines">
+        <span class="disc-pill disc-steel">Steel</span>
+      </div>
+      <div class="formats">
+        <div class="format-row">
+          <span class="format-arrow fa-in">IN</span>
+          <div class="format-tags">
+            <span class="format-tag">AdvSteeling.Core API JSON</span>
+            <span class="format-tag">SteelObject hierarchy</span>
+          </div>
+        </div>
+        <div class="format-row">
+          <span class="format-arrow fa-out">OUT</span>
+          <div class="format-tags"><span class="format-tag">PMEF NDJSON</span></div>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="card-row-key">Identity</span><span class="card-row-val">AutoCAD entity handle (hex)</span>
+        <span class="card-row-key">Native units</span><span class="card-row-val">Metres → ×1000 → mm</span>
+        <span class="card-row-key">Coord sys</span><span class="card-row-val">Z-up</span>
+        <span class="card-row-key">Tech stack</span><span class="card-row-val">Rust JSON processor · AdvancedSteeling.Core .NET API</span>
+      </div>
+      <div class="card-note">Full structural steel model: StraightBeam/BentBeam → SteelMember with FIXED/PINNED end releases. BoltPattern → SteelConnection (BOLTED_ENDPLATE) with bolt grade/diameter/count. FilletWeld → SteelConnection (WELDED) with leg size. AnchorPattern. DIN/AISC/BS/AS profile catalog normalisation.</div>
+      <div class="code-lines"><span class="code-rs">Rust 573 lines</span> · <span class="code-cs">C# 320 lines (combined)</span></div>
+    </div>
+
+    <!-- Navisworks -->
+    <div class="adapter-card">
+      <div class="card-top">
+        <div>
+          <div class="card-name">Navisworks Manage</div>
+          <div class="card-vendor">Autodesk · Navisworks 2024</div>
+        </div>
+        <div class="badges">
+          <span class="badge badge-export">→ Export</span>
+          <span class="badge badge-l2">L2</span>
+        </div>
+      </div>
+      <div class="disciplines">
+        <span class="disc-pill disc-piping">Piping</span>
+        <span class="disc-pill disc-equipment">Equipment</span>
+        <span class="disc-pill disc-steel">Steel</span>
+        <span class="disc-pill disc-clash">Clash</span>
+      </div>
+      <div class="formats">
+        <div class="format-row">
+          <span class="format-arrow fa-in">IN</span>
+          <div class="format-tags">
+            <span class="format-tag">NWD/NWF federated model</span>
+            <span class="format-tag">Clash Detective results</span>
+          </div>
+        </div>
+        <div class="format-row">
+          <span class="format-arrow fa-out">OUT</span>
+          <div class="format-tags">
+            <span class="format-tag">PMEF NDJSON</span>
+            <span class="format-tag">pmef:ClashResult</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="card-row-key">Identity</span><span class="card-row-val">Navisworks InstanceGuid (conf. 0.9)</span>
+        <span class="card-row-key">Native units</span><span class="card-row-val">Metres → ×1000 → mm</span>
+        <span class="card-row-key">Coord sys</span><span class="card-row-val">Z-up (all source models unified)</span>
+        <span class="card-row-key">Tech stack</span><span class="card-row-val">Rust JSON processor · Navisworks API AddInPlugin .NET</span>
+      </div>
+      <div class="card-note">Unique: the only adapter for model federation and clash detection. HasEquivalentIn confidence=0.9 (federated; lower than direct 1.0). Infers source system from file extension (REVIT/PLANT3D/AVEVA_E3D/IFC/TEKLA). Active-clashes-only filter. Clash severity: ERROR (hard) · WARNING (clearance) · INFO (duplicate).</div>
+      <div class="code-lines"><span class="code-rs">Rust 694 lines</span> · <span class="code-cs">C# 325 lines (combined)</span></div>
+    </div>
+
+  </div><!-- adapters-grid -->
+
+  <!-- ── Discipline Coverage Matrix ── -->
+  <div class="section-title">Discipline Coverage Matrix</div>
+  <table class="coverage-table">
+    <thead>
+      <tr>
+        <th style="text-align:left">Adapter</th>
+        <th>Piping</th>
+        <th>Equipment</th>
+        <th>Steel</th>
+        <th>E&amp;I</th>
+        <th>Cables</th>
+        <th>PLC/DCS</th>
+        <th>Clash</th>
+        <th>BIM/Civil</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="tool-col">AutoCAD Plant 3D</td>  <td><span class="cov-yes">●</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td></tr>
+      <tr><td class="tool-col">CADMATIC</td>          <td><span class="cov-yes">●</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td></tr>
+      <tr><td class="tool-col">AVEVA E3D</td>         <td><span class="cov-yes">●</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td></tr>
+      <tr><td class="tool-col">Tekla Structures</td>  <td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td></tr>
+      <tr><td class="tool-col">Siemens COMOS</td>     <td><span class="cov-yes">●</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-no">○</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td></tr>
+      <tr><td class="tool-col">Creo Parametric</td>   <td><span class="cov-partial">◑</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-partial">◑</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td></tr>
+      <tr><td class="tool-col">Autodesk Inventor</td> <td><span class="cov-partial">◑</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td></tr>
+      <tr><td class="tool-col">Autodesk Revit</td>    <td><span class="cov-yes">●</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-no">○</span></td><td><span class="cov-partial">◑</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-yes">●</span></td></tr>
+      <tr><td class="tool-col">Advanced Steel</td>    <td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td><td><span class="cov-no">○</span></td></tr>
+      <tr><td class="tool-col">Navisworks Manage</td> <td><span class="cov-yes">●</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-partial">◑</span></td><td><span class="cov-partial">◑</span></td><td><span class="cov-no">○</span></td><td><span class="cov-yes">●</span></td><td><span class="cov-yes">●</span></td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:11px;color:var(--muted);margin-top:-48px;margin-bottom:48px">
+    <span style="color:var(--accent)">●</span> Full coverage &nbsp;·&nbsp;
+    <span style="color:var(--accent3)">◑</span> Partial (envelope/routing only) &nbsp;·&nbsp;
+    <span style="color:#1e293b">○</span> Not supported
+  </p>
+
+  <!-- ── Direction & Identity Table ── -->
+  <div class="section-title">Direction, Identity &amp; Conformance</div>
+  <table class="matrix-table" style="margin-bottom:64px">
+    <thead>
+      <tr>
+        <th>Adapter</th>
+        <th>Direction</th>
+        <th>Conformance</th>
+        <th>Identity key (HasEquivalentIn)</th>
+        <th>Confidence</th>
+        <th>Import updates</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><div class="tool-name-cell">Plant 3D</div><div class="tool-id">pmef-adapter-plant3d</div></td>
+        <td class="dir-cell"><span class="dir-icon dir-bi">↔</span></td>
+        <td><span class="badge badge-l2">Level 2</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8">DWG handle (hex64)</td>
+        <td style="text-align:center;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px">1.0</td>
+        <td style="font-size:11px;color:#64748b">Equipment properties via Plant SDK</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">CADMATIC</div><div class="tool-id">pmef-adapter-cadmatic</div></td>
+        <td class="dir-cell"><span class="dir-icon dir-bi">↔</span></td>
+        <td><span class="badge badge-l2">Level 2</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8">objectGuid (UUID)</td>
+        <td style="text-align:center;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px">1.0</td>
+        <td style="font-size:11px;color:#64748b">POST /api/v1/import/pmef bulk endpoint</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">AVEVA E3D</div><div class="tool-id">pmef-adapter-e3d</div></td>
+        <td class="dir-cell"><span class="dir-icon dir-exp">→</span></td>
+        <td><span class="badge badge-l2">Level 2</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8">/SITE/ZONE/ELEM/… DB address</td>
+        <td style="text-align:center;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px">1.0</td>
+        <td style="font-size:11px;color:#64748b">Export only — no import</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">Tekla Structures</div><div class="tool-id">pmef-adapter-tekla</div></td>
+        <td class="dir-cell"><span class="dir-icon dir-bi">↔</span></td>
+        <td><span class="badge badge-l3" style="font-size:11px">Level 3 ★</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8">GUID + numeric teklaId</td>
+        <td style="text-align:center;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px">1.0</td>
+        <td style="font-size:11px;color:#64748b">Profile, grade, mark, UDA write-back</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">Siemens COMOS</div><div class="tool-id">pmef-adapter-comos</div></td>
+        <td class="dir-cell"><span class="dir-icon dir-exp">→</span></td>
+        <td><span class="badge badge-l2">Level 2</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8">CUID (stable across renames)</td>
+        <td style="text-align:center;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px">1.0</td>
+        <td style="font-size:11px;color:#64748b">Export only — P&amp;ID data origin</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">Creo Parametric</div><div class="tool-id">pmef-adapter-creo</div></td>
+        <td class="dir-cell"><span class="dir-icon dir-exp">→</span></td>
+        <td><span class="badge badge-l2">Level 2</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8">model_name + WTPart# (Windchill)</td>
+        <td style="text-align:center;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px">1.0</td>
+        <td style="font-size:11px;color:#64748b">Export only (STEP for LOD3)</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">Autodesk Inventor</div><div class="tool-id">pmef-adapter-inventor</div></td>
+        <td class="dir-cell"><span class="dir-icon dir-exp">→</span></td>
+        <td><span class="badge badge-l2">Level 2</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8">OccurrencePath + Vault doc#</td>
+        <td style="text-align:center;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px">1.0</td>
+        <td style="font-size:11px;color:#64748b">Export only (iLogic / COM add-in)</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">Autodesk Revit</div><div class="tool-id">pmef-adapter-revit</div></td>
+        <td class="dir-cell"><span class="dir-icon dir-bi">↔</span></td>
+        <td><span class="badge badge-l2">Level 2</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8">UniqueId (stable GUID) + ElementId</td>
+        <td style="text-align:center;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px">1.0</td>
+        <td style="font-size:11px;color:#64748b">Equipment properties, design conditions</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">Advanced Steel</div><div class="tool-id">pmef-adapter-advanced-steel</div></td>
+        <td class="dir-cell"><span class="dir-icon dir-bi">↔</span></td>
+        <td><span class="badge badge-l3" style="font-size:11px">Level 3 ★</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8">AutoCAD handle (hex, per-DWG)</td>
+        <td style="text-align:center;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px">1.0</td>
+        <td style="font-size:11px;color:#64748b">Member marks, grades, connection data</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">Navisworks Manage</div><div class="tool-id">pmef-adapter-navisworks</div></td>
+        <td class="dir-cell"><span class="dir-icon dir-exp">→</span></td>
+        <td><span class="badge badge-l2">Level 2</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8">InstanceGuid (session-scoped)</td>
+        <td style="text-align:center;color:var(--accent3);font-family:'JetBrains Mono',monospace;font-size:12px">0.9</td>
+        <td style="font-size:11px;color:#64748b">Export only — federated + clash results</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ── Unit Conversion Reference ── -->
+  <div class="section-title">Unit Conversions per Adapter</div>
+  <div class="conv-grid">
+    <div class="conv-card">
+      <div class="conv-tool">Plant 3D (PCF/IDF)</div>
+      <div class="conv-row"><span class="conv-native">inches</span><span class="conv-arrow">→</span><span class="conv-pmef">mm</span><span class="conv-factor">× 25.4</span></div>
+      <div class="conv-row"><span class="conv-native">psig</span><span class="conv-arrow">→</span><span class="conv-pmef">Pa abs</span><span class="conv-factor">× 6894.757 + 101325</span></div>
+      <div class="conv-row"><span class="conv-native">°F</span><span class="conv-arrow">→</span><span class="conv-pmef">K</span><span class="conv-factor">(F−32)×5/9 + 273.15</span></div>
+      <div class="conv-row"><span class="conv-native">lbs</span><span class="conv-arrow">→</span><span class="conv-pmef">kg</span><span class="conv-factor">× 0.453592</span></div>
+      <div class="conv-row"><span class="conv-native">hp</span><span class="conv-arrow">→</span><span class="conv-pmef">kW</span><span class="conv-factor">× 0.7457</span></div>
+      <div class="conv-row"><span class="conv-native">gpm</span><span class="conv-arrow">→</span><span class="conv-pmef">m³/h</span><span class="conv-factor">× 0.22712</span></div>
+      <div class="conv-row"><span class="conv-native">ft</span><span class="conv-arrow">→</span><span class="conv-pmef">m</span><span class="conv-factor">× 0.3048</span></div>
+      <div class="conv-row"><span class="conv-native">gal</span><span class="conv-arrow">→</span><span class="conv-pmef">m³</span><span class="conv-factor">× 0.003785</span></div>
+    </div>
+    <div class="conv-card">
+      <div class="conv-tool">CADMATIC</div>
+      <div class="conv-row"><span class="conv-native">mm</span><span class="conv-arrow">→</span><span class="conv-pmef">mm</span><span class="conv-factor">identity</span></div>
+      <div class="conv-row"><span class="conv-native">bar-g</span><span class="conv-arrow">→</span><span class="conv-pmef">Pa abs</span><span class="conv-factor">× 100000 + 101325</span></div>
+      <div class="conv-row"><span class="conv-native">°C</span><span class="conv-arrow">→</span><span class="conv-pmef">K</span><span class="conv-factor">+ 273.15</span></div>
+      <div class="conv-row"><span class="conv-native">kW</span><span class="conv-arrow">→</span><span class="conv-pmef">W</span><span class="conv-factor">× 1000</span></div>
+      <div class="conv-row"><span class="conv-native">m³/h</span><span class="conv-arrow">→</span><span class="conv-pmef">m³/h</span><span class="conv-factor">identity</span></div>
+    </div>
+    <div class="conv-card">
+      <div class="conv-tool">AVEVA E3D (PML export)</div>
+      <div class="conv-row"><span class="conv-native">mm</span><span class="conv-arrow">→</span><span class="conv-pmef">mm</span><span class="conv-factor">identity</span></div>
+      <div class="conv-row"><span class="conv-native">K</span><span class="conv-arrow">→</span><span class="conv-pmef">K</span><span class="conv-factor">identity (E3D exports K)</span></div>
+      <div class="conv-row"><span class="conv-native">Pa</span><span class="conv-arrow">→</span><span class="conv-pmef">Pa abs</span><span class="conv-factor">identity (E3D exports Pa)</span></div>
+      <div class="conv-row"><span class="conv-native">PDMS Y-up</span><span class="conv-arrow">→</span><span class="conv-pmef">Z-up</span><span class="conv-factor">(X,Y,Z)→(X,−Z,Y)</span></div>
+    </div>
+    <div class="conv-card">
+      <div class="conv-tool">Tekla Structures</div>
+      <div class="conv-row"><span class="conv-native">mm</span><span class="conv-arrow">→</span><span class="conv-pmef">mm</span><span class="conv-factor">identity</span></div>
+      <div class="conv-row"><span class="conv-native">kg</span><span class="conv-arrow">→</span><span class="conv-pmef">kg</span><span class="conv-factor">identity</span></div>
+      <div class="conv-row"><span class="conv-native">CIS/2 Y-up</span><span class="conv-arrow">→</span><span class="conv-pmef">Z-up</span><span class="conv-factor">(X,Y,Z)→(X,−Z,Y)</span></div>
+    </div>
+    <div class="conv-card">
+      <div class="conv-tool">Siemens COMOS</div>
+      <div class="conv-row"><span class="conv-native">bar-g</span><span class="conv-arrow">→</span><span class="conv-pmef">Pa abs</span><span class="conv-factor">× 100000 + 101325</span></div>
+      <div class="conv-row"><span class="conv-native">°C</span><span class="conv-arrow">→</span><span class="conv-pmef">K</span><span class="conv-factor">+ 273.15</span></div>
+      <div class="conv-row"><span class="conv-native">kW</span><span class="conv-arrow">→</span><span class="conv-pmef">W</span><span class="conv-factor">× 1000</span></div>
+      <div class="conv-row"><span class="conv-native">m³/h</span><span class="conv-arrow">→</span><span class="conv-pmef">m³/h</span><span class="conv-factor">identity</span></div>
+    </div>
+    <div class="conv-card">
+      <div class="conv-tool">Creo Parametric</div>
+      <div class="conv-row"><span class="conv-native">mm or in</span><span class="conv-arrow">→</span><span class="conv-pmef">mm</span><span class="conv-factor">auto-detect; in × 25.4</span></div>
+      <div class="conv-row"><span class="conv-native">m (Creo)</span><span class="conv-arrow">→</span><span class="conv-pmef">mm</span><span class="conv-factor">× 1000</span></div>
+      <div class="conv-row"><span class="conv-native">bar-g</span><span class="conv-arrow">→</span><span class="conv-pmef">Pa abs</span><span class="conv-factor">× 100000 + 101325</span></div>
+      <div class="conv-row"><span class="conv-native">°C</span><span class="conv-arrow">→</span><span class="conv-pmef">K</span><span class="conv-factor">+ 273.15</span></div>
+    </div>
+    <div class="conv-card">
+      <div class="conv-tool">Autodesk Inventor</div>
+      <div class="conv-row"><span class="conv-native">cm (internal)</span><span class="conv-arrow">→</span><span class="conv-pmef">mm</span><span class="conv-factor">× 10</span></div>
+      <div class="conv-row"><span class="conv-native">bar-g</span><span class="conv-arrow">→</span><span class="conv-pmef">Pa abs</span><span class="conv-factor">× 100000 + 101325</span></div>
+      <div class="conv-row"><span class="conv-native">°C</span><span class="conv-arrow">→</span><span class="conv-pmef">K</span><span class="conv-factor">+ 273.15</span></div>
+      <div class="conv-row"><span class="conv-native">in (T&amp;P)</span><span class="conv-arrow">→</span><span class="conv-pmef">mm</span><span class="conv-factor">× 25.4</span></div>
+    </div>
+    <div class="conv-card">
+      <div class="conv-tool">Autodesk Revit</div>
+      <div class="conv-row"><span class="conv-native">ft (internal)</span><span class="conv-arrow">→</span><span class="conv-pmef">mm</span><span class="conv-factor">× 304.8</span></div>
+      <div class="conv-row"><span class="conv-native">ft² (area)</span><span class="conv-arrow">→</span><span class="conv-pmef">m²</span><span class="conv-factor">× 0.0929</span></div>
+      <div class="conv-row"><span class="conv-native">ft³ (volume)</span><span class="conv-arrow">→</span><span class="conv-pmef">m³</span><span class="conv-factor">× 0.0283</span></div>
+      <div class="conv-row"><span class="conv-native">BTU/hr</span><span class="conv-arrow">→</span><span class="conv-pmef">W</span><span class="conv-factor">× 0.29307</span></div>
+    </div>
+    <div class="conv-card">
+      <div class="conv-tool">Adv. Steel + Navisworks</div>
+      <div class="conv-row"><span class="conv-native">m (internal)</span><span class="conv-arrow">→</span><span class="conv-pmef">mm</span><span class="conv-factor">× 1000</span></div>
+      <div class="conv-row"><span class="conv-native">m² (area)</span><span class="conv-arrow">→</span><span class="conv-pmef">m²</span><span class="conv-factor">identity</span></div>
+      <div class="conv-row"><span class="conv-native">kg</span><span class="conv-arrow">→</span><span class="conv-pmef">kg</span><span class="conv-factor">identity</span></div>
+    </div>
+  </div>
+
+  <!-- ── Data Models per Adapter ── -->
+  <div class="section-title">Data Model — PMEF Types per Adapter</div>
+  <table class="matrix-table" style="margin-bottom:64px">
+    <thead>
+      <tr>
+        <th>Adapter</th>
+        <th>PMEF Types Produced</th>
+        <th>Key Attributes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><div class="tool-name-cell">Plant 3D</div></td>
+        <td style="font-size:11px;color:#94a3b8">PipingNetworkSystem · PipingSegment · Pipe · Elbow · Tee · Reducer · Flange · Valve · Gasket · Weld · PipeSupport · Pump · GenericEquipment · HasEquivalentIn</td>
+        <td style="font-size:11px;color:#64748b">skey (8-char) · material · ports (coord+bore) · weld number/NDE · support type</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">CADMATIC</div></td>
+        <td style="font-size:11px;color:#94a3b8">PipingNetworkSystem · PipingSegment · Pipe · Elbow · Tee · Reducer · Flange · Valve · Gasket · Weld · PipeSupport · 40+ equipment types · HasEquivalentIn</td>
+        <td style="font-size:11px;color:#64748b">30 component types · design P/T · OD/WT · actuator type · fail position · nozzles with position+direction</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">AVEVA E3D</div></td>
+        <td style="font-size:11px;color:#94a3b8">PipingNetworkSystem · PipingSegment · Pipe · Elbow · Tee · Reducer · Flange · Valve · Weld · PipeSupport · 40+ equipment types · SteelMember · HasEquivalentIn</td>
+        <td style="font-size:11px;color:#64748b">PML element tree · RVM primitives (15 types) · 5-support types · elbow radius classification</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">Tekla</div></td>
+        <td style="font-size:11px;color:#94a3b8">SteelMember · SteelConnection · HasEquivalentIn</td>
+        <td style="font-size:11px;color:#64748b">profileId (EN/AISC/BS/AS) · memberType · fy/fu · finish · fireProtection · analysisResults · bolt spec · connection capacity · CIS/2 ref</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">COMOS</div></td>
+        <td style="font-size:11px;color:#94a3b8">Pump · Compressor · HeatExchanger · Vessel · Tank · Reactor · Column · Filter · Turbine · GenericEquipment · PipingNetworkSystem · InstrumentObject · InstrumentLoop · CableObject · PLCObject · HasEquivalentIn</td>
+        <td style="font-size:11px;color:#64748b">30 CTA attrs per class · SIL/PFD/PFH · TIA Portal addr · EPLAN BKZ · IEC 81346 functional/product · Kv/shutoff</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">Creo</div></td>
+        <td style="font-size:11px;color:#94a3b8">Pump · HeatExchanger · Vessel · Tank · Reactor · GenericEquipment · Pipe · Elbow · Tee · Valve · Flange · SteelMember · HasEquivalentIn</td>
+        <td style="font-size:11px;color:#64748b">boundingBox (LOD1/LOD3) · nozzle CS (origin+direction) · Windchill WTPart# · 4×3 transform matrix · STEP refUri</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">Inventor</div></td>
+        <td style="font-size:11px;color:#94a3b8">Pump · HeatExchanger · Vessel · Reactor · GenericEquipment · SteelMember · PipingNetworkSystem · PipingSegment · Pipe · HasEquivalentIn</td>
+        <td style="font-size:11px;color:#64748b">iProperties (11 fields) · PMEF_TAG/CLASS/DESIGN_PRESSURE params · nozzle work points · Frame Generator section · end releases · Vault doc#</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">Revit</div></td>
+        <td style="font-size:11px;color:#94a3b8">PipingNetworkSystem · PipingSegment · Pipe · Elbow · Tee · Reducer · Flange · Valve · Filter · Pump · HeatExchanger · GenericEquipment · SteelMember · HasEquivalentIn</td>
+        <td style="font-size:11px;color:#64748b">system type → medium code (HW/CW/ST) · OmniClass number · level name · design flow · power · structural usage</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">Advanced Steel</div></td>
+        <td style="font-size:11px;color:#94a3b8">SteelMember · SteelConnection (BOLTED_ENDPLATE, WELDED) · HasEquivalentIn</td>
+        <td style="font-size:11px;color:#64748b">profileId · memberType · end release (FIXED/PINNED) · bolt grade/diam/count/preloaded · weld type/leg/process · anchor pattern</td>
+      </tr>
+      <tr>
+        <td><div class="tool-name-cell">Navisworks</div></td>
+        <td style="font-size:11px;color:#94a3b8">GenericEquipment · Pipe · SteelMember · CableObject · ClashResult · ModelSource · HasEquivalentIn</td>
+        <td style="font-size:11px;color:#64748b">clashType (Hard/Clearance/Duplicate) · severity (ERROR/WARNING/INFO) · status (New→Resolved) · penetrationMm · assignedTo · sourceSystem</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ── Footer ── -->
+  <div class="footer">
+    <div class="footer-left">
+      <strong>PMEF v0.9.0-rc</strong> · Plant Model Exchange Format<br>
+      SMS Group Digital Engineering · 2026 · Apache-2.0 + CC-BY-4.0 + CC0
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <span class="footer-badge">15 Rust crates</span>
+      <span class="footer-badge">17,871 Rust lines</span>
+      <span class="footer-badge">6,215 C# lines</span>
+      <span class="footer-badge">624 C lines</span>
+      <span class="footer-badge">10 adapters</span>
+      <span class="footer-badge">68 tests ✓</span>
+    </div>
+  </div>
+
+</div><!-- page -->
+</body>
+</html>

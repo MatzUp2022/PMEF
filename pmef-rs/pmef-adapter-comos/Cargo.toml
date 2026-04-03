@@ -1,0 +1,26 @@
+[package]
+name        = "pmef-adapter-comos"
+description = "PMEF adapter for Siemens COMOS — Engineering Data Management"
+version.workspace    = true
+edition.workspace    = true
+license.workspace    = true
+repository.workspace = true
+
+[dependencies]
+serde.workspace      = true
+serde_json.workspace = true
+thiserror.workspace  = true
+anyhow.workspace     = true
+tokio.workspace      = true
+tracing.workspace    = true
+pmef-core.workspace  = true
+pmef-io.workspace    = true
+pmef-validate.workspace = true
+
+# XML parsing for COMOS AutomationML export
+quick-xml = { version = "0.36", features = ["serialize"] }
+# UUID generation for synthetic IDs
+uuid.workspace       = true
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }

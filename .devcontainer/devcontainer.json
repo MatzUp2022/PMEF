@@ -1,0 +1,38 @@
+{
+  "name": "PMEF Specification Development",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12-bullseye",
+
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "20" },
+    "ghcr.io/devcontainers/features/rust:1": { "version": "stable" }
+  },
+
+  "postCreateCommand": "pip install jsonschema check-jsonschema && npm install -g @mermaid-js/mermaid-cli markdownlint-cli2",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "redhat.vscode-yaml",
+        "bierner.markdown-mermaid",
+        "davidanson.vscode-markdownlint",
+        "esbenp.prettier-vscode",
+        "ms-python.python",
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml"
+      ],
+      "settings": {
+        "yaml.schemas": {
+          "./schemas/pmef-piping-component.schema.json": "examples/pump-skid-complete.ndjson",
+          "./schemas/pmef-equipment.schema.json": "examples/heat-exchanger-station.ndjson"
+        },
+        "editor.formatOnSave": true,
+        "editor.rulers": [120],
+        "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+        "[markdown]": { "editor.wordWrap": "on" }
+      }
+    }
+  },
+
+  "forwardPorts": [],
+  "remoteUser": "vscode"
+}

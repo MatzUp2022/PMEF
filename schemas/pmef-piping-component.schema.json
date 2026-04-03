@@ -1,0 +1,356 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pmef.org/schemas/0.9/pmef-piping-component.schema.json",
+  "title": "PMEF Piping Domain",
+  "description": "Canonical schema for PipingNetworkSystem, PipingSegment, and all PipingComponent subtypes.",
+
+  "$defs": {
+
+    "PipingNetworkSystem": {
+      "title": "Piping Network System (Line)",
+      "description": "A complete piping line from the P&ID. Corresponds to DEXPI PipingNetworkSystem and ISO 15926 ProcessSystem.",
+      "type": "object",
+      "required": ["@type","@id","pmefVersion","lineNumber","isPartOf"],
+      "properties": {
+        "@type":        { "const": "pmef:PipingNetworkSystem" },
+        "@id":          { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "pmefVersion":  { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+
+        "lineNumber": {
+          "type": "string",
+          "description": "Full line number tag, e.g. '8\"-CW-101-A1A2-HW'. Format: <size>-<medium>-<number>-<pipeClass>[-<options>]",
+          "examples": ["8\"-CW-101-A1A2", "6\"-SS-250-B3C1-HW", "DN200-PG-003-D1"]
+        },
+
+        "nominalDiameter":  { "type": "number", "description": "DN [mm]", "minimum": 1 },
+        "pipeClass":        { "type": "string" },
+        "mediumCode":       { "type": "string", "description": "Short service code, e.g. CW, SS, PG, NG" },
+        "mediumDescription":{ "type": "string" },
+        "fluidPhase":       { "type": "string", "enum": ["LIQUID","GAS","TWO_PHASE","SLURRY","STEAM","POWDER"] },
+
+        "isPartOf": {
+          "$ref": "pmef-base.schema.json#/$defs/PmefId",
+          "description": "Parent unit/area/plant PMEF ID"
+        },
+
+        "isDerivedFrom": {
+          "oneOf": [
+            { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+            { "type": "null" }
+          ],
+          "description": "DEXPI/P&ID FunctionalObject URI this physical line is derived from"
+        },
+
+        "iec81346": { "$ref": "pmef-base.schema.json#/$defs/Iec81346Designation" },
+        "rdlType":  { "$ref": "pmef-base.schema.json#/$defs/RdlUri" },
+        "catalogRef":{ "$ref": "pmef-base.schema.json#/$defs/CatalogReference" },
+
+        "designConditions": { "$ref": "pmef-property-sets.schema.json#/$defs/PipingDesignConditions" },
+        "specification":    { "$ref": "pmef-property-sets.schema.json#/$defs/PipingSpecification" },
+
+        "segments": {
+          "type": "array",
+          "description": "Ordered list of segment IDs that make up this line",
+          "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" }
+        },
+
+        "pidSheetRef":   { "type": "string", "description": "P&ID drawing number(s)" },
+        "isometricRef":  { "type": "string", "description": "Isometric drawing reference" },
+        "documents":     { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/DocumentLink" } },
+        "revision":      { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+
+        "customAttributes": {
+          "type": "object",
+          "description": "Project-specific key/value extension attributes",
+          "additionalProperties": { "type": ["string","number","boolean","null"] }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "PipingSegment": {
+      "title": "Piping Segment",
+      "description": "A contiguous section of a piping line sharing uniform specification. Maps to DEXPI PipingNetworkSegment.",
+      "type": "object",
+      "required": ["@type","@id","isPartOf"],
+      "properties": {
+        "@type":   { "const": "pmef:PipingSegment" },
+        "@id":     { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "isPartOf":{ "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Parent PipingNetworkSystem ID" },
+
+        "segmentNumber": { "type": "integer", "minimum": 1, "description": "Sequential segment number within line" },
+        "specification": { "$ref": "pmef-property-sets.schema.json#/$defs/PipingSpecification" },
+        "designConditions": { "$ref": "pmef-property-sets.schema.json#/$defs/PipingDesignConditions" },
+
+        "components": {
+          "type": "array",
+          "description": "Ordered list of component IDs in routing sequence",
+          "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" }
+        },
+
+        "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+      },
+      "additionalProperties": false
+    },
+
+    "PipingComponent": {
+      "title": "Piping Component (abstract base)",
+      "description": "Base type for all physical piping components. Never instantiated directly — use a specific subtype.",
+      "type": "object",
+      "required": ["@type","@id","pmefVersion","isPartOf","componentSpec"],
+      "properties": {
+        "@type":       { "type": "string", "description": "Concrete type: pmef:Pipe, pmef:Elbow, pmef:Valve, etc." },
+        "@id":         { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "pmefVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+
+        "isPartOf": {
+          "$ref": "pmef-base.schema.json#/$defs/PmefId",
+          "description": "Parent PipingSegment or PipingNetworkSystem ID"
+        },
+
+        "tagNumber":   { "type": "string", "description": "Instrument/valve tag if individually tagged" },
+        "itemNumber":  { "type": "string", "description": "Isometric item number" },
+        "heatNumber":  { "type": "string", "description": "Material traceability heat/cast number" },
+
+        "componentSpec": { "$ref": "pmef-property-sets.schema.json#/$defs/PipingComponentSpec" },
+        "catalogRef":    { "$ref": "pmef-base.schema.json#/$defs/CatalogReference" },
+        "iec81346":      { "$ref": "pmef-base.schema.json#/$defs/Iec81346Designation" },
+        "rdlType":       { "$ref": "pmef-base.schema.json#/$defs/RdlUri" },
+
+        "ports": {
+          "type": "array",
+          "description": "Connection ports of this component",
+          "items": { "$ref": "#/$defs/Port" },
+          "minItems": 1
+        },
+
+        "geometry":   { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
+        "documents":  { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/DocumentLink" } },
+        "revision":   { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+
+        "customAttributes": {
+          "type": "object",
+          "additionalProperties": { "type": ["string","number","boolean","null"] }
+        }
+      }
+    },
+
+    "Port": {
+      "title": "Connection Port",
+      "description": "A physical connection point on a piping component or equipment nozzle.",
+      "type": "object",
+      "required": ["portId","coordinate"],
+      "properties": {
+        "portId":      { "type": "string", "description": "Port identifier within this component, e.g. 'P1', 'P2', 'BRANCH'" },
+        "portType":    { "type": "string", "enum": ["INLET","OUTLET","BIDIRECTIONAL","BRANCH","VENT","DRAIN"], "default": "BIDIRECTIONAL" },
+        "coordinate":  { "$ref": "pmef-base.schema.json#/$defs/Coordinate3D", "description": "Port centreline point [mm]" },
+        "direction":   { "$ref": "pmef-base.schema.json#/$defs/UnitVector3D",  "description": "Flow/connection direction (unit vector pointing away from component)" },
+        "nominalDiameter": { "type": "number", "description": "Port bore [mm]" },
+        "endType":     { "type": "string", "enum": ["BW","FL","SW","SC","STUB","GROOVED","PLAIN"] },
+        "connectedTo": {
+          "oneOf": [
+            { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+            { "type": "null" }
+          ],
+          "description": "ID of the connected Port (via topology graph)"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "Pipe": {
+      "title": "Pipe (straight run)",
+      "allOf": [
+        { "$ref": "#/$defs/PipingComponent" },
+        {
+          "properties": {
+            "@type": { "const": "pmef:Pipe" },
+            "pipeLength": { "type": "number", "description": "Cut length [mm]", "minimum": 0 },
+            "spoolMark":  { "type": "string" }
+          }
+        }
+      ]
+    },
+
+    "Elbow": {
+      "title": "Elbow / Bend",
+      "allOf": [
+        { "$ref": "#/$defs/PipingComponent" },
+        {
+          "properties": {
+            "@type":  { "const": "pmef:Elbow" },
+            "angle":  { "type": "number", "description": "Bend angle [degrees], e.g. 45, 90, 180", "minimum": 0, "maximum": 360 },
+            "radius": { "type": "string", "enum": ["LONG_RADIUS","SHORT_RADIUS","3D","5D","CUSTOM"], "description": "Bend radius type; '3D'/'5D' = 3× or 5× nominal diameter" },
+            "radiusMm":{ "type": "number", "description": "Actual centreline bend radius [mm] if CUSTOM" }
+          }
+        }
+      ]
+    },
+
+    "Tee": {
+      "title": "Tee / Branch",
+      "allOf": [
+        { "$ref": "#/$defs/PipingComponent" },
+        {
+          "properties": {
+            "@type":         { "const": "pmef:Tee" },
+            "teeType":       { "type": "string", "enum": ["EQUAL","REDUCING","LATERAL_45","LATERAL_OTHER"] },
+            "branchDiameter":{ "type": "number", "description": "DN of branch leg [mm]" },
+            "branchAngle":   { "type": "number", "description": "Branch angle from run axis [degrees]", "default": 90 }
+          }
+        }
+      ]
+    },
+
+    "Reducer": {
+      "title": "Reducer (concentric or eccentric)",
+      "allOf": [
+        { "$ref": "#/$defs/PipingComponent" },
+        {
+          "properties": {
+            "@type":           { "const": "pmef:Reducer" },
+            "reducerType":     { "type": "string", "enum": ["CONCENTRIC","ECCENTRIC"] },
+            "largeDiameter":   { "type": "number", "description": "DN large end [mm]" },
+            "smallDiameter":   { "type": "number", "description": "DN small end [mm]" },
+            "eccentricFlat":   { "type": "string", "enum": ["FLAT_ON_BOTTOM","FLAT_ON_TOP","N/A"], "description": "Eccentric flat orientation" }
+          }
+        }
+      ]
+    },
+
+    "Flange": {
+      "title": "Flange",
+      "allOf": [
+        { "$ref": "#/$defs/PipingComponent" },
+        {
+          "properties": {
+            "@type":       { "const": "pmef:Flange" },
+            "flangeType":  { "type": "string", "enum": ["WELD_NECK","SLIP_ON","SOCKET_WELD","THREADED","LAP_JOINT","BLIND","ORIFICE","REDUCING","LONG_WELD_NECK"] },
+            "rating":      { "type": "string", "description": "ANSI class or PN, e.g. 'ANSI-150', 'PN16'" },
+            "facing":      { "type": "string", "enum": ["RF","FF","RTJ","AARH","TG","MF"] },
+            "boreDiameter":{ "type": "number", "description": "Bore diameter [mm]" }
+          }
+        }
+      ]
+    },
+
+    "Valve": {
+      "title": "Valve",
+      "allOf": [
+        { "$ref": "#/$defs/PipingComponent" },
+        {
+          "properties": {
+            "@type":      { "const": "pmef:Valve" },
+            "valveSpec":  { "$ref": "pmef-property-sets.schema.json#/$defs/ValveSpec" },
+            "instrumentTag": { "type": "string", "description": "Instrument tag for control/safety valves, e.g. 'XV-10101'" },
+            "normalPosition": { "type": "string", "enum": ["NO","NC","LOCKED_OPEN","LOCKED_CLOSED","THROTTLED"], "description": "Normal operating position" }
+          }
+        }
+      ]
+    },
+
+    "Olet": {
+      "title": "Branch Fitting (Olet, Sockolet, Weldolet …)",
+      "allOf": [
+        { "$ref": "#/$defs/PipingComponent" },
+        {
+          "properties": {
+            "@type":         { "const": "pmef:Olet" },
+            "oletType":      { "type": "string", "enum": ["WELDOLET","SOCKOLET","THREADOLET","NIPOLET","LATROLET","ELBOLET","SWEEPOLET","BRAZOLET"] },
+            "branchDiameter":{ "type": "number", "description": "DN of branch [mm]" },
+            "branchSchedule":{ "type": "string" }
+          }
+        }
+      ]
+    },
+
+    "Gasket": {
+      "title": "Gasket",
+      "allOf": [
+        { "$ref": "#/$defs/PipingComponent" },
+        {
+          "properties": {
+            "@type":      { "const": "pmef:Gasket" },
+            "gasketType": { "type": "string", "enum": ["RING","FULL_FACE","SPIRAL_WOUND","KAMMPROFILE","SOLID_METAL","RUBBER","PTFE","GRAPHITE"] },
+            "gasketMaterial": { "type": "string" }
+          }
+        }
+      ]
+    },
+
+    "Weld": {
+      "title": "Weld Record",
+      "allOf": [
+        { "$ref": "#/$defs/PipingComponent" },
+        {
+          "properties": {
+            "@type":    { "const": "pmef:Weld" },
+            "weldSpec": { "$ref": "pmef-property-sets.schema.json#/$defs/WeldSpec" },
+            "connects": {
+              "type": "array",
+              "description": "IDs of the two components joined by this weld",
+              "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "required": ["weldSpec","connects"]
+        }
+      ]
+    },
+
+    "PipeSupport": {
+      "title": "Pipe Support",
+      "allOf": [
+        { "$ref": "#/$defs/PipingComponent" },
+        {
+          "properties": {
+            "@type":       { "const": "pmef:PipeSupport" },
+            "supportSpec": { "$ref": "pmef-property-sets.schema.json#/$defs/SupportSpec" },
+            "supportsMark":{ "type": "string", "description": "Support mark from isometric" },
+            "structuralAttachmentId": {
+              "$ref": "pmef-base.schema.json#/$defs/PmefId",
+              "description": "SteelObject or CivilObject this support is welded/bolted to"
+            }
+          }
+        }
+      ]
+    },
+
+    "Spool": {
+      "title": "Fabrication Spool",
+      "description": "A prefabricated piping assembly, defined for shop or field fabrication. Contains an ordered list of components.",
+      "type": "object",
+      "required": ["@type","@id","spoolMark","isPartOf","components"],
+      "properties": {
+        "@type":     { "const": "pmef:Spool" },
+        "@id":       { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "spoolMark": { "type": "string", "description": "Spool mark / piece number on isometric" },
+        "isPartOf":  { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "components":{ "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" }, "minItems": 1 },
+        "totalWeight":   { "type": "number", "description": "[kg]" },
+        "spoolLength":   { "type": "number", "description": "Overall envelope length [mm]" },
+        "fabricationLocation": { "type": "string", "enum": ["SHOP","FIELD","VENDOR"] },
+        "isometricRef":  { "type": "string" },
+        "revision":      { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+      },
+      "additionalProperties": false
+    }
+  },
+
+  "oneOf": [
+    { "$ref": "#/$defs/PipingNetworkSystem" },
+    { "$ref": "#/$defs/PipingSegment" },
+    { "$ref": "#/$defs/Pipe" },
+    { "$ref": "#/$defs/Elbow" },
+    { "$ref": "#/$defs/Tee" },
+    { "$ref": "#/$defs/Reducer" },
+    { "$ref": "#/$defs/Flange" },
+    { "$ref": "#/$defs/Valve" },
+    { "$ref": "#/$defs/Olet" },
+    { "$ref": "#/$defs/Gasket" },
+    { "$ref": "#/$defs/Weld" },
+    { "$ref": "#/$defs/PipeSupport" },
+    { "$ref": "#/$defs/Spool" }
+  ]
+}

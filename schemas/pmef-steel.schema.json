@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pmef.org/schemas/0.9/pmef-steel.schema.json",
+  "title": "PMEF Structural Steel Domain",
+  "description": "Schema for SteelObject, SteelMember, SteelConnection, SteelSystem. Aligned with CIS/2, IFC 4.3 IfcStructuralMember, and Tekla Structures Open API.",
+
+  "$defs": {
+
+    "SteelSystem": {
+      "title": "Steel System (structural sub-model)",
+      "description": "A named structural sub-model or structure: e.g. pipe rack, equipment frame, building structure.",
+      "type": "object",
+      "required": ["@type","@id","pmefVersion","isPartOf","systemName"],
+      "properties": {
+        "@type":       { "const": "pmef:SteelSystem" },
+        "@id":         { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "pmefVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "isPartOf":    { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "systemName":  { "type": "string", "description": "e.g. 'Pipe Rack A', 'EAF Building', 'Compressor Frame'" },
+        "systemType": {
+          "type": "string",
+          "enum": ["PIPE_RACK","EQUIPMENT_FRAME","BUILDING","BRIDGE","CONVEYOR_STRUCTURE",
+                   "TANK_FOUNDATION","OFFSHORE_JACKET","MAST","CRANE_RUNWAY","STAIRCASE",
+                   "HANDRAIL","PLATFORM","GENERIC"],
+          "description": "Structural system category"
+        },
+        "designCode":  { "type": "string", "description": "Applicable design code, e.g. 'EN 1993-1-1', 'AISC 360', 'API RP 2A'" },
+        "steelGrade":  { "type": "string", "description": "Primary steel grade, e.g. 'S355JR', 'A572 Gr.50'" },
+        "memberIds":   { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" } },
+        "revision":    { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+      },
+      "additionalProperties": false
+    },
+
+    "SteelMember": {
+      "title": "Steel Member",
+      "description": "A single structural steel member (beam, column, brace, purlin). Corresponds to CIS/2 StructuralMember and IFC IfcBeam/IfcColumn.",
+      "type": "object",
+      "required": ["@type","@id","pmefVersion","isPartOf","memberType","profileId","startPoint","endPoint"],
+      "properties": {
+        "@type":       { "const": "pmef:SteelMember" },
+        "@id":         { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "pmefVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "isPartOf":    { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Parent SteelSystem" },
+        "memberMark":  { "type": "string", "description": "Mark/piece number from structural drawings, e.g. 'B101', 'C-A1'" },
+        "memberType": {
+          "type": "string",
+          "enum": ["BEAM","COLUMN","BRACE","PURLIN","GIRT","RAFTER","TRUSS_CHORD","TRUSS_DIAGONAL",
+                   "HANDRAIL","STRINGER","KICKER","TIE","CRANE_GIRDER","CRANE_RAIL","GENERIC"],
+          "description": "Structural member function"
+        },
+        "profileId": {
+          "type": "string",
+          "description": "PMEF profile catalog ID. Format: <standard>:<designation>, e.g. 'EN:HEA200', 'AISC:W12x53', 'EN:RHS200x100x6', 'EN:CHS219.1x8'",
+          "examples": ["EN:HEA200","EN:IPE300","AISC:W12x53","EN:RHS200x100x6","EN:UPE200","EN:CHS219.1x8","FLAT:200x20"]
+        },
+        "startPoint":  { "$ref": "pmef-base.schema.json#/$defs/Coordinate3D", "description": "Start node [mm]" },
+        "endPoint":    { "$ref": "pmef-base.schema.json#/$defs/Coordinate3D", "description": "End node [mm]" },
+        "rollAngle":   { "type": "number", "description": "Roll rotation of cross-section about member axis [degrees]", "default": 0 },
+        "length":      { "type": "number", "description": "Nominal member length [mm]", "minimum": 0 },
+        "material": {
+          "type": "object",
+          "description": "Material specification",
+          "properties": {
+            "grade":    { "type": "string", "description": "Steel grade, e.g. 'S355JR', 'A572 Gr.50'" },
+            "standard": { "type": "string", "description": "Material standard, e.g. 'EN 10025-2', 'ASTM A572'" },
+            "density":  { "type": "number", "description": "[kg/m³]", "default": 7850 },
+            "fy":       { "type": "number", "description": "Yield strength [MPa]" },
+            "fu":       { "type": "number", "description": "Ultimate tensile strength [MPa]" }
+          },
+          "required": ["grade"],
+          "additionalProperties": false
+        },
+        "weight":  { "type": "number", "description": "Member weight [kg]" },
+        "finish":  { "type": "string", "description": "Surface finish / coating, e.g. 'HOT_DIP_GALVANIZED', 'PRIMER_2XCOAT'" },
+        "fireProtection": {
+          "type": "object",
+          "description": "Fire protection specification",
+          "properties": {
+            "type":              { "type": "string", "enum": ["NONE","INTUMESCENT_PAINT","SPRAY_MINERAL","BOARD_ENCLOSURE","CONCRETE_ENCASEMENT"] },
+            "requiredPeriod":    { "type": "number", "description": "Required fire resistance [minutes]" },
+            "sectionFactor":     { "type": "number", "description": "Section factor Hp/A or Am/V [1/m]" }
+          },
+          "additionalProperties": false
+        },
+        "analysisResults": {
+          "type": "object",
+          "description": "Structural analysis results (from FEM/stress analysis)",
+          "properties": {
+            "utilisationRatio": { "type": "number", "description": "Member utilisation ratio (0–1)", "minimum": 0 },
+            "criticalCheck":    { "type": "string", "description": "Governing check, e.g. 'LTB', 'SHEAR', 'DEFLECTION'" },
+            "axialForce":       { "type": "number", "description": "[kN]" },
+            "majorBending":     { "type": "number", "description": "Major axis moment [kN·m]" },
+            "minorBending":     { "type": "number", "description": "Minor axis moment [kN·m]" },
+            "shearForce":       { "type": "number", "description": "[kN]" }
+          },
+          "additionalProperties": false
+        },
+        "cis2Ref":    { "type": "string", "description": "CIS/2 native member ID for round-trip" },
+        "teklaGUID":  { "type": "string", "description": "Tekla Structures GUID for round-trip" },
+        "iec81346":   { "$ref": "pmef-base.schema.json#/$defs/Iec81346Designation" },
+        "rdlType":    { "$ref": "pmef-base.schema.json#/$defs/RdlUri" },
+        "geometry":   { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
+        "documents":  { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/DocumentLink" } },
+        "revision":   { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "customAttributes": { "type": "object", "additionalProperties": { "type": ["string","number","boolean","null"] } }
+      },
+      "additionalProperties": false
+    },
+
+    "SteelNode": {
+      "title": "Structural Node",
+      "description": "A topology node (joint) in the structural model where members connect. Used for FEM export.",
+      "type": "object",
+      "required": ["@type","@id","isPartOf","coordinate"],
+      "properties": {
+        "@type":       { "const": "pmef:SteelNode" },
+        "@id":         { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "isPartOf":    { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "nodeNumber":  { "type": "integer", "description": "Sequential node number for FEM" },
+        "coordinate":  { "$ref": "pmef-base.schema.json#/$defs/Coordinate3D" },
+        "memberIds":   { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" }, "description": "Members framing into this node" },
+        "connectionId":{ "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "SteelConnection at this node" },
+        "supportType": {
+          "type": ["string","null"],
+          "enum": ["FIXED","PINNED","ROLLER_X","ROLLER_Y","ROLLER_Z","SPRING","FREE",null],
+          "description": "Boundary condition (null = internal node)"
+        },
+        "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+      },
+      "additionalProperties": false
+    },
+
+    "SteelConnection": {
+      "title": "Steel Connection",
+      "description": "A structural connection between members (bolted, welded, pinned). Aligns with CIS/2 Connection and Tekla connection objects.",
+      "type": "object",
+      "required": ["@type","@id","isPartOf","connectionType","memberIds"],
+      "properties": {
+        "@type":          { "const": "pmef:SteelConnection" },
+        "@id":            { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "isPartOf":       { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "connectionMark": { "type": "string", "description": "Connection mark from drawings" },
+        "connectionType": {
+          "type": "string",
+          "enum": ["BOLTED_ENDPLATE","BOLTED_CLEAT","BOLTED_BASEPLATEBOLTED","WELDED_FULL_PENETRATION",
+                   "WELDED_FILLET","PINNED","MOMENT_RIGID","SEMI_RIGID","BASEPLATE","ANCHOR_BOLTS",
+                   "SPLICE","GUSSET_PLATE","HAUNCH","GENERIC"],
+          "description": "Connection typology"
+        },
+        "memberIds": {
+          "type": "array",
+          "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+          "minItems": 2,
+          "description": "IDs of all SteelMembers participating in this connection"
+        },
+        "coordinate":    { "$ref": "pmef-base.schema.json#/$defs/Coordinate3D", "description": "Reference point of the connection" },
+        "boltSpec": {
+          "type": "object",
+          "description": "Bolt specification (if bolted connection)",
+          "properties": {
+            "boltGrade":    { "type": "string", "description": "e.g. '8.8', '10.9', 'A325'" },
+            "boltDiameter": { "type": "number", "description": "[mm]" },
+            "numberOfBolts":{ "type": "integer" },
+            "holeType":     { "type": "string", "enum": ["CLEARANCE","OVERSIZE","SHORT_SLOT","LONG_SLOT"] },
+            "preloaded":    { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "weldSpec": {
+          "type": "object",
+          "description": "Weld specification (if welded connection)",
+          "properties": {
+            "weldType":     { "type": "string", "enum": ["FILLET","FULL_PENETRATION","PARTIAL_PENETRATION"] },
+            "weldSize":     { "type": "number", "description": "Weld size a [mm]" },
+            "weldLength":   { "type": "number", "description": "[mm]" }
+          },
+          "additionalProperties": false
+        },
+        "designCapacity": {
+          "type": "object",
+          "description": "Design capacity of the connection",
+          "properties": {
+            "shear":  { "type": "number", "description": "[kN]" },
+            "moment": { "type": "number", "description": "[kN·m]" },
+            "axial":  { "type": "number", "description": "[kN]" }
+          },
+          "additionalProperties": false
+        },
+        "utilisationRatio": { "type": "number", "minimum": 0, "description": "Connection utilisation (0–1)" },
+        "teklaConnectionNumber": { "type": "integer", "description": "Tekla connection template number for round-trip" },
+        "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+      },
+      "additionalProperties": false
+    }
+  },
+
+  "oneOf": [
+    { "$ref": "#/$defs/SteelSystem" },
+    { "$ref": "#/$defs/SteelMember" },
+    { "$ref": "#/$defs/SteelNode" },
+    { "$ref": "#/$defs/SteelConnection" }
+  ]
+}

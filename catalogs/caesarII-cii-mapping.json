@@ -1,0 +1,573 @@
+{
+  "$schema": "https://pmef.org/schemas/0.9/pmef-catalog.schema.json",
+  "catalogId": "caesarII-cii-mapping",
+  "catalogType": "PIPE_STRESS_MAPPING",
+  "version": "2024.1",
+  "description": "PMEF ↔ CAESAR II .cii (Piping Input File) field mapping specification. Covers all piping, material, load, boundary condition and result fields. Adapter: pmef-stress crate (Rust).",
+  "ciiVersion": "CAESAR II 2024 (v14.0)",
+  "pmefVersion": "0.9.0",
+  "units": {
+    "pmef_length": "mm",
+    "pmef_pressure": "Pa",
+    "pmef_temperature": "K",
+    "cii_default_length": "inch or mm (user setting)",
+    "cii_default_pressure": "psi or kPa or MPa (user setting)",
+    "cii_default_temperature": "°F or °C (user setting)"
+  },
+  "conversionFactors": {
+    "mm_to_inch": 0.03937008,
+    "inch_to_mm": 25.4,
+    "Pa_to_psi": 0.0001450377,
+    "psi_to_Pa": 6894.757,
+    "Pa_to_kPa": 0.001,
+    "kPa_to_Pa": 1000.0,
+    "Pa_to_MPa": 1e-06,
+    "MPa_to_Pa": 1000000.0,
+    "K_to_degF": "lambda K: (K - 273.15) * 9/5 + 32",
+    "K_to_degC": "lambda K: K - 273.15",
+    "degF_to_K": "lambda F: (F - 32) * 5/9 + 273.15",
+    "degC_to_K": "lambda C: C + 273.15",
+    "kg_per_m3_to_lb_per_ft3": 0.062428,
+    "MPa_to_ksi": 0.145038
+  },
+  "sections": {
+    "piping_geometry": "Pipe routing, node coordinates, element data",
+    "material_properties": "Steel material properties (E, ν, α, Sy, Su)",
+    "pipe_cross_section": "OD, wall thickness, insulation, fluid density",
+    "design_conditions": "Pressure and temperature per operating case",
+    "boundary_conditions": "Restraints, anchors, guides, spring hangers",
+    "operating_cases": "Load case definitions (W, P, T, Wind, Seismic)",
+    "allowable_stresses": "Code allowable stresses per ASME B31.3",
+    "results_mapping": "Stress results back to PMEF analysisResults"
+  },
+  "mappings": [
+    {
+      "section": "piping_geometry",
+      "ciiField": "NODE",
+      "ciiRecord": "!NODE",
+      "pmefPath": "PipingComponent.ports[].portId (auto-numbered)",
+      "pmefType": "string",
+      "ciiType": "integer",
+      "direction": "bidirectional",
+      "conversionRule": "PMEF port IDs (P1, P2) → sequential CII node numbers (10, 20, 30…). Step: 10. Store CII node → PMEF port map in adapter.",
+      "notes": "CII node numbering starts at 10 by convention. Each Port.coordinate becomes a CII node."
+    },
+    {
+      "section": "piping_geometry",
+      "ciiField": "DX / DY / DZ",
+      "ciiRecord": "!NODE",
+      "pmefPath": "PipingComponent.ports[1].coordinate - ports[0].coordinate",
+      "pmefType": "Coordinate3D [mm]",
+      "ciiType": "float [inch or mm]",
+      "direction": "bidirectional",
+      "conversionRule": "PMEF uses absolute coordinates. CII uses incremental (delta). Export: ΔX = coord[end].x - coord[start].x, convert mm → CII unit. Import: cumulate deltas → absolute coords.",
+      "pmef_to_cii": "mm × 0.03937 → inch (if CII unit=inch) or mm × 1 (if mm)",
+      "cii_to_pmef": "inch × 25.4 → mm or mm × 1",
+      "tolerance_mm": 0.01
+    },
+    {
+      "section": "piping_geometry",
+      "ciiField": "PIPE OD",
+      "ciiRecord": "!PIPE",
+      "pmefPath": "PipingNetworkSystem.specification.outsideDiameter",
+      "pmefType": "number [mm]",
+      "ciiType": "float [inch or mm]",
+      "direction": "bidirectional",
+      "conversionRule": "Direct conversion. Use catalog OD_BY_DN lookup if outsideDiameter not set: DN→OD_mm.",
+      "pmef_to_cii": "mm × 0.03937",
+      "cii_to_pmef": "inch × 25.4",
+      "tolerance_mm": 0.1
+    },
+    {
+      "section": "piping_geometry",
+      "ciiField": "PIPE WALL",
+      "ciiRecord": "!PIPE",
+      "pmefPath": "PipingNetworkSystem.specification.wallThickness",
+      "pmefType": "number [mm]",
+      "ciiType": "float [inch or mm]",
+      "direction": "bidirectional",
+      "pmef_to_cii": "mm × 0.03937",
+      "cii_to_pmef": "inch × 25.4",
+      "tolerance_mm": 0.01
+    },
+    {
+      "section": "piping_geometry",
+      "ciiField": "ELBOW BEND RADIUS",
+      "ciiRecord": "!BEND",
+      "pmefPath": "Elbow.radius + Elbow.nominalDiameter",
+      "pmefType": "string enum + number [mm]",
+      "ciiType": "float [inch or mm]",
+      "direction": "bidirectional",
+      "conversionRule": "LONG_RADIUS → 1.5 × DN; SHORT_RADIUS → 1.0 × DN; 3D/5D → factor × DN; CUSTOM → radiusMm.",
+      "pmef_to_cii": "radius_mm × 0.03937",
+      "cii_to_pmef": "If CII_radius = 1.5×OD/2 → LONG_RADIUS; else CUSTOM with radiusMm",
+      "notes": "CII stores centreline radius R. PMEF stores LR/SR enum + optional radiusMm."
+    },
+    {
+      "section": "piping_geometry",
+      "ciiField": "REDUCER ALPHA",
+      "ciiRecord": "!EXPAN or !REDUC",
+      "pmefPath": "Reducer.reducerType + largeDiameter + smallDiameter + length",
+      "pmefType": "string + number [mm]",
+      "ciiType": "float [degrees] or length [inch]",
+      "direction": "bidirectional",
+      "conversionRule": "CAESAR II models reducers as tapered sections. Half-cone angle α = arctan((OD_large - OD_small) / (2 × length)). Store length_mm in PipingComponentSpec.",
+      "notes": "Eccentric reducers: CII ignores eccentricity for stress; use equivalent concentric for analysis."
+    },
+    {
+      "section": "material_properties",
+      "ciiField": "MAT (material ID)",
+      "ciiRecord": "!MAT",
+      "pmefPath": "PipingNetworkSystem.specification.material",
+      "pmefType": "string",
+      "ciiType": "integer (1–999) or string",
+      "direction": "export",
+      "conversionRule": "Map PMEF material string to CII material library ID. See materialMapping table below.",
+      "materialMapping": {
+        "ASTM A106 Gr. B": {
+          "ciiMatId": 1,
+          "ciiName": "A106B",
+          "E_GPa": 199.9,
+          "nu": 0.3,
+          "alpha_1e-6_K": 11.7,
+          "Sy_MPa": 241,
+          "Su_MPa": 414
+        },
+        "ASTM A106 Gr. A": {
+          "ciiMatId": 2,
+          "ciiName": "A106A",
+          "E_GPa": 199.9,
+          "nu": 0.3,
+          "alpha_1e-6_K": 11.7,
+          "Sy_MPa": 207,
+          "Su_MPa": 331
+        },
+        "ASTM A312 TP316L": {
+          "ciiMatId": 10,
+          "ciiName": "A312_316L",
+          "E_GPa": 193.0,
+          "nu": 0.3,
+          "alpha_1e-6_K": 15.9,
+          "Sy_MPa": 170,
+          "Su_MPa": 485
+        },
+        "ASTM A312 TP304L": {
+          "ciiMatId": 11,
+          "ciiName": "A312_304L",
+          "E_GPa": 193.0,
+          "nu": 0.3,
+          "alpha_1e-6_K": 15.9,
+          "Sy_MPa": 170,
+          "Su_MPa": 485
+        },
+        "ASTM A335 Gr. P11": {
+          "ciiMatId": 20,
+          "ciiName": "A335P11",
+          "E_GPa": 199.9,
+          "nu": 0.3,
+          "alpha_1e-6_K": 12.0,
+          "Sy_MPa": 207,
+          "Su_MPa": 414
+        },
+        "ASTM A335 Gr. P22": {
+          "ciiMatId": 21,
+          "ciiName": "A335P22",
+          "E_GPa": 199.9,
+          "nu": 0.3,
+          "alpha_1e-6_K": 12.0,
+          "Sy_MPa": 207,
+          "Su_MPa": 414
+        },
+        "ASTM A333 Gr. 6": {
+          "ciiMatId": 30,
+          "ciiName": "A333_6",
+          "E_GPa": 199.9,
+          "nu": 0.3,
+          "alpha_1e-6_K": 11.7,
+          "Sy_MPa": 241,
+          "Su_MPa": 414
+        },
+        "EN 10216-2 P265GH": {
+          "ciiMatId": 50,
+          "ciiName": "P265GH",
+          "E_GPa": 200.0,
+          "nu": 0.3,
+          "alpha_1e-6_K": 12.0,
+          "Sy_MPa": 265,
+          "Su_MPa": 410
+        },
+        "EN 10216-5 X5CrNi18-10": {
+          "ciiMatId": 51,
+          "ciiName": "304SS",
+          "E_GPa": 195.0,
+          "nu": 0.3,
+          "alpha_1e-6_K": 16.0,
+          "Sy_MPa": 195,
+          "Su_MPa": 490
+        }
+      }
+    },
+    {
+      "section": "material_properties",
+      "ciiField": "ELASTIC MODULUS",
+      "ciiRecord": "!MAT",
+      "pmefPath": "(derived from material, temperature-dependent)",
+      "pmefType": "number [GPa — informational only]",
+      "ciiType": "float [psi or kPa or MPa]",
+      "direction": "export",
+      "conversionRule": "Use temperature-dependent E from ASME B31.3 Appendix C. Standard carbon steel (A106B) at 20°C: 199.9 GPa = 29,000,000 psi.",
+      "pmef_to_cii_kPa": "E_GPa × 1e6 → kPa"
+    },
+    {
+      "section": "material_properties",
+      "ciiField": "EXPANSION COEFF",
+      "ciiRecord": "!MAT",
+      "pmefPath": "(derived from material + temperature)",
+      "pmefType": "number [1/K × 1e-6]",
+      "ciiType": "float [in/in/°F or mm/mm/°C]",
+      "direction": "export",
+      "conversionRule": "α [1/°C] = α [1/K]. α [1/°F] = α [1/K] × 5/9. A106B: α = 11.7 × 10⁻⁶ /K at 20°C.",
+      "pmef_to_cii_per_F": "alpha_per_K × 5/9"
+    },
+    {
+      "section": "material_properties",
+      "ciiField": "YIELD STRESS",
+      "ciiRecord": "!MAT",
+      "pmefPath": "(derived from material — used for allowable calculations)",
+      "pmefType": "number [MPa]",
+      "ciiType": "float [psi or MPa]",
+      "direction": "export",
+      "pmef_to_cii_psi": "Sy_MPa × 145.038",
+      "pmef_to_cii_MPa": "Sy_MPa × 1.0"
+    },
+    {
+      "section": "design_conditions",
+      "ciiField": "PRESSURE (operating case N)",
+      "ciiRecord": "!PRES T1 / T2 / T3",
+      "pmefPath": "PipingNetworkSystem.designConditions.operatingPressure",
+      "pmefType": "number [Pa, absolute]",
+      "ciiType": "float [psi or kPa — gauge or absolute, per CII setting]",
+      "direction": "bidirectional",
+      "conversionRule": "PMEF stores absolute pressure in Pa. CII typically uses gauge pressure. Export: P_gauge_psi = (P_abs_Pa - 101325) × 1.450377e-4. Import: P_abs_Pa = P_gauge_psi × 6894.757 + 101325.",
+      "pmef_to_cii_psi_gauge": "(P_Pa - 101325) × 0.000145038",
+      "cii_to_pmef_Pa_abs": "P_psi_gauge × 6894.757 + 101325",
+      "notes": "PMEF uses absolute pressure. CII default is gauge. Adapter must handle the offset."
+    },
+    {
+      "section": "design_conditions",
+      "ciiField": "TEMPERATURE (operating case N)",
+      "ciiRecord": "!TEMP T1 / T2 / T3",
+      "pmefPath": "PipingNetworkSystem.designConditions.operatingTemperature",
+      "pmefType": "number [K]",
+      "ciiType": "float [°F or °C]",
+      "direction": "bidirectional",
+      "conversionRule": "K → °F: (K - 273.15) × 9/5 + 32. K → °C: K - 273.15.",
+      "pmef_to_cii_degF": "(T_K - 273.15) × 1.8 + 32",
+      "pmef_to_cii_degC": "T_K - 273.15",
+      "cii_to_pmef_K_from_F": "(T_F - 32) × 5/9 + 273.15",
+      "cii_to_pmef_K_from_C": "T_C + 273.15",
+      "tolerance_K": 0.1
+    },
+    {
+      "section": "design_conditions",
+      "ciiField": "FLUID DENSITY",
+      "ciiRecord": "!PRES (SG or density field)",
+      "pmefPath": "PipingNetworkSystem.customAttributes.fluidDensity_kg_m3",
+      "pmefType": "number [kg/m³]",
+      "ciiType": "float [kg/m³ or lb/ft³ or SG]",
+      "direction": "export",
+      "conversionRule": "kg/m³ → lb/ft³: × 0.062428. SG = density / 1000.",
+      "notes": "PMEF stores fluid density in customAttributes. Standard CW: 998 kg/m³. Steam: use SG=0."
+    },
+    {
+      "section": "design_conditions",
+      "ciiField": "INSULATION THICKNESS",
+      "ciiRecord": "!INSU",
+      "pmefPath": "PipingNetworkSystem.specification.insulationThickness",
+      "pmefType": "number [mm]",
+      "ciiType": "float [inch or mm]",
+      "direction": "bidirectional",
+      "pmef_to_cii": "mm × 0.03937",
+      "cii_to_pmef": "inch × 25.4"
+    },
+    {
+      "section": "design_conditions",
+      "ciiField": "INSULATION DENSITY",
+      "ciiRecord": "!INSU",
+      "pmefPath": "PipingNetworkSystem.customAttributes.insulationDensity_kg_m3",
+      "pmefType": "number [kg/m³]",
+      "ciiType": "float [lb/ft³]",
+      "direction": "export",
+      "pmef_to_cii_lbft3": "density_kg_m3 × 0.062428",
+      "notes": "Typical values: mineral wool 130 kg/m³, calcium silicate 240 kg/m³"
+    },
+    {
+      "section": "boundary_conditions",
+      "ciiField": "ANCHOR (all 6 DOF fixed)",
+      "ciiRecord": "!ANCH",
+      "pmefPath": "PipeSupport.supportSpec.supportType = ANCHOR",
+      "pmefType": "string enum",
+      "ciiType": "record flag",
+      "direction": "bidirectional",
+      "conversionRule": "CII ANCHOR → PMEF supportType=ANCHOR, all loadDesign fields from CII results.",
+      "cii_to_pmef": {
+        "supportType": "ANCHOR",
+        "attachmentType": "WELDED"
+      }
+    },
+    {
+      "section": "boundary_conditions",
+      "ciiField": "GUIDE (lateral restraint, free axial)",
+      "ciiRecord": "!REST Y or Z only",
+      "pmefPath": "PipeSupport.supportSpec.supportType = GUIDE",
+      "pmefType": "string enum",
+      "ciiType": "directional restraint",
+      "direction": "bidirectional",
+      "cii_to_pmef": {
+        "supportType": "GUIDE"
+      }
+    },
+    {
+      "section": "boundary_conditions",
+      "ciiField": "RESTING (downward load, free lateral)",
+      "ciiRecord": "!REST Y+ only",
+      "pmefPath": "PipeSupport.supportSpec.supportType = RESTING",
+      "pmefType": "string enum",
+      "ciiType": "Y+ restraint",
+      "direction": "bidirectional",
+      "cii_to_pmef": {
+        "supportType": "RESTING"
+      }
+    },
+    {
+      "section": "boundary_conditions",
+      "ciiField": "VARIABLE SPRING (spring hanger)",
+      "ciiRecord": "!SHANG or !SVAR",
+      "pmefPath": "PipeSupport.supportSpec.supportType = SPRING_VARIABLE",
+      "pmefType": "string enum",
+      "ciiType": "spring record",
+      "direction": "bidirectional",
+      "pmef_fields_exported": [
+        "springRate_N_per_mm",
+        "hotLoad_N",
+        "coldLoad_N",
+        "travelRange_mm"
+      ],
+      "conversionRule": "springRate: N/mm → lb/in: × 5.7102. hotLoad: N → lb: × 0.2248.",
+      "cii_to_pmef": {
+        "supportType": "SPRING_VARIABLE",
+        "springRate_N_per_mm": "CII_k_lb_in × 0.175127",
+        "hotLoad_N": "CII_hot_lb × 4.448"
+      }
+    },
+    {
+      "section": "boundary_conditions",
+      "ciiField": "CONSTANT HANGER",
+      "ciiRecord": "!SHANG CONSTANT",
+      "pmefPath": "PipeSupport.supportSpec.supportType = SPRING_CONSTANT",
+      "pmefType": "string enum",
+      "ciiType": "constant hanger record",
+      "direction": "bidirectional",
+      "cii_to_pmef": {
+        "supportType": "SPRING_CONSTANT",
+        "hotLoad_N": "CII_load_lb × 4.448"
+      }
+    },
+    {
+      "section": "boundary_conditions",
+      "ciiField": "SIF (stress intensification factor)",
+      "ciiRecord": "!SIF",
+      "pmefPath": "PipingComponent.customAttributes.sif_i (import only)",
+      "pmefType": "number",
+      "ciiType": "float",
+      "direction": "import",
+      "notes": "CII calculates SIF per B31.3. Import SIF_i and SIF_o into customAttributes for documentation."
+    },
+    {
+      "section": "operating_cases",
+      "ciiField": "Operating Case 1 (W+P1+T1)",
+      "ciiRecord": "!COMB OP1",
+      "pmefPath": "PipingNetworkSystem.designConditions (primary operating case)",
+      "direction": "export",
+      "conversionRule": "Export primary P+T from designConditions.operatingPressure + operatingTemperature as CII operating case 1. Export design P+T as CII sustained case.",
+      "ciiLoadCase": {
+        "OPE": "W + P1 + T1 (operating)",
+        "SUS": "W + P1 (sustained — code check ASME B31.3 eq. 1)",
+        "EXP": "T1 - T0 (expansion — code check ASME B31.3 eq. 2)",
+        "OCC": "W + P1 + Wind or Seismic (occasional)"
+      }
+    },
+    {
+      "section": "operating_cases",
+      "ciiField": "Design Pressure Case",
+      "ciiRecord": "!PRES P1",
+      "pmefPath": "PipingNetworkSystem.designConditions.designPressure",
+      "direction": "export",
+      "notes": "CII sustained case uses design pressure for code compliance check per ASME B31.3 §302.3.5."
+    },
+    {
+      "section": "allowable_stresses",
+      "ciiField": "ALLOWABLE STRESS (Sh)",
+      "ciiRecord": "!ALLO",
+      "pmefPath": "(derived: ASME B31.3 Table A-1 per material + temperature)",
+      "direction": "export",
+      "conversionRule": "Sh [psi] from ASME B31.3 Table A-1. A106B at 38°C: Sh = 20,000 psi = 137.9 MPa.",
+      "typicalValues_MPa": {
+        "A106B_20C": 137.9,
+        "A106B_100C": 137.9,
+        "A106B_200C": 130.3,
+        "A106B_300C": 113.8,
+        "A106B_400C": 96.5,
+        "A106B_454C": 63.4,
+        "A312_316L_20C": 115.1,
+        "A335P11_20C": 137.9,
+        "A335P22_20C": 137.9
+      }
+    },
+    {
+      "section": "results_mapping",
+      "ciiField": "SUSTAINED STRESS (B31.3 Eq.1)",
+      "ciiRecord": "OUTPUT SUS",
+      "pmefPath": "PipeSupport.supportSpec.designLoadFy (from reactions) + PipingComponent.customAttributes.stressRatioSus",
+      "direction": "import",
+      "conversionRule": "CII sustained stress ratio = Sus_stress / Sh. Import into PipingComponent.customAttributes.stressRatioSus.",
+      "cii_to_pmef": {
+        "stressRatioSus": "CII_sustained_stress_psi / Sh_psi",
+        "criticalCheck": "SUSTAINED if ratio > 0.8"
+      }
+    },
+    {
+      "section": "results_mapping",
+      "ciiField": "EXPANSION STRESS (B31.3 Eq.2)",
+      "ciiRecord": "OUTPUT EXP",
+      "pmefPath": "PipingComponent.customAttributes.stressRatioExp",
+      "direction": "import",
+      "cii_to_pmef": {
+        "stressRatioExp": "CII_expansion_stress_psi / SA_psi",
+        "criticalCheck": "EXPANSION if ratio > 0.8"
+      }
+    },
+    {
+      "section": "results_mapping",
+      "ciiField": "SUPPORT REACTIONS (Fx, Fy, Fz, Mx, My, Mz)",
+      "ciiRecord": "OUTPUT REAC",
+      "pmefPath": "PipeSupport.supportSpec.designLoadFx/Fy/Fz/Mx/My/Mz",
+      "direction": "import",
+      "conversionRule": "Import CII reactions as PMEF design loads. Forces: lb → N: × 4.448. Moments: ft·lb → N·m: × 1.3558.",
+      "cii_to_pmef_N": "F_lb × 4.448222",
+      "cii_to_pmef_Nm": "M_ftlb × 1.355818",
+      "cii_to_pmef_kN": "F_lb × 0.004448",
+      "cii_to_pmef_kNm": "M_ftlb × 0.001356"
+    },
+    {
+      "section": "results_mapping",
+      "ciiField": "SPRING HANGER SELECTION",
+      "ciiRecord": "OUTPUT HANG",
+      "pmefPath": "PipeSupport.supportSpec (springRate, hotLoad, coldLoad, travelRange)",
+      "direction": "import",
+      "conversionRule": "After CII hanger sizing run, import selected spring specs: k [lb/in] → N/mm, loads [lb] → N.",
+      "cii_to_pmef": {
+        "springRate_N_per_mm": "k_lb_in × 0.175127",
+        "hotLoad_N": "hot_lb × 4.448",
+        "coldLoad_N": "cold_lb × 4.448",
+        "travelRange_mm": "travel_in × 25.4",
+        "supportType": "SPRING_VARIABLE"
+      }
+    },
+    {
+      "section": "results_mapping",
+      "ciiField": "MAXIMUM DISPLACEMENT",
+      "ciiRecord": "OUTPUT DISP",
+      "pmefPath": "PipingComponent.customAttributes.maxDisplacement_mm",
+      "direction": "import",
+      "conversionRule": "CII displacement [inch] × 25.4 → mm. Store in customAttributes.",
+      "cii_to_pmef_mm": "disp_inch × 25.4"
+    }
+  ],
+  "roundTripProcedure": {
+    "export_PMEF_to_CII": [
+      "1. Read PMEF NDJSON package (streaming).",
+      "2. Index PipingNetworkSystem objects → collect lines, design conditions.",
+      "3. For each PipingSegment: traverse components in routing order.",
+      "4. Convert coordinates to CII delta increments (ΔX, ΔY, ΔZ) in CII units.",
+      "5. Write !PIPE records (OD, wall, corrosion, insulation).",
+      "6. Write !BEND records at Elbow components (radius from enum + DN).",
+      "7. Write !MAT records from material mapping table.",
+      "8. Write !TEMP and !PRES records per operating case.",
+      "9. Write !REST / !ANCH / !SHANG records from PipeSupport.supportSpec.",
+      "10. Write !COMB records for OPE / SUS / EXP load case definitions.",
+      "11. Write pmef:HasEquivalentIn relationship: PMEF_id → CII node number.",
+      "12. Validate CII file syntax with pmef-stress crate CII parser."
+    ],
+    "import_CII_to_PMEF": [
+      "1. Parse .cii file with pmef-stress CII parser (line-by-line state machine).",
+      "2. Accumulate node coordinates from delta increments.",
+      "3. Identify component type from node geometry (straight → Pipe, bend → Elbow, tee → Tee).",
+      "4. Map CII material ID to PMEF material string via materialMapping table.",
+      "5. Convert CII temperatures/pressures to PMEF K/Pa (absolute).",
+      "6. Create PipeSupport objects from !REST / !ANCH / !SHANG records.",
+      "7. If results present: import reactions → PipeSupport.supportSpec.designLoad*",
+      "8. Import stress ratios → PipingComponent.customAttributes.",
+      "9. Write pmef:HasEquivalentIn: PMEF_id → CII node number.",
+      "10. Write pmef:IsDocumentedBy: PMEF line → CII file reference."
+    ],
+    "fidelityThresholds": {
+      "nodeCoordinates_mm": 0.01,
+      "OD_mm": 0.1,
+      "wallThickness_mm": 0.01,
+      "pressure_Pa": 100,
+      "temperature_K": 0.1,
+      "forces_N": 1.0,
+      "moments_Nm": 0.01,
+      "springRate_N_per_mm": 0.01
+    }
+  },
+  "rohr2NtrMapping": {
+    "description": "Key ROHR2 .ntr (NTR = Natrium Rohr-Rechnung?) field differences vs. CII. Supplement to the main CII mapping.",
+    "version": "ROHR2 40.0",
+    "keyDifferences": [
+      {
+        "pmefField": "PipingNetworkSystem.specification.outsideDiameter",
+        "rohr2Field": "ROHRQUERSCHNITT/AUSSENDURCHMESSER",
+        "unit_rohr2": "mm",
+        "conversion": "Direct (ROHR2 is metric-native)",
+        "notes": "ROHR2 uses metric throughout. No inch conversion needed."
+      },
+      {
+        "pmefField": "PipingNetworkSystem.designConditions.operatingPressure",
+        "rohr2Field": "BETRIEBSDATEN/DRUCK",
+        "unit_rohr2": "N/mm² (= MPa)",
+        "conversion": "Pa → MPa: ÷ 1e6",
+        "notes": "ROHR2 uses gauge pressure in N/mm². Apply -0.1013 MPa for atmospheric offset."
+      },
+      {
+        "pmefField": "PipingNetworkSystem.designConditions.operatingTemperature",
+        "rohr2Field": "BETRIEBSDATEN/TEMPERATUR",
+        "unit_rohr2": "°C",
+        "conversion": "K - 273.15",
+        "notes": "ROHR2 uses Celsius."
+      },
+      {
+        "pmefField": "PipeSupport.supportSpec.designLoadFy",
+        "rohr2Field": "AUFLAGER/REAKTIONSKRAEFTE/Fy",
+        "unit_rohr2": "N",
+        "conversion": "Direct (SI)",
+        "notes": "ROHR2 results in SI units — simpler import than CII."
+      },
+      {
+        "pmefField": "PipeSupport.supportSpec.springRate",
+        "rohr2Field": "FEDERSTEIFIGKEIT",
+        "unit_rohr2": "N/mm",
+        "conversion": "Direct (SI)",
+        "notes": "Spring rate in N/mm in both PMEF and ROHR2."
+      }
+    ],
+    "fileStructure": {
+      "extension": ".ntr",
+      "encoding": "Windows-1252 or UTF-8 (ROHR2 v40+)",
+      "recordSeparator": "Keyword blocks, semicolons, German keywords",
+      "example": "ROHRLEITUNG BEZEICHNUNG=CW-201 DRUCK=0.6 TEMPERATUR=30 MATERIAL=P265GH"
+    }
+  },
+  "entries": []
+}

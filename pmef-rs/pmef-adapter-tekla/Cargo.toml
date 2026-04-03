@@ -1,0 +1,24 @@
+[package]
+name        = "pmef-adapter-tekla"
+description = "PMEF adapter for Tekla Structures — reads Tekla JSON/XML export, writes PMEF NDJSON"
+version.workspace    = true
+edition.workspace    = true
+license.workspace    = true
+repository.workspace = true
+
+[dependencies]
+serde.workspace      = true
+serde_json.workspace = true
+thiserror.workspace  = true
+anyhow.workspace     = true
+tokio.workspace      = true
+tracing.workspace    = true
+pmef-core.workspace  = true
+pmef-io.workspace    = true
+pmef-validate.workspace = true
+
+# XML parsing for Tekla IFC/CIS2 export
+quick-xml = { version = "0.36", features = ["serialize"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }

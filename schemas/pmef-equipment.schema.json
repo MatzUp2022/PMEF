@@ -1,0 +1,265 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pmef.org/schemas/0.9/pmef-equipment.schema.json",
+  "title": "PMEF Equipment Domain",
+  "description": "Canonical schema for all EquipmentObject subtypes and the shared Nozzle type.",
+
+  "$defs": {
+
+    "EquipmentObject": {
+      "title": "Equipment Object (abstract base)",
+      "description": "Base type for all physical equipment. Never instantiated directly.",
+      "type": "object",
+      "required": ["@type","@id","pmefVersion","isPartOf","equipmentBasic"],
+      "properties": {
+        "@type":        { "type": "string" },
+        "@id":          { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "pmefVersion":  { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+
+        "isPartOf": {
+          "$ref": "pmef-base.schema.json#/$defs/PmefId",
+          "description": "Parent Unit / Area / Plant ID"
+        },
+
+        "isDerivedFrom": {
+          "type": ["string","null"],
+          "description": "URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises"
+        },
+
+        "equipmentBasic": { "$ref": "pmef-property-sets.schema.json#/$defs/EquipmentBasic" },
+
+        "iec81346":   { "$ref": "pmef-base.schema.json#/$defs/Iec81346Designation" },
+        "rdlType":    { "$ref": "pmef-base.schema.json#/$defs/RdlUri" },
+        "catalogRef": { "$ref": "pmef-base.schema.json#/$defs/CatalogReference" },
+
+        "nozzles": {
+          "type": "array",
+          "description": "All process and utility nozzles on this equipment",
+          "items": { "$ref": "#/$defs/Nozzle" }
+        },
+
+        "geometry":   { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
+        "documents":  { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/DocumentLink" } },
+        "revision":   { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "customAttributes": {
+          "type": "object",
+          "additionalProperties": { "type": ["string","number","boolean","null"] }
+        }
+      }
+    },
+
+    "Nozzle": {
+      "title": "Equipment Nozzle",
+      "description": "A process or utility connection point on a piece of equipment. Acts as the topological link between EquipmentObject and PipingComponent.",
+      "type": "object",
+      "required": ["nozzleId","nozzleMark","coordinate","direction"],
+      "properties": {
+        "nozzleId":      { "type": "string", "description": "Unique ID within equipment, e.g. 'N01', 'SUCTION', 'DISCHARGE'" },
+        "nozzleMark":    { "type": "string", "description": "Nozzle mark from equipment drawing, e.g. 'N1', 'A', 'IN'" },
+        "service":       { "type": "string", "description": "Process service, e.g. 'Process Inlet', 'CW Supply'" },
+        "nominalDiameter":{ "type": "number", "description": "[mm]" },
+        "flangeRating":  { "type": "string", "description": "e.g. 'ANSI-150', 'PN16'" },
+        "facingType":    { "type": "string", "enum": ["RF","FF","RTJ","PLAIN"] },
+        "coordinate":    { "$ref": "pmef-base.schema.json#/$defs/Coordinate3D", "description": "Nozzle face centreline [mm]" },
+        "direction":     { "$ref": "pmef-base.schema.json#/$defs/UnitVector3D",  "description": "Direction vector pointing from flange face outward" },
+        "elevation":     { "type": "number", "description": "Elevation of nozzle face above datum [mm]" },
+        "connectedLineId":{ "type": ["string","null"], "description": "PMEF ID of the PipingNetworkSystem connected here" },
+        "connectedPortId":{ "type": ["string","null"], "description": "Port ID on the connected piping component" },
+        "normallyOpen":  { "type": ["boolean","null"] },
+        "blindedInService": { "type": "boolean", "default": false }
+      },
+      "additionalProperties": false
+    },
+
+    "Vessel": {
+      "title": "Pressure Vessel",
+      "allOf": [
+        { "$ref": "#/$defs/EquipmentObject" },
+        {
+          "properties": {
+            "@type":       { "const": "pmef:Vessel" },
+            "vesselDesign":{ "$ref": "pmef-property-sets.schema.json#/$defs/VesselDesign" },
+            "vesselSubtype":{ "type": "string", "enum": ["DRUM","SEPARATOR","SCRUBBER","ACCUMULATOR","SURGE_DRUM","FLASH_DRUM","KO_DRUM","SLUG_CATCHER","GENERIC"] }
+          },
+          "required": ["vesselDesign"]
+        }
+      ]
+    },
+
+    "Tank": {
+      "title": "Storage Tank",
+      "allOf": [
+        { "$ref": "#/$defs/EquipmentObject" },
+        {
+          "properties": {
+            "@type":       { "const": "pmef:Tank" },
+            "tankType":    { "type": "string", "enum": ["FIXED_ROOF","FLOATING_ROOF","INTERNAL_FLOATING_ROOF","CONE_ROOF","HORIZONTAL","SPHERICAL","UNDERGROUND","OPEN_TOP","DAY_TANK"] },
+            "apiStandard": { "type": "string", "description": "API 650, API 620, API 12F, EN 14015, etc." },
+            "capacity":    { "type": "number", "description": "Nominal capacity [m³]" },
+            "workingCapacity": { "type": "number", "description": "Working/operating capacity [m³]" },
+            "diameter":    { "type": "number", "description": "Tank shell inside diameter [mm]" },
+            "shellHeight": { "type": "number", "description": "Shell height [mm]" },
+            "designPressure":  { "type": "number", "description": "[Pa]; 0 for atmospheric" },
+            "designTemperature":{ "type": "number", "description": "[K]" },
+            "contents":    { "type": "string", "description": "Stored fluid/product" },
+            "heatingCoil": { "type": "boolean", "default": false },
+            "coolingCoil":  { "type": "boolean", "default": false },
+            "mixerInstalled":{ "type": "boolean", "default": false },
+            "dikedArea":   { "type": "boolean", "default": true }
+          }
+        }
+      ]
+    },
+
+    "Pump": {
+      "title": "Pump",
+      "allOf": [
+        { "$ref": "#/$defs/EquipmentObject" },
+        {
+          "properties": {
+            "@type":    { "const": "pmef:Pump" },
+            "pumpSpec": { "$ref": "pmef-property-sets.schema.json#/$defs/PumpSpec" },
+            "motorId":  { "type": "string", "description": "PMEF ID of the associated Motor equipment object" }
+          },
+          "required": ["pumpSpec"]
+        }
+      ]
+    },
+
+    "Compressor": {
+      "title": "Compressor",
+      "allOf": [
+        { "$ref": "#/$defs/EquipmentObject" },
+        {
+          "properties": {
+            "@type":          { "const": "pmef:Compressor" },
+            "compressorSpec": { "$ref": "pmef-property-sets.schema.json#/$defs/CompressorSpec" },
+            "motorId":        { "type": "string" },
+            "auxSystemIds":   { "type": "array", "items": { "type": "string" }, "description": "IDs of lube oil, seal gas, cooling systems" }
+          },
+          "required": ["compressorSpec"]
+        }
+      ]
+    },
+
+    "HeatExchanger": {
+      "title": "Heat Exchanger",
+      "allOf": [
+        { "$ref": "#/$defs/EquipmentObject" },
+        {
+          "properties": {
+            "@type":        { "const": "pmef:HeatExchanger" },
+            "hxSpec":       { "$ref": "pmef-property-sets.schema.json#/$defs/HeatExchangerSpec" }
+          },
+          "required": ["hxSpec"]
+        }
+      ]
+    },
+
+    "Column": {
+      "title": "Distillation / Absorption Column",
+      "allOf": [
+        { "$ref": "#/$defs/EquipmentObject" },
+        {
+          "properties": {
+            "@type":       { "const": "pmef:Column" },
+            "vesselDesign":{ "$ref": "pmef-property-sets.schema.json#/$defs/VesselDesign" },
+            "columnType":  { "type": "string", "enum": ["DISTILLATION","ABSORPTION","STRIPPING","EXTRACTION","SCRUBBER","QUENCH"] },
+            "numberOfTrays":  { "type": "integer" },
+            "trayType":       { "type": "string", "enum": ["SIEVE","VALVE","BUBBLE_CAP","STRUCTURED_PACKING","RANDOM_PACKING"] },
+            "packingHeight":  { "type": "number", "description": "[mm]" },
+            "operatingPressure": { "type": "number", "description": "[Pa]" },
+            "topTemperature":    { "type": "number", "description": "[K]" },
+            "bottomTemperature": { "type": "number", "description": "[K]" },
+            "numberOfBeds": { "type": "integer" }
+          },
+          "required": ["vesselDesign"]
+        }
+      ]
+    },
+
+    "Reactor": {
+      "title": "Reactor",
+      "allOf": [
+        { "$ref": "#/$defs/EquipmentObject" },
+        {
+          "properties": {
+            "@type":       { "const": "pmef:Reactor" },
+            "vesselDesign":{ "$ref": "pmef-property-sets.schema.json#/$defs/VesselDesign" },
+            "reactorType": { "type": "string", "enum": ["CSTR","PFR","FIXED_BED","FLUIDIZED_BED","TRICKLE_BED","BATCH","SEMI_BATCH","TUBULAR","ELECTRIC_ARC_FURNACE","BLAST_FURNACE","CONVERTER"] },
+            "catalystType":    { "type": "string" },
+            "reactionType":    { "type": "string", "description": "e.g. 'Exothermic catalytic', 'Electrochemical smelting'" },
+            "heatRemovalType": { "type": "string", "enum": ["COOLING_COIL","COOLING_JACKET","QUENCH","ADIABATIC","EXTERNAL_HX"] },
+            "installedPower":  { "type": "number", "description": "[kW] for electrically heated reactors (e.g. EAF)" },
+            "powerSupplyVoltage": { "type": "number", "description": "[V] for EAF / electrochemical reactors" }
+          },
+          "required": ["vesselDesign"]
+        }
+      ]
+    },
+
+    "Filter": {
+      "title": "Filter / Separator",
+      "allOf": [
+        { "$ref": "#/$defs/EquipmentObject" },
+        {
+          "properties": {
+            "@type":       { "const": "pmef:Filter" },
+            "filterType":  { "type": "string", "enum": ["BASKET_STRAINER","Y_STRAINER","DUPLEX_BASKET","CARTRIDGE","BAG","SAND","CYCLONE","HYDROCYCLONE","COALESCER","DEMISTER","CENTRIFUGE"] },
+            "filtrationRating": { "type": "number", "description": "Filtration rating [µm]" },
+            "designFlow":  { "type": "number", "description": "[m³/h]" },
+            "differentialPressure": { "type": "number", "description": "Design ΔP [Pa]" },
+            "cleaningType":{ "type": "string", "enum": ["MANUAL","AUTOMATIC_BACKWASH","REPLACEABLE_ELEMENT","SELF_CLEANING"] }
+          }
+        }
+      ]
+    },
+
+    "Turbine": {
+      "title": "Turbine",
+      "allOf": [
+        { "$ref": "#/$defs/EquipmentObject" },
+        {
+          "properties": {
+            "@type":       { "const": "pmef:Turbine" },
+            "turbineType": { "type": "string", "enum": ["STEAM_BACKPRESSURE","STEAM_CONDENSING","GAS","HYDRAULIC","EXPANDER"] },
+            "inletPressure":  { "type": "number", "description": "[Pa]" },
+            "outletPressure": { "type": "number", "description": "[Pa]" },
+            "inletTemperature":  { "type": "number", "description": "[K]" },
+            "outletTemperature": { "type": "number", "description": "[K]" },
+            "ratedSpeed":  { "type": "number", "description": "[rpm]" },
+            "shaftPower":  { "type": "number", "description": "[kW]" },
+            "isentropicEfficiency": { "type": "number", "description": "[%]" }
+          }
+        }
+      ]
+    },
+
+    "GenericEquipment": {
+      "title": "Generic Equipment",
+      "description": "Fallback type for equipment not covered by specific subtypes.",
+      "allOf": [
+        { "$ref": "#/$defs/EquipmentObject" },
+        {
+          "properties": {
+            "@type": { "const": "pmef:GenericEquipment" },
+            "genericEquipmentSubtype": { "type": "string", "description": "Free-text equipment subtype for project-specific classifications" }
+          }
+        }
+      ]
+    }
+  },
+
+  "oneOf": [
+    { "$ref": "#/$defs/Vessel" },
+    { "$ref": "#/$defs/Tank" },
+    { "$ref": "#/$defs/Pump" },
+    { "$ref": "#/$defs/Compressor" },
+    { "$ref": "#/$defs/HeatExchanger" },
+    { "$ref": "#/$defs/Column" },
+    { "$ref": "#/$defs/Reactor" },
+    { "$ref": "#/$defs/Filter" },
+    { "$ref": "#/$defs/Turbine" },
+    { "$ref": "#/$defs/GenericEquipment" }
+  ]
+}
