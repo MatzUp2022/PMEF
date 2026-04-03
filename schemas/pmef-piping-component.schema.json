@@ -34,8 +34,10 @@
         },
 
         "isDerivedFrom": {
-          "type": ["string","null"],
-          "$ref": "pmef-base.schema.json#/$defs/PmefId",
+          "oneOf": [
+            { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+            { "type": "null" }
+          ],
           "description": "DEXPI/P&ID FunctionalObject URI this physical line is derived from"
         },
 
@@ -146,8 +148,10 @@
         "nominalDiameter": { "type": "number", "description": "Port bore [mm]" },
         "endType":     { "type": "string", "enum": ["BW","FL","SW","SC","STUB","GROOVED","PLAIN"] },
         "connectedTo": {
-          "type": ["string","null"],
-          "$ref": "pmef-base.schema.json#/$defs/PmefId",
+          "oneOf": [
+            { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+            { "type": "null" }
+          ],
           "description": "ID of the connected Port (via topology graph)"
         }
       },
@@ -305,7 +309,6 @@
             "supportSpec": { "$ref": "pmef-property-sets.schema.json#/$defs/SupportSpec" },
             "supportsMark":{ "type": "string", "description": "Support mark from isometric" },
             "structuralAttachmentId": {
-              "type": "string",
               "$ref": "pmef-base.schema.json#/$defs/PmefId",
               "description": "SteelObject or CivilObject this support is welded/bolted to"
             }
