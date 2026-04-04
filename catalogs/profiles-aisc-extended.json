@@ -24,7 +24,7 @@
   ],
   "entries": [
     {
-      "id": "AISC:C3x4.1",
+      "catalogId": "AISC:C3x4.1",
       "family": "C",
       "d_in": 3.0,
       "bf_in": 1.41,
