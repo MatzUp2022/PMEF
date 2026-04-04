@@ -37,7 +37,7 @@
       "catalogId": "ENP1A-PIPE-15",
       "componentClass": "PIPE",
       "skey": "PIPW    ",
-      "nominalDiameter_mm": 15,
+      "DN": 15,
       "outsideDiameter_mm": 21.3,
       "wallThickness_mm": 2.6,
       "bore_mm": 16.1,
