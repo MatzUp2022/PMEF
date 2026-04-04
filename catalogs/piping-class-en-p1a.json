@@ -31,7 +31,7 @@
     "temperature": "°C",
     "mass": "kg"
   },
-  "componentCount": 120,
+  "componentCount": 61,
   "entries": [
     {
       "catalogId": "ENP1A-PIPE-15",
@@ -725,7 +725,7 @@
       "flangeThickness_mm": 36,
       "boltCircle_mm": 430,
       "boltHoles": 12,
-      "boltDiameter_mm": 26,
+      "boltDiameter_mm": 27,
       "rating": "PN40",
       "facingType": "RF",
       "endType1": "BW",
