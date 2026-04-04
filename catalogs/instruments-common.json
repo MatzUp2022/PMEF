@@ -27,7 +27,7 @@
   ],
   "entries": [
     {
-      "id": "TT-RTD-PT100-A",
+      "catalogId": "TT-RTD-PT100-A",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "TEMPERATURE",
       "measurementPrinciple": "RTD (Pt100, 3-wire)",
