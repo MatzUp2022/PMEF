@@ -34,7 +34,7 @@
   ],
   "entries": [
     {
-      "id": "ASTM:A36",
+      "catalogId": "ASTM:A36",
       "family": "STRUCTURAL",
       "designation": "A36",
       "standard": "ASTM A36/A36M",
