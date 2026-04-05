@@ -27,7 +27,6 @@
   ],
   "entries": [
     {
-      "catalogId": "TT-RTD-PT100-A",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "TEMPERATURE",
       "measurementPrinciple": "RTD (Pt100, 3-wire)",
@@ -42,10 +41,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60751"
+      "applicableStandard": "IEC 60751",
+      "catalogId": "TT-RTD-PT100-A"
     },
     {
-      "id": "TT-RTD-PT100-B",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "TEMPERATURE",
       "measurementPrinciple": "RTD (Pt100, 4-wire)",
@@ -60,10 +59,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60751"
+      "applicableStandard": "IEC 60751",
+      "catalogId": "TT-RTD-PT100-B"
     },
     {
-      "id": "TT-TC-K",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "TEMPERATURE",
       "measurementPrinciple": "Thermocouple Type K (NiCr-Ni)",
@@ -78,10 +77,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60584-1"
+      "applicableStandard": "IEC 60584-1",
+      "catalogId": "TT-TC-K"
     },
     {
-      "id": "TT-TC-J",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "TEMPERATURE",
       "measurementPrinciple": "Thermocouple Type J (Fe-CuNi)",
@@ -96,10 +95,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60584-1"
+      "applicableStandard": "IEC 60584-1",
+      "catalogId": "TT-TC-J"
     },
     {
-      "id": "PT-GAUGE-0-10",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "PRESSURE",
       "measurementPrinciple": "Piezoresistive (gauge)",
@@ -113,10 +112,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60770"
+      "applicableStandard": "IEC 60770",
+      "catalogId": "PT-GAUGE-0-10"
     },
     {
-      "id": "PT-GAUGE-0-40",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "PRESSURE",
       "measurementPrinciple": "Piezoresistive (gauge)",
@@ -130,10 +129,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60770"
+      "applicableStandard": "IEC 60770",
+      "catalogId": "PT-GAUGE-0-40"
     },
     {
-      "id": "PT-GAUGE-0-100",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "PRESSURE",
       "measurementPrinciple": "Piezoresistive (gauge)",
@@ -147,10 +146,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60770"
+      "applicableStandard": "IEC 60770",
+      "catalogId": "PT-GAUGE-0-100"
     },
     {
-      "id": "PT-GAUGE-0-250",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "PRESSURE",
       "measurementPrinciple": "Piezoresistive (gauge)",
@@ -164,10 +163,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60770"
+      "applicableStandard": "IEC 60770",
+      "catalogId": "PT-GAUGE-0-250"
     },
     {
-      "id": "PT-ABS-0-10",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "PRESSURE",
       "measurementPrinciple": "Capacitive (absolute)",
@@ -181,10 +180,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60770"
+      "applicableStandard": "IEC 60770",
+      "catalogId": "PT-ABS-0-10"
     },
     {
-      "id": "PDT-DP-0-500",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "PRESSURE",
       "measurementPrinciple": "Capacitive (differential)",
@@ -198,10 +197,10 @@
       "sil_capable": true,
       "sil_level": 3,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60770"
+      "applicableStandard": "IEC 60770",
+      "catalogId": "PDT-DP-0-500"
     },
     {
-      "id": "FT-DP-ORIFICE",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "FLOW",
       "measurementPrinciple": "Differential pressure (orifice plate)",
@@ -215,10 +214,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "ISO 5167-2"
+      "applicableStandard": "ISO 5167-2",
+      "catalogId": "FT-DP-ORIFICE"
     },
     {
-      "id": "FT-CORIOLIS",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "FLOW",
       "measurementPrinciple": "Coriolis (mass flow)",
@@ -232,10 +231,10 @@
       "sil_capable": true,
       "sil_level": 3,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60770"
+      "applicableStandard": "IEC 60770",
+      "catalogId": "FT-CORIOLIS"
     },
     {
-      "id": "FT-MAG",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "FLOW",
       "measurementPrinciple": "Electromagnetic (conductive liquids)",
@@ -249,10 +248,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60770"
+      "applicableStandard": "IEC 60770",
+      "catalogId": "FT-MAG"
     },
     {
-      "id": "FT-VORTEX",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "FLOW",
       "measurementPrinciple": "Vortex shedding",
@@ -266,10 +265,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60770"
+      "applicableStandard": "IEC 60770",
+      "catalogId": "FT-VORTEX"
     },
     {
-      "id": "FT-ULTRASONIC",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "FLOW",
       "measurementPrinciple": "Ultrasonic (transit time)",
@@ -283,10 +282,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60770"
+      "applicableStandard": "IEC 60770",
+      "catalogId": "FT-ULTRASONIC"
     },
     {
-      "id": "LT-RADAR-GWR",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "LEVEL",
       "measurementPrinciple": "Guided wave radar (TDR)",
@@ -300,10 +299,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60770"
+      "applicableStandard": "IEC 60770",
+      "catalogId": "LT-RADAR-GWR"
     },
     {
-      "id": "LT-RADAR-FMCW",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "LEVEL",
       "measurementPrinciple": "Free-space radar (FMCW, 80 GHz)",
@@ -317,10 +316,10 @@
       "sil_capable": true,
       "sil_level": 3,
       "enclosureRating": "IP66/IP68",
-      "applicableStandard": "IEC 60770"
+      "applicableStandard": "IEC 60770",
+      "catalogId": "LT-RADAR-FMCW"
     },
     {
-      "id": "LT-ULTRASONIC",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "LEVEL",
       "measurementPrinciple": "Ultrasonic (non-contact)",
@@ -333,10 +332,10 @@
       "processConnection": "2\" NPT or DN50 flange",
       "sil_capable": false,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60770"
+      "applicableStandard": "IEC 60770",
+      "catalogId": "LT-ULTRASONIC"
     },
     {
-      "id": "LT-DP",
       "instrumentType": "TRANSMITTER",
       "measuredVariable": "LEVEL",
       "measurementPrinciple": "Differential pressure (hydrostatic)",
@@ -350,10 +349,10 @@
       "sil_capable": true,
       "sil_level": 3,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60770"
+      "applicableStandard": "IEC 60770",
+      "catalogId": "LT-DP"
     },
     {
-      "id": "CV-GLOBE-SS",
       "instrumentType": "VALVE_CONTROL",
       "measuredVariable": "FLOW",
       "valveType": "Globe (single-seat, balanced plug)",
@@ -369,10 +368,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "leakageClass": "ANSI/FCI 70-2 Class IV",
-      "applicableStandard": "IEC 60534"
+      "applicableStandard": "IEC 60534",
+      "catalogId": "CV-GLOBE-SS"
     },
     {
-      "id": "CV-GLOBE-CS",
       "instrumentType": "VALVE_CONTROL",
       "measuredVariable": "FLOW",
       "valveType": "Globe (single-seat, balanced plug)",
@@ -388,10 +387,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "leakageClass": "ANSI/FCI 70-2 Class IV",
-      "applicableStandard": "IEC 60534"
+      "applicableStandard": "IEC 60534",
+      "catalogId": "CV-GLOBE-CS"
     },
     {
-      "id": "CV-BUTTERFLY",
       "instrumentType": "VALVE_CONTROL",
       "measuredVariable": "FLOW",
       "valveType": "Butterfly (high-performance, double/triple offset)",
@@ -406,10 +405,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "leakageClass": "ANSI/FCI 70-2 Class V (metal seat) / VI (soft seat)",
-      "applicableStandard": "IEC 60534"
+      "applicableStandard": "IEC 60534",
+      "catalogId": "CV-BUTTERFLY"
     },
     {
-      "id": "CV-BALL-V-PORT",
       "instrumentType": "VALVE_CONTROL",
       "measuredVariable": "FLOW",
       "valveType": "Ball (V-port, characterized)",
@@ -424,10 +423,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "leakageClass": "ANSI/FCI 70-2 Class V / VI",
-      "applicableStandard": "IEC 60534"
+      "applicableStandard": "IEC 60534",
+      "catalogId": "CV-BALL-V-PORT"
     },
     {
-      "id": "PSV-SPRING-CS",
       "instrumentType": "VALVE_RELIEF",
       "measuredVariable": "PRESSURE",
       "valveType": "Spring-loaded, conventional",
@@ -440,10 +439,10 @@
       "outletConnection": "Flanged ASME B16.5",
       "sil_capable": true,
       "sil_level": 3,
-      "applicableStandard": "API 526, ASME Section VIII"
+      "applicableStandard": "API 526, ASME Section VIII",
+      "catalogId": "PSV-SPRING-CS"
     },
     {
-      "id": "PSV-SPRING-SS",
       "instrumentType": "VALVE_RELIEF",
       "measuredVariable": "PRESSURE",
       "valveType": "Spring-loaded, balanced bellows",
@@ -456,10 +455,10 @@
       "outletConnection": "Flanged ASME B16.5",
       "sil_capable": true,
       "sil_level": 3,
-      "applicableStandard": "API 526, ASME Section VIII"
+      "applicableStandard": "API 526, ASME Section VIII",
+      "catalogId": "PSV-SPRING-SS"
     },
     {
-      "id": "PSV-PILOT",
       "instrumentType": "VALVE_RELIEF",
       "measuredVariable": "PRESSURE",
       "valveType": "Pilot-operated",
@@ -472,10 +471,10 @@
       "outletConnection": "Flanged ASME B16.5",
       "sil_capable": true,
       "sil_level": 3,
-      "applicableStandard": "API 526, ASME Section VIII"
+      "applicableStandard": "API 526, ASME Section VIII",
+      "catalogId": "PSV-PILOT"
     },
     {
-      "id": "LSH-VIBFORK",
       "instrumentType": "SWITCH",
       "measuredVariable": "LEVEL",
       "measurementPrinciple": "Vibrating fork (tuning fork)",
@@ -487,10 +486,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "enclosureRating": "IP66/IP67",
-      "applicableStandard": "IEC 60770"
+      "applicableStandard": "IEC 60770",
+      "catalogId": "LSH-VIBFORK"
     },
     {
-      "id": "PSH-DIAPHRAGM",
       "instrumentType": "SWITCH",
       "measuredVariable": "PRESSURE",
       "measurementPrinciple": "Diaphragm/bourdon tube",
@@ -504,10 +503,10 @@
       "sil_capable": true,
       "sil_level": 2,
       "enclosureRating": "IP65",
-      "applicableStandard": "IEC 60770"
+      "applicableStandard": "IEC 60770",
+      "catalogId": "PSH-DIAPHRAGM"
     },
     {
-      "id": "AT-PH",
       "instrumentType": "ANALYSER",
       "measuredVariable": "pH",
       "measurementPrinciple": "Glass electrode / reference electrode",
@@ -520,10 +519,10 @@
       "processConnection": "1\" NPT or immersion assembly",
       "sil_capable": false,
       "enclosureRating": "IP66",
-      "applicableStandard": "IEC 60746"
+      "applicableStandard": "IEC 60746",
+      "catalogId": "AT-PH"
     },
     {
-      "id": "AT-CONDUCTIVITY",
       "instrumentType": "ANALYSER",
       "measuredVariable": "CONDUCTIVITY",
       "measurementPrinciple": "Inductive (toroidal)",
@@ -536,7 +535,8 @@
       "processConnection": "1\" NPT or immersion assembly",
       "sil_capable": false,
       "enclosureRating": "IP66",
-      "applicableStandard": "IEC 60746"
+      "applicableStandard": "IEC 60746",
+      "catalogId": "AT-CONDUCTIVITY"
     }
   ]
 }

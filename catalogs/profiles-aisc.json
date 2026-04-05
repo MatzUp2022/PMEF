@@ -22,7 +22,6 @@
   "note": "Dimensions are nominal values per AISC. Wall thickness shown is design thickness (= 0.93 × nominal for HSS). For design use, verify against the current AISC Manual.",
   "entries": [
     {
-      "id": "AISC:W4x13",
       "family": "W",
       "designation": "W4x13",
       "d_mm": 105.7,
@@ -35,10 +34,10 @@
       "Sy_cm3": 31.1,
       "mass_kg_m": 19.3,
       "lbft": 13,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W4x13"
     },
     {
-      "id": "AISC:W5x19",
       "family": "W",
       "designation": "W5x19",
       "d_mm": 130.8,
@@ -51,10 +50,10 @@
       "Sy_cm3": 59.5,
       "mass_kg_m": 28.3,
       "lbft": 19,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W5x19"
     },
     {
-      "id": "AISC:W6x15",
       "family": "W",
       "designation": "W6x15",
       "d_mm": 152.1,
@@ -67,10 +66,10 @@
       "Sy_cm3": 51.0,
       "mass_kg_m": 22.3,
       "lbft": 15,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W6x15"
     },
     {
-      "id": "AISC:W6x20",
       "family": "W",
       "designation": "W6x20",
       "d_mm": 157.5,
@@ -83,10 +82,10 @@
       "Sy_cm3": 72.3,
       "mass_kg_m": 29.8,
       "lbft": 20,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W6x20"
     },
     {
-      "id": "AISC:W8x18",
       "family": "W",
       "designation": "W8x18",
       "d_mm": 206.8,
@@ -99,10 +98,10 @@
       "Sy_cm3": 49.8,
       "mass_kg_m": 26.8,
       "lbft": 18,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W8x18"
     },
     {
-      "id": "AISC:W8x31",
       "family": "W",
       "designation": "W8x31",
       "d_mm": 203.2,
@@ -115,10 +114,10 @@
       "Sy_cm3": 151.9,
       "mass_kg_m": 46.1,
       "lbft": 31,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W8x31"
     },
     {
-      "id": "AISC:W8x40",
       "family": "W",
       "designation": "W8x40",
       "d_mm": 209.5,
@@ -131,10 +130,10 @@
       "Sy_cm3": 199.9,
       "mass_kg_m": 59.5,
       "lbft": 40,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W8x40"
     },
     {
-      "id": "AISC:W8x48",
       "family": "W",
       "designation": "W8x48",
       "d_mm": 215.9,
@@ -147,10 +146,10 @@
       "Sy_cm3": 245.8,
       "mass_kg_m": 71.4,
       "lbft": 48,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W8x48"
     },
     {
-      "id": "AISC:W10x22",
       "family": "W",
       "designation": "W10x22",
       "d_mm": 253.7,
@@ -163,10 +162,10 @@
       "Sy_cm3": 65.1,
       "mass_kg_m": 32.7,
       "lbft": 22,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W10x22"
     },
     {
-      "id": "AISC:W10x33",
       "family": "W",
       "designation": "W10x33",
       "d_mm": 254.0,
@@ -179,10 +178,10 @@
       "Sy_cm3": 150.8,
       "mass_kg_m": 49.1,
       "lbft": 33,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W10x33"
     },
     {
-      "id": "AISC:W10x45",
       "family": "W",
       "designation": "W10x45",
       "d_mm": 256.5,
@@ -195,10 +194,10 @@
       "Sy_cm3": 217.9,
       "mass_kg_m": 67.0,
       "lbft": 45,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W10x45"
     },
     {
-      "id": "AISC:W10x60",
       "family": "W",
       "designation": "W10x60",
       "d_mm": 259.6,
@@ -211,10 +210,10 @@
       "Sy_cm3": 376.9,
       "mass_kg_m": 89.3,
       "lbft": 60,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W10x60"
     },
     {
-      "id": "AISC:W12x26",
       "family": "W",
       "designation": "W12x26",
       "d_mm": 310.4,
@@ -227,10 +226,10 @@
       "Sy_cm3": 87.5,
       "mass_kg_m": 38.7,
       "lbft": 26,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W12x26"
     },
     {
-      "id": "AISC:W12x35",
       "family": "W",
       "designation": "W12x35",
       "d_mm": 317.5,
@@ -243,10 +242,10 @@
       "Sy_cm3": 122.4,
       "mass_kg_m": 52.1,
       "lbft": 35,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W12x35"
     },
     {
-      "id": "AISC:W12x50",
       "family": "W",
       "designation": "W12x50",
       "d_mm": 309.6,
@@ -259,10 +258,10 @@
       "Sy_cm3": 227.8,
       "mass_kg_m": 74.4,
       "lbft": 50,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W12x50"
     },
     {
-      "id": "AISC:W12x53",
       "family": "W",
       "designation": "W12x53",
       "d_mm": 306.3,
@@ -275,10 +274,10 @@
       "Sy_cm3": 314.6,
       "mass_kg_m": 78.9,
       "lbft": 53,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W12x53"
     },
     {
-      "id": "AISC:W12x65",
       "family": "W",
       "designation": "W12x65",
       "d_mm": 307.8,
@@ -291,10 +290,10 @@
       "Sy_cm3": 476.9,
       "mass_kg_m": 96.7,
       "lbft": 65,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W12x65"
     },
     {
-      "id": "AISC:W12x96",
       "family": "W",
       "designation": "W12x96",
       "d_mm": 322.8,
@@ -307,10 +306,10 @@
       "Sy_cm3": 727.6,
       "mass_kg_m": 142.9,
       "lbft": 96,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W12x96"
     },
     {
-      "id": "AISC:W14x22",
       "family": "W",
       "designation": "W14x22",
       "d_mm": 349.0,
@@ -323,10 +322,10 @@
       "Sy_cm3": 45.9,
       "mass_kg_m": 32.7,
       "lbft": 22,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W14x22"
     },
     {
-      "id": "AISC:W14x30",
       "family": "W",
       "designation": "W14x30",
       "d_mm": 351.5,
@@ -339,10 +338,10 @@
       "Sy_cm3": 95.4,
       "mass_kg_m": 44.6,
       "lbft": 30,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W14x30"
     },
     {
-      "id": "AISC:W14x48",
       "family": "W",
       "designation": "W14x48",
       "d_mm": 350.3,
@@ -355,10 +354,10 @@
       "Sy_cm3": 209.8,
       "mass_kg_m": 71.4,
       "lbft": 48,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W14x48"
     },
     {
-      "id": "AISC:W14x68",
       "family": "W",
       "designation": "W14x68",
       "d_mm": 356.6,
@@ -371,10 +370,10 @@
       "Sy_cm3": 396.6,
       "mass_kg_m": 101.2,
       "lbft": 68,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W14x68"
     },
     {
-      "id": "AISC:W14x90",
       "family": "W",
       "designation": "W14x90",
       "d_mm": 356.1,
@@ -387,10 +386,10 @@
       "Sy_cm3": 817.7,
       "mass_kg_m": 133.9,
       "lbft": 90,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W14x90"
     },
     {
-      "id": "AISC:W14x132",
       "family": "W",
       "designation": "W14x132",
       "d_mm": 372.4,
@@ -403,10 +402,10 @@
       "Sy_cm3": 1220.8,
       "mass_kg_m": 196.4,
       "lbft": 132,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W14x132"
     },
     {
-      "id": "AISC:W16x26",
       "family": "W",
       "designation": "W16x26",
       "d_mm": 398.5,
@@ -419,10 +418,10 @@
       "Sy_cm3": 57.2,
       "mass_kg_m": 38.7,
       "lbft": 26,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W16x26"
     },
     {
-      "id": "AISC:W16x40",
       "family": "W",
       "designation": "W16x40",
       "d_mm": 406.7,
@@ -435,10 +434,10 @@
       "Sy_cm3": 135.2,
       "mass_kg_m": 59.5,
       "lbft": 40,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W16x40"
     },
     {
-      "id": "AISC:W16x57",
       "family": "W",
       "designation": "W16x57",
       "d_mm": 417.3,
@@ -451,10 +450,10 @@
       "Sy_cm3": 198.3,
       "mass_kg_m": 84.8,
       "lbft": 57,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W16x57"
     },
     {
-      "id": "AISC:W18x35",
       "family": "W",
       "designation": "W18x35",
       "d_mm": 449.6,
@@ -467,10 +466,10 @@
       "Sy_cm3": 83.9,
       "mass_kg_m": 52.1,
       "lbft": 35,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W18x35"
     },
     {
-      "id": "AISC:W18x50",
       "family": "W",
       "designation": "W18x50",
       "d_mm": 456.9,
@@ -483,10 +482,10 @@
       "Sy_cm3": 175.3,
       "mass_kg_m": 74.4,
       "lbft": 50,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W18x50"
     },
     {
-      "id": "AISC:W18x76",
       "family": "W",
       "designation": "W18x76",
       "d_mm": 462.5,
@@ -499,10 +498,10 @@
       "Sy_cm3": 452.3,
       "mass_kg_m": 113.1,
       "lbft": 76,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W18x76"
     },
     {
-      "id": "AISC:W21x44",
       "family": "W",
       "designation": "W21x44",
       "d_mm": 524.8,
@@ -515,10 +514,10 @@
       "Sy_cm3": 104.2,
       "mass_kg_m": 65.5,
       "lbft": 44,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W21x44"
     },
     {
-      "id": "AISC:W21x68",
       "family": "W",
       "designation": "W21x68",
       "d_mm": 536.7,
@@ -531,10 +530,10 @@
       "Sy_cm3": 278.6,
       "mass_kg_m": 101.2,
       "lbft": 68,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W21x68"
     },
     {
-      "id": "AISC:W24x55",
       "family": "W",
       "designation": "W24x55",
       "d_mm": 598.7,
@@ -547,10 +546,10 @@
       "Sy_cm3": 136.0,
       "mass_kg_m": 81.8,
       "lbft": 55,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W24x55"
     },
     {
-      "id": "AISC:W24x84",
       "family": "W",
       "designation": "W24x84",
       "d_mm": 612.1,
@@ -563,10 +562,10 @@
       "Sy_cm3": 342.5,
       "mass_kg_m": 125.0,
       "lbft": 84,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W24x84"
     },
     {
-      "id": "AISC:W27x84",
       "family": "W",
       "designation": "W27x84",
       "d_mm": 678.4,
@@ -579,10 +578,10 @@
       "Sy_cm3": 347.4,
       "mass_kg_m": 125.0,
       "lbft": 84,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W27x84"
     },
     {
-      "id": "AISC:W30x90",
       "family": "W",
       "designation": "W30x90",
       "d_mm": 750.1,
@@ -595,10 +594,10 @@
       "Sy_cm3": 362.2,
       "mass_kg_m": 133.9,
       "lbft": 90,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W30x90"
     },
     {
-      "id": "AISC:W33x118",
       "family": "W",
       "designation": "W33x118",
       "d_mm": 834.6,
@@ -611,10 +610,10 @@
       "Sy_cm3": 534.2,
       "mass_kg_m": 175.6,
       "lbft": 118,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W33x118"
     },
     {
-      "id": "AISC:W36x135",
       "family": "W",
       "designation": "W36x135",
       "d_mm": 903.0,
@@ -627,10 +626,10 @@
       "Sy_cm3": 617.8,
       "mass_kg_m": 200.9,
       "lbft": 135,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W36x135"
     },
     {
-      "id": "AISC:W36x150",
       "family": "W",
       "designation": "W36x150",
       "d_mm": 910.6,
@@ -643,10 +642,10 @@
       "Sy_cm3": 1982.8,
       "mass_kg_m": 223.2,
       "lbft": 150,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W36x150"
     },
     {
-      "id": "AISC:W40x167",
       "family": "W",
       "designation": "W40x167",
       "d_mm": 1000.3,
@@ -659,10 +658,10 @@
       "Sy_cm3": 2032.0,
       "mass_kg_m": 248.5,
       "lbft": 167,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W40x167"
     },
     {
-      "id": "AISC:W44x230",
       "family": "W",
       "designation": "W44x230",
       "d_mm": 1118.1,
@@ -675,10 +674,10 @@
       "Sy_cm3": 2261.4,
       "mass_kg_m": 342.3,
       "lbft": 230,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:W44x230"
     },
     {
-      "id": "AISC:HSS3x2x0.25",
       "family": "HSS_RECT",
       "designation": "HSS3x2x0.25",
       "b_mm": 76.2,
@@ -686,10 +685,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 10.6,
       "lbft": 7.11,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS3x2x0.25"
     },
     {
-      "id": "AISC:HSS4x2x0.25",
       "family": "HSS_RECT",
       "designation": "HSS4x2x0.25",
       "b_mm": 101.6,
@@ -697,10 +696,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 14.0,
       "lbft": 9.42,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS4x2x0.25"
     },
     {
-      "id": "AISC:HSS4x3x0.25",
       "family": "HSS_RECT",
       "designation": "HSS4x3x0.25",
       "b_mm": 101.6,
@@ -708,10 +707,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 16.4,
       "lbft": 11.0,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS4x3x0.25"
     },
     {
-      "id": "AISC:HSS4x3x0.375",
       "family": "HSS_RECT",
       "designation": "HSS4x3x0.375",
       "b_mm": 101.6,
@@ -719,10 +718,10 @@
       "t_mm": 9.52,
       "mass_kg_m": 23.8,
       "lbft": 16.0,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS4x3x0.375"
     },
     {
-      "id": "AISC:HSS4x4x0.25",
       "family": "HSS_RECT",
       "designation": "HSS4x4x0.25",
       "b_mm": 101.6,
@@ -730,10 +729,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 18.2,
       "lbft": 12.2,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS4x4x0.25"
     },
     {
-      "id": "AISC:HSS5x3x0.25",
       "family": "HSS_RECT",
       "designation": "HSS5x3x0.25",
       "b_mm": 127.0,
@@ -741,10 +740,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 18.2,
       "lbft": 12.2,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS5x3x0.25"
     },
     {
-      "id": "AISC:HSS5x3x0.375",
       "family": "HSS_RECT",
       "designation": "HSS5x3x0.375",
       "b_mm": 127.0,
@@ -752,10 +751,10 @@
       "t_mm": 9.52,
       "mass_kg_m": 26.6,
       "lbft": 17.9,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS5x3x0.375"
     },
     {
-      "id": "AISC:HSS5x5x0.25",
       "family": "HSS_RECT",
       "designation": "HSS5x5x0.25",
       "b_mm": 127.0,
@@ -763,10 +762,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 23.2,
       "lbft": 15.6,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS5x5x0.25"
     },
     {
-      "id": "AISC:HSS6x2x0.25",
       "family": "HSS_RECT",
       "designation": "HSS6x2x0.25",
       "b_mm": 152.4,
@@ -774,10 +773,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 17.4,
       "lbft": 11.7,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS6x2x0.25"
     },
     {
-      "id": "AISC:HSS6x4x0.25",
       "family": "HSS_RECT",
       "designation": "HSS6x4x0.25",
       "b_mm": 152.4,
@@ -785,10 +784,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 24.4,
       "lbft": 16.4,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS6x4x0.25"
     },
     {
-      "id": "AISC:HSS6x4x0.375",
       "family": "HSS_RECT",
       "designation": "HSS6x4x0.375",
       "b_mm": 152.4,
@@ -796,10 +795,10 @@
       "t_mm": 9.52,
       "mass_kg_m": 35.6,
       "lbft": 23.9,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS6x4x0.375"
     },
     {
-      "id": "AISC:HSS6x6x0.25",
       "family": "HSS_RECT",
       "designation": "HSS6x6x0.25",
       "b_mm": 152.4,
@@ -807,10 +806,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 28.3,
       "lbft": 19.0,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS6x6x0.25"
     },
     {
-      "id": "AISC:HSS6x6x0.375",
       "family": "HSS_RECT",
       "designation": "HSS6x6x0.375",
       "b_mm": 152.4,
@@ -818,10 +817,10 @@
       "t_mm": 9.52,
       "mass_kg_m": 41.4,
       "lbft": 27.8,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS6x6x0.375"
     },
     {
-      "id": "AISC:HSS8x4x0.25",
       "family": "HSS_RECT",
       "designation": "HSS8x4x0.25",
       "b_mm": 203.2,
@@ -829,10 +828,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 28.3,
       "lbft": 19.0,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS8x4x0.25"
     },
     {
-      "id": "AISC:HSS8x4x0.375",
       "family": "HSS_RECT",
       "designation": "HSS8x4x0.375",
       "b_mm": 203.2,
@@ -840,10 +839,10 @@
       "t_mm": 9.52,
       "mass_kg_m": 41.4,
       "lbft": 27.8,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS8x4x0.375"
     },
     {
-      "id": "AISC:HSS8x6x0.25",
       "family": "HSS_RECT",
       "designation": "HSS8x6x0.25",
       "b_mm": 203.2,
@@ -851,10 +850,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 33.3,
       "lbft": 22.4,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS8x6x0.25"
     },
     {
-      "id": "AISC:HSS8x6x0.375",
       "family": "HSS_RECT",
       "designation": "HSS8x6x0.375",
       "b_mm": 203.2,
@@ -862,10 +861,10 @@
       "t_mm": 9.52,
       "mass_kg_m": 48.5,
       "lbft": 32.6,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS8x6x0.375"
     },
     {
-      "id": "AISC:HSS8x8x0.25",
       "family": "HSS_RECT",
       "designation": "HSS8x8x0.25",
       "b_mm": 203.2,
@@ -873,10 +872,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 38.4,
       "lbft": 25.8,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS8x8x0.25"
     },
     {
-      "id": "AISC:HSS8x8x0.375",
       "family": "HSS_RECT",
       "designation": "HSS8x8x0.375",
       "b_mm": 203.2,
@@ -884,10 +883,10 @@
       "t_mm": 9.52,
       "mass_kg_m": 56.1,
       "lbft": 37.7,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS8x8x0.375"
     },
     {
-      "id": "AISC:HSS8x8x0.5",
       "family": "HSS_RECT",
       "designation": "HSS8x8x0.5",
       "b_mm": 203.2,
@@ -895,10 +894,10 @@
       "t_mm": 12.7,
       "mass_kg_m": 73.4,
       "lbft": 49.3,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS8x8x0.5"
     },
     {
-      "id": "AISC:HSS10x6x0.25",
       "family": "HSS_RECT",
       "designation": "HSS10x6x0.25",
       "b_mm": 254.0,
@@ -906,10 +905,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 38.4,
       "lbft": 25.8,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS10x6x0.25"
     },
     {
-      "id": "AISC:HSS10x6x0.375",
       "family": "HSS_RECT",
       "designation": "HSS10x6x0.375",
       "b_mm": 254.0,
@@ -917,10 +916,10 @@
       "t_mm": 9.52,
       "mass_kg_m": 56.1,
       "lbft": 37.7,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS10x6x0.375"
     },
     {
-      "id": "AISC:HSS10x8x0.25",
       "family": "HSS_RECT",
       "designation": "HSS10x8x0.25",
       "b_mm": 254.0,
@@ -928,10 +927,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 43.5,
       "lbft": 29.2,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS10x8x0.25"
     },
     {
-      "id": "AISC:HSS10x8x0.5",
       "family": "HSS_RECT",
       "designation": "HSS10x8x0.5",
       "b_mm": 254.0,
@@ -939,10 +938,10 @@
       "t_mm": 12.7,
       "mass_kg_m": 82.7,
       "lbft": 55.6,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS10x8x0.5"
     },
     {
-      "id": "AISC:HSS12x8x0.375",
       "family": "HSS_RECT",
       "designation": "HSS12x8x0.375",
       "b_mm": 304.8,
@@ -950,10 +949,10 @@
       "t_mm": 9.52,
       "mass_kg_m": 66.7,
       "lbft": 44.8,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS12x8x0.375"
     },
     {
-      "id": "AISC:HSS12x8x0.5",
       "family": "HSS_RECT",
       "designation": "HSS12x8x0.5",
       "b_mm": 304.8,
@@ -961,10 +960,10 @@
       "t_mm": 12.7,
       "mass_kg_m": 87.5,
       "lbft": 58.8,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS12x8x0.5"
     },
     {
-      "id": "AISC:HSS12x10x0.375",
       "family": "HSS_RECT",
       "designation": "HSS12x10x0.375",
       "b_mm": 304.8,
@@ -972,10 +971,10 @@
       "t_mm": 9.52,
       "mass_kg_m": 72.8,
       "lbft": 48.9,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS12x10x0.375"
     },
     {
-      "id": "AISC:HSS12x12x0.5",
       "family": "HSS_RECT",
       "designation": "HSS12x12x0.5",
       "b_mm": 304.8,
@@ -983,10 +982,10 @@
       "t_mm": 12.7,
       "mass_kg_m": 108.2,
       "lbft": 72.7,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS12x12x0.5"
     },
     {
-      "id": "AISC:HSS14x10x0.5",
       "family": "HSS_RECT",
       "designation": "HSS14x10x0.5",
       "b_mm": 355.6,
@@ -994,10 +993,10 @@
       "t_mm": 12.7,
       "mass_kg_m": 108.2,
       "lbft": 72.7,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS14x10x0.5"
     },
     {
-      "id": "AISC:HSS16x12x0.5",
       "family": "HSS_RECT",
       "designation": "HSS16x12x0.5",
       "b_mm": 406.4,
@@ -1005,10 +1004,10 @@
       "t_mm": 12.7,
       "mass_kg_m": 131.1,
       "lbft": 88.1,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS16x12x0.5"
     },
     {
-      "id": "AISC:HSS20x12x0.5",
       "family": "HSS_RECT",
       "designation": "HSS20x12x0.5",
       "b_mm": 508.0,
@@ -1016,10 +1015,10 @@
       "t_mm": 12.7,
       "mass_kg_m": 163.7,
       "lbft": 110,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS20x12x0.5"
     },
     {
-      "id": "AISC:HSS20x16x0.5",
       "family": "HSS_RECT",
       "designation": "HSS20x16x0.5",
       "b_mm": 508.0,
@@ -1027,330 +1026,330 @@
       "t_mm": 12.7,
       "mass_kg_m": 192.0,
       "lbft": 129,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS20x16x0.5"
     },
     {
-      "id": "AISC:HSS1.5x0.125",
       "family": "HSS_ROUND",
       "designation": "HSS1.5x0.125",
       "OD_mm": 38.1,
       "t_mm": 3.17,
       "mass_kg_m": 2.8,
       "lbft": 1.88,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS1.5x0.125"
     },
     {
-      "id": "AISC:HSS2.0x0.125",
       "family": "HSS_ROUND",
       "designation": "HSS2.0x0.125",
       "OD_mm": 50.8,
       "t_mm": 3.17,
       "mass_kg_m": 3.7,
       "lbft": 2.51,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS2.0x0.125"
     },
     {
-      "id": "AISC:HSS2.5x0.125",
       "family": "HSS_ROUND",
       "designation": "HSS2.5x0.125",
       "OD_mm": 63.5,
       "t_mm": 3.17,
       "mass_kg_m": 4.7,
       "lbft": 3.16,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS2.5x0.125"
     },
     {
-      "id": "AISC:HSS2.5x0.188",
       "family": "HSS_ROUND",
       "designation": "HSS2.5x0.188",
       "OD_mm": 63.5,
       "t_mm": 4.78,
       "mass_kg_m": 6.9,
       "lbft": 4.64,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS2.5x0.188"
     },
     {
-      "id": "AISC:HSS3.0x0.125",
       "family": "HSS_ROUND",
       "designation": "HSS3.0x0.125",
       "OD_mm": 76.2,
       "t_mm": 3.17,
       "mass_kg_m": 5.7,
       "lbft": 3.8,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS3.0x0.125"
     },
     {
-      "id": "AISC:HSS3.0x0.188",
       "family": "HSS_ROUND",
       "designation": "HSS3.0x0.188",
       "OD_mm": 76.2,
       "t_mm": 4.78,
       "mass_kg_m": 8.3,
       "lbft": 5.6,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS3.0x0.188"
     },
     {
-      "id": "AISC:HSS3.5x0.188",
       "family": "HSS_ROUND",
       "designation": "HSS3.5x0.188",
       "OD_mm": 88.9,
       "t_mm": 4.78,
       "mass_kg_m": 9.8,
       "lbft": 6.56,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS3.5x0.188"
     },
     {
-      "id": "AISC:HSS3.5x0.25",
       "family": "HSS_ROUND",
       "designation": "HSS3.5x0.25",
       "OD_mm": 88.9,
       "t_mm": 6.35,
       "mass_kg_m": 12.8,
       "lbft": 8.62,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS3.5x0.25"
     },
     {
-      "id": "AISC:HSS4.0x0.188",
       "family": "HSS_ROUND",
       "designation": "HSS4.0x0.188",
       "OD_mm": 101.6,
       "t_mm": 4.78,
       "mass_kg_m": 11.2,
       "lbft": 7.52,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS4.0x0.188"
     },
     {
-      "id": "AISC:HSS4.0x0.25",
       "family": "HSS_ROUND",
       "designation": "HSS4.0x0.25",
       "OD_mm": 101.6,
       "t_mm": 6.35,
       "mass_kg_m": 14.6,
       "lbft": 9.84,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS4.0x0.25"
     },
     {
-      "id": "AISC:HSS4.5x0.188",
       "family": "HSS_ROUND",
       "designation": "HSS4.5x0.188",
       "OD_mm": 114.3,
       "t_mm": 4.78,
       "mass_kg_m": 12.6,
       "lbft": 8.48,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS4.5x0.188"
     },
     {
-      "id": "AISC:HSS4.5x0.25",
       "family": "HSS_ROUND",
       "designation": "HSS4.5x0.25",
       "OD_mm": 114.3,
       "t_mm": 6.35,
       "mass_kg_m": 16.5,
       "lbft": 11.1,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS4.5x0.25"
     },
     {
-      "id": "AISC:HSS5.0x0.25",
       "family": "HSS_ROUND",
       "designation": "HSS5.0x0.25",
       "OD_mm": 127.0,
       "t_mm": 6.35,
       "mass_kg_m": 18.5,
       "lbft": 12.4,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS5.0x0.25"
     },
     {
-      "id": "AISC:HSS5.5x0.25",
       "family": "HSS_ROUND",
       "designation": "HSS5.5x0.25",
       "OD_mm": 139.7,
       "t_mm": 6.35,
       "mass_kg_m": 20.2,
       "lbft": 13.6,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS5.5x0.25"
     },
     {
-      "id": "AISC:HSS6.0x0.25",
       "family": "HSS_ROUND",
       "designation": "HSS6.0x0.25",
       "OD_mm": 152.4,
       "t_mm": 6.35,
       "mass_kg_m": 22.2,
       "lbft": 14.9,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS6.0x0.25"
     },
     {
-      "id": "AISC:HSS6.0x0.375",
       "family": "HSS_ROUND",
       "designation": "HSS6.0x0.375",
       "OD_mm": 152.4,
       "t_mm": 9.52,
       "mass_kg_m": 32.6,
       "lbft": 21.9,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS6.0x0.375"
     },
     {
-      "id": "AISC:HSS6.625x0.25",
       "family": "HSS_ROUND",
       "designation": "HSS6.625x0.25",
       "OD_mm": 168.3,
       "t_mm": 6.35,
       "mass_kg_m": 24.4,
       "lbft": 16.4,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS6.625x0.25"
     },
     {
-      "id": "AISC:HSS7.0x0.25",
       "family": "HSS_ROUND",
       "designation": "HSS7.0x0.25",
       "OD_mm": 177.8,
       "t_mm": 6.35,
       "mass_kg_m": 25.7,
       "lbft": 17.3,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS7.0x0.25"
     },
     {
-      "id": "AISC:HSS7.5x0.375",
       "family": "HSS_ROUND",
       "designation": "HSS7.5x0.375",
       "OD_mm": 190.5,
       "t_mm": 9.52,
       "mass_kg_m": 40.8,
       "lbft": 27.4,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS7.5x0.375"
     },
     {
-      "id": "AISC:HSS8.0x0.25",
       "family": "HSS_ROUND",
       "designation": "HSS8.0x0.25",
       "OD_mm": 203.2,
       "t_mm": 6.35,
       "mass_kg_m": 29.3,
       "lbft": 19.7,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS8.0x0.25"
     },
     {
-      "id": "AISC:HSS8.625x0.25",
       "family": "HSS_ROUND",
       "designation": "HSS8.625x0.25",
       "OD_mm": 219.1,
       "t_mm": 6.35,
       "mass_kg_m": 31.7,
       "lbft": 21.3,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS8.625x0.25"
     },
     {
-      "id": "AISC:HSS9.0x0.375",
       "family": "HSS_ROUND",
       "designation": "HSS9.0x0.375",
       "OD_mm": 228.6,
       "t_mm": 9.52,
       "mass_kg_m": 49.7,
       "lbft": 33.4,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS9.0x0.375"
     },
     {
-      "id": "AISC:HSS10.0x0.25",
       "family": "HSS_ROUND",
       "designation": "HSS10.0x0.25",
       "OD_mm": 254.0,
       "t_mm": 6.35,
       "mass_kg_m": 37.1,
       "lbft": 24.9,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS10.0x0.25"
     },
     {
-      "id": "AISC:HSS10.0x0.375",
       "family": "HSS_ROUND",
       "designation": "HSS10.0x0.375",
       "OD_mm": 254.0,
       "t_mm": 9.52,
       "mass_kg_m": 54.9,
       "lbft": 36.9,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS10.0x0.375"
     },
     {
-      "id": "AISC:HSS10.0x0.5",
       "family": "HSS_ROUND",
       "designation": "HSS10.0x0.5",
       "OD_mm": 254.0,
       "t_mm": 12.7,
       "mass_kg_m": 72.3,
       "lbft": 48.6,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS10.0x0.5"
     },
     {
-      "id": "AISC:HSS12.0x0.375",
       "family": "HSS_ROUND",
       "designation": "HSS12.0x0.375",
       "OD_mm": 304.8,
       "t_mm": 9.52,
       "mass_kg_m": 66.2,
       "lbft": 44.5,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS12.0x0.375"
     },
     {
-      "id": "AISC:HSS12.0x0.5",
       "family": "HSS_ROUND",
       "designation": "HSS12.0x0.5",
       "OD_mm": 304.8,
       "t_mm": 12.7,
       "mass_kg_m": 87.4,
       "lbft": 58.7,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS12.0x0.5"
     },
     {
-      "id": "AISC:HSS14.0x0.375",
       "family": "HSS_ROUND",
       "designation": "HSS14.0x0.375",
       "OD_mm": 355.6,
       "t_mm": 9.52,
       "mass_kg_m": 77.4,
       "lbft": 52.0,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS14.0x0.375"
     },
     {
-      "id": "AISC:HSS16.0x0.375",
       "family": "HSS_ROUND",
       "designation": "HSS16.0x0.375",
       "OD_mm": 406.4,
       "t_mm": 9.52,
       "mass_kg_m": 88.8,
       "lbft": 59.7,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS16.0x0.375"
     },
     {
-      "id": "AISC:HSS16.0x0.5",
       "family": "HSS_ROUND",
       "designation": "HSS16.0x0.5",
       "OD_mm": 406.4,
       "t_mm": 12.7,
       "mass_kg_m": 117.7,
       "lbft": 79.1,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS16.0x0.5"
     },
     {
-      "id": "AISC:HSS18.0x0.5",
       "family": "HSS_ROUND",
       "designation": "HSS18.0x0.5",
       "OD_mm": 457.2,
       "t_mm": 12.7,
       "mass_kg_m": 132.9,
       "lbft": 89.3,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS18.0x0.5"
     },
     {
-      "id": "AISC:HSS20.0x0.5",
       "family": "HSS_ROUND",
       "designation": "HSS20.0x0.5",
       "OD_mm": 508.0,
       "t_mm": 12.7,
       "mass_kg_m": 148.2,
       "lbft": 99.6,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:HSS20.0x0.5"
     },
     {
-      "id": "AISC:L2x2x0.25",
       "family": "L",
       "designation": "L2x2x0.25",
       "b1_mm": 50.8,
@@ -1358,10 +1357,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 2.9,
       "lbft": 1.98,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:L2x2x0.25"
     },
     {
-      "id": "AISC:L2.5x2.5x0.25",
       "family": "L",
       "designation": "L2.5x2.5x0.25",
       "b1_mm": 63.5,
@@ -1369,10 +1368,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 3.7,
       "lbft": 2.5,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:L2.5x2.5x0.25"
     },
     {
-      "id": "AISC:L3x3x0.25",
       "family": "L",
       "designation": "L3x3x0.25",
       "b1_mm": 76.2,
@@ -1380,10 +1379,10 @@
       "t_mm": 6.35,
       "mass_kg_m": 4.5,
       "lbft": 3.02,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:L3x3x0.25"
     },
     {
-      "id": "AISC:L3x3x0.375",
       "family": "L",
       "designation": "L3x3x0.375",
       "b1_mm": 76.2,
@@ -1391,10 +1390,10 @@
       "t_mm": 9.52,
       "mass_kg_m": 6.7,
       "lbft": 4.49,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:L3x3x0.375"
     },
     {
-      "id": "AISC:L3.5x3.5x0.375",
       "family": "L",
       "designation": "L3.5x3.5x0.375",
       "b1_mm": 88.9,
@@ -1402,10 +1401,10 @@
       "t_mm": 9.52,
       "mass_kg_m": 7.9,
       "lbft": 5.33,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:L3.5x3.5x0.375"
     },
     {
-      "id": "AISC:L4x4x0.375",
       "family": "L",
       "designation": "L4x4x0.375",
       "b1_mm": 101.6,
@@ -1413,10 +1412,10 @@
       "t_mm": 9.52,
       "mass_kg_m": 9.2,
       "lbft": 6.18,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:L4x4x0.375"
     },
     {
-      "id": "AISC:L4x4x0.5",
       "family": "L",
       "designation": "L4x4x0.5",
       "b1_mm": 101.6,
@@ -1424,10 +1423,10 @@
       "t_mm": 12.7,
       "mass_kg_m": 12.1,
       "lbft": 8.15,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:L4x4x0.5"
     },
     {
-      "id": "AISC:L5x5x0.375",
       "family": "L",
       "designation": "L5x5x0.375",
       "b1_mm": 127.0,
@@ -1435,10 +1434,10 @@
       "t_mm": 9.52,
       "mass_kg_m": 11.6,
       "lbft": 7.81,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:L5x5x0.375"
     },
     {
-      "id": "AISC:L5x5x0.5",
       "family": "L",
       "designation": "L5x5x0.5",
       "b1_mm": 127.0,
@@ -1446,10 +1445,10 @@
       "t_mm": 12.7,
       "mass_kg_m": 15.3,
       "lbft": 10.3,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:L5x5x0.5"
     },
     {
-      "id": "AISC:L6x6x0.5",
       "family": "L",
       "designation": "L6x6x0.5",
       "b1_mm": 152.4,
@@ -1457,10 +1456,10 @@
       "t_mm": 12.7,
       "mass_kg_m": 18.6,
       "lbft": 12.5,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:L6x6x0.5"
     },
     {
-      "id": "AISC:L6x6x0.75",
       "family": "L",
       "designation": "L6x6x0.75",
       "b1_mm": 152.4,
@@ -1468,10 +1467,10 @@
       "t_mm": 19.05,
       "mass_kg_m": 27.2,
       "lbft": 18.3,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:L6x6x0.75"
     },
     {
-      "id": "AISC:L8x8x0.5",
       "family": "L",
       "designation": "L8x8x0.5",
       "b1_mm": 203.2,
@@ -1479,10 +1478,10 @@
       "t_mm": 12.7,
       "mass_kg_m": 25.0,
       "lbft": 16.8,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:L8x8x0.5"
     },
     {
-      "id": "AISC:L8x8x0.75",
       "family": "L",
       "designation": "L8x8x0.75",
       "b1_mm": 203.2,
@@ -1490,10 +1489,10 @@
       "t_mm": 19.05,
       "mass_kg_m": 36.9,
       "lbft": 24.8,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:L8x8x0.75"
     },
     {
-      "id": "AISC:L8x8x1.0",
       "family": "L",
       "designation": "L8x8x1.0",
       "b1_mm": 203.2,
@@ -1501,7 +1500,8 @@
       "t_mm": 25.4,
       "mass_kg_m": 48.7,
       "lbft": 32.7,
-      "standard": "AISC 360-22"
+      "standard": "AISC 360-22",
+      "catalogId": "AISC:L8x8x1.0"
     }
   ]
 }

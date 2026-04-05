@@ -27,7 +27,6 @@
   ],
   "entries": [
     {
-      "catalogId": "EN:S235JR",
       "family": "S_STRUCTURAL",
       "designation": "S235JR",
       "standard": "EN 10025-2",
@@ -41,10 +40,15 @@
       "density_kg_m3": 7850,
       "weldability": "good",
       "deliveryCondition": "AR",
-      "applicableProducts": ["plate", "section", "flat", "bar"]
+      "applicableProducts": [
+        "plate",
+        "section",
+        "flat",
+        "bar"
+      ],
+      "catalogId": "EN:S235JR"
     },
     {
-      "id": "EN:S235J0",
       "family": "S_STRUCTURAL",
       "designation": "S235J0",
       "standard": "EN 10025-2",
@@ -58,10 +62,15 @@
       "density_kg_m3": 7850,
       "weldability": "good",
       "deliveryCondition": "AR",
-      "applicableProducts": ["plate", "section", "flat", "bar"]
+      "applicableProducts": [
+        "plate",
+        "section",
+        "flat",
+        "bar"
+      ],
+      "catalogId": "EN:S235J0"
     },
     {
-      "id": "EN:S235J2",
       "family": "S_STRUCTURAL",
       "designation": "S235J2",
       "standard": "EN 10025-2",
@@ -75,10 +84,15 @@
       "density_kg_m3": 7850,
       "weldability": "good",
       "deliveryCondition": "AR",
-      "applicableProducts": ["plate", "section", "flat", "bar"]
+      "applicableProducts": [
+        "plate",
+        "section",
+        "flat",
+        "bar"
+      ],
+      "catalogId": "EN:S235J2"
     },
     {
-      "id": "EN:S275JR",
       "family": "S_STRUCTURAL",
       "designation": "S275JR",
       "standard": "EN 10025-2",
@@ -92,10 +106,15 @@
       "density_kg_m3": 7850,
       "weldability": "good",
       "deliveryCondition": "AR",
-      "applicableProducts": ["plate", "section", "flat", "bar"]
+      "applicableProducts": [
+        "plate",
+        "section",
+        "flat",
+        "bar"
+      ],
+      "catalogId": "EN:S275JR"
     },
     {
-      "id": "EN:S275J0",
       "family": "S_STRUCTURAL",
       "designation": "S275J0",
       "standard": "EN 10025-2",
@@ -109,10 +128,15 @@
       "density_kg_m3": 7850,
       "weldability": "good",
       "deliveryCondition": "AR",
-      "applicableProducts": ["plate", "section", "flat", "bar"]
+      "applicableProducts": [
+        "plate",
+        "section",
+        "flat",
+        "bar"
+      ],
+      "catalogId": "EN:S275J0"
     },
     {
-      "id": "EN:S275J2",
       "family": "S_STRUCTURAL",
       "designation": "S275J2",
       "standard": "EN 10025-2",
@@ -126,10 +150,15 @@
       "density_kg_m3": 7850,
       "weldability": "good",
       "deliveryCondition": "AR",
-      "applicableProducts": ["plate", "section", "flat", "bar"]
+      "applicableProducts": [
+        "plate",
+        "section",
+        "flat",
+        "bar"
+      ],
+      "catalogId": "EN:S275J2"
     },
     {
-      "id": "EN:S355JR",
       "family": "S_STRUCTURAL",
       "designation": "S355JR",
       "standard": "EN 10025-2",
@@ -143,10 +172,15 @@
       "density_kg_m3": 7850,
       "weldability": "good",
       "deliveryCondition": "AR",
-      "applicableProducts": ["plate", "section", "flat", "bar"]
+      "applicableProducts": [
+        "plate",
+        "section",
+        "flat",
+        "bar"
+      ],
+      "catalogId": "EN:S355JR"
     },
     {
-      "id": "EN:S355J0",
       "family": "S_STRUCTURAL",
       "designation": "S355J0",
       "standard": "EN 10025-2",
@@ -160,10 +194,15 @@
       "density_kg_m3": 7850,
       "weldability": "good",
       "deliveryCondition": "AR",
-      "applicableProducts": ["plate", "section", "flat", "bar"]
+      "applicableProducts": [
+        "plate",
+        "section",
+        "flat",
+        "bar"
+      ],
+      "catalogId": "EN:S355J0"
     },
     {
-      "id": "EN:S355J2",
       "family": "S_STRUCTURAL",
       "designation": "S355J2",
       "standard": "EN 10025-2",
@@ -177,10 +216,15 @@
       "density_kg_m3": 7850,
       "weldability": "good",
       "deliveryCondition": "AR",
-      "applicableProducts": ["plate", "section", "flat", "bar"]
+      "applicableProducts": [
+        "plate",
+        "section",
+        "flat",
+        "bar"
+      ],
+      "catalogId": "EN:S355J2"
     },
     {
-      "id": "EN:S355K2",
       "family": "S_STRUCTURAL",
       "designation": "S355K2",
       "standard": "EN 10025-2",
@@ -194,10 +238,15 @@
       "density_kg_m3": 7850,
       "weldability": "good",
       "deliveryCondition": "N",
-      "applicableProducts": ["plate", "section", "flat", "bar"]
+      "applicableProducts": [
+        "plate",
+        "section",
+        "flat",
+        "bar"
+      ],
+      "catalogId": "EN:S355K2"
     },
     {
-      "id": "EN:S460J0",
       "family": "S_STRUCTURAL",
       "designation": "S460J0",
       "standard": "EN 10025-2",
@@ -211,10 +260,13 @@
       "density_kg_m3": 7850,
       "weldability": "moderate",
       "deliveryCondition": "N",
-      "applicableProducts": ["plate", "section"]
+      "applicableProducts": [
+        "plate",
+        "section"
+      ],
+      "catalogId": "EN:S460J0"
     },
     {
-      "id": "EN:S460J2",
       "family": "S_STRUCTURAL",
       "designation": "S460J2",
       "standard": "EN 10025-2",
@@ -228,10 +280,13 @@
       "density_kg_m3": 7850,
       "weldability": "moderate",
       "deliveryCondition": "N",
-      "applicableProducts": ["plate", "section"]
+      "applicableProducts": [
+        "plate",
+        "section"
+      ],
+      "catalogId": "EN:S460J2"
     },
     {
-      "id": "EN:P235GH",
       "family": "P_PRESSURE",
       "designation": "P235GH",
       "standard": "EN 10028-2",
@@ -246,10 +301,14 @@
       "maxServiceTemp_C": 300,
       "weldability": "good",
       "deliveryCondition": "N",
-      "applicableProducts": ["plate", "pipe", "fitting"]
+      "applicableProducts": [
+        "plate",
+        "pipe",
+        "fitting"
+      ],
+      "catalogId": "EN:P235GH"
     },
     {
-      "id": "EN:P265GH",
       "family": "P_PRESSURE",
       "designation": "P265GH",
       "standard": "EN 10028-2",
@@ -264,10 +323,14 @@
       "maxServiceTemp_C": 350,
       "weldability": "good",
       "deliveryCondition": "N",
-      "applicableProducts": ["plate", "pipe", "fitting"]
+      "applicableProducts": [
+        "plate",
+        "pipe",
+        "fitting"
+      ],
+      "catalogId": "EN:P265GH"
     },
     {
-      "id": "EN:P355GH",
       "family": "P_PRESSURE",
       "designation": "P355GH",
       "standard": "EN 10028-2",
@@ -282,10 +345,14 @@
       "maxServiceTemp_C": 400,
       "weldability": "good",
       "deliveryCondition": "N",
-      "applicableProducts": ["plate", "pipe", "fitting"]
+      "applicableProducts": [
+        "plate",
+        "pipe",
+        "fitting"
+      ],
+      "catalogId": "EN:P355GH"
     },
     {
-      "id": "EN:16Mo3",
       "family": "P_PRESSURE",
       "designation": "16Mo3",
       "standard": "EN 10028-2",
@@ -300,10 +367,14 @@
       "maxServiceTemp_C": 500,
       "weldability": "good",
       "deliveryCondition": "N+T",
-      "applicableProducts": ["plate", "pipe", "fitting"]
+      "applicableProducts": [
+        "plate",
+        "pipe",
+        "fitting"
+      ],
+      "catalogId": "EN:16Mo3"
     },
     {
-      "id": "EN:13CrMo4-5",
       "family": "P_PRESSURE",
       "designation": "13CrMo4-5",
       "standard": "EN 10028-2",
@@ -318,10 +389,14 @@
       "maxServiceTemp_C": 530,
       "weldability": "moderate",
       "deliveryCondition": "N+T",
-      "applicableProducts": ["plate", "pipe", "fitting"]
+      "applicableProducts": [
+        "plate",
+        "pipe",
+        "fitting"
+      ],
+      "catalogId": "EN:13CrMo4-5"
     },
     {
-      "id": "EN:10CrMo9-10",
       "family": "P_PRESSURE",
       "designation": "10CrMo9-10",
       "standard": "EN 10028-2",
@@ -336,10 +411,14 @@
       "maxServiceTemp_C": 560,
       "weldability": "moderate",
       "deliveryCondition": "N+T",
-      "applicableProducts": ["plate", "pipe", "fitting"]
+      "applicableProducts": [
+        "plate",
+        "pipe",
+        "fitting"
+      ],
+      "catalogId": "EN:10CrMo9-10"
     },
     {
-      "id": "EN:X2CrNi19-11",
       "family": "P_PRESSURE",
       "designation": "X2CrNi19-11 (304L)",
       "standard": "EN 10028-7",
@@ -354,10 +433,15 @@
       "maxServiceTemp_C": 550,
       "weldability": "good",
       "deliveryCondition": "AT",
-      "applicableProducts": ["plate", "pipe", "fitting", "bar"]
+      "applicableProducts": [
+        "plate",
+        "pipe",
+        "fitting",
+        "bar"
+      ],
+      "catalogId": "EN:X2CrNi19-11"
     },
     {
-      "id": "EN:X5CrNi18-10",
       "family": "P_PRESSURE",
       "designation": "X5CrNi18-10 (304)",
       "standard": "EN 10028-7",
@@ -372,10 +456,15 @@
       "maxServiceTemp_C": 550,
       "weldability": "good",
       "deliveryCondition": "AT",
-      "applicableProducts": ["plate", "pipe", "fitting", "bar"]
+      "applicableProducts": [
+        "plate",
+        "pipe",
+        "fitting",
+        "bar"
+      ],
+      "catalogId": "EN:X5CrNi18-10"
     },
     {
-      "id": "EN:X2CrNiMo17-12-2",
       "family": "P_PRESSURE",
       "designation": "X2CrNiMo17-12-2 (316L)",
       "standard": "EN 10028-7",
@@ -390,10 +479,15 @@
       "maxServiceTemp_C": 550,
       "weldability": "good",
       "deliveryCondition": "AT",
-      "applicableProducts": ["plate", "pipe", "fitting", "bar"]
+      "applicableProducts": [
+        "plate",
+        "pipe",
+        "fitting",
+        "bar"
+      ],
+      "catalogId": "EN:X2CrNiMo17-12-2"
     },
     {
-      "id": "EN:X5CrNiMo17-12-2",
       "family": "P_PRESSURE",
       "designation": "X5CrNiMo17-12-2 (316)",
       "standard": "EN 10028-7",
@@ -408,10 +502,15 @@
       "maxServiceTemp_C": 550,
       "weldability": "good",
       "deliveryCondition": "AT",
-      "applicableProducts": ["plate", "pipe", "fitting", "bar"]
+      "applicableProducts": [
+        "plate",
+        "pipe",
+        "fitting",
+        "bar"
+      ],
+      "catalogId": "EN:X5CrNiMo17-12-2"
     },
     {
-      "id": "EN:P235TR1",
       "family": "PIPE_SEAMLESS",
       "designation": "P235TR1",
       "standard": "EN 10216-1",
@@ -426,10 +525,12 @@
       "maxServiceTemp_C": 300,
       "weldability": "good",
       "deliveryCondition": "N",
-      "applicableProducts": ["seamless pipe"]
+      "applicableProducts": [
+        "seamless pipe"
+      ],
+      "catalogId": "EN:P235TR1"
     },
     {
-      "id": "EN:P235TR2",
       "family": "PIPE_SEAMLESS",
       "designation": "P235TR2",
       "standard": "EN 10216-1",
@@ -444,10 +545,12 @@
       "maxServiceTemp_C": 300,
       "weldability": "good",
       "deliveryCondition": "N",
-      "applicableProducts": ["seamless pipe"]
+      "applicableProducts": [
+        "seamless pipe"
+      ],
+      "catalogId": "EN:P235TR2"
     },
     {
-      "id": "EN:P265TR1",
       "family": "PIPE_SEAMLESS",
       "designation": "P265TR1",
       "standard": "EN 10216-1",
@@ -462,10 +565,12 @@
       "maxServiceTemp_C": 300,
       "weldability": "good",
       "deliveryCondition": "N",
-      "applicableProducts": ["seamless pipe"]
+      "applicableProducts": [
+        "seamless pipe"
+      ],
+      "catalogId": "EN:P265TR1"
     },
     {
-      "id": "EN:P235GH-TC1",
       "family": "PIPE_SEAMLESS",
       "designation": "P235GH",
       "standard": "EN 10216-2",
@@ -480,10 +585,12 @@
       "maxServiceTemp_C": 300,
       "weldability": "good",
       "deliveryCondition": "N",
-      "applicableProducts": ["seamless pipe (elevated temperature)"]
+      "applicableProducts": [
+        "seamless pipe (elevated temperature)"
+      ],
+      "catalogId": "EN:P235GH-TC1"
     },
     {
-      "id": "EN:P265GH-TC1",
       "family": "PIPE_SEAMLESS",
       "designation": "P265GH",
       "standard": "EN 10216-2",
@@ -498,10 +605,12 @@
       "maxServiceTemp_C": 350,
       "weldability": "good",
       "deliveryCondition": "N",
-      "applicableProducts": ["seamless pipe (elevated temperature)"]
+      "applicableProducts": [
+        "seamless pipe (elevated temperature)"
+      ],
+      "catalogId": "EN:P265GH-TC1"
     },
     {
-      "id": "EN:16Mo3-TC1",
       "family": "PIPE_SEAMLESS",
       "designation": "16Mo3",
       "standard": "EN 10216-2",
@@ -516,10 +625,12 @@
       "maxServiceTemp_C": 500,
       "weldability": "good",
       "deliveryCondition": "N+T",
-      "applicableProducts": ["seamless pipe (elevated temperature)"]
+      "applicableProducts": [
+        "seamless pipe (elevated temperature)"
+      ],
+      "catalogId": "EN:16Mo3-TC1"
     },
     {
-      "id": "EN:P235GH-W1",
       "family": "PIPE_WELDED",
       "designation": "P235GH",
       "standard": "EN 10217-1",
@@ -534,10 +645,12 @@
       "maxServiceTemp_C": 300,
       "weldability": "good",
       "deliveryCondition": "N",
-      "applicableProducts": ["welded pipe"]
+      "applicableProducts": [
+        "welded pipe"
+      ],
+      "catalogId": "EN:P235GH-W1"
     },
     {
-      "id": "EN:P265GH-W1",
       "family": "PIPE_WELDED",
       "designation": "P265GH",
       "standard": "EN 10217-1",
@@ -552,10 +665,12 @@
       "maxServiceTemp_C": 300,
       "weldability": "good",
       "deliveryCondition": "N",
-      "applicableProducts": ["welded pipe"]
+      "applicableProducts": [
+        "welded pipe"
+      ],
+      "catalogId": "EN:P265GH-W1"
     },
     {
-      "id": "EN:P355GH-W1",
       "family": "PIPE_WELDED",
       "designation": "P355GH",
       "standard": "EN 10217-1",
@@ -570,10 +685,12 @@
       "maxServiceTemp_C": 350,
       "weldability": "good",
       "deliveryCondition": "N",
-      "applicableProducts": ["welded pipe"]
+      "applicableProducts": [
+        "welded pipe"
+      ],
+      "catalogId": "EN:P355GH-W1"
     },
     {
-      "id": "EN:P245GH-F",
       "family": "FORGING",
       "designation": "P245GH",
       "standard": "EN 10222-2",
@@ -588,10 +705,13 @@
       "maxServiceTemp_C": 300,
       "weldability": "good",
       "deliveryCondition": "N",
-      "applicableProducts": ["flange", "fitting (forged)"]
+      "applicableProducts": [
+        "flange",
+        "fitting (forged)"
+      ],
+      "catalogId": "EN:P245GH-F"
     },
     {
-      "id": "EN:P280GH-F",
       "family": "FORGING",
       "designation": "P280GH",
       "standard": "EN 10222-2",
@@ -606,7 +726,11 @@
       "maxServiceTemp_C": 350,
       "weldability": "good",
       "deliveryCondition": "N",
-      "applicableProducts": ["flange", "fitting (forged)"]
+      "applicableProducts": [
+        "flange",
+        "fitting (forged)"
+      ],
+      "catalogId": "EN:P280GH-F"
     }
   ]
 }

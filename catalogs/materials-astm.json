@@ -34,7 +34,6 @@
   ],
   "entries": [
     {
-      "catalogId": "ASTM:A36",
       "family": "STRUCTURAL",
       "designation": "A36",
       "standard": "ASTM A36/A36M",
@@ -45,10 +44,14 @@
       "elongation_pct": 23,
       "density_kg_m3": 7850,
       "weldability": "good",
-      "applicableProducts": ["plate", "shape", "bar"]
+      "applicableProducts": [
+        "plate",
+        "shape",
+        "bar"
+      ],
+      "catalogId": "ASTM:A36"
     },
     {
-      "id": "ASTM:A572-50",
       "family": "STRUCTURAL",
       "designation": "A572 Gr. 50",
       "standard": "ASTM A572/A572M",
@@ -59,10 +62,14 @@
       "elongation_pct": 21,
       "density_kg_m3": 7850,
       "weldability": "good",
-      "applicableProducts": ["plate", "shape", "bar"]
+      "applicableProducts": [
+        "plate",
+        "shape",
+        "bar"
+      ],
+      "catalogId": "ASTM:A572-50"
     },
     {
-      "id": "ASTM:A572-65",
       "family": "STRUCTURAL",
       "designation": "A572 Gr. 65",
       "standard": "ASTM A572/A572M",
@@ -73,10 +80,14 @@
       "elongation_pct": 17,
       "density_kg_m3": 7850,
       "weldability": "moderate",
-      "applicableProducts": ["plate", "shape", "bar"]
+      "applicableProducts": [
+        "plate",
+        "shape",
+        "bar"
+      ],
+      "catalogId": "ASTM:A572-65"
     },
     {
-      "id": "ASTM:A500-B",
       "family": "STRUCTURAL",
       "designation": "A500 Gr. B",
       "standard": "ASTM A500/A500M",
@@ -86,10 +97,13 @@
       "elongation_pct": 23,
       "density_kg_m3": 7850,
       "weldability": "good",
-      "applicableProducts": ["HSS round", "HSS rectangular"]
+      "applicableProducts": [
+        "HSS round",
+        "HSS rectangular"
+      ],
+      "catalogId": "ASTM:A500-B"
     },
     {
-      "id": "ASTM:A500-C",
       "family": "STRUCTURAL",
       "designation": "A500 Gr. C",
       "standard": "ASTM A500/A500M",
@@ -99,10 +113,13 @@
       "elongation_pct": 21,
       "density_kg_m3": 7850,
       "weldability": "good",
-      "applicableProducts": ["HSS round", "HSS rectangular"]
+      "applicableProducts": [
+        "HSS round",
+        "HSS rectangular"
+      ],
+      "catalogId": "ASTM:A500-C"
     },
     {
-      "id": "ASTM:A106-B",
       "family": "PIPE_CS",
       "designation": "A106 Gr. B",
       "standard": "ASTM A106/A106M",
@@ -113,10 +130,12 @@
       "density_kg_m3": 7850,
       "maxServiceTemp_C": 425,
       "weldability": "good",
-      "applicableProducts": ["seamless pipe"]
+      "applicableProducts": [
+        "seamless pipe"
+      ],
+      "catalogId": "ASTM:A106-B"
     },
     {
-      "id": "ASTM:A106-C",
       "family": "PIPE_CS",
       "designation": "A106 Gr. C",
       "standard": "ASTM A106/A106M",
@@ -127,10 +146,12 @@
       "density_kg_m3": 7850,
       "maxServiceTemp_C": 425,
       "weldability": "good",
-      "applicableProducts": ["seamless pipe"]
+      "applicableProducts": [
+        "seamless pipe"
+      ],
+      "catalogId": "ASTM:A106-C"
     },
     {
-      "id": "ASTM:A53-B",
       "family": "PIPE_CS",
       "designation": "A53 Gr. B",
       "standard": "ASTM A53/A53M",
@@ -141,10 +162,13 @@
       "density_kg_m3": 7850,
       "maxServiceTemp_C": 400,
       "weldability": "good",
-      "applicableProducts": ["seamless pipe", "ERW pipe"]
+      "applicableProducts": [
+        "seamless pipe",
+        "ERW pipe"
+      ],
+      "catalogId": "ASTM:A53-B"
     },
     {
-      "id": "ASTM:A335-P11",
       "family": "PIPE_ALLOY",
       "designation": "A335 Gr. P11",
       "standard": "ASTM A335/A335M",
@@ -155,10 +179,12 @@
       "density_kg_m3": 7850,
       "maxServiceTemp_C": 540,
       "weldability": "moderate",
-      "applicableProducts": ["seamless alloy pipe"]
+      "applicableProducts": [
+        "seamless alloy pipe"
+      ],
+      "catalogId": "ASTM:A335-P11"
     },
     {
-      "id": "ASTM:A335-P22",
       "family": "PIPE_ALLOY",
       "designation": "A335 Gr. P22",
       "standard": "ASTM A335/A335M",
@@ -169,10 +195,12 @@
       "density_kg_m3": 7850,
       "maxServiceTemp_C": 565,
       "weldability": "moderate",
-      "applicableProducts": ["seamless alloy pipe"]
+      "applicableProducts": [
+        "seamless alloy pipe"
+      ],
+      "catalogId": "ASTM:A335-P22"
     },
     {
-      "id": "ASTM:A312-TP304L",
       "family": "PIPE_SS",
       "designation": "A312 TP304L",
       "standard": "ASTM A312/A312M",
@@ -183,10 +211,13 @@
       "density_kg_m3": 7900,
       "maxServiceTemp_C": 425,
       "weldability": "good",
-      "applicableProducts": ["seamless SS pipe", "welded SS pipe"]
+      "applicableProducts": [
+        "seamless SS pipe",
+        "welded SS pipe"
+      ],
+      "catalogId": "ASTM:A312-TP304L"
     },
     {
-      "id": "ASTM:A312-TP316L",
       "family": "PIPE_SS",
       "designation": "A312 TP316L",
       "standard": "ASTM A312/A312M",
@@ -197,10 +228,13 @@
       "density_kg_m3": 7950,
       "maxServiceTemp_C": 425,
       "weldability": "good",
-      "applicableProducts": ["seamless SS pipe", "welded SS pipe"]
+      "applicableProducts": [
+        "seamless SS pipe",
+        "welded SS pipe"
+      ],
+      "catalogId": "ASTM:A312-TP316L"
     },
     {
-      "id": "ASTM:A358-TP304L",
       "family": "PIPE_SS",
       "designation": "A358 TP304L",
       "standard": "ASTM A358/A358M",
@@ -211,10 +245,12 @@
       "density_kg_m3": 7900,
       "maxServiceTemp_C": 425,
       "weldability": "good",
-      "applicableProducts": ["welded SS pipe (large bore)"]
+      "applicableProducts": [
+        "welded SS pipe (large bore)"
+      ],
+      "catalogId": "ASTM:A358-TP304L"
     },
     {
-      "id": "ASTM:A358-TP316L",
       "family": "PIPE_SS",
       "designation": "A358 TP316L",
       "standard": "ASTM A358/A358M",
@@ -225,10 +261,12 @@
       "density_kg_m3": 7950,
       "maxServiceTemp_C": 425,
       "weldability": "good",
-      "applicableProducts": ["welded SS pipe (large bore)"]
+      "applicableProducts": [
+        "welded SS pipe (large bore)"
+      ],
+      "catalogId": "ASTM:A358-TP316L"
     },
     {
-      "id": "ASTM:A234-WPB",
       "family": "FITTING_CS",
       "designation": "A234 WPB",
       "standard": "ASTM A234/A234M",
@@ -239,10 +277,15 @@
       "density_kg_m3": 7850,
       "maxServiceTemp_C": 425,
       "weldability": "good",
-      "applicableProducts": ["BW elbow", "BW tee", "BW reducer", "BW cap"]
+      "applicableProducts": [
+        "BW elbow",
+        "BW tee",
+        "BW reducer",
+        "BW cap"
+      ],
+      "catalogId": "ASTM:A234-WPB"
     },
     {
-      "id": "ASTM:A403-WP304L",
       "family": "FITTING_SS",
       "designation": "A403 WP304L",
       "standard": "ASTM A403/A403M",
@@ -253,10 +296,14 @@
       "density_kg_m3": 7900,
       "maxServiceTemp_C": 425,
       "weldability": "good",
-      "applicableProducts": ["BW elbow (SS)", "BW tee (SS)", "BW reducer (SS)"]
+      "applicableProducts": [
+        "BW elbow (SS)",
+        "BW tee (SS)",
+        "BW reducer (SS)"
+      ],
+      "catalogId": "ASTM:A403-WP304L"
     },
     {
-      "id": "ASTM:A403-WP316L",
       "family": "FITTING_SS",
       "designation": "A403 WP316L",
       "standard": "ASTM A403/A403M",
@@ -267,10 +314,14 @@
       "density_kg_m3": 7950,
       "maxServiceTemp_C": 425,
       "weldability": "good",
-      "applicableProducts": ["BW elbow (SS)", "BW tee (SS)", "BW reducer (SS)"]
+      "applicableProducts": [
+        "BW elbow (SS)",
+        "BW tee (SS)",
+        "BW reducer (SS)"
+      ],
+      "catalogId": "ASTM:A403-WP316L"
     },
     {
-      "id": "ASTM:A105",
       "family": "FORGING_CS",
       "designation": "A105",
       "standard": "ASTM A105/A105M",
@@ -281,10 +332,15 @@
       "density_kg_m3": 7850,
       "maxServiceTemp_C": 425,
       "weldability": "good",
-      "applicableProducts": ["WN flange", "SO flange", "blind flange", "SW fitting"]
+      "applicableProducts": [
+        "WN flange",
+        "SO flange",
+        "blind flange",
+        "SW fitting"
+      ],
+      "catalogId": "ASTM:A105"
     },
     {
-      "id": "ASTM:A182-F304L",
       "family": "FORGING_SS",
       "designation": "A182 F304L",
       "standard": "ASTM A182/A182M",
@@ -295,10 +351,14 @@
       "density_kg_m3": 7900,
       "maxServiceTemp_C": 425,
       "weldability": "good",
-      "applicableProducts": ["WN flange (SS)", "SO flange (SS)", "blind flange (SS)"]
+      "applicableProducts": [
+        "WN flange (SS)",
+        "SO flange (SS)",
+        "blind flange (SS)"
+      ],
+      "catalogId": "ASTM:A182-F304L"
     },
     {
-      "id": "ASTM:A182-F316L",
       "family": "FORGING_SS",
       "designation": "A182 F316L",
       "standard": "ASTM A182/A182M",
@@ -309,10 +369,14 @@
       "density_kg_m3": 7950,
       "maxServiceTemp_C": 425,
       "weldability": "good",
-      "applicableProducts": ["WN flange (SS)", "SO flange (SS)", "blind flange (SS)"]
+      "applicableProducts": [
+        "WN flange (SS)",
+        "SO flange (SS)",
+        "blind flange (SS)"
+      ],
+      "catalogId": "ASTM:A182-F316L"
     },
     {
-      "id": "ASTM:A350-LF2",
       "family": "FORGING_LT",
       "designation": "A350 LF2",
       "standard": "ASTM A350/A350M",
@@ -324,10 +388,13 @@
       "density_kg_m3": 7850,
       "minServiceTemp_C": -46,
       "weldability": "good",
-      "applicableProducts": ["WN flange (low-temp)", "blind flange (low-temp)"]
+      "applicableProducts": [
+        "WN flange (low-temp)",
+        "blind flange (low-temp)"
+      ],
+      "catalogId": "ASTM:A350-LF2"
     },
     {
-      "id": "ASTM:A193-B7",
       "family": "BOLTING",
       "designation": "A193 Gr. B7",
       "standard": "ASTM A193/A193M",
@@ -337,10 +404,13 @@
       "elongation_pct": 16,
       "density_kg_m3": 7850,
       "maxServiceTemp_C": 425,
-      "applicableProducts": ["stud bolt", "cap screw"]
+      "applicableProducts": [
+        "stud bolt",
+        "cap screw"
+      ],
+      "catalogId": "ASTM:A193-B7"
     },
     {
-      "id": "ASTM:A193-B8M",
       "family": "BOLTING",
       "designation": "A193 Gr. B8M Cl.1",
       "standard": "ASTM A193/A193M",
@@ -350,10 +420,13 @@
       "elongation_pct": 30,
       "density_kg_m3": 7950,
       "maxServiceTemp_C": 425,
-      "applicableProducts": ["stud bolt (SS)", "cap screw (SS)"]
+      "applicableProducts": [
+        "stud bolt (SS)",
+        "cap screw (SS)"
+      ],
+      "catalogId": "ASTM:A193-B8M"
     },
     {
-      "id": "ASTM:A194-2H",
       "family": "BOLTING",
       "designation": "A194 Gr. 2H",
       "standard": "ASTM A194/A194M",
@@ -362,10 +435,12 @@
       "tensileStrength_min_MPa": 860,
       "density_kg_m3": 7850,
       "maxServiceTemp_C": 425,
-      "applicableProducts": ["heavy hex nut"]
+      "applicableProducts": [
+        "heavy hex nut"
+      ],
+      "catalogId": "ASTM:A194-2H"
     },
     {
-      "id": "ASTM:A194-8M",
       "family": "BOLTING",
       "designation": "A194 Gr. 8M",
       "standard": "ASTM A194/A194M",
@@ -374,10 +449,12 @@
       "tensileStrength_min_MPa": 515,
       "density_kg_m3": 7950,
       "maxServiceTemp_C": 425,
-      "applicableProducts": ["heavy hex nut (SS)"]
+      "applicableProducts": [
+        "heavy hex nut (SS)"
+      ],
+      "catalogId": "ASTM:A194-8M"
     },
     {
-      "id": "ASTM:A216-WCB",
       "family": "CASTING_CS",
       "designation": "A216 WCB",
       "standard": "ASTM A216/A216M",
@@ -388,10 +465,13 @@
       "density_kg_m3": 7850,
       "maxServiceTemp_C": 425,
       "weldability": "good",
-      "applicableProducts": ["valve body (CS)", "pump casing (CS)"]
+      "applicableProducts": [
+        "valve body (CS)",
+        "pump casing (CS)"
+      ],
+      "catalogId": "ASTM:A216-WCB"
     },
     {
-      "id": "ASTM:A351-CF8M",
       "family": "CASTING_SS",
       "designation": "A351 CF8M",
       "standard": "ASTM A351/A351M",
@@ -402,7 +482,11 @@
       "density_kg_m3": 7750,
       "maxServiceTemp_C": 425,
       "weldability": "good",
-      "applicableProducts": ["valve body (SS)", "pump casing (SS)"]
+      "applicableProducts": [
+        "valve body (SS)",
+        "pump casing (SS)"
+      ],
+      "catalogId": "ASTM:A351-CF8M"
     }
   ]
 }
