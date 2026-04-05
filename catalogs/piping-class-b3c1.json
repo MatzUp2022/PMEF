@@ -1,5 +1,5 @@
 {
-  "$schema": "https://pmef.org/schemas/0.9/pmef-catalog.schema.json",
+  "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
   "catalogId": "piping-class-b3c1",
   "catalogType": "PIPING_CLASS",
   "version": "2024.1",

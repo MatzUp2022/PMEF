@@ -1,5 +1,5 @@
 {
-  "$schema": "https://pmef.org/schemas/0.9/pmef-catalog.schema.json",
+  "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
   "catalogId": "pipe-dimensions",
   "catalogType": "PIPE_DIMENSIONS",
   "standard": "ASME B36.10M-2018 (Welded and Seamless Wrought Steel Pipe), ASME B36.19M-2018 (Stainless Steel Pipe)",
@@ -27,6 +27,7 @@
   },
   "entries": [
     {
+      "catalogId": "ASME-NPS0.5",
       "DN": 15,
       "NPS": 0.5,
       "OD_mm": 21.3,
@@ -64,6 +65,7 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS0.75",
       "DN": 20,
       "NPS": 0.75,
       "OD_mm": 26.7,
@@ -101,6 +103,7 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS1",
       "DN": 25,
       "NPS": 1,
       "OD_mm": 33.4,
@@ -138,6 +141,7 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS1.25",
       "DN": 32,
       "NPS": 1.25,
       "OD_mm": 42.2,
@@ -175,6 +179,7 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS1.5",
       "DN": 40,
       "NPS": 1.5,
       "OD_mm": 48.3,
@@ -212,6 +217,7 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS2",
       "DN": 50,
       "NPS": 2,
       "OD_mm": 60.3,
@@ -249,6 +255,7 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS2.5",
       "DN": 65,
       "NPS": 2.5,
       "OD_mm": 73.0,
@@ -286,6 +293,7 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS3",
       "DN": 80,
       "NPS": 3,
       "OD_mm": 88.9,
@@ -365,12 +373,14 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS3.5",
       "DN": 90,
       "NPS": 3.5,
       "OD_mm": 101.6,
       "schedules": []
     },
     {
+      "catalogId": "ASME-NPS4",
       "DN": 100,
       "NPS": 4,
       "OD_mm": 114.3,
@@ -450,12 +460,14 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS5",
       "DN": 125,
       "NPS": 5,
       "OD_mm": 141.3,
       "schedules": []
     },
     {
+      "catalogId": "ASME-NPS6",
       "DN": 150,
       "NPS": 6,
       "OD_mm": 168.3,
@@ -535,6 +547,7 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS8",
       "DN": 200,
       "NPS": 8,
       "OD_mm": 219.1,
@@ -614,6 +627,7 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS10",
       "DN": 250,
       "NPS": 10,
       "OD_mm": 273.1,
@@ -693,6 +707,7 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS12",
       "DN": 300,
       "NPS": 12,
       "OD_mm": 323.9,
@@ -772,6 +787,7 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS14",
       "DN": 350,
       "NPS": 14,
       "OD_mm": 355.6,
@@ -845,6 +861,7 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS16",
       "DN": 400,
       "NPS": 16,
       "OD_mm": 406.4,
@@ -918,6 +935,7 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS18",
       "DN": 450,
       "NPS": 18,
       "OD_mm": 457.2,
@@ -991,6 +1009,7 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS20",
       "DN": 500,
       "NPS": 20,
       "OD_mm": 508.0,
@@ -1064,12 +1083,14 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS22",
       "DN": 550,
       "NPS": 22,
       "OD_mm": 558.8,
       "schedules": []
     },
     {
+      "catalogId": "ASME-NPS24",
       "DN": 600,
       "NPS": 24,
       "OD_mm": 609.6,
@@ -1143,60 +1164,70 @@
       ]
     },
     {
+      "catalogId": "ASME-NPS26",
       "DN": 650,
       "NPS": 26,
       "OD_mm": 660.4,
       "schedules": []
     },
     {
+      "catalogId": "ASME-NPS28",
       "DN": 700,
       "NPS": 28,
       "OD_mm": 711.2,
       "schedules": []
     },
     {
+      "catalogId": "ASME-NPS30",
       "DN": 750,
       "NPS": 30,
       "OD_mm": 762.0,
       "schedules": []
     },
     {
+      "catalogId": "ASME-NPS32",
       "DN": 800,
       "NPS": 32,
       "OD_mm": 812.8,
       "schedules": []
     },
     {
+      "catalogId": "ASME-NPS34",
       "DN": 850,
       "NPS": 34,
       "OD_mm": 863.6,
       "schedules": []
     },
     {
+      "catalogId": "ASME-NPS36",
       "DN": 900,
       "NPS": 36,
       "OD_mm": 914.4,
       "schedules": []
     },
     {
+      "catalogId": "ASME-NPS40",
       "DN": 1000,
       "NPS": 40,
       "OD_mm": 1016.0,
       "schedules": []
     },
     {
+      "catalogId": "ASME-NPS42",
       "DN": 1050,
       "NPS": 42,
       "OD_mm": 1066.8,
       "schedules": []
     },
     {
+      "catalogId": "ASME-NPS44",
       "DN": 1100,
       "NPS": 44,
       "OD_mm": 1117.6,
       "schedules": []
     },
     {
+      "catalogId": "ASME-NPS48",
       "DN": 1200,
       "NPS": 48,
       "OD_mm": 1219.2,

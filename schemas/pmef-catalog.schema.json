@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://pmef.org/schemas/0.9/pmef-catalog.schema.json",
+  "$id": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
   "title": "PMEF Catalog",
   "description": "Schema for PMEF open catalog files (steel profiles, piping classes, pipe dimensions).",
   "type": "object",
@@ -26,7 +26,8 @@
         "PIPING_CLASS",
         "PIPE_DIMENSIONS",
         "FLANGE_DIMENSIONS",
-        "INSTRUMENT_CATALOG"
+        "INSTRUMENT_CATALOG",
+        "MATERIAL_GRADES"
       ],
       "description": "Catalog domain type"
     },

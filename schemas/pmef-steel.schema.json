@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://pmef.org/schemas/0.9/pmef-steel.schema.json",
+  "$id": "https://pmef.net/schemas/0.9/pmef-steel.schema.json",
   "title": "PMEF Structural Steel Domain",
   "description": "Schema for SteelObject, SteelMember, SteelConnection, SteelSystem. Aligned with CIS/2, IFC 4.3 IfcStructuralMember, and Tekla Structures Open API.",
 

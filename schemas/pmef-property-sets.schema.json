@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://pmef.org/schemas/0.9/pmef-property-sets.schema.json",
+  "$id": "https://pmef.net/schemas/0.9/pmef-property-sets.schema.json",
   "title": "PMEF Property Sets",
   "description": "All standardised property-set definitions for Piping and Equipment domains.",
   "$defs": {

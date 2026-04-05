@@ -148,7 +148,7 @@ jobs:
             --no-progress
             --exclude-all-private
             --exclude 'https://discord.gg'
-            --exclude 'https://pmef.org'
+            --exclude 'https://pmef.net'
             '**/*.md'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

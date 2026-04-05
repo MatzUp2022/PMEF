@@ -94,7 +94,7 @@ deprecation period with migration guide.
 ## Code of Conduct Enforcement
 
 The TSC is the enforcement body for the [Code of Conduct](CODE_OF_CONDUCT.md).
-Reports can be sent to [conduct@pmef.org](mailto:conduct@pmef.org) (private,
+Reports can be sent to [conduct@pmef.net](mailto:conduct@pmef.net) (private,
 handled by a rotating 3-person CoC committee, none of whom may be the subject
 of the report).
 

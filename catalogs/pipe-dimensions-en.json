@@ -1,0 +1,749 @@
+{
+  "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
+  "catalogId": "pipe-dimensions-en",
+  "catalogType": "PIPE_DIMENSIONS",
+  "standard": "EN 10220:2002 (Seamless and welded steel tubes — Dimensions and masses per unit length)",
+  "version": "2024.1",
+  "description": "European pipe outside diameters and wall thicknesses per EN 10220. DN15–DN600. All dimensions in mm. Mass per metre calculated for steel density 7850 kg/m³.",
+  "units": {
+    "OD": "mm",
+    "wall_thickness": "mm",
+    "bore": "mm",
+    "mass_per_length": "kg/m"
+  },
+  "notes": [
+    "Wall thickness series based on EN 10220 preferred values.",
+    "Mass per metre is theoretical for plain-end pipe at 7850 kg/m³.",
+    "This catalog is not a substitute for the official EN 10220 standard."
+  ],
+  "entries": [
+    {
+      "catalogId": "EN10220-DN15",
+      "DN": 15,
+      "OD_mm": 21.3,
+      "wallThicknesses": [
+        {
+          "wall_mm": 1.6,
+          "bore_mm": 18.1,
+          "mass_kg_m": 0.78
+        },
+        {
+          "wall_mm": 2.0,
+          "bore_mm": 17.3,
+          "mass_kg_m": 0.95
+        },
+        {
+          "wall_mm": 2.6,
+          "bore_mm": 16.1,
+          "mass_kg_m": 1.2
+        },
+        {
+          "wall_mm": 3.2,
+          "bore_mm": 14.9,
+          "mass_kg_m": 1.43
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN20",
+      "DN": 20,
+      "OD_mm": 26.9,
+      "wallThicknesses": [
+        {
+          "wall_mm": 1.6,
+          "bore_mm": 23.7,
+          "mass_kg_m": 1.0
+        },
+        {
+          "wall_mm": 2.0,
+          "bore_mm": 22.9,
+          "mass_kg_m": 1.23
+        },
+        {
+          "wall_mm": 2.3,
+          "bore_mm": 22.3,
+          "mass_kg_m": 1.4
+        },
+        {
+          "wall_mm": 2.6,
+          "bore_mm": 21.7,
+          "mass_kg_m": 1.56
+        },
+        {
+          "wall_mm": 3.2,
+          "bore_mm": 20.5,
+          "mass_kg_m": 1.87
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN25",
+      "DN": 25,
+      "OD_mm": 33.7,
+      "wallThicknesses": [
+        {
+          "wall_mm": 2.0,
+          "bore_mm": 29.7,
+          "mass_kg_m": 1.56
+        },
+        {
+          "wall_mm": 2.6,
+          "bore_mm": 28.5,
+          "mass_kg_m": 1.99
+        },
+        {
+          "wall_mm": 3.2,
+          "bore_mm": 27.3,
+          "mass_kg_m": 2.41
+        },
+        {
+          "wall_mm": 4.0,
+          "bore_mm": 25.7,
+          "mass_kg_m": 2.93
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN32",
+      "DN": 32,
+      "OD_mm": 42.4,
+      "wallThicknesses": [
+        {
+          "wall_mm": 2.0,
+          "bore_mm": 38.4,
+          "mass_kg_m": 1.99
+        },
+        {
+          "wall_mm": 2.6,
+          "bore_mm": 37.2,
+          "mass_kg_m": 2.55
+        },
+        {
+          "wall_mm": 3.2,
+          "bore_mm": 36.0,
+          "mass_kg_m": 3.09
+        },
+        {
+          "wall_mm": 4.0,
+          "bore_mm": 34.4,
+          "mass_kg_m": 3.79
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN40",
+      "DN": 40,
+      "OD_mm": 48.3,
+      "wallThicknesses": [
+        {
+          "wall_mm": 2.0,
+          "bore_mm": 44.3,
+          "mass_kg_m": 2.28
+        },
+        {
+          "wall_mm": 2.6,
+          "bore_mm": 43.1,
+          "mass_kg_m": 2.93
+        },
+        {
+          "wall_mm": 3.2,
+          "bore_mm": 41.9,
+          "mass_kg_m": 3.56
+        },
+        {
+          "wall_mm": 4.0,
+          "bore_mm": 40.3,
+          "mass_kg_m": 4.37
+        },
+        {
+          "wall_mm": 5.0,
+          "bore_mm": 38.3,
+          "mass_kg_m": 5.34
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN50",
+      "DN": 50,
+      "OD_mm": 60.3,
+      "wallThicknesses": [
+        {
+          "wall_mm": 2.0,
+          "bore_mm": 56.3,
+          "mass_kg_m": 2.88
+        },
+        {
+          "wall_mm": 2.6,
+          "bore_mm": 55.1,
+          "mass_kg_m": 3.7
+        },
+        {
+          "wall_mm": 3.2,
+          "bore_mm": 53.9,
+          "mass_kg_m": 4.51
+        },
+        {
+          "wall_mm": 3.6,
+          "bore_mm": 53.1,
+          "mass_kg_m": 5.03
+        },
+        {
+          "wall_mm": 4.0,
+          "bore_mm": 52.3,
+          "mass_kg_m": 5.55
+        },
+        {
+          "wall_mm": 5.0,
+          "bore_mm": 50.3,
+          "mass_kg_m": 6.82
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN65",
+      "DN": 65,
+      "OD_mm": 76.1,
+      "wallThicknesses": [
+        {
+          "wall_mm": 2.0,
+          "bore_mm": 72.1,
+          "mass_kg_m": 3.65
+        },
+        {
+          "wall_mm": 2.6,
+          "bore_mm": 70.9,
+          "mass_kg_m": 4.71
+        },
+        {
+          "wall_mm": 3.2,
+          "bore_mm": 69.7,
+          "mass_kg_m": 5.75
+        },
+        {
+          "wall_mm": 3.6,
+          "bore_mm": 68.9,
+          "mass_kg_m": 6.44
+        },
+        {
+          "wall_mm": 5.0,
+          "bore_mm": 66.1,
+          "mass_kg_m": 8.77
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN80",
+      "DN": 80,
+      "OD_mm": 88.9,
+      "wallThicknesses": [
+        {
+          "wall_mm": 2.3,
+          "bore_mm": 84.3,
+          "mass_kg_m": 4.91
+        },
+        {
+          "wall_mm": 3.2,
+          "bore_mm": 82.5,
+          "mass_kg_m": 6.76
+        },
+        {
+          "wall_mm": 4.0,
+          "bore_mm": 80.9,
+          "mass_kg_m": 8.37
+        },
+        {
+          "wall_mm": 5.0,
+          "bore_mm": 78.9,
+          "mass_kg_m": 10.34
+        },
+        {
+          "wall_mm": 5.6,
+          "bore_mm": 77.7,
+          "mass_kg_m": 11.5
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN100",
+      "DN": 100,
+      "OD_mm": 114.3,
+      "wallThicknesses": [
+        {
+          "wall_mm": 2.6,
+          "bore_mm": 109.1,
+          "mass_kg_m": 7.16
+        },
+        {
+          "wall_mm": 3.2,
+          "bore_mm": 107.9,
+          "mass_kg_m": 8.77
+        },
+        {
+          "wall_mm": 4.0,
+          "bore_mm": 106.3,
+          "mass_kg_m": 10.88
+        },
+        {
+          "wall_mm": 5.0,
+          "bore_mm": 104.3,
+          "mass_kg_m": 13.48
+        },
+        {
+          "wall_mm": 5.6,
+          "bore_mm": 103.1,
+          "mass_kg_m": 15.01
+        },
+        {
+          "wall_mm": 6.3,
+          "bore_mm": 101.7,
+          "mass_kg_m": 16.78
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN125",
+      "DN": 125,
+      "OD_mm": 139.7,
+      "wallThicknesses": [
+        {
+          "wall_mm": 3.2,
+          "bore_mm": 133.3,
+          "mass_kg_m": 10.77
+        },
+        {
+          "wall_mm": 4.0,
+          "bore_mm": 131.7,
+          "mass_kg_m": 13.39
+        },
+        {
+          "wall_mm": 4.5,
+          "bore_mm": 130.7,
+          "mass_kg_m": 15.0
+        },
+        {
+          "wall_mm": 5.0,
+          "bore_mm": 129.7,
+          "mass_kg_m": 16.61
+        },
+        {
+          "wall_mm": 5.6,
+          "bore_mm": 128.5,
+          "mass_kg_m": 18.52
+        },
+        {
+          "wall_mm": 6.3,
+          "bore_mm": 127.1,
+          "mass_kg_m": 20.72
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN150",
+      "DN": 150,
+      "OD_mm": 168.3,
+      "wallThicknesses": [
+        {
+          "wall_mm": 3.2,
+          "bore_mm": 161.9,
+          "mass_kg_m": 13.03
+        },
+        {
+          "wall_mm": 4.0,
+          "bore_mm": 160.3,
+          "mass_kg_m": 16.21
+        },
+        {
+          "wall_mm": 4.5,
+          "bore_mm": 159.3,
+          "mass_kg_m": 18.18
+        },
+        {
+          "wall_mm": 5.0,
+          "bore_mm": 158.3,
+          "mass_kg_m": 20.13
+        },
+        {
+          "wall_mm": 5.6,
+          "bore_mm": 157.1,
+          "mass_kg_m": 22.47
+        },
+        {
+          "wall_mm": 6.3,
+          "bore_mm": 155.7,
+          "mass_kg_m": 25.17
+        },
+        {
+          "wall_mm": 7.1,
+          "bore_mm": 154.1,
+          "mass_kg_m": 28.22
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN200",
+      "DN": 200,
+      "OD_mm": 219.1,
+      "wallThicknesses": [
+        {
+          "wall_mm": 3.2,
+          "bore_mm": 212.7,
+          "mass_kg_m": 17.04
+        },
+        {
+          "wall_mm": 4.0,
+          "bore_mm": 211.1,
+          "mass_kg_m": 21.22
+        },
+        {
+          "wall_mm": 5.0,
+          "bore_mm": 209.1,
+          "mass_kg_m": 26.4
+        },
+        {
+          "wall_mm": 5.9,
+          "bore_mm": 207.3,
+          "mass_kg_m": 31.02
+        },
+        {
+          "wall_mm": 6.3,
+          "bore_mm": 206.5,
+          "mass_kg_m": 33.06
+        },
+        {
+          "wall_mm": 7.1,
+          "bore_mm": 204.9,
+          "mass_kg_m": 37.12
+        },
+        {
+          "wall_mm": 8.0,
+          "bore_mm": 203.1,
+          "mass_kg_m": 41.65
+        },
+        {
+          "wall_mm": 8.8,
+          "bore_mm": 201.5,
+          "mass_kg_m": 45.64
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN250",
+      "DN": 250,
+      "OD_mm": 273.0,
+      "wallThicknesses": [
+        {
+          "wall_mm": 4.0,
+          "bore_mm": 265.0,
+          "mass_kg_m": 26.53
+        },
+        {
+          "wall_mm": 5.0,
+          "bore_mm": 263.0,
+          "mass_kg_m": 33.04
+        },
+        {
+          "wall_mm": 5.6,
+          "bore_mm": 261.8,
+          "mass_kg_m": 36.93
+        },
+        {
+          "wall_mm": 6.3,
+          "bore_mm": 260.4,
+          "mass_kg_m": 41.43
+        },
+        {
+          "wall_mm": 7.1,
+          "bore_mm": 258.8,
+          "mass_kg_m": 46.56
+        },
+        {
+          "wall_mm": 8.0,
+          "bore_mm": 257.0,
+          "mass_kg_m": 52.28
+        },
+        {
+          "wall_mm": 8.8,
+          "bore_mm": 255.4,
+          "mass_kg_m": 57.33
+        },
+        {
+          "wall_mm": 10.0,
+          "bore_mm": 253.0,
+          "mass_kg_m": 64.86
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN300",
+      "DN": 300,
+      "OD_mm": 323.9,
+      "wallThicknesses": [
+        {
+          "wall_mm": 4.0,
+          "bore_mm": 315.9,
+          "mass_kg_m": 31.55
+        },
+        {
+          "wall_mm": 5.0,
+          "bore_mm": 313.9,
+          "mass_kg_m": 39.32
+        },
+        {
+          "wall_mm": 5.6,
+          "bore_mm": 312.7,
+          "mass_kg_m": 43.96
+        },
+        {
+          "wall_mm": 6.3,
+          "bore_mm": 311.3,
+          "mass_kg_m": 49.34
+        },
+        {
+          "wall_mm": 7.1,
+          "bore_mm": 309.7,
+          "mass_kg_m": 55.47
+        },
+        {
+          "wall_mm": 8.0,
+          "bore_mm": 307.9,
+          "mass_kg_m": 62.32
+        },
+        {
+          "wall_mm": 8.8,
+          "bore_mm": 306.3,
+          "mass_kg_m": 68.38
+        },
+        {
+          "wall_mm": 10.0,
+          "bore_mm": 303.9,
+          "mass_kg_m": 77.41
+        },
+        {
+          "wall_mm": 11.0,
+          "bore_mm": 301.9,
+          "mass_kg_m": 84.88
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN350",
+      "DN": 350,
+      "OD_mm": 355.6,
+      "wallThicknesses": [
+        {
+          "wall_mm": 4.0,
+          "bore_mm": 347.6,
+          "mass_kg_m": 34.68
+        },
+        {
+          "wall_mm": 5.0,
+          "bore_mm": 345.6,
+          "mass_kg_m": 43.23
+        },
+        {
+          "wall_mm": 5.6,
+          "bore_mm": 344.4,
+          "mass_kg_m": 48.33
+        },
+        {
+          "wall_mm": 6.3,
+          "bore_mm": 343.0,
+          "mass_kg_m": 54.27
+        },
+        {
+          "wall_mm": 8.0,
+          "bore_mm": 339.6,
+          "mass_kg_m": 68.57
+        },
+        {
+          "wall_mm": 10.0,
+          "bore_mm": 335.6,
+          "mass_kg_m": 85.22
+        },
+        {
+          "wall_mm": 11.0,
+          "bore_mm": 333.6,
+          "mass_kg_m": 93.48
+        },
+        {
+          "wall_mm": 12.5,
+          "bore_mm": 330.6,
+          "mass_kg_m": 105.76
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN400",
+      "DN": 400,
+      "OD_mm": 406.4,
+      "wallThicknesses": [
+        {
+          "wall_mm": 4.0,
+          "bore_mm": 398.4,
+          "mass_kg_m": 39.69
+        },
+        {
+          "wall_mm": 5.0,
+          "bore_mm": 396.4,
+          "mass_kg_m": 49.49
+        },
+        {
+          "wall_mm": 5.6,
+          "bore_mm": 395.2,
+          "mass_kg_m": 55.35
+        },
+        {
+          "wall_mm": 6.3,
+          "bore_mm": 393.8,
+          "mass_kg_m": 62.16
+        },
+        {
+          "wall_mm": 8.0,
+          "bore_mm": 390.4,
+          "mass_kg_m": 78.6
+        },
+        {
+          "wall_mm": 10.0,
+          "bore_mm": 386.4,
+          "mass_kg_m": 97.75
+        },
+        {
+          "wall_mm": 11.0,
+          "bore_mm": 384.4,
+          "mass_kg_m": 107.26
+        },
+        {
+          "wall_mm": 12.5,
+          "bore_mm": 381.4,
+          "mass_kg_m": 121.42
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN450",
+      "DN": 450,
+      "OD_mm": 457.0,
+      "wallThicknesses": [
+        {
+          "wall_mm": 5.0,
+          "bore_mm": 447.0,
+          "mass_kg_m": 55.73
+        },
+        {
+          "wall_mm": 5.6,
+          "bore_mm": 445.8,
+          "mass_kg_m": 62.34
+        },
+        {
+          "wall_mm": 6.3,
+          "bore_mm": 444.4,
+          "mass_kg_m": 70.02
+        },
+        {
+          "wall_mm": 8.0,
+          "bore_mm": 441.0,
+          "mass_kg_m": 88.58
+        },
+        {
+          "wall_mm": 10.0,
+          "bore_mm": 437.0,
+          "mass_kg_m": 110.23
+        },
+        {
+          "wall_mm": 11.0,
+          "bore_mm": 435.0,
+          "mass_kg_m": 120.98
+        },
+        {
+          "wall_mm": 12.5,
+          "bore_mm": 432.0,
+          "mass_kg_m": 137.02
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN500",
+      "DN": 500,
+      "OD_mm": 508.0,
+      "wallThicknesses": [
+        {
+          "wall_mm": 5.0,
+          "bore_mm": 498.0,
+          "mass_kg_m": 62.02
+        },
+        {
+          "wall_mm": 5.6,
+          "bore_mm": 496.8,
+          "mass_kg_m": 69.38
+        },
+        {
+          "wall_mm": 6.3,
+          "bore_mm": 495.4,
+          "mass_kg_m": 77.94
+        },
+        {
+          "wall_mm": 8.0,
+          "bore_mm": 492.0,
+          "mass_kg_m": 98.64
+        },
+        {
+          "wall_mm": 10.0,
+          "bore_mm": 488.0,
+          "mass_kg_m": 122.81
+        },
+        {
+          "wall_mm": 11.0,
+          "bore_mm": 486.0,
+          "mass_kg_m": 134.82
+        },
+        {
+          "wall_mm": 12.5,
+          "bore_mm": 483.0,
+          "mass_kg_m": 152.74
+        }
+      ]
+    },
+    {
+      "catalogId": "EN10220-DN600",
+      "DN": 600,
+      "OD_mm": 610.0,
+      "wallThicknesses": [
+        {
+          "wall_mm": 5.6,
+          "bore_mm": 598.8,
+          "mass_kg_m": 83.47
+        },
+        {
+          "wall_mm": 6.3,
+          "bore_mm": 597.4,
+          "mass_kg_m": 93.79
+        },
+        {
+          "wall_mm": 8.0,
+          "bore_mm": 594.0,
+          "mass_kg_m": 118.76
+        },
+        {
+          "wall_mm": 10.0,
+          "bore_mm": 590.0,
+          "mass_kg_m": 147.96
+        },
+        {
+          "wall_mm": 11.0,
+          "bore_mm": 588.0,
+          "mass_kg_m": 162.48
+        },
+        {
+          "wall_mm": 12.5,
+          "bore_mm": 585.0,
+          "mass_kg_m": 184.18
+        },
+        {
+          "wall_mm": 14.2,
+          "bore_mm": 581.6,
+          "mass_kg_m": 208.63
+        }
+      ]
+    }
+  ]
+}

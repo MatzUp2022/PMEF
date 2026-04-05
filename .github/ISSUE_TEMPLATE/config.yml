@@ -5,7 +5,7 @@ contact_links:
     url: https://discord.gg/pmef
     about: Ask questions, share ideas, and connect with the PMEF community
   - name: 📖 Specification Documentation
-    url: https://pmef.org/spec
+    url: https://pmef.net/spec
     about: Browse the full PMEF specification
   - name: 🗣️ GitHub Discussions
     url: https://github.com/pmef/specification/discussions

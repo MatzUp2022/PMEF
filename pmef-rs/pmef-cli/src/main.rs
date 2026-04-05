@@ -19,7 +19,7 @@ use tracing::{error, info, warn};
     version = "0.9.0",
     about = "PMEF — Plant Model Exchange Format CLI",
     long_about = "Validate, diff, convert, and analyse PMEF NDJSON packages.\n\
-                  Documentation: https://pmef.org/docs/cli"
+                  Documentation: https://pmef.net/docs/cli"
 )]
 struct Cli {
     /// Verbosity level (-v, -vv, -vvv)

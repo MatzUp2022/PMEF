@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://pmef.org/schemas/0.9/pmef-relationships.schema.json",
+  "$id": "https://pmef.net/schemas/0.9/pmef-relationships.schema.json",
   "title": "PMEF Typed Relationships",
   "description": "Explicit, typed relationship objects between PMEF entities. Relationships are first-class objects stored in the NDJSON stream, enabling graph traversal, provenance tracking and cross-discipline linking without modifying the related objects themselves.",
 

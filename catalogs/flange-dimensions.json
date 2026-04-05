@@ -1,5 +1,5 @@
 {
-  "$schema": "https://pmef.org/schemas/0.9/pmef-catalog.schema.json",
+  "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
   "catalogId": "flange-dimensions",
   "catalogType": "FLANGE_DIMENSIONS",
   "standard": "ASME B16.5-2020 (Pipe Flanges and Flanged Fittings)",

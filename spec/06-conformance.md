@@ -499,7 +499,7 @@ To have a self-certification reviewed by the PMEF community:
    [Conformance Report template](../.github/ISSUE_TEMPLATE/conformance.md).
 2. The PMEF TSC or a designated WG will review the report within 30 days.
 3. Upon acceptance, the implementation is listed on the PMEF
-   website's [Certified Implementations](https://pmef.org/certified)
+   website's [Certified Implementations](https://pmef.net/certified)
    page.
 
 ### 8.3 Conformance Badges
@@ -512,7 +512,7 @@ PMEF-Full      (Level 2)
 PMEF-RoundTrip (Level 3)
 ```
 
-Badge image URLs: `https://pmef.org/badges/pmef-<level>.svg`
+Badge image URLs: `https://pmef.net/badges/pmef-<level>.svg`
 
 ### 8.4 Revoking Conformance Claims
 

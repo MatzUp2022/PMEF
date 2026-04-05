@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://pmef.org/schemas/0.9/pmef-hierarchy.schema.json",
+  "$id": "https://pmef.net/schemas/0.9/pmef-hierarchy.schema.json",
   "title": "PMEF Plant Hierarchy",
   "description": "Canonical schema for the plant hierarchy entities: FileHeader, Plant, Unit, Area.",
 

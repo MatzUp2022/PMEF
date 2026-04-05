@@ -1,5 +1,5 @@
 {
-  "$schema": "https://pmef.org/schemas/0.9/pmef-catalog.schema.json",
+  "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
   "catalogId": "profiles-en",
   "catalogType": "STEEL_PROFILES",
   "standard": "EN 10034:1993, EN 10279:2000, EN 10210-2:2006, EN 10219-2:2006, EN 10055:1995, EN 10056-1:1998, EN 10058:2003",
@@ -26,7 +26,6 @@
   "note": "Section properties are nominal values from European standards. For design use, verify against the current edition of the applicable standard.",
   "entries": [
     {
-      "id": "EN:HEA96",
       "family": "HEA",
       "h_mm": 96,
       "b_mm": 100,
@@ -38,10 +37,10 @@
       "Iz_cm4": 278,
       "Wel_y_cm3": 228,
       "Wel_z_cm3": 55.7,
-      "mass_kg_m": 16.7
+      "mass_kg_m": 16.7,
+      "catalogId": "EN:HEA96"
     },
     {
-      "id": "EN:HEA120",
       "family": "HEA",
       "h_mm": 120,
       "b_mm": 120,
@@ -53,10 +52,10 @@
       "Iz_cm4": 431,
       "Wel_y_cm3": 340,
       "Wel_z_cm3": 71.8,
-      "mass_kg_m": 19.9
+      "mass_kg_m": 19.9,
+      "catalogId": "EN:HEA120"
     },
     {
-      "id": "EN:HEA140",
       "family": "HEA",
       "h_mm": 140,
       "b_mm": 140,
@@ -68,10 +67,10 @@
       "Iz_cm4": 670,
       "Wel_y_cm3": 556,
       "Wel_z_cm3": 95.7,
-      "mass_kg_m": 24.7
+      "mass_kg_m": 24.7,
+      "catalogId": "EN:HEA140"
     },
     {
-      "id": "EN:HEA160",
       "family": "HEA",
       "h_mm": 160,
       "b_mm": 160,
@@ -83,10 +82,10 @@
       "Iz_cm4": 1170,
       "Wel_y_cm3": 861,
       "Wel_z_cm3": 146,
-      "mass_kg_m": 30.4
+      "mass_kg_m": 30.4,
+      "catalogId": "EN:HEA160"
     },
     {
-      "id": "EN:HEA180",
       "family": "HEA",
       "h_mm": 180,
       "b_mm": 180,
@@ -98,10 +97,10 @@
       "Iz_cm4": 1980,
       "Wel_y_cm3": 1300,
       "Wel_z_cm3": 220,
-      "mass_kg_m": 35.5
+      "mass_kg_m": 35.5,
+      "catalogId": "EN:HEA180"
     },
     {
-      "id": "EN:HEA200",
       "family": "HEA",
       "h_mm": 200,
       "b_mm": 200,
@@ -113,10 +112,10 @@
       "Iz_cm4": 3110,
       "Wel_y_cm3": 1840,
       "Wel_z_cm3": 311,
-      "mass_kg_m": 42.3
+      "mass_kg_m": 42.3,
+      "catalogId": "EN:HEA200"
     },
     {
-      "id": "EN:HEA220",
       "family": "HEA",
       "h_mm": 220,
       "b_mm": 220,
@@ -128,10 +127,10 @@
       "Iz_cm4": 4730,
       "Wel_y_cm3": 2540,
       "Wel_z_cm3": 430,
-      "mass_kg_m": 50.5
+      "mass_kg_m": 50.5,
+      "catalogId": "EN:HEA220"
     },
     {
-      "id": "EN:HEA240",
       "family": "HEA",
       "h_mm": 240,
       "b_mm": 240,
@@ -143,10 +142,10 @@
       "Iz_cm4": 7090,
       "Wel_y_cm3": 3490,
       "Wel_z_cm3": 591,
-      "mass_kg_m": 60.3
+      "mass_kg_m": 60.3,
+      "catalogId": "EN:HEA240"
     },
     {
-      "id": "EN:HEA260",
       "family": "HEA",
       "h_mm": 260,
       "b_mm": 260,
@@ -158,10 +157,10 @@
       "Iz_cm4": 10450,
       "Wel_y_cm3": 4610,
       "Wel_z_cm3": 804,
-      "mass_kg_m": 68.2
+      "mass_kg_m": 68.2,
+      "catalogId": "EN:HEA260"
     },
     {
-      "id": "EN:HEA280",
       "family": "HEA",
       "h_mm": 280,
       "b_mm": 280,
@@ -173,10 +172,10 @@
       "Iz_cm4": 14870,
       "Wel_y_cm3": 5990,
       "Wel_z_cm3": 1060,
-      "mass_kg_m": 76.4
+      "mass_kg_m": 76.4,
+      "catalogId": "EN:HEA280"
     },
     {
-      "id": "EN:HEA300",
       "family": "HEA",
       "h_mm": 300,
       "b_mm": 300,
@@ -188,10 +187,10 @@
       "Iz_cm4": 21000,
       "Wel_y_cm3": 7880,
       "Wel_z_cm3": 1400,
-      "mass_kg_m": 88.3
+      "mass_kg_m": 88.3,
+      "catalogId": "EN:HEA300"
     },
     {
-      "id": "EN:HEA320",
       "family": "HEA",
       "h_mm": 320,
       "b_mm": 300,
@@ -203,10 +202,10 @@
       "Iz_cm4": 25640,
       "Wel_y_cm3": 10180,
       "Wel_z_cm3": 1710,
-      "mass_kg_m": 97.6
+      "mass_kg_m": 97.6,
+      "catalogId": "EN:HEA320"
     },
     {
-      "id": "EN:HEA340",
       "family": "HEA",
       "h_mm": 340,
       "b_mm": 300,
@@ -218,10 +217,10 @@
       "Iz_cm4": 26720,
       "Wel_y_cm3": 12420,
       "Wel_z_cm3": 1780,
-      "mass_kg_m": 105
+      "mass_kg_m": 105,
+      "catalogId": "EN:HEA340"
     },
     {
-      "id": "EN:HEA360",
       "family": "HEA",
       "h_mm": 360,
       "b_mm": 300,
@@ -233,10 +232,10 @@
       "Iz_cm4": 28130,
       "Wel_y_cm3": 14800,
       "Wel_z_cm3": 1870,
-      "mass_kg_m": 112
+      "mass_kg_m": 112,
+      "catalogId": "EN:HEA360"
     },
     {
-      "id": "EN:HEA400",
       "family": "HEA",
       "h_mm": 400,
       "b_mm": 300,
@@ -248,10 +247,10 @@
       "Iz_cm4": 33870,
       "Wel_y_cm3": 19440,
       "Wel_z_cm3": 2260,
-      "mass_kg_m": 125
+      "mass_kg_m": 125,
+      "catalogId": "EN:HEA400"
     },
     {
-      "id": "EN:HEA450",
       "family": "HEA",
       "h_mm": 450,
       "b_mm": 300,
@@ -263,10 +262,10 @@
       "Iz_cm4": 40600,
       "Wel_y_cm3": 26330,
       "Wel_z_cm3": 2710,
-      "mass_kg_m": 140
+      "mass_kg_m": 140,
+      "catalogId": "EN:HEA450"
     },
     {
-      "id": "EN:HEA500",
       "family": "HEA",
       "h_mm": 500,
       "b_mm": 300,
@@ -278,10 +277,10 @@
       "Iz_cm4": 48200,
       "Wel_y_cm3": 34600,
       "Wel_z_cm3": 3210,
-      "mass_kg_m": 155
+      "mass_kg_m": 155,
+      "catalogId": "EN:HEA500"
     },
     {
-      "id": "EN:HEA550",
       "family": "HEA",
       "h_mm": 550,
       "b_mm": 300,
@@ -293,10 +292,10 @@
       "Iz_cm4": 52110,
       "Wel_y_cm3": 41830,
       "Wel_z_cm3": 3475,
-      "mass_kg_m": 166
+      "mass_kg_m": 166,
+      "catalogId": "EN:HEA550"
     },
     {
-      "id": "EN:HEA600",
       "family": "HEA",
       "h_mm": 600,
       "b_mm": 300,
@@ -308,10 +307,10 @@
       "Iz_cm4": 57680,
       "Wel_y_cm3": 50630,
       "Wel_z_cm3": 3850,
-      "mass_kg_m": 178
+      "mass_kg_m": 178,
+      "catalogId": "EN:HEA600"
     },
     {
-      "id": "EN:HEA650",
       "family": "HEA",
       "h_mm": 650,
       "b_mm": 300,
@@ -323,10 +322,10 @@
       "Iz_cm4": 63720,
       "Wel_y_cm3": 60340,
       "Wel_z_cm3": 4250,
-      "mass_kg_m": 190
+      "mass_kg_m": 190,
+      "catalogId": "EN:HEA650"
     },
     {
-      "id": "EN:HEA700",
       "family": "HEA",
       "h_mm": 700,
       "b_mm": 300,
@@ -338,10 +337,10 @@
       "Iz_cm4": 74530,
       "Wel_y_cm3": 77420,
       "Wel_z_cm3": 4968,
-      "mass_kg_m": 204
+      "mass_kg_m": 204,
+      "catalogId": "EN:HEA700"
     },
     {
-      "id": "EN:HEA800",
       "family": "HEA",
       "h_mm": 800,
       "b_mm": 300,
@@ -353,10 +352,10 @@
       "Iz_cm4": 89290,
       "Wel_y_cm3": 111480,
       "Wel_z_cm3": 5952,
-      "mass_kg_m": 224
+      "mass_kg_m": 224,
+      "catalogId": "EN:HEA800"
     },
     {
-      "id": "EN:HEA900",
       "family": "HEA",
       "h_mm": 900,
       "b_mm": 300,
@@ -368,10 +367,10 @@
       "Iz_cm4": 86220,
       "Wel_y_cm3": 134670,
       "Wel_z_cm3": 5750,
-      "mass_kg_m": 252
+      "mass_kg_m": 252,
+      "catalogId": "EN:HEA900"
     },
     {
-      "id": "EN:HEA1000",
       "family": "HEA",
       "h_mm": 1000,
       "b_mm": 300,
@@ -383,10 +382,10 @@
       "Iz_cm4": 92080,
       "Wel_y_cm3": 161300,
       "Wel_z_cm3": 6140,
-      "mass_kg_m": 272
+      "mass_kg_m": 272,
+      "catalogId": "EN:HEA1000"
     },
     {
-      "id": "EN:HEB100",
       "family": "HEB",
       "h_mm": 100,
       "b_mm": 100,
@@ -398,10 +397,10 @@
       "Iz_cm4": 167,
       "Wel_y_cm3": 89.9,
       "Wel_z_cm3": 33.4,
-      "mass_kg_m": 20.4
+      "mass_kg_m": 20.4,
+      "catalogId": "EN:HEB100"
     },
     {
-      "id": "EN:HEB120",
       "family": "HEB",
       "h_mm": 120,
       "b_mm": 120,
@@ -413,10 +412,10 @@
       "Iz_cm4": 318,
       "Wel_y_cm3": 144,
       "Wel_z_cm3": 53.0,
-      "mass_kg_m": 26.7
+      "mass_kg_m": 26.7,
+      "catalogId": "EN:HEB120"
     },
     {
-      "id": "EN:HEB140",
       "family": "HEB",
       "h_mm": 140,
       "b_mm": 140,
@@ -428,10 +427,10 @@
       "Iz_cm4": 550,
       "Wel_y_cm3": 215,
       "Wel_z_cm3": 78.5,
-      "mass_kg_m": 33.7
+      "mass_kg_m": 33.7,
+      "catalogId": "EN:HEB140"
     },
     {
-      "id": "EN:HEB160",
       "family": "HEB",
       "h_mm": 160,
       "b_mm": 160,
@@ -443,10 +442,10 @@
       "Iz_cm4": 889,
       "Wel_y_cm3": 311,
       "Wel_z_cm3": 111,
-      "mass_kg_m": 42.6
+      "mass_kg_m": 42.6,
+      "catalogId": "EN:HEB160"
     },
     {
-      "id": "EN:HEB180",
       "family": "HEB",
       "h_mm": 180,
       "b_mm": 180,
@@ -458,10 +457,10 @@
       "Iz_cm4": 1360,
       "Wel_y_cm3": 426,
       "Wel_z_cm3": 151,
-      "mass_kg_m": 51.2
+      "mass_kg_m": 51.2,
+      "catalogId": "EN:HEB180"
     },
     {
-      "id": "EN:HEB200",
       "family": "HEB",
       "h_mm": 200,
       "b_mm": 200,
@@ -473,10 +472,10 @@
       "Iz_cm4": 2000,
       "Wel_y_cm3": 570,
       "Wel_z_cm3": 200,
-      "mass_kg_m": 61.3
+      "mass_kg_m": 61.3,
+      "catalogId": "EN:HEB200"
     },
     {
-      "id": "EN:HEB220",
       "family": "HEB",
       "h_mm": 220,
       "b_mm": 220,
@@ -488,10 +487,10 @@
       "Iz_cm4": 2840,
       "Wel_y_cm3": 736,
       "Wel_z_cm3": 258,
-      "mass_kg_m": 71.5
+      "mass_kg_m": 71.5,
+      "catalogId": "EN:HEB220"
     },
     {
-      "id": "EN:HEB240",
       "family": "HEB",
       "h_mm": 240,
       "b_mm": 240,
@@ -503,10 +502,10 @@
       "Iz_cm4": 3920,
       "Wel_y_cm3": 938,
       "Wel_z_cm3": 327,
-      "mass_kg_m": 83.2
+      "mass_kg_m": 83.2,
+      "catalogId": "EN:HEB240"
     },
     {
-      "id": "EN:HEB260",
       "family": "HEB",
       "h_mm": 260,
       "b_mm": 260,
@@ -518,10 +517,10 @@
       "Iz_cm4": 5130,
       "Wel_y_cm3": 1150,
       "Wel_z_cm3": 395,
-      "mass_kg_m": 93.0
+      "mass_kg_m": 93.0,
+      "catalogId": "EN:HEB260"
     },
     {
-      "id": "EN:HEB280",
       "family": "HEB",
       "h_mm": 280,
       "b_mm": 280,
@@ -533,10 +532,10 @@
       "Iz_cm4": 6590,
       "Wel_y_cm3": 1380,
       "Wel_z_cm3": 471,
-      "mass_kg_m": 103
+      "mass_kg_m": 103,
+      "catalogId": "EN:HEB280"
     },
     {
-      "id": "EN:HEB300",
       "family": "HEB",
       "h_mm": 300,
       "b_mm": 300,
@@ -548,10 +547,10 @@
       "Iz_cm4": 8560,
       "Wel_y_cm3": 1680,
       "Wel_z_cm3": 571,
-      "mass_kg_m": 117
+      "mass_kg_m": 117,
+      "catalogId": "EN:HEB300"
     },
     {
-      "id": "EN:HEB320",
       "family": "HEB",
       "h_mm": 320,
       "b_mm": 300,
@@ -563,10 +562,10 @@
       "Iz_cm4": 9240,
       "Wel_y_cm3": 1930,
       "Wel_z_cm3": 616,
-      "mass_kg_m": 127
+      "mass_kg_m": 127,
+      "catalogId": "EN:HEB320"
     },
     {
-      "id": "EN:HEB340",
       "family": "HEB",
       "h_mm": 340,
       "b_mm": 300,
@@ -578,10 +577,10 @@
       "Iz_cm4": 9690,
       "Wel_y_cm3": 2160,
       "Wel_z_cm3": 646,
-      "mass_kg_m": 134
+      "mass_kg_m": 134,
+      "catalogId": "EN:HEB340"
     },
     {
-      "id": "EN:HEB360",
       "family": "HEB",
       "h_mm": 360,
       "b_mm": 300,
@@ -593,10 +592,10 @@
       "Iz_cm4": 10140,
       "Wel_y_cm3": 2400,
       "Wel_z_cm3": 676,
-      "mass_kg_m": 142
+      "mass_kg_m": 142,
+      "catalogId": "EN:HEB360"
     },
     {
-      "id": "EN:HEB400",
       "family": "HEB",
       "h_mm": 400,
       "b_mm": 300,
@@ -608,10 +607,10 @@
       "Iz_cm4": 10820,
       "Wel_y_cm3": 2880,
       "Wel_z_cm3": 721,
-      "mass_kg_m": 155
+      "mass_kg_m": 155,
+      "catalogId": "EN:HEB400"
     },
     {
-      "id": "EN:HEB450",
       "family": "HEB",
       "h_mm": 450,
       "b_mm": 300,
@@ -623,10 +622,10 @@
       "Iz_cm4": 11720,
       "Wel_y_cm3": 3550,
       "Wel_z_cm3": 781,
-      "mass_kg_m": 171
+      "mass_kg_m": 171,
+      "catalogId": "EN:HEB450"
     },
     {
-      "id": "EN:HEB500",
       "family": "HEB",
       "h_mm": 500,
       "b_mm": 300,
@@ -638,10 +637,10 @@
       "Iz_cm4": 12620,
       "Wel_y_cm3": 4290,
       "Wel_z_cm3": 842,
-      "mass_kg_m": 187
+      "mass_kg_m": 187,
+      "catalogId": "EN:HEB500"
     },
     {
-      "id": "EN:HEB550",
       "family": "HEB",
       "h_mm": 550,
       "b_mm": 300,
@@ -653,10 +652,10 @@
       "Iz_cm4": 13080,
       "Wel_y_cm3": 4970,
       "Wel_z_cm3": 872,
-      "mass_kg_m": 199
+      "mass_kg_m": 199,
+      "catalogId": "EN:HEB550"
     },
     {
-      "id": "EN:HEB600",
       "family": "HEB",
       "h_mm": 600,
       "b_mm": 300,
@@ -668,10 +667,10 @@
       "Iz_cm4": 13530,
       "Wel_y_cm3": 5700,
       "Wel_z_cm3": 902,
-      "mass_kg_m": 212
+      "mass_kg_m": 212,
+      "catalogId": "EN:HEB600"
     },
     {
-      "id": "EN:HEB650",
       "family": "HEB",
       "h_mm": 650,
       "b_mm": 300,
@@ -683,10 +682,10 @@
       "Iz_cm4": 13980,
       "Wel_y_cm3": 6480,
       "Wel_z_cm3": 932,
-      "mass_kg_m": 225
+      "mass_kg_m": 225,
+      "catalogId": "EN:HEB650"
     },
     {
-      "id": "EN:HEB700",
       "family": "HEB",
       "h_mm": 700,
       "b_mm": 300,
@@ -698,10 +697,10 @@
       "Iz_cm4": 14440,
       "Wel_y_cm3": 7340,
       "Wel_z_cm3": 963,
-      "mass_kg_m": 241
+      "mass_kg_m": 241,
+      "catalogId": "EN:HEB700"
     },
     {
-      "id": "EN:HEB800",
       "family": "HEB",
       "h_mm": 800,
       "b_mm": 300,
@@ -713,10 +712,10 @@
       "Iz_cm4": 14900,
       "Wel_y_cm3": 8980,
       "Wel_z_cm3": 994,
-      "mass_kg_m": 262
+      "mass_kg_m": 262,
+      "catalogId": "EN:HEB800"
     },
     {
-      "id": "EN:HEB900",
       "family": "HEB",
       "h_mm": 900,
       "b_mm": 300,
@@ -728,10 +727,10 @@
       "Iz_cm4": 15820,
       "Wel_y_cm3": 10980,
       "Wel_z_cm3": 1055,
-      "mass_kg_m": 291
+      "mass_kg_m": 291,
+      "catalogId": "EN:HEB900"
     },
     {
-      "id": "EN:HEB1000",
       "family": "HEB",
       "h_mm": 1000,
       "b_mm": 300,
@@ -743,10 +742,10 @@
       "Iz_cm4": 16280,
       "Wel_y_cm3": 12890,
       "Wel_z_cm3": 1087,
-      "mass_kg_m": 314
+      "mass_kg_m": 314,
+      "catalogId": "EN:HEB1000"
     },
     {
-      "id": "EN:IPE80",
       "family": "IPE",
       "h_mm": 80,
       "b_mm": 46,
@@ -758,10 +757,10 @@
       "Iz_cm4": 8.49,
       "Wel_y_cm3": 20.0,
       "Wel_z_cm3": 3.69,
-      "mass_kg_m": 6.0
+      "mass_kg_m": 6.0,
+      "catalogId": "EN:IPE80"
     },
     {
-      "id": "EN:IPE100",
       "family": "IPE",
       "h_mm": 100,
       "b_mm": 55,
@@ -773,10 +772,10 @@
       "Iz_cm4": 15.9,
       "Wel_y_cm3": 34.2,
       "Wel_z_cm3": 5.79,
-      "mass_kg_m": 8.1
+      "mass_kg_m": 8.1,
+      "catalogId": "EN:IPE100"
     },
     {
-      "id": "EN:IPE120",
       "family": "IPE",
       "h_mm": 120,
       "b_mm": 64,
@@ -788,10 +787,10 @@
       "Iz_cm4": 27.7,
       "Wel_y_cm3": 53.0,
       "Wel_z_cm3": 8.65,
-      "mass_kg_m": 10.4
+      "mass_kg_m": 10.4,
+      "catalogId": "EN:IPE120"
     },
     {
-      "id": "EN:IPE140",
       "family": "IPE",
       "h_mm": 140,
       "b_mm": 73,
@@ -803,10 +802,10 @@
       "Iz_cm4": 44.9,
       "Wel_y_cm3": 77.3,
       "Wel_z_cm3": 12.3,
-      "mass_kg_m": 12.9
+      "mass_kg_m": 12.9,
+      "catalogId": "EN:IPE140"
     },
     {
-      "id": "EN:IPE160",
       "family": "IPE",
       "h_mm": 160,
       "b_mm": 82,
@@ -818,10 +817,10 @@
       "Iz_cm4": 68.3,
       "Wel_y_cm3": 109,
       "Wel_z_cm3": 16.7,
-      "mass_kg_m": 15.8
+      "mass_kg_m": 15.8,
+      "catalogId": "EN:IPE160"
     },
     {
-      "id": "EN:IPE180",
       "family": "IPE",
       "h_mm": 180,
       "b_mm": 91,
@@ -833,10 +832,10 @@
       "Iz_cm4": 101,
       "Wel_y_cm3": 146,
       "Wel_z_cm3": 22.2,
-      "mass_kg_m": 18.8
+      "mass_kg_m": 18.8,
+      "catalogId": "EN:IPE180"
     },
     {
-      "id": "EN:IPE200",
       "family": "IPE",
       "h_mm": 200,
       "b_mm": 100,
@@ -848,10 +847,10 @@
       "Iz_cm4": 142,
       "Wel_y_cm3": 194,
       "Wel_z_cm3": 28.5,
-      "mass_kg_m": 22.4
+      "mass_kg_m": 22.4,
+      "catalogId": "EN:IPE200"
     },
     {
-      "id": "EN:IPE220",
       "family": "IPE",
       "h_mm": 220,
       "b_mm": 110,
@@ -863,10 +862,10 @@
       "Iz_cm4": 205,
       "Wel_y_cm3": 252,
       "Wel_z_cm3": 37.3,
-      "mass_kg_m": 26.2
+      "mass_kg_m": 26.2,
+      "catalogId": "EN:IPE220"
     },
     {
-      "id": "EN:IPE240",
       "family": "IPE",
       "h_mm": 240,
       "b_mm": 120,
@@ -878,10 +877,10 @@
       "Iz_cm4": 284,
       "Wel_y_cm3": 324,
       "Wel_z_cm3": 47.3,
-      "mass_kg_m": 30.7
+      "mass_kg_m": 30.7,
+      "catalogId": "EN:IPE240"
     },
     {
-      "id": "EN:IPE270",
       "family": "IPE",
       "h_mm": 270,
       "b_mm": 135,
@@ -893,10 +892,10 @@
       "Iz_cm4": 420,
       "Wel_y_cm3": 429,
       "Wel_z_cm3": 62.2,
-      "mass_kg_m": 36.1
+      "mass_kg_m": 36.1,
+      "catalogId": "EN:IPE270"
     },
     {
-      "id": "EN:IPE300",
       "family": "IPE",
       "h_mm": 300,
       "b_mm": 150,
@@ -908,10 +907,10 @@
       "Iz_cm4": 604,
       "Wel_y_cm3": 557,
       "Wel_z_cm3": 80.5,
-      "mass_kg_m": 42.2
+      "mass_kg_m": 42.2,
+      "catalogId": "EN:IPE300"
     },
     {
-      "id": "EN:IPE330",
       "family": "IPE",
       "h_mm": 330,
       "b_mm": 160,
@@ -923,10 +922,10 @@
       "Iz_cm4": 788,
       "Wel_y_cm3": 713,
       "Wel_z_cm3": 98.5,
-      "mass_kg_m": 49.1
+      "mass_kg_m": 49.1,
+      "catalogId": "EN:IPE330"
     },
     {
-      "id": "EN:IPE360",
       "family": "IPE",
       "h_mm": 360,
       "b_mm": 170,
@@ -938,10 +937,10 @@
       "Iz_cm4": 1040,
       "Wel_y_cm3": 904,
       "Wel_z_cm3": 123,
-      "mass_kg_m": 57.1
+      "mass_kg_m": 57.1,
+      "catalogId": "EN:IPE360"
     },
     {
-      "id": "EN:IPE400",
       "family": "IPE",
       "h_mm": 400,
       "b_mm": 180,
@@ -953,10 +952,10 @@
       "Iz_cm4": 1320,
       "Wel_y_cm3": 1160,
       "Wel_z_cm3": 146,
-      "mass_kg_m": 66.3
+      "mass_kg_m": 66.3,
+      "catalogId": "EN:IPE400"
     },
     {
-      "id": "EN:IPE450",
       "family": "IPE",
       "h_mm": 450,
       "b_mm": 190,
@@ -968,10 +967,10 @@
       "Iz_cm4": 1680,
       "Wel_y_cm3": 1500,
       "Wel_z_cm3": 176,
-      "mass_kg_m": 77.6
+      "mass_kg_m": 77.6,
+      "catalogId": "EN:IPE450"
     },
     {
-      "id": "EN:IPE500",
       "family": "IPE",
       "h_mm": 500,
       "b_mm": 200,
@@ -983,10 +982,10 @@
       "Iz_cm4": 2140,
       "Wel_y_cm3": 1930,
       "Wel_z_cm3": 214,
-      "mass_kg_m": 90.7
+      "mass_kg_m": 90.7,
+      "catalogId": "EN:IPE500"
     },
     {
-      "id": "EN:IPE550",
       "family": "IPE",
       "h_mm": 550,
       "b_mm": 210,
@@ -998,10 +997,10 @@
       "Iz_cm4": 2670,
       "Wel_y_cm3": 2440,
       "Wel_z_cm3": 254,
-      "mass_kg_m": 106
+      "mass_kg_m": 106,
+      "catalogId": "EN:IPE550"
     },
     {
-      "id": "EN:IPE600",
       "family": "IPE",
       "h_mm": 600,
       "b_mm": 220,
@@ -1013,10 +1012,10 @@
       "Iz_cm4": 3390,
       "Wel_y_cm3": 3070,
       "Wel_z_cm3": 308,
-      "mass_kg_m": 122
+      "mass_kg_m": 122,
+      "catalogId": "EN:IPE600"
     },
     {
-      "id": "EN:UPE80",
       "family": "UPE",
       "h_mm": 80,
       "b_mm": 50,
@@ -1028,10 +1027,10 @@
       "Iz_cm4": 25.4,
       "Wel_y_cm3": 26.6,
       "Wel_z_cm3": 7.23,
-      "mass_kg_m": 7.89
+      "mass_kg_m": 7.89,
+      "catalogId": "EN:UPE80"
     },
     {
-      "id": "EN:UPE100",
       "family": "UPE",
       "h_mm": 100,
       "b_mm": 55,
@@ -1043,10 +1042,10 @@
       "Iz_cm4": 39.1,
       "Wel_y_cm3": 41.4,
       "Wel_z_cm3": 10.0,
-      "mass_kg_m": 9.86
+      "mass_kg_m": 9.86,
+      "catalogId": "EN:UPE100"
     },
     {
-      "id": "EN:UPE120",
       "family": "UPE",
       "h_mm": 120,
       "b_mm": 60,
@@ -1058,10 +1057,10 @@
       "Iz_cm4": 57.6,
       "Wel_y_cm3": 60.8,
       "Wel_z_cm3": 13.5,
-      "mass_kg_m": 12.2
+      "mass_kg_m": 12.2,
+      "catalogId": "EN:UPE120"
     },
     {
-      "id": "EN:UPE140",
       "family": "UPE",
       "h_mm": 140,
       "b_mm": 65,
@@ -1073,10 +1072,10 @@
       "Iz_cm4": 81.4,
       "Wel_y_cm3": 86.1,
       "Wel_z_cm3": 17.6,
-      "mass_kg_m": 15.0
+      "mass_kg_m": 15.0,
+      "catalogId": "EN:UPE140"
     },
     {
-      "id": "EN:UPE160",
       "family": "UPE",
       "h_mm": 160,
       "b_mm": 70,
@@ -1088,10 +1087,10 @@
       "Iz_cm4": 108,
       "Wel_y_cm3": 116,
       "Wel_z_cm3": 21.5,
-      "mass_kg_m": 17.5
+      "mass_kg_m": 17.5,
+      "catalogId": "EN:UPE160"
     },
     {
-      "id": "EN:UPE180",
       "family": "UPE",
       "h_mm": 180,
       "b_mm": 75,
@@ -1103,10 +1102,10 @@
       "Iz_cm4": 143,
       "Wel_y_cm3": 150,
       "Wel_z_cm3": 26.5,
-      "mass_kg_m": 20.6
+      "mass_kg_m": 20.6,
+      "catalogId": "EN:UPE180"
     },
     {
-      "id": "EN:UPE200",
       "family": "UPE",
       "h_mm": 200,
       "b_mm": 80,
@@ -1118,10 +1117,10 @@
       "Iz_cm4": 186,
       "Wel_y_cm3": 191,
       "Wel_z_cm3": 32.6,
-      "mass_kg_m": 23.6
+      "mass_kg_m": 23.6,
+      "catalogId": "EN:UPE200"
     },
     {
-      "id": "EN:UPE220",
       "family": "UPE",
       "h_mm": 220,
       "b_mm": 85,
@@ -1133,10 +1132,10 @@
       "Iz_cm4": 232,
       "Wel_y_cm3": 236,
       "Wel_z_cm3": 38.3,
-      "mass_kg_m": 26.8
+      "mass_kg_m": 26.8,
+      "catalogId": "EN:UPE220"
     },
     {
-      "id": "EN:UPE240",
       "family": "UPE",
       "h_mm": 240,
       "b_mm": 90,
@@ -1148,10 +1147,10 @@
       "Iz_cm4": 285,
       "Wel_y_cm3": 288,
       "Wel_z_cm3": 44.6,
-      "mass_kg_m": 30.4
+      "mass_kg_m": 30.4,
+      "catalogId": "EN:UPE240"
     },
     {
-      "id": "EN:UPE270",
       "family": "UPE",
       "h_mm": 270,
       "b_mm": 95,
@@ -1163,10 +1162,10 @@
       "Iz_cm4": 365,
       "Wel_y_cm3": 385,
       "Wel_z_cm3": 53.9,
-      "mass_kg_m": 35.3
+      "mass_kg_m": 35.3,
+      "catalogId": "EN:UPE270"
     },
     {
-      "id": "EN:UPE300",
       "family": "UPE",
       "h_mm": 300,
       "b_mm": 100,
@@ -1178,10 +1177,10 @@
       "Iz_cm4": 452,
       "Wel_y_cm3": 496,
       "Wel_z_cm3": 63.5,
-      "mass_kg_m": 40.5
+      "mass_kg_m": 40.5,
+      "catalogId": "EN:UPE300"
     },
     {
-      "id": "EN:UPE330",
       "family": "UPE",
       "h_mm": 330,
       "b_mm": 105,
@@ -1193,10 +1192,10 @@
       "Iz_cm4": 568,
       "Wel_y_cm3": 633,
       "Wel_z_cm3": 75.9,
-      "mass_kg_m": 46.9
+      "mass_kg_m": 46.9,
+      "catalogId": "EN:UPE330"
     },
     {
-      "id": "EN:UPE360",
       "family": "UPE",
       "h_mm": 360,
       "b_mm": 110,
@@ -1208,10 +1207,10 @@
       "Iz_cm4": 665,
       "Wel_y_cm3": 766,
       "Wel_z_cm3": 85.6,
-      "mass_kg_m": 51.8
+      "mass_kg_m": 51.8,
+      "catalogId": "EN:UPE360"
     },
     {
-      "id": "EN:UPE400",
       "family": "UPE",
       "h_mm": 400,
       "b_mm": 115,
@@ -1223,10 +1222,10 @@
       "Iz_cm4": 837,
       "Wel_y_cm3": 1029,
       "Wel_z_cm3": 103,
-      "mass_kg_m": 60.8
+      "mass_kg_m": 60.8,
+      "catalogId": "EN:UPE400"
     },
     {
-      "id": "EN:RHS100x60x4",
       "family": "RHS",
       "h_mm": 60,
       "b_mm": 100,
@@ -1234,10 +1233,10 @@
       "A_cm2": 12.16,
       "mass_kg_m": 10.1,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS100x60x4"
     },
     {
-      "id": "EN:RHS100x60x5",
       "family": "RHS",
       "h_mm": 60,
       "b_mm": 100,
@@ -1245,10 +1244,10 @@
       "A_cm2": 15.0,
       "mass_kg_m": 12.4,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS100x60x5"
     },
     {
-      "id": "EN:RHS100x60x6",
       "family": "RHS",
       "h_mm": 60,
       "b_mm": 100,
@@ -1256,10 +1255,10 @@
       "A_cm2": 17.76,
       "mass_kg_m": 14.6,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS100x60x6"
     },
     {
-      "id": "EN:RHS120x80x4",
       "family": "RHS",
       "h_mm": 80,
       "b_mm": 120,
@@ -1267,10 +1266,10 @@
       "A_cm2": 15.36,
       "mass_kg_m": 12.2,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS120x80x4"
     },
     {
-      "id": "EN:RHS120x80x5",
       "family": "RHS",
       "h_mm": 80,
       "b_mm": 120,
@@ -1278,10 +1277,10 @@
       "A_cm2": 19.0,
       "mass_kg_m": 15.1,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS120x80x5"
     },
     {
-      "id": "EN:RHS120x80x6",
       "family": "RHS",
       "h_mm": 80,
       "b_mm": 120,
@@ -1289,10 +1288,10 @@
       "A_cm2": 22.56,
       "mass_kg_m": 17.8,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS120x80x6"
     },
     {
-      "id": "EN:RHS150x100x5",
       "family": "RHS",
       "h_mm": 100,
       "b_mm": 150,
@@ -1300,10 +1299,10 @@
       "A_cm2": 24.0,
       "mass_kg_m": 19.0,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS150x100x5"
     },
     {
-      "id": "EN:RHS150x100x6",
       "family": "RHS",
       "h_mm": 100,
       "b_mm": 150,
@@ -1311,10 +1310,10 @@
       "A_cm2": 28.56,
       "mass_kg_m": 22.6,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS150x100x6"
     },
     {
-      "id": "EN:RHS150x100x8",
       "family": "RHS",
       "h_mm": 100,
       "b_mm": 150,
@@ -1322,10 +1321,10 @@
       "A_cm2": 37.44,
       "mass_kg_m": 29.4,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS150x100x8"
     },
     {
-      "id": "EN:RHS160x80x5",
       "family": "RHS",
       "h_mm": 80,
       "b_mm": 160,
@@ -1333,10 +1332,10 @@
       "A_cm2": 23.0,
       "mass_kg_m": 18.3,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS160x80x5"
     },
     {
-      "id": "EN:RHS160x80x6",
       "family": "RHS",
       "h_mm": 80,
       "b_mm": 160,
@@ -1344,10 +1343,10 @@
       "A_cm2": 27.36,
       "mass_kg_m": 21.7,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS160x80x6"
     },
     {
-      "id": "EN:RHS200x100x5",
       "family": "RHS",
       "h_mm": 100,
       "b_mm": 200,
@@ -1355,10 +1354,10 @@
       "A_cm2": 29.0,
       "mass_kg_m": 22.8,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS200x100x5"
     },
     {
-      "id": "EN:RHS200x100x6",
       "family": "RHS",
       "h_mm": 100,
       "b_mm": 200,
@@ -1366,10 +1365,10 @@
       "A_cm2": 34.56,
       "mass_kg_m": 27.2,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS200x100x6"
     },
     {
-      "id": "EN:RHS200x100x8",
       "family": "RHS",
       "h_mm": 100,
       "b_mm": 200,
@@ -1377,10 +1376,10 @@
       "A_cm2": 45.44,
       "mass_kg_m": 35.5,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS200x100x8"
     },
     {
-      "id": "EN:RHS200x100x10",
       "family": "RHS",
       "h_mm": 100,
       "b_mm": 200,
@@ -1388,10 +1387,10 @@
       "A_cm2": 56.0,
       "mass_kg_m": 43.5,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS200x100x10"
     },
     {
-      "id": "EN:RHS200x150x6",
       "family": "RHS",
       "h_mm": 150,
       "b_mm": 200,
@@ -1399,10 +1398,10 @@
       "A_cm2": 40.56,
       "mass_kg_m": 31.8,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS200x150x6"
     },
     {
-      "id": "EN:RHS200x150x8",
       "family": "RHS",
       "h_mm": 150,
       "b_mm": 200,
@@ -1410,10 +1409,10 @@
       "A_cm2": 53.44,
       "mass_kg_m": 41.7,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS200x150x8"
     },
     {
-      "id": "EN:RHS200x150x10",
       "family": "RHS",
       "h_mm": 150,
       "b_mm": 200,
@@ -1421,10 +1420,10 @@
       "A_cm2": 66.0,
       "mass_kg_m": 51.3,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS200x150x10"
     },
     {
-      "id": "EN:RHS250x150x6",
       "family": "RHS",
       "h_mm": 150,
       "b_mm": 250,
@@ -1432,10 +1431,10 @@
       "A_cm2": 46.56,
       "mass_kg_m": 36.4,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS250x150x6"
     },
     {
-      "id": "EN:RHS250x150x8",
       "family": "RHS",
       "h_mm": 150,
       "b_mm": 250,
@@ -1443,10 +1442,10 @@
       "A_cm2": 61.44,
       "mass_kg_m": 47.9,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS250x150x8"
     },
     {
-      "id": "EN:RHS250x150x10",
       "family": "RHS",
       "h_mm": 150,
       "b_mm": 250,
@@ -1454,10 +1453,10 @@
       "A_cm2": 76.0,
       "mass_kg_m": 58.9,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS250x150x10"
     },
     {
-      "id": "EN:RHS300x150x8",
       "family": "RHS",
       "h_mm": 150,
       "b_mm": 300,
@@ -1465,10 +1464,10 @@
       "A_cm2": 69.44,
       "mass_kg_m": 54.1,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS300x150x8"
     },
     {
-      "id": "EN:RHS300x150x10",
       "family": "RHS",
       "h_mm": 150,
       "b_mm": 300,
@@ -1476,10 +1475,10 @@
       "A_cm2": 86.0,
       "mass_kg_m": 66.9,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS300x150x10"
     },
     {
-      "id": "EN:RHS300x200x8",
       "family": "RHS",
       "h_mm": 200,
       "b_mm": 300,
@@ -1487,10 +1486,10 @@
       "A_cm2": 77.44,
       "mass_kg_m": 60.8,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS300x200x8"
     },
     {
-      "id": "EN:RHS300x200x10",
       "family": "RHS",
       "h_mm": 200,
       "b_mm": 300,
@@ -1498,10 +1497,10 @@
       "A_cm2": 96.0,
       "mass_kg_m": 75.2,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS300x200x10"
     },
     {
-      "id": "EN:RHS300x200x12",
       "family": "RHS",
       "h_mm": 200,
       "b_mm": 300,
@@ -1509,10 +1508,10 @@
       "A_cm2": 114.24,
       "mass_kg_m": 89.2,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS300x200x12"
     },
     {
-      "id": "EN:RHS400x200x8",
       "family": "RHS",
       "h_mm": 200,
       "b_mm": 400,
@@ -1520,10 +1519,10 @@
       "A_cm2": 93.44,
       "mass_kg_m": 74.1,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS400x200x8"
     },
     {
-      "id": "EN:RHS400x200x10",
       "family": "RHS",
       "h_mm": 200,
       "b_mm": 400,
@@ -1531,10 +1530,10 @@
       "A_cm2": 116.0,
       "mass_kg_m": 91.8,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS400x200x10"
     },
     {
-      "id": "EN:RHS400x200x12",
       "family": "RHS",
       "h_mm": 200,
       "b_mm": 400,
@@ -1542,10 +1541,10 @@
       "A_cm2": 138.24,
       "mass_kg_m": 109,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS400x200x12"
     },
     {
-      "id": "EN:RHS400x300x10",
       "family": "RHS",
       "h_mm": 300,
       "b_mm": 400,
@@ -1553,10 +1552,10 @@
       "A_cm2": 136.0,
       "mass_kg_m": 107,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS400x300x10"
     },
     {
-      "id": "EN:RHS400x300x12",
       "family": "RHS",
       "h_mm": 300,
       "b_mm": 400,
@@ -1564,10 +1563,10 @@
       "A_cm2": 162.24,
       "mass_kg_m": 128,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS400x300x12"
     },
     {
-      "id": "EN:RHS500x300x10",
       "family": "RHS",
       "h_mm": 300,
       "b_mm": 500,
@@ -1575,10 +1574,10 @@
       "A_cm2": 156.0,
       "mass_kg_m": 122,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS500x300x10"
     },
     {
-      "id": "EN:RHS500x300x12",
       "family": "RHS",
       "h_mm": 300,
       "b_mm": 500,
@@ -1586,10 +1585,10 @@
       "A_cm2": 186.24,
       "mass_kg_m": 146,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS500x300x12"
     },
     {
-      "id": "EN:RHS500x300x16",
       "family": "RHS",
       "h_mm": 300,
       "b_mm": 500,
@@ -1597,769 +1596,770 @@
       "A_cm2": 245.76,
       "mass_kg_m": 190,
       "standard": "EN 10210 / EN 10219",
-      "note": "Hot-finished or cold-formed"
+      "note": "Hot-finished or cold-formed",
+      "catalogId": "EN:RHS500x300x16"
     },
     {
-      "id": "EN:SHS50x4",
       "family": "SHS",
       "h_mm": 50,
       "b_mm": 50,
       "t_mm": 4,
       "mass_kg_m": 5.72,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS50x4"
     },
     {
-      "id": "EN:SHS50x5",
       "family": "SHS",
       "h_mm": 50,
       "b_mm": 50,
       "t_mm": 5,
       "mass_kg_m": 6.97,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS50x5"
     },
     {
-      "id": "EN:SHS60x4",
       "family": "SHS",
       "h_mm": 60,
       "b_mm": 60,
       "t_mm": 4,
       "mass_kg_m": 6.97,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS60x4"
     },
     {
-      "id": "EN:SHS60x5",
       "family": "SHS",
       "h_mm": 60,
       "b_mm": 60,
       "t_mm": 5,
       "mass_kg_m": 8.54,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS60x5"
     },
     {
-      "id": "EN:SHS80x4",
       "family": "SHS",
       "h_mm": 80,
       "b_mm": 80,
       "t_mm": 4,
       "mass_kg_m": 9.47,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS80x4"
     },
     {
-      "id": "EN:SHS80x5",
       "family": "SHS",
       "h_mm": 80,
       "b_mm": 80,
       "t_mm": 5,
       "mass_kg_m": 11.6,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS80x5"
     },
     {
-      "id": "EN:SHS80x6",
       "family": "SHS",
       "h_mm": 80,
       "b_mm": 80,
       "t_mm": 6,
       "mass_kg_m": 13.7,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS80x6"
     },
     {
-      "id": "EN:SHS100x4",
       "family": "SHS",
       "h_mm": 100,
       "b_mm": 100,
       "t_mm": 4,
       "mass_kg_m": 11.9,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS100x4"
     },
     {
-      "id": "EN:SHS100x5",
       "family": "SHS",
       "h_mm": 100,
       "b_mm": 100,
       "t_mm": 5,
       "mass_kg_m": 14.7,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS100x5"
     },
     {
-      "id": "EN:SHS100x6",
       "family": "SHS",
       "h_mm": 100,
       "b_mm": 100,
       "t_mm": 6,
       "mass_kg_m": 17.4,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS100x6"
     },
     {
-      "id": "EN:SHS120x5",
       "family": "SHS",
       "h_mm": 120,
       "b_mm": 120,
       "t_mm": 5,
       "mass_kg_m": 17.8,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS120x5"
     },
     {
-      "id": "EN:SHS120x6",
       "family": "SHS",
       "h_mm": 120,
       "b_mm": 120,
       "t_mm": 6,
       "mass_kg_m": 21.2,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS120x6"
     },
     {
-      "id": "EN:SHS120x8",
       "family": "SHS",
       "h_mm": 120,
       "b_mm": 120,
       "t_mm": 8,
       "mass_kg_m": 27.5,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS120x8"
     },
     {
-      "id": "EN:SHS150x5",
       "family": "SHS",
       "h_mm": 150,
       "b_mm": 150,
       "t_mm": 5,
       "mass_kg_m": 22.5,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS150x5"
     },
     {
-      "id": "EN:SHS150x6",
       "family": "SHS",
       "h_mm": 150,
       "b_mm": 150,
       "t_mm": 6,
       "mass_kg_m": 26.8,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS150x6"
     },
     {
-      "id": "EN:SHS150x8",
       "family": "SHS",
       "h_mm": 150,
       "b_mm": 150,
       "t_mm": 8,
       "mass_kg_m": 35.0,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS150x8"
     },
     {
-      "id": "EN:SHS150x10",
       "family": "SHS",
       "h_mm": 150,
       "b_mm": 150,
       "t_mm": 10,
       "mass_kg_m": 42.9,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS150x10"
     },
     {
-      "id": "EN:SHS180x6",
       "family": "SHS",
       "h_mm": 180,
       "b_mm": 180,
       "t_mm": 6,
       "mass_kg_m": 32.4,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS180x6"
     },
     {
-      "id": "EN:SHS180x8",
       "family": "SHS",
       "h_mm": 180,
       "b_mm": 180,
       "t_mm": 8,
       "mass_kg_m": 42.5,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS180x8"
     },
     {
-      "id": "EN:SHS200x6",
       "family": "SHS",
       "h_mm": 200,
       "b_mm": 200,
       "t_mm": 6,
       "mass_kg_m": 36.3,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS200x6"
     },
     {
-      "id": "EN:SHS200x8",
       "family": "SHS",
       "h_mm": 200,
       "b_mm": 200,
       "t_mm": 8,
       "mass_kg_m": 47.7,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS200x8"
     },
     {
-      "id": "EN:SHS200x10",
       "family": "SHS",
       "h_mm": 200,
       "b_mm": 200,
       "t_mm": 10,
       "mass_kg_m": 58.7,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS200x10"
     },
     {
-      "id": "EN:SHS250x8",
       "family": "SHS",
       "h_mm": 250,
       "b_mm": 250,
       "t_mm": 8,
       "mass_kg_m": 60.4,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS250x8"
     },
     {
-      "id": "EN:SHS250x10",
       "family": "SHS",
       "h_mm": 250,
       "b_mm": 250,
       "t_mm": 10,
       "mass_kg_m": 74.5,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS250x10"
     },
     {
-      "id": "EN:SHS250x12",
       "family": "SHS",
       "h_mm": 250,
       "b_mm": 250,
       "t_mm": 12,
       "mass_kg_m": 88.2,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS250x12"
     },
     {
-      "id": "EN:SHS300x8",
       "family": "SHS",
       "h_mm": 300,
       "b_mm": 300,
       "t_mm": 8,
       "mass_kg_m": 72.9,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS300x8"
     },
     {
-      "id": "EN:SHS300x10",
       "family": "SHS",
       "h_mm": 300,
       "b_mm": 300,
       "t_mm": 10,
       "mass_kg_m": 90.2,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS300x10"
     },
     {
-      "id": "EN:SHS300x12",
       "family": "SHS",
       "h_mm": 300,
       "b_mm": 300,
       "t_mm": 12,
       "mass_kg_m": 107,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS300x12"
     },
     {
-      "id": "EN:SHS400x10",
       "family": "SHS",
       "h_mm": 400,
       "b_mm": 400,
       "t_mm": 10,
       "mass_kg_m": 121,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS400x10"
     },
     {
-      "id": "EN:SHS400x12",
       "family": "SHS",
       "h_mm": 400,
       "b_mm": 400,
       "t_mm": 12,
       "mass_kg_m": 145,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:SHS400x12"
     },
     {
-      "id": "EN:CHS33.7x3.2",
       "family": "CHS",
       "OD_mm": 33.7,
       "t_mm": 3.2,
       "mass_kg_m": 2.41,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS33.7x3.2"
     },
     {
-      "id": "EN:CHS42.4x3.2",
       "family": "CHS",
       "OD_mm": 42.4,
       "t_mm": 3.2,
       "mass_kg_m": 3.09,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS42.4x3.2"
     },
     {
-      "id": "EN:CHS48.3x3.2",
       "family": "CHS",
       "OD_mm": 48.3,
       "t_mm": 3.2,
       "mass_kg_m": 3.56,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS48.3x3.2"
     },
     {
-      "id": "EN:CHS60.3x3.2",
       "family": "CHS",
       "OD_mm": 60.3,
       "t_mm": 3.2,
       "mass_kg_m": 4.51,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS60.3x3.2"
     },
     {
-      "id": "EN:CHS76.1x3.2",
       "family": "CHS",
       "OD_mm": 76.1,
       "t_mm": 3.2,
       "mass_kg_m": 5.75,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS76.1x3.2"
     },
     {
-      "id": "EN:CHS88.9x3.2",
       "family": "CHS",
       "OD_mm": 88.9,
       "t_mm": 3.2,
       "mass_kg_m": 6.76,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS88.9x3.2"
     },
     {
-      "id": "EN:CHS88.9x4.0",
       "family": "CHS",
       "OD_mm": 88.9,
       "t_mm": 4.0,
       "mass_kg_m": 8.38,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS88.9x4.0"
     },
     {
-      "id": "EN:CHS101.6x4.0",
       "family": "CHS",
       "OD_mm": 101.6,
       "t_mm": 4.0,
       "mass_kg_m": 9.63,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS101.6x4.0"
     },
     {
-      "id": "EN:CHS114.3x4.0",
       "family": "CHS",
       "OD_mm": 114.3,
       "t_mm": 4.0,
       "mass_kg_m": 10.85,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS114.3x4.0"
     },
     {
-      "id": "EN:CHS114.3x5.0",
       "family": "CHS",
       "OD_mm": 114.3,
       "t_mm": 5.0,
       "mass_kg_m": 13.44,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS114.3x5.0"
     },
     {
-      "id": "EN:CHS139.7x5.0",
       "family": "CHS",
       "OD_mm": 139.7,
       "t_mm": 5.0,
       "mass_kg_m": 16.6,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS139.7x5.0"
     },
     {
-      "id": "EN:CHS139.7x6.3",
       "family": "CHS",
       "OD_mm": 139.7,
       "t_mm": 6.3,
       "mass_kg_m": 20.71,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS139.7x6.3"
     },
     {
-      "id": "EN:CHS168.3x5.0",
       "family": "CHS",
       "OD_mm": 168.3,
       "t_mm": 5.0,
       "mass_kg_m": 20.1,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS168.3x5.0"
     },
     {
-      "id": "EN:CHS168.3x6.3",
       "family": "CHS",
       "OD_mm": 168.3,
       "t_mm": 6.3,
       "mass_kg_m": 25.17,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS168.3x6.3"
     },
     {
-      "id": "EN:CHS168.3x8.0",
       "family": "CHS",
       "OD_mm": 168.3,
       "t_mm": 8.0,
       "mass_kg_m": 31.62,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS168.3x8.0"
     },
     {
-      "id": "EN:CHS193.7x6.3",
       "family": "CHS",
       "OD_mm": 193.7,
       "t_mm": 6.3,
       "mass_kg_m": 29.2,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS193.7x6.3"
     },
     {
-      "id": "EN:CHS193.7x8.0",
       "family": "CHS",
       "OD_mm": 193.7,
       "t_mm": 8.0,
       "mass_kg_m": 36.65,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS193.7x8.0"
     },
     {
-      "id": "EN:CHS219.1x6.3",
       "family": "CHS",
       "OD_mm": 219.1,
       "t_mm": 6.3,
       "mass_kg_m": 33.17,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS219.1x6.3"
     },
     {
-      "id": "EN:CHS219.1x8.0",
       "family": "CHS",
       "OD_mm": 219.1,
       "t_mm": 8.0,
       "mass_kg_m": 41.67,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS219.1x8.0"
     },
     {
-      "id": "EN:CHS219.1x10.0",
       "family": "CHS",
       "OD_mm": 219.1,
       "t_mm": 10.0,
       "mass_kg_m": 51.73,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS219.1x10.0"
     },
     {
-      "id": "EN:CHS244.5x6.3",
       "family": "CHS",
       "OD_mm": 244.5,
       "t_mm": 6.3,
       "mass_kg_m": 37.15,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS244.5x6.3"
     },
     {
-      "id": "EN:CHS244.5x8.0",
       "family": "CHS",
       "OD_mm": 244.5,
       "t_mm": 8.0,
       "mass_kg_m": 46.68,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS244.5x8.0"
     },
     {
-      "id": "EN:CHS244.5x10.0",
       "family": "CHS",
       "OD_mm": 244.5,
       "t_mm": 10.0,
       "mass_kg_m": 57.97,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS244.5x10.0"
     },
     {
-      "id": "EN:CHS273.0x8.0",
       "family": "CHS",
       "OD_mm": 273.0,
       "t_mm": 8.0,
       "mass_kg_m": 52.31,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS273.0x8.0"
     },
     {
-      "id": "EN:CHS273.0x10.0",
       "family": "CHS",
       "OD_mm": 273.0,
       "t_mm": 10.0,
       "mass_kg_m": 64.97,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS273.0x10.0"
     },
     {
-      "id": "EN:CHS323.9x8.0",
       "family": "CHS",
       "OD_mm": 323.9,
       "t_mm": 8.0,
       "mass_kg_m": 62.3,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS323.9x8.0"
     },
     {
-      "id": "EN:CHS323.9x10.0",
       "family": "CHS",
       "OD_mm": 323.9,
       "t_mm": 10.0,
       "mass_kg_m": 77.52,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS323.9x10.0"
     },
     {
-      "id": "EN:CHS355.6x10.0",
       "family": "CHS",
       "OD_mm": 355.6,
       "t_mm": 10.0,
       "mass_kg_m": 85.17,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS355.6x10.0"
     },
     {
-      "id": "EN:CHS406.4x10.0",
       "family": "CHS",
       "OD_mm": 406.4,
       "t_mm": 10.0,
       "mass_kg_m": 97.62,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS406.4x10.0"
     },
     {
-      "id": "EN:CHS406.4x12.5",
       "family": "CHS",
       "OD_mm": 406.4,
       "t_mm": 12.5,
       "mass_kg_m": 121.4,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS406.4x12.5"
     },
     {
-      "id": "EN:CHS457.0x10.0",
       "family": "CHS",
       "OD_mm": 457.0,
       "t_mm": 10.0,
       "mass_kg_m": 110.0,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS457.0x10.0"
     },
     {
-      "id": "EN:CHS508.0x10.0",
       "family": "CHS",
       "OD_mm": 508.0,
       "t_mm": 10.0,
       "mass_kg_m": 122.5,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS508.0x10.0"
     },
     {
-      "id": "EN:CHS508.0x12.5",
       "family": "CHS",
       "OD_mm": 508.0,
       "t_mm": 12.5,
       "mass_kg_m": 152.6,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS508.0x12.5"
     },
     {
-      "id": "EN:CHS610.0x10.0",
       "family": "CHS",
       "OD_mm": 610.0,
       "t_mm": 10.0,
       "mass_kg_m": 147.3,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS610.0x10.0"
     },
     {
-      "id": "EN:CHS610.0x12.5",
       "family": "CHS",
       "OD_mm": 610.0,
       "t_mm": 12.5,
       "mass_kg_m": 183.8,
-      "standard": "EN 10210 / EN 10219"
+      "standard": "EN 10210 / EN 10219",
+      "catalogId": "EN:CHS610.0x12.5"
     },
     {
-      "id": "EN:L50x5",
       "family": "EQUAL_ANGLE",
       "b1_mm": 50,
       "b2_mm": 50,
       "t_mm": 5,
       "r_mm": 4,
       "mass_kg_m": 3.77,
-      "standard": "EN 10056-1"
+      "standard": "EN 10056-1",
+      "catalogId": "EN:L50x5"
     },
     {
-      "id": "EN:L60x6",
       "family": "EQUAL_ANGLE",
       "b1_mm": 60,
       "b2_mm": 60,
       "t_mm": 6,
       "r_mm": 5,
       "mass_kg_m": 5.42,
-      "standard": "EN 10056-1"
+      "standard": "EN 10056-1",
+      "catalogId": "EN:L60x6"
     },
     {
-      "id": "EN:L70x7",
       "family": "EQUAL_ANGLE",
       "b1_mm": 70,
       "b2_mm": 70,
       "t_mm": 7,
       "r_mm": 5,
       "mass_kg_m": 7.38,
-      "standard": "EN 10056-1"
+      "standard": "EN 10056-1",
+      "catalogId": "EN:L70x7"
     },
     {
-      "id": "EN:L80x8",
       "family": "EQUAL_ANGLE",
       "b1_mm": 80,
       "b2_mm": 80,
       "t_mm": 8,
       "r_mm": 8,
       "mass_kg_m": 9.63,
-      "standard": "EN 10056-1"
+      "standard": "EN 10056-1",
+      "catalogId": "EN:L80x8"
     },
     {
-      "id": "EN:L90x9",
       "family": "EQUAL_ANGLE",
       "b1_mm": 90,
       "b2_mm": 90,
       "t_mm": 9,
       "r_mm": 9,
       "mass_kg_m": 12.2,
-      "standard": "EN 10056-1"
+      "standard": "EN 10056-1",
+      "catalogId": "EN:L90x9"
     },
     {
-      "id": "EN:L100x10",
       "family": "EQUAL_ANGLE",
       "b1_mm": 100,
       "b2_mm": 100,
       "t_mm": 10,
       "r_mm": 10,
       "mass_kg_m": 15.1,
-      "standard": "EN 10056-1"
+      "standard": "EN 10056-1",
+      "catalogId": "EN:L100x10"
     },
     {
-      "id": "EN:L120x12",
       "family": "EQUAL_ANGLE",
       "b1_mm": 120,
       "b2_mm": 120,
       "t_mm": 12,
       "r_mm": 11,
       "mass_kg_m": 21.6,
-      "standard": "EN 10056-1"
+      "standard": "EN 10056-1",
+      "catalogId": "EN:L120x12"
     },
     {
-      "id": "EN:L150x12",
       "family": "EQUAL_ANGLE",
       "b1_mm": 150,
       "b2_mm": 150,
       "t_mm": 12,
       "r_mm": 13,
       "mass_kg_m": 26.6,
-      "standard": "EN 10056-1"
+      "standard": "EN 10056-1",
+      "catalogId": "EN:L150x12"
     },
     {
-      "id": "EN:L150x15",
       "family": "EQUAL_ANGLE",
       "b1_mm": 150,
       "b2_mm": 150,
       "t_mm": 15,
       "r_mm": 16,
       "mass_kg_m": 32.8,
-      "standard": "EN 10056-1"
+      "standard": "EN 10056-1",
+      "catalogId": "EN:L150x15"
     },
     {
-      "id": "EN:L180x16",
       "family": "EQUAL_ANGLE",
       "b1_mm": 180,
       "b2_mm": 180,
       "t_mm": 16,
       "r_mm": 16,
       "mass_kg_m": 43.5,
-      "standard": "EN 10056-1"
+      "standard": "EN 10056-1",
+      "catalogId": "EN:L180x16"
     },
     {
-      "id": "EN:L200x16",
       "family": "EQUAL_ANGLE",
       "b1_mm": 200,
       "b2_mm": 200,
       "t_mm": 16,
       "r_mm": 18,
       "mass_kg_m": 48.6,
-      "standard": "EN 10056-1"
+      "standard": "EN 10056-1",
+      "catalogId": "EN:L200x16"
     },
     {
-      "id": "EN:L200x20",
       "family": "EQUAL_ANGLE",
       "b1_mm": 200,
       "b2_mm": 200,
       "t_mm": 20,
       "r_mm": 20,
       "mass_kg_m": 59.9,
-      "standard": "EN 10056-1"
+      "standard": "EN 10056-1",
+      "catalogId": "EN:L200x20"
     },
     {
-      "id": "EN:L250x16",
       "family": "EQUAL_ANGLE",
       "b1_mm": 250,
       "b2_mm": 250,
       "t_mm": 16,
       "r_mm": 18,
       "mass_kg_m": 61.2,
-      "standard": "EN 10056-1"
+      "standard": "EN 10056-1",
+      "catalogId": "EN:L250x16"
     },
     {
-      "id": "EN:L250x20",
       "family": "EQUAL_ANGLE",
       "b1_mm": 250,
       "b2_mm": 250,
       "t_mm": 20,
       "r_mm": 20,
       "mass_kg_m": 75.6,
-      "standard": "EN 10056-1"
+      "standard": "EN 10056-1",
+      "catalogId": "EN:L250x20"
     },
     {
-      "id": "EN:FLAT200x20",
       "family": "FLAT",
       "b_mm": 200,
       "t_mm": 20,
       "mass_kg_m": 31.4,
-      "standard": "EN 10058"
+      "standard": "EN 10058",
+      "catalogId": "EN:FLAT200x20"
     },
     {
-      "id": "EN:FLAT200x15",
       "family": "FLAT",
       "b_mm": 200,
       "t_mm": 15,
       "mass_kg_m": 23.6,
-      "standard": "EN 10058"
+      "standard": "EN 10058",
+      "catalogId": "EN:FLAT200x15"
     },
     {
-      "id": "EN:FLAT150x20",
       "family": "FLAT",
       "b_mm": 150,
       "t_mm": 20,
       "mass_kg_m": 23.6,
-      "standard": "EN 10058"
+      "standard": "EN 10058",
+      "catalogId": "EN:FLAT150x20"
     },
     {
-      "id": "EN:FLAT150x15",
       "family": "FLAT",
       "b_mm": 150,
       "t_mm": 15,
       "mass_kg_m": 17.7,
-      "standard": "EN 10058"
+      "standard": "EN 10058",
+      "catalogId": "EN:FLAT150x15"
     },
     {
-      "id": "EN:FLAT100x20",
       "family": "FLAT",
       "b_mm": 100,
       "t_mm": 20,
       "mass_kg_m": 15.7,
-      "standard": "EN 10058"
+      "standard": "EN 10058",
+      "catalogId": "EN:FLAT100x20"
     },
     {
-      "id": "EN:FLAT100x15",
       "family": "FLAT",
       "b_mm": 100,
       "t_mm": 15,
       "mass_kg_m": 11.8,
-      "standard": "EN 10058"
+      "standard": "EN 10058",
+      "catalogId": "EN:FLAT100x15"
     },
     {
-      "id": "EN:FLAT100x12",
       "family": "FLAT",
       "b_mm": 100,
       "t_mm": 12,
       "mass_kg_m": 9.42,
-      "standard": "EN 10058"
+      "standard": "EN 10058",
+      "catalogId": "EN:FLAT100x12"
     },
     {
-      "id": "EN:FLAT80x12",
       "family": "FLAT",
       "b_mm": 80,
       "t_mm": 12,
       "mass_kg_m": 7.54,
-      "standard": "EN 10058"
+      "standard": "EN 10058",
+      "catalogId": "EN:FLAT80x12"
     },
     {
-      "id": "EN:FLAT60x10",
       "family": "FLAT",
       "b_mm": 60,
       "t_mm": 10,
       "mass_kg_m": 4.71,
-      "standard": "EN 10058"
+      "standard": "EN 10058",
+      "catalogId": "EN:FLAT60x10"
     }
   ]
 }

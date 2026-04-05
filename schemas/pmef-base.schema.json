@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://pmef.org/schemas/0.9/pmef-base.schema.json",
+  "$id": "https://pmef.net/schemas/0.9/pmef-base.schema.json",
   "title": "PMEF Base Types",
   "description": "Shared primitive types, enumerations and reusable definitions for all PMEF schemas.",
   "$defs": {

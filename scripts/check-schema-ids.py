@@ -3,7 +3,7 @@
 check-schema-ids.py — Verify that each schema's $id matches its file path.
 
 Ensures that the $id field in each JSON Schema file follows the convention:
-    https://pmef.org/schemas/0.9/<filename>
+    https://pmef.net/schemas/0.9/<filename>
 
 Usage:
     python scripts/check-schema-ids.py
@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 SCHEMAS_DIR = Path(__file__).parent.parent / "schemas"
-BASE_URI = "https://pmef.org/schemas/0.9/"
+BASE_URI = "https://pmef.net/schemas/0.9/"
 
 
 def main():

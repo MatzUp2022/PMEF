@@ -23,7 +23,7 @@ def bundle_schemas(schemas_dir: Path) -> dict:
     all_defs = {}
     metadata = {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "https://pmef.org/schemas/bundle/latest/pmef-bundle.schema.json",
+        "$id": "https://pmef.net/schemas/bundle/latest/pmef-bundle.schema.json",
         "title": "PMEF Schema Bundle",
         "description": "All PMEF JSON Schema definitions bundled into a single file for offline validation.",
         "$defs": {},
