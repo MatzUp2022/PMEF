@@ -38,12 +38,14 @@ def load_json(path: Path) -> dict:
 
 def check_duplicate_ids(catalog: dict) -> list[str]:
     """Return warnings for duplicate catalogId values within a catalog."""
+    if not isinstance(catalog, dict):
+        return []
     seen: dict[str, int] = {}
     for entry in catalog.get("entries", []):
         if not isinstance(entry, dict):
             continue
         cid = entry.get("catalogId")
-        if cid is None:
+        if not isinstance(cid, str):
             continue
         seen[cid] = seen.get(cid, 0) + 1
     return [f"Duplicate catalogId '{cid}' ({n}×)" for cid, n in seen.items() if n > 1]
@@ -53,6 +55,8 @@ def validate_catalog(path: Path, validator: Draft202012Validator) -> list[str]:
     """Validate a single catalog file. Returns list of error messages."""
     try:
         catalog = load_json(path)
+    except OSError as e:
+        return [f"Error reading file: {e}"]
     except json.JSONDecodeError as e:
         return [f"Invalid JSON: {e}"]
 
@@ -79,7 +83,13 @@ def main() -> None:
     Draft202012Validator.check_schema(schema)
     validator = Draft202012Validator(schema)
 
-    files = [args.file] if args.file else sorted(CATALOGS_DIR.glob("*.json"))
+    if args.file:
+        if not args.file.is_file():
+            print(f"ERROR: file not found: {args.file}", file=sys.stderr)
+            sys.exit(1)
+        files = [args.file]
+    else:
+        files = sorted(CATALOGS_DIR.glob("*.json"))
     if not files:
         print(f"No catalog files found in {CATALOGS_DIR}")
         sys.exit(0)

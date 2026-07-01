@@ -51,8 +51,11 @@ def collect_connections(body) -> list[str]:
     def walk(node):
         if isinstance(node, dict):
             for key, value in node.items():
-                if key == "connectedTo" and isinstance(value, str):
-                    found.append(value)
+                if key == "connectedTo":
+                    if isinstance(value, str):
+                        found.append(value)
+                    elif isinstance(value, list):
+                        found.extend(v for v in value if isinstance(v, str))
                 else:
                     walk(value)
         elif isinstance(node, list):
@@ -75,6 +78,10 @@ def check_file(path: Path, allow_external: bool, verbose: bool) -> tuple[int, in
     for line_no, obj in load_objects(path):
         if isinstance(obj, json.JSONDecodeError):
             errors.append(f"Line {line_no}: invalid JSON — {obj}")
+            continue
+        if not isinstance(obj, dict):
+            errors.append(f"Line {line_no}: expected JSON object, "
+                          f"got {type(obj).__name__}")
             continue
         oid = obj.get("@id")
         if isinstance(oid, str):
@@ -133,7 +140,13 @@ def main() -> None:
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
-    files = [args.file] if args.file else sorted(EXAMPLES_DIR.glob("*.ndjson"))
+    if args.file:
+        if not args.file.is_file():
+            print(f"ERROR: file not found: {args.file}", file=sys.stderr)
+            sys.exit(1)
+        files = [args.file]
+    else:
+        files = sorted(EXAMPLES_DIR.glob("*.ndjson"))
     if not files:
         print(f"No .ndjson files found in {EXAMPLES_DIR}")
         sys.exit(0)

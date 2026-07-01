@@ -172,6 +172,21 @@
           }
         }
       }
+    },
+    {
+      "if": {
+        "properties": { "catalogType": { "const": "PIPE_STRESS_MAPPING" } }
+      },
+      "then": {
+        "required": ["mappings"],
+        "properties": {
+          "mappings": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/pipeStressMappingEntry" }
+          }
+        }
+      }
     }
   ],
   "additionalProperties": true,
@@ -319,6 +334,21 @@
           "title": "PMEF Type",
           "description": "PMEF type token, e.g. 'pmef:Pump'."
         },
+        "equipmentClass": {
+          "type": "string",
+          "title": "Equipment Class",
+          "description": "Optional equipment sub-class modifier, e.g. 'CENTRIFUGAL_PUMP'."
+        },
+        "componentClass": {
+          "type": "string",
+          "title": "Component Class",
+          "description": "Optional piping component sub-class modifier, e.g. 'ELBOW'."
+        },
+        "instrumentClass": {
+          "type": "string",
+          "title": "Instrument Class",
+          "description": "Optional instrument sub-class modifier."
+        },
         "rdlUri": {
           "type": "string",
           "format": "uri",
@@ -329,6 +359,40 @@
           "type": "string",
           "title": "Label",
           "description": "Human-readable label for the mapped concept."
+        }
+      }
+    },
+    "pipeStressMappingEntry": {
+      "type": "object",
+      "title": "Pipe Stress Mapping Entry",
+      "description": "A single field mapping between a pipe-stress interchange format (e.g. CAESAR II .cii) and a PMEF path. Carried in the top-level 'mappings' array; 'entries' is unused for this catalog type.",
+      "required": ["section", "ciiField", "ciiRecord", "direction", "pmefPath"],
+      "properties": {
+        "section": {
+          "type": "string",
+          "title": "Section",
+          "description": "Logical section of the source format the field belongs to."
+        },
+        "ciiField": {
+          "type": "string",
+          "title": "Source Field",
+          "description": "Field name in the pipe-stress format (e.g. CAESAR II .cii field)."
+        },
+        "ciiRecord": {
+          "type": "string",
+          "title": "Source Record",
+          "description": "Record/table in the pipe-stress format that holds the field."
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["import", "export", "bidirectional"],
+          "title": "Mapping Direction",
+          "description": "Direction in which the mapping applies."
+        },
+        "pmefPath": {
+          "type": "string",
+          "title": "PMEF Path",
+          "description": "Target path within the PMEF model for the mapped value."
         }
       }
     }
