@@ -25,6 +25,10 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   the catalog schema and flags duplicate `catalogId` values within a catalog.
 - CI job `validate-catalogs` (and `catalogs/**` path trigger) in the
   schema-validation workflow, so malformed catalogs fail the build.
+- `scripts/check-topology.py` — dataset connectivity integrity checks for
+  NDJSON examples: unique `@id`, `connectedTo` resolution, and port
+  reciprocity (with `--allow-external` for federated/cross-dataset boundaries).
+  Wired into the `validate-examples` CI job.
 
 ---
 

@@ -79,6 +79,9 @@ jobs:
       - name: Check example NDJSON is single-line-per-object
         run: python scripts/check-ndjson-format.py
 
+      - name: Check dataset topology (connectivity integrity)
+        run: python scripts/check-topology.py
+
   # ──────────────────────────────────────────────────────────
   # 3. Validate open catalogs against the catalog schema
   # ──────────────────────────────────────────────────────────
