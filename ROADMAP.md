@@ -35,7 +35,7 @@ reference implementation. Dates are targets, not commitments.
 - ✅ PMEF-DS-01 benchmark example (pump skid)
 - 🔄 Geometry schema: OpenUSD schema extension (`pmef:` custom schema)
 - 🔄 Relationships schema (`pmef-relationships.schema.json`)
-- 🔄 Catalog schema for piping specs + steel profiles
+- ✅ Catalog schema for piping specs + steel profiles (`pmef-catalog.schema.json`, per-`catalogType` entry validation, CI-enforced)
 
 ### Community
 

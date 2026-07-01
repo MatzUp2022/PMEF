@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
   "title": "PMEF Catalog",
-  "description": "Schema for PMEF open catalog files (steel profiles, piping classes, pipe dimensions).",
+  "description": "Schema for PMEF open catalog files (steel profiles, piping classes, pipe/flange dimensions, materials, instruments, and reference-data mappings). The shape of each 'entries' item is constrained by 'catalogType'.",
   "type": "object",
   "required": [
     "catalogId",
@@ -13,11 +13,13 @@
   ],
   "properties": {
     "$schema": {
-      "type": "string"
+      "type": "string",
+      "description": "Optional JSON Schema reference for editor tooling."
     },
     "catalogId": {
       "type": "string",
-      "description": "Unique catalog identifier, e.g. 'profiles-en'"
+      "minLength": 1,
+      "description": "Unique catalog identifier, e.g. 'profiles-en'."
     },
     "catalogType": {
       "type": "string",
@@ -27,47 +29,308 @@
         "PIPE_DIMENSIONS",
         "FLANGE_DIMENSIONS",
         "INSTRUMENT_CATALOG",
-        "MATERIAL_GRADES"
+        "MATERIAL_GRADES",
+        "RDL_MAPPING",
+        "PIPE_STRESS_MAPPING"
       ],
-      "description": "Catalog domain type"
+      "description": "Catalog domain type. Determines the required fields of each entry."
     },
     "standard": {
-      "type": "string"
+      "type": "string",
+      "description": "Governing standard or code, e.g. 'EN 10025-2' or 'ASME B36.10'."
     },
     "version": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1,
+      "description": "Catalog version string."
     },
     "description": {
-      "type": "string"
+      "type": "string",
+      "description": "Human-readable summary of the catalog contents."
     },
     "units": {
       "type": "object",
+      "description": "Map of field name to unit symbol used across entries.",
       "additionalProperties": {
         "type": "string"
       }
     },
     "families": {
       "type": "object",
+      "description": "Map of family code to human-readable family name.",
       "additionalProperties": {
         "type": "string"
       }
     },
     "note": {
-      "type": "string"
+      "type": "string",
+      "description": "Single free-form note about the catalog."
     },
     "notes": {
       "type": "array",
+      "description": "List of free-form notes about the catalog.",
       "items": {
         "type": "string"
       }
     },
     "entries": {
       "type": "array",
+      "description": "Catalog entries. Item shape is refined by 'catalogType'.",
       "items": {
         "type": "object"
-      },
-      "minItems": 1
+      }
     }
   },
-  "additionalProperties": true
+  "allOf": [
+    {
+      "if": {
+        "properties": { "catalogType": { "const": "STEEL_PROFILES" } }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/steelProfileEntry" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "catalogType": { "const": "PIPING_CLASS" } }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/pipingClassEntry" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "catalogType": { "const": "PIPE_DIMENSIONS" } }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/pipeDimensionEntry" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "catalogType": { "const": "FLANGE_DIMENSIONS" } }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/flangeDimensionEntry" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "catalogType": { "const": "INSTRUMENT_CATALOG" } }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/instrumentEntry" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "catalogType": { "const": "MATERIAL_GRADES" } }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/materialGradeEntry" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "catalogType": { "const": "RDL_MAPPING" } }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/rdlMappingEntry" }
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": true,
+  "$defs": {
+    "catalogRef": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Catalog Entry Identifier",
+      "description": "Stable identifier for the entry, unique within the catalog."
+    },
+    "steelProfileEntry": {
+      "type": "object",
+      "title": "Steel Profile Entry",
+      "description": "A single hot-rolled or built-up steel profile.",
+      "required": ["catalogId", "family"],
+      "properties": {
+        "catalogId": { "$ref": "#/$defs/catalogRef" },
+        "family": {
+          "type": "string",
+          "title": "Profile Family",
+          "description": "Section family code, e.g. 'HEA', 'IPE', 'W', 'L'."
+        }
+      }
+    },
+    "pipingClassEntry": {
+      "type": "object",
+      "title": "Piping Class Entry",
+      "description": "A single component selection within a piping class.",
+      "required": ["catalogId", "componentClass", "skey", "standard"],
+      "properties": {
+        "catalogId": { "$ref": "#/$defs/catalogRef" },
+        "componentClass": {
+          "type": "string",
+          "title": "Component Class",
+          "description": "Component class, e.g. 'PIPE', 'ELBOW', 'FLANGE', 'VALVE'."
+        },
+        "skey": {
+          "type": "string",
+          "title": "Symbol Key",
+          "description": "PCF/ISOGEN SKEY identifying the component symbol."
+        },
+        "standard": {
+          "type": "string",
+          "title": "Standard",
+          "description": "Dimensional/material standard for the component."
+        }
+      }
+    },
+    "pipeDimensionEntry": {
+      "type": "object",
+      "title": "Pipe Dimension Entry",
+      "description": "A nominal pipe size with its outside diameter and wall data.",
+      "required": ["catalogId", "DN", "OD_mm"],
+      "properties": {
+        "catalogId": { "$ref": "#/$defs/catalogRef" },
+        "DN": {
+          "type": "number",
+          "title": "Nominal Diameter",
+          "description": "Nominal diameter (DN)."
+        },
+        "OD_mm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "title": "Outside Diameter",
+          "description": "Outside diameter in millimetres."
+        }
+      }
+    },
+    "flangeDimensionEntry": {
+      "type": "object",
+      "title": "Flange Dimension Entry",
+      "description": "A single flange dimension row for a size/rating pair.",
+      "required": ["catalogId", "nominalDiameter", "pressureClass", "flangeOD_mm"],
+      "properties": {
+        "catalogId": { "$ref": "#/$defs/catalogRef" },
+        "nominalDiameter": {
+          "type": "number",
+          "title": "Nominal Diameter",
+          "description": "Nominal diameter (DN)."
+        },
+        "pressureClass": {
+          "type": ["number", "string"],
+          "title": "Pressure Class",
+          "description": "Flange pressure class: numeric ASME class (150, 300, 600) or EN nominal pressure string ('PN10', 'PN16')."
+        },
+        "flangeOD_mm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "title": "Flange Outside Diameter",
+          "description": "Flange outside diameter in millimetres."
+        }
+      }
+    },
+    "instrumentEntry": {
+      "type": "object",
+      "title": "Instrument Entry",
+      "description": "A single field instrument type in the instrument catalog.",
+      "required": ["catalogId", "instrumentType", "measuredVariable"],
+      "properties": {
+        "catalogId": { "$ref": "#/$defs/catalogRef" },
+        "instrumentType": {
+          "type": "string",
+          "title": "Instrument Type",
+          "description": "Instrument type, e.g. 'TRANSMITTER', 'GAUGE', 'SWITCH'."
+        },
+        "measuredVariable": {
+          "type": "string",
+          "title": "Measured Variable",
+          "description": "Measured variable, e.g. 'TEMPERATURE', 'PRESSURE', 'FLOW'."
+        }
+      }
+    },
+    "materialGradeEntry": {
+      "type": "object",
+      "title": "Material Grade Entry",
+      "description": "A single material grade with mechanical properties.",
+      "required": ["catalogId", "designation", "standard", "family"],
+      "properties": {
+        "catalogId": { "$ref": "#/$defs/catalogRef" },
+        "designation": {
+          "type": "string",
+          "title": "Designation",
+          "description": "Material designation, e.g. 'S235JR', 'A36'."
+        },
+        "standard": {
+          "type": "string",
+          "title": "Standard",
+          "description": "Material standard, e.g. 'EN 10025-2', 'ASTM A36/A36M'."
+        },
+        "family": {
+          "type": "string",
+          "title": "Material Family",
+          "description": "Material family/grouping code."
+        }
+      }
+    },
+    "rdlMappingEntry": {
+      "type": "object",
+      "title": "RDL Mapping Entry",
+      "description": "A mapping from a PMEF type to a reference-data-library URI.",
+      "required": ["pmefType", "rdlUri", "label"],
+      "properties": {
+        "pmefType": {
+          "type": "string",
+          "title": "PMEF Type",
+          "description": "PMEF type token, e.g. 'pmef:Pump'."
+        },
+        "rdlUri": {
+          "type": "string",
+          "format": "uri",
+          "title": "RDL URI",
+          "description": "Reference-data-library URI (e.g. POSC Caesar RDL)."
+        },
+        "label": {
+          "type": "string",
+          "title": "Label",
+          "description": "Human-readable label for the mapped concept."
+        }
+      }
+    }
+  }
 }
