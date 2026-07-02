@@ -1,7 +1,7 @@
 {
   "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
   "catalogId": "rdl-uri-map",
-  "catalogType": "INSTRUMENT_CATALOG",
+  "catalogType": "RDL_MAPPING",
   "version": "2024.1",
   "description": "Cross-reference between PMEF entity types, piping class component classes, and PCA-RDL (ISO 15926-4) URIs. Use rdlType on PMEF objects to point to these URIs.",
   "sparqlEndpoint": "https://data.posccaesar.org/rdl/sparql",

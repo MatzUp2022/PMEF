@@ -33,13 +33,25 @@ Each catalog file follows a common JSON structure:
 {
   "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
   "catalogId": "<id>",
-  "catalogType": "STEEL_PROFILES | PIPING_CLASS | PIPE_DIMENSIONS | FLANGE_DIMENSIONS | MATERIAL_GRADES | INSTRUMENT_CATALOG",
+  "catalogType": "STEEL_PROFILES | PIPING_CLASS | PIPE_DIMENSIONS | FLANGE_DIMENSIONS | MATERIAL_GRADES | INSTRUMENT_CATALOG | RDL_MAPPING | PIPE_STRESS_MAPPING",
   "standard": "<applicable standard>",
   "version": "<version string>",
   "description": "<human-readable description>",
   "units": { "<quantity>": "<unit>" },
   "entries": [ { ... } ]
 }
+```
+
+All catalogs are validated in CI against
+[`schemas/pmef-catalog.schema.json`](../schemas/pmef-catalog.schema.json).
+Beyond the common envelope above, the schema refines the required fields of
+each `entries` item based on `catalogType` — for example a `PIPING_CLASS`
+entry must carry `catalogId`, `componentClass`, `skey`, and `standard`, while
+an `RDL_MAPPING` entry must carry `pmefType`, `rdlUri`, and `label`. Run the
+validator locally with:
+
+```sh
+python scripts/validate-catalogs.py
 ```
 
 ## Profile ID Convention

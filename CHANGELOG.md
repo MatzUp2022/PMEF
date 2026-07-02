@@ -5,6 +5,33 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ---
 
+## [Unreleased]
+
+### Changed
+
+- **Catalog schema (`schemas/pmef-catalog.schema.json`)**: tightened from a
+  loose envelope into a per-`catalogType` contract. Each `entries` item is now
+  validated against a type-specific `$def` (steel profile, piping class, pipe
+  dimension, flange dimension, instrument, material grade, RDL mapping), with
+  required identifier/core fields enforced per type. Added `RDL_MAPPING` and
+  `PIPE_STRESS_MAPPING` to the `catalogType` enum; `pressureClass` now accepts
+  numeric ASME classes and EN `PN` strings.
+- Reclassified `catalogs/rdl-uri-map.json` from `INSTRUMENT_CATALOG` to
+  `RDL_MAPPING` to match its actual content.
+
+### Added
+
+- `scripts/validate-catalogs.py` — validates every file in `catalogs/` against
+  the catalog schema and flags duplicate `catalogId` values within a catalog.
+- CI job `validate-catalogs` (and `catalogs/**` path trigger) in the
+  schema-validation workflow, so malformed catalogs fail the build.
+- `scripts/check-topology.py` — dataset connectivity integrity checks for
+  NDJSON examples: unique `@id`, `connectedTo` resolution, and port
+  reciprocity (with `--allow-external` for federated/cross-dataset boundaries).
+  Wired into the `validate-examples` CI job.
+
+---
+
 ## [0.9.0-rc] — 2026-03-31 · Release Candidate
 
 ### Summary

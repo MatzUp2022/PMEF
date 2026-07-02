@@ -6,6 +6,7 @@ on:
     paths:
       - 'schemas/**'
       - 'examples/**'
+      - 'catalogs/**'
       - 'scripts/**'
       - 'diagrams/**'
       - 'spec/**'
@@ -17,6 +18,7 @@ on:
     paths:
       - 'schemas/**'
       - 'examples/**'
+      - 'catalogs/**'
       - 'scripts/**'
       - 'diagrams/**'
       - 'spec/**'
@@ -77,8 +79,32 @@ jobs:
       - name: Check example NDJSON is single-line-per-object
         run: python scripts/check-ndjson-format.py
 
+      - name: Check dataset topology (connectivity integrity)
+        run: python scripts/check-topology.py
+
   # ──────────────────────────────────────────────────────────
-  # 3. Check Mermaid diagrams are syntactically valid
+  # 3. Validate open catalogs against the catalog schema
+  # ──────────────────────────────────────────────────────────
+  validate-catalogs:
+    name: Validate catalogs
+    runs-on: ubuntu-latest
+    needs: validate-schemas
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install jsonschema
+
+      - name: Validate all catalogs
+        run: python scripts/validate-catalogs.py
+
+  # ──────────────────────────────────────────────────────────
+  # 4. Check Mermaid diagrams are syntactically valid
   # ──────────────────────────────────────────────────────────
   validate-diagrams:
     name: Validate Mermaid diagrams
@@ -116,7 +142,7 @@ jobs:
           done
 
   # ──────────────────────────────────────────────────────────
-  # 4. Lint Markdown files
+  # 5. Lint Markdown files
   # ──────────────────────────────────────────────────────────
   lint-markdown:
     name: Lint Markdown
@@ -135,7 +161,7 @@ jobs:
           config: .markdownlint.jsonc
 
   # ──────────────────────────────────────────────────────────
-  # 5. Check for broken internal links
+  # 6. Check for broken internal links
   # ──────────────────────────────────────────────────────────
   check-links:
     name: Check internal links
@@ -159,13 +185,14 @@ jobs:
   ci-success:
     name: CI passed
     runs-on: ubuntu-latest
-    needs: [validate-schemas, validate-examples, validate-diagrams, lint-markdown]
+    needs: [validate-schemas, validate-examples, validate-catalogs, validate-diagrams, lint-markdown]
     if: always()
     steps:
       - name: Check all jobs passed
         run: |
           if [[ "${{ needs.validate-schemas.result }}" != "success" ]] || \
              [[ "${{ needs.validate-examples.result }}" != "success" ]] || \
+             [[ "${{ needs.validate-catalogs.result }}" != "success" ]] || \
              [[ "${{ needs.validate-diagrams.result }}" != "success" ]] || \
              [[ "${{ needs.lint-markdown.result }}" != "success" ]]; then
             echo "One or more required checks failed"
