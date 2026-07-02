@@ -17,6 +17,17 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   validator now loads every `*.schema.json` in the directory, indexes them by
   `$id`, and validates via an absolute `$ref` root so all references resolve
   locally. `pmef validate examples/*.ndjson` now runs to completion.
+- **`FileHeader` schema drifted from the spec.** `pmef-hierarchy.schema.json`
+  required `createdAt` (a PMEFX container-manifest field, not a FileHeader
+  field per spec §3.1) and defined `projectId` instead of `projectCode`, so
+  every benchmark `FileHeader` failed validation — hidden because
+  `validate-examples.py` skipped hierarchy objects. Aligned the schema to
+  spec §3.1: `required` is now `@type`/`@id`/`pmefVersion`/`plantId`, and the
+  field is `projectCode`. Added a top-level `oneOf` so the hierarchy schema
+  validates its objects like the piping/equipment schemas do.
+- **`validate-examples.py` now validates `FileHeader`/`Plant`/`Unit`/`Area`**
+  against `pmef-hierarchy.schema.json` instead of skipping them, so CI catches
+  hierarchy schema/data divergence.
 
 ### Changed
 

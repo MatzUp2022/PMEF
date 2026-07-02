@@ -56,11 +56,11 @@ TYPE_TO_SCHEMA: dict[str, str] = {
     "pmef:Turbine":             "pmef-equipment.schema.json",
     "pmef:GenericEquipment":    "pmef-equipment.schema.json",
     "pmef:ParametricGeometry":  "pmef-geometry.schema.json",
-    # Header/hierarchy types — validate as free-form JSON objects
-    "pmef:FileHeader": None,
-    "pmef:Plant":      None,
-    "pmef:Unit":       None,
-    "pmef:Area":       None,
+    # Plant hierarchy types
+    "pmef:FileHeader": "pmef-hierarchy.schema.json",
+    "pmef:Plant":      "pmef-hierarchy.schema.json",
+    "pmef:Unit":       "pmef-hierarchy.schema.json",
+    "pmef:Area":       "pmef-hierarchy.schema.json",
 }
 
 

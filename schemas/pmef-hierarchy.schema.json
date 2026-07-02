@@ -4,13 +4,20 @@
   "title": "PMEF Plant Hierarchy",
   "description": "Canonical schema for the plant hierarchy entities: FileHeader, Plant, Unit, Area.",
 
+  "oneOf": [
+    { "$ref": "#/$defs/FileHeader" },
+    { "$ref": "#/$defs/Plant" },
+    { "$ref": "#/$defs/Unit" },
+    { "$ref": "#/$defs/Area" }
+  ],
+
   "$defs": {
 
     "FileHeader": {
       "title": "PMEF File Header",
       "description": "Required first line of every PMEF NDJSON file. Declares format version, authoring tool, and project context.",
       "type": "object",
-      "required": ["@type", "@id", "pmefVersion", "createdAt"],
+      "required": ["@type", "@id", "pmefVersion", "plantId"],
       "properties": {
         "@type": {
           "const": "pmef:FileHeader",
@@ -42,9 +49,9 @@
           "type": "string",
           "description": "Version of the authoring/export tool."
         },
-        "projectId": {
+        "projectCode": {
           "type": "string",
-          "description": "Project code or identifier, e.g. 'EAF-2026'."
+          "description": "Short project identifier, e.g. 'EAF-2026'. (Spec §3.1)"
         },
         "projectName": {
           "type": "string",
