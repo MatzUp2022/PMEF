@@ -7,6 +7,17 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Fixed
+
+- **`pmef validate` crashed on every real dataset.** `PmefValidator` compiled
+  each `$defs` sub-schema in isolation with no document store, so cross-file
+  `$ref`s (`pmef-base.schema.json`, `pmef-property-sets.schema.json`,
+  `#/$defs/EquipmentObject`) could not resolve; `jsonschema` then fell back to
+  fetching schemas over HTTP, which panicked inside the async runtime. The
+  validator now loads every `*.schema.json` in the directory, indexes them by
+  `$id`, and validates via an absolute `$ref` root so all references resolve
+  locally. `pmef validate examples/*.ndjson` now runs to completion.
+
 ### Changed
 
 - **Catalog schema (`schemas/pmef-catalog.schema.json`)**: tightened from a
