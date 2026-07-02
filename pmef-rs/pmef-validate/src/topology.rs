@@ -153,6 +153,11 @@ pub fn check_topology(objects: &[Value], allow_external: bool) -> TopologyReport
     }
     report.connection_count = edges.len();
 
+    // Deduplicate identical edges so a repeated connectedTo target does not
+    // produce duplicate dangling/non-reciprocal findings.
+    edges.sort_unstable();
+    edges.dedup();
+
     let edge_set: HashSet<(&str, &str)> =
         edges.iter().map(|(a, b)| (a.as_str(), b.as_str())).collect();
 

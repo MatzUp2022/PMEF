@@ -28,6 +28,18 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 - **`validate-examples.py` now validates `FileHeader`/`Plant`/`Unit`/`Area`**
   against `pmef-hierarchy.schema.json` instead of skipping them, so CI catches
   hierarchy schema/data divergence.
+- **Relationship objects were never validated** (both tools). `schema_for_type`
+  (Rust) and `TYPE_TO_SCHEMA` (Python) listed relationship type names that do
+  not exist in `pmef-relationships.schema.json` (`pmef:ConnectedTo`,
+  `pmef:HasPort`, `pmef:FlowsTo`, …) and omitted the real ones, so every
+  relationship object was silently skipped. Both maps now use the schema's
+  actual relationship types (`IsConnectedTo`, `IsDerivedFrom`, `Supports`,
+  `ControlledBy`, `HasEquivalentIn`, `IsRevisionOf`, …).
+- **`pmef validate` conformance pass rate** now excludes skipped objects.
+  A type the validator has no schema for is a tool gap, not a data defect, and
+  no longer drags the pass rate below the conformance threshold. With the
+  relationship fix, all five benchmark datasets now report 0 errors, 0 skipped,
+  and Conformance L1 PASS.
 
 ### Changed
 

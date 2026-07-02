@@ -61,6 +61,17 @@ TYPE_TO_SCHEMA: dict[str, str] = {
     "pmef:Plant":      "pmef-hierarchy.schema.json",
     "pmef:Unit":       "pmef-hierarchy.schema.json",
     "pmef:Area":       "pmef-hierarchy.schema.json",
+    # Relationship types
+    "pmef:IsPartOf":        "pmef-relationships.schema.json",
+    "pmef:IsConnectedTo":   "pmef-relationships.schema.json",
+    "pmef:IsDerivedFrom":   "pmef-relationships.schema.json",
+    "pmef:Supports":        "pmef-relationships.schema.json",
+    "pmef:ControlledBy":    "pmef-relationships.schema.json",
+    "pmef:IsDocumentedBy":  "pmef-relationships.schema.json",
+    "pmef:IsRevisionOf":    "pmef-relationships.schema.json",
+    "pmef:HasEquivalentIn": "pmef-relationships.schema.json",
+    "pmef:IsCollocatedWith":"pmef-relationships.schema.json",
+    "pmef:ReplacedBy":      "pmef-relationships.schema.json",
 }
 
 
