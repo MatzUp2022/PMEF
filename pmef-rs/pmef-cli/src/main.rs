@@ -7,6 +7,7 @@
 //!   pmef convert <input.pcf> --to pmef --output <output.ndjson>
 //!   pmef index <file.ndjson> [--key tag-number|line-number]
 //!   pmef conformance <file.ndjson> [--dataset ds01]
+//!   pmef topology <file.ndjson> [--allow-external]
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -135,6 +136,15 @@ enum Commands {
         #[arg(long)]
         strict: bool,
     },
+
+    /// Check dataset topology: unique @id, connectedTo resolution, reciprocity.
+    Topology {
+        /// Path to the NDJSON file.
+        file: PathBuf,
+        /// Treat unresolved connectedTo targets as warnings (cross-dataset boundaries).
+        #[arg(long)]
+        allow_external: bool,
+    },
 }
 
 #[tokio::main]
@@ -177,6 +187,9 @@ async fn main() -> Result<()> {
         }
         Commands::CheckRefs { file, strict } => {
             cmd_check_refs(file, strict).await
+        }
+        Commands::Topology { file, allow_external } => {
+            cmd_topology(file, allow_external).await
         }
     }
 }
@@ -244,6 +257,11 @@ async fn cmd_validate(
     }
 
     let total = ok + fail + skip;
+    // Pass rate is over *validated* objects (ok + fail); objects skipped because
+    // the tool has no schema for their @type are a validator gap, not a data
+    // defect, and must not drag conformance below threshold.
+    let validated = ok + fail;
+    let pass_rate = if validated > 0 { ok as f64 / validated as f64 } else { 1.0 };
     match format {
         "json" => {
             let report = serde_json::json!({
@@ -251,7 +269,7 @@ async fn cmd_validate(
                 "ok": ok,
                 "fail": fail,
                 "skip": skip,
-                "pass_rate": if total > 0 { ok as f64 / total as f64 } else { 1.0 },
+                "pass_rate": pass_rate,
                 "errors": all_errors,
             });
             println!("{}", serde_json::to_string_pretty(&report)?);
@@ -263,7 +281,6 @@ async fn cmd_validate(
             println!("  ✓ Valid:  {ok}");
             println!("  ✗ Errors: {fail}");
             println!("  ○ Skipped:{skip}");
-            let pass_rate = if total > 0 { ok as f64 / total as f64 } else { 1.0 };
             println!("  Pass rate: {:.1}%", pass_rate * 100.0);
             let meets = pass_rate >= match level { 3 => 0.98, 2 => 0.95, _ => 1.0 };
             println!("  Conformance L{level}: {}", if meets { "✓ PASS" } else { "✗ FAIL" });
@@ -606,5 +623,35 @@ async fn cmd_check_refs(file: PathBuf, strict: bool) -> Result<()> {
     println!("Reference check: {} broken reference(s) found in {} objects",
              broken, idx.len());
     if strict && broken > 0 { std::process::exit(1); }
+    Ok(())
+}
+
+async fn cmd_topology(file: PathBuf, allow_external: bool) -> Result<()> {
+    use pmef_io::read_ndjson_file;
+    use pmef_validate::check_topology;
+
+    let objects: Vec<serde_json::Value> = read_ndjson_file(&file)
+        .with_context(|| format!("Cannot read {}", file.display()))?
+        .into_iter()
+        .map(|o| o.value)
+        .collect();
+
+    let report = check_topology(&objects, allow_external);
+
+    println!("PMEF Topology — {}", file.display());
+    println!("────────────────────────────────────");
+    println!("  Objects:     {}", report.object_count);
+    println!("  Connections: {}", report.connection_count);
+    println!("  ✗ Errors:    {}", report.error_count());
+    println!("  ! Warnings:  {}", report.warning_count());
+    for issue in &report.issues {
+        let tag = if issue.is_error { "ERROR" } else { "warn " };
+        println!("    {tag}: {}", issue.message);
+    }
+    if report.is_ok() {
+        println!("\n  ✓ Topology consistent.");
+    }
+
+    if !report.is_ok() { std::process::exit(1); }
     Ok(())
 }

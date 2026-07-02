@@ -7,6 +7,40 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Fixed
+
+- **`pmef validate` crashed on every real dataset.** `PmefValidator` compiled
+  each `$defs` sub-schema in isolation with no document store, so cross-file
+  `$ref`s (`pmef-base.schema.json`, `pmef-property-sets.schema.json`,
+  `#/$defs/EquipmentObject`) could not resolve; `jsonschema` then fell back to
+  fetching schemas over HTTP, which panicked inside the async runtime. The
+  validator now loads every `*.schema.json` in the directory, indexes them by
+  `$id`, and validates via an absolute `$ref` root so all references resolve
+  locally. `pmef validate examples/*.ndjson` now runs to completion.
+- **`FileHeader` schema drifted from the spec.** `pmef-hierarchy.schema.json`
+  required `createdAt` (a PMEFX container-manifest field, not a FileHeader
+  field per spec §3.1) and defined `projectId` instead of `projectCode`, so
+  every benchmark `FileHeader` failed validation — hidden because
+  `validate-examples.py` skipped hierarchy objects. Aligned the schema to
+  spec §3.1: `required` is now `@type`/`@id`/`pmefVersion`/`plantId`, and the
+  field is `projectCode`. Added a top-level `oneOf` so the hierarchy schema
+  validates its objects like the piping/equipment schemas do.
+- **`validate-examples.py` now validates `FileHeader`/`Plant`/`Unit`/`Area`**
+  against `pmef-hierarchy.schema.json` instead of skipping them, so CI catches
+  hierarchy schema/data divergence.
+- **Relationship objects were never validated** (both tools). `schema_for_type`
+  (Rust) and `TYPE_TO_SCHEMA` (Python) listed relationship type names that do
+  not exist in `pmef-relationships.schema.json` (`pmef:ConnectedTo`,
+  `pmef:HasPort`, `pmef:FlowsTo`, …) and omitted the real ones, so every
+  relationship object was silently skipped. Both maps now use the schema's
+  actual relationship types (`IsConnectedTo`, `IsDerivedFrom`, `Supports`,
+  `ControlledBy`, `HasEquivalentIn`, `IsRevisionOf`, …).
+- **`pmef validate` conformance pass rate** now excludes skipped objects.
+  A type the validator has no schema for is a tool gap, not a data defect, and
+  no longer drags the pass rate below the conformance threshold. With the
+  relationship fix, all five benchmark datasets now report 0 errors, 0 skipped,
+  and Conformance L1 PASS.
+
 ### Changed
 
 - **Catalog schema (`schemas/pmef-catalog.schema.json`)**: tightened from a
@@ -29,6 +63,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   NDJSON examples: unique `@id`, `connectedTo` resolution, and port
   reciprocity (with `--allow-external` for federated/cross-dataset boundaries).
   Wired into the `validate-examples` CI job.
+- **`pmef-validate` topology module** (`pmef-rs/pmef-validate/src/topology.rs`):
+  Rust reference implementation of the same connectivity checks (unique `@id`,
+  `connectedTo` resolution, port reciprocity), exposed as `check_topology()`
+  with a `TopologyReport`, at parity with `check-topology.py`.
+- **`pmef topology` CLI subcommand** — runs the topology checks over an NDJSON
+  package, with `--allow-external` for cross-dataset boundaries.
 
 ---
 

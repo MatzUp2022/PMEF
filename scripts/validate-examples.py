@@ -56,11 +56,22 @@ TYPE_TO_SCHEMA: dict[str, str] = {
     "pmef:Turbine":             "pmef-equipment.schema.json",
     "pmef:GenericEquipment":    "pmef-equipment.schema.json",
     "pmef:ParametricGeometry":  "pmef-geometry.schema.json",
-    # Header/hierarchy types — validate as free-form JSON objects
-    "pmef:FileHeader": None,
-    "pmef:Plant":      None,
-    "pmef:Unit":       None,
-    "pmef:Area":       None,
+    # Plant hierarchy types
+    "pmef:FileHeader": "pmef-hierarchy.schema.json",
+    "pmef:Plant":      "pmef-hierarchy.schema.json",
+    "pmef:Unit":       "pmef-hierarchy.schema.json",
+    "pmef:Area":       "pmef-hierarchy.schema.json",
+    # Relationship types
+    "pmef:IsPartOf":        "pmef-relationships.schema.json",
+    "pmef:IsConnectedTo":   "pmef-relationships.schema.json",
+    "pmef:IsDerivedFrom":   "pmef-relationships.schema.json",
+    "pmef:Supports":        "pmef-relationships.schema.json",
+    "pmef:ControlledBy":    "pmef-relationships.schema.json",
+    "pmef:IsDocumentedBy":  "pmef-relationships.schema.json",
+    "pmef:IsRevisionOf":    "pmef-relationships.schema.json",
+    "pmef:HasEquivalentIn": "pmef-relationships.schema.json",
+    "pmef:IsCollocatedWith":"pmef-relationships.schema.json",
+    "pmef:ReplacedBy":      "pmef-relationships.schema.json",
 }
 
 

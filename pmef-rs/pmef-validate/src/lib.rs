@@ -8,6 +8,9 @@ use std::collections::HashMap;
 use std::fmt;
 use std::path::Path;
 
+pub mod topology;
+pub use topology::{check_topology, TopologyIssue, TopologyIssueKind, TopologyReport};
+
 /// A single validation error.
 #[derive(Debug, Clone)]
 pub struct ValidationError {
@@ -45,8 +48,10 @@ pub fn schema_for_type(type_str: &str) -> Option<&'static str> {
         "pmef:SteelSystem" | "pmef:SteelMember" | "pmef:SteelNode" | "pmef:SteelConnection"
             => Some("pmef-steel.schema.json"),
         "pmef:ParametricGeometry" => Some("pmef-geometry.schema.json"),
-        "pmef:ConnectedTo" | "pmef:IsPartOf" | "pmef:HasPort" |
-        "pmef:FlowsTo" | "pmef:SupportsLoad" | "pmef:References"
+        "pmef:IsPartOf" | "pmef:IsConnectedTo" | "pmef:IsDerivedFrom" |
+        "pmef:Supports" | "pmef:ControlledBy" | "pmef:IsDocumentedBy" |
+        "pmef:IsRevisionOf" | "pmef:HasEquivalentIn" | "pmef:IsCollocatedWith" |
+        "pmef:ReplacedBy"
             => Some("pmef-relationships.schema.json"),
         "pmef:FileHeader" | "pmef:Plant" | "pmef:Unit" | "pmef:Area"
             => Some("pmef-hierarchy.schema.json"),
@@ -62,43 +67,58 @@ fn defs_key_for_type(type_str: &str) -> Option<&str> {
     type_str.strip_prefix("pmef:")
 }
 
-/// A validator that holds compiled JSON schemas keyed by schema filename.
+/// A validator that holds parsed JSON schemas.
 pub struct PmefValidator {
     /// Map from schema filename → parsed schema JSON value.
     schemas: HashMap<String, Value>,
+    /// Map from schema `$id` → parsed schema JSON value, used to resolve
+    /// cross-file `$ref`s without network access.
+    by_id: HashMap<String, Value>,
+    /// Cache of compiled validators keyed by entity `@type`, so each schema is
+    /// compiled at most once across a whole package.
+    compiled: std::sync::Mutex<HashMap<String, jsonschema::JSONSchema>>,
 }
 
 impl PmefValidator {
-    /// Load schemas from a directory on disk.
+    /// Load every `*.schema.json` file from a directory on disk.
+    ///
+    /// All schemas are indexed by their `$id` so that cross-file `$ref`s
+    /// (e.g. `pmef-base.schema.json#/$defs/PmefId`) resolve locally.
     pub fn from_directory(dir: &Path) -> Result<Self, String> {
-        let schema_files = [
-            "pmef-piping-component.schema.json",
-            "pmef-equipment.schema.json",
-            "pmef-ei.schema.json",
-            "pmef-steel.schema.json",
-            "pmef-geometry.schema.json",
-            "pmef-relationships.schema.json",
-            "pmef-hierarchy.schema.json",
-            "pmef-base.schema.json",
-        ];
+        let entries = std::fs::read_dir(dir)
+            .map_err(|e| format!("Failed to read directory {}: {}", dir.display(), e))?;
 
         let mut schemas = HashMap::new();
-        for filename in &schema_files {
-            let path = dir.join(filename);
-            if path.exists() {
-                let content = std::fs::read_to_string(&path)
-                    .map_err(|e| format!("Failed to read {}: {}", path.display(), e))?;
-                let val: Value = serde_json::from_str(&content)
-                    .map_err(|e| format!("Failed to parse {}: {}", path.display(), e))?;
-                schemas.insert(filename.to_string(), val);
+        let mut by_id = HashMap::new();
+        for entry in entries {
+            let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
+            let path = entry.path();
+            if !path.is_file() {
+                continue;
             }
+            let filename = match path.file_name().and_then(|s| s.to_str()) {
+                Some(name) if name.ends_with(".schema.json") => name.to_string(),
+                _ => continue,
+            };
+            let content = std::fs::read_to_string(&path)
+                .map_err(|e| format!("Failed to read {}: {}", path.display(), e))?;
+            let val: Value = serde_json::from_str(&content)
+                .map_err(|e| format!("Failed to parse {}: {}", path.display(), e))?;
+            if let Some(id) = val.get("$id").and_then(Value::as_str) {
+                by_id.insert(id.to_string(), val.clone());
+            }
+            schemas.insert(filename, val);
         }
 
         if schemas.is_empty() {
             return Err(format!("No schema files found in {}", dir.display()));
         }
 
-        Ok(Self { schemas })
+        Ok(Self {
+            schemas,
+            by_id,
+            compiled: std::sync::Mutex::new(HashMap::new()),
+        })
     }
 
     /// Validate a single JSON object against the schema for its `@type`.
@@ -116,26 +136,56 @@ impl PmefValidator {
             None => return vec![],
         };
 
-        // Try to find the entity-specific sub-schema in $defs
-        let sub_schema = defs_key_for_type(entity_type)
-            .and_then(|key| schema_val.get("$defs").and_then(|defs| defs.get(key)));
+        let mut cache = self.compiled.lock().expect("validator cache poisoned");
 
-        let effective_schema = match sub_schema {
-            Some(s) => s,
-            None => schema_val,
-        };
+        // Compile once per entity type; subsequent objects reuse the validator.
+        if !cache.contains_key(entity_type) {
+            let schema_id = match schema_val.get("$id").and_then(Value::as_str) {
+                Some(id) => id,
+                None => {
+                    return vec![ValidationError {
+                        instance_path: String::new(),
+                        message: format!("Schema {schema_file} is missing a $id"),
+                    }];
+                }
+            };
 
-        // Use jsonschema to validate
-        let compiled = match jsonschema::JSONSchema::compile(effective_schema) {
-            Ok(c) => c,
-            Err(e) => {
-                return vec![ValidationError {
-                    instance_path: String::new(),
-                    message: format!("Schema compilation error for {}: {}", entity_type, e),
-                }];
+            // Point at the entity-specific sub-schema in $defs when present,
+            // otherwise validate against the whole schema document. An absolute
+            // `$ref` establishes the base URI so internal (`#/$defs/...`) and
+            // relative cross-file refs resolve against the registered docs.
+            let ref_target = match defs_key_for_type(entity_type) {
+                Some(key)
+                    if schema_val.get("$defs").and_then(|d| d.get(key)).is_some() =>
+                {
+                    format!("{schema_id}#/$defs/{key}")
+                }
+                _ => schema_id.to_string(),
+            };
+
+            let root = serde_json::json!({
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "$ref": ref_target,
+            });
+
+            let mut options = jsonschema::JSONSchema::options();
+            for (id, doc) in &self.by_id {
+                options.with_document(id.clone(), doc.clone());
             }
-        };
 
+            let compiled = match options.compile(&root) {
+                Ok(c) => c,
+                Err(e) => {
+                    return vec![ValidationError {
+                        instance_path: String::new(),
+                        message: format!("Schema compilation error for {}: {}", entity_type, e),
+                    }];
+                }
+            };
+            cache.insert(entity_type.to_string(), compiled);
+        }
+
+        let compiled = &cache[entity_type];
         let result = compiled.validate(object);
         let errors = match result {
             Ok(()) => vec![],
@@ -208,7 +258,11 @@ mod tests {
     #[test]
     fn test_schema_for_type_relationships() {
         assert_eq!(
-            schema_for_type("pmef:ConnectedTo"),
+            schema_for_type("pmef:IsDerivedFrom"),
+            Some("pmef-relationships.schema.json")
+        );
+        assert_eq!(
+            schema_for_type("pmef:HasEquivalentIn"),
             Some("pmef-relationships.schema.json")
         );
     }
@@ -230,6 +284,8 @@ mod tests {
     fn test_validate_object_no_schema_returns_empty() {
         let validator = PmefValidator {
             schemas: HashMap::new(),
+            by_id: HashMap::new(),
+            compiled: std::sync::Mutex::new(HashMap::new()),
         };
         let obj = json!({"@type": "pmef:Unknown", "@id": "test-1"});
         let errors = validator.validate_object("pmef:Unknown", &obj);
@@ -248,14 +304,22 @@ mod tests {
             }
         });
 
-        let mut schemas = HashMap::new();
-        schemas.insert("pmef-equipment.schema.json".to_string(), json!({
+        let equip = json!({
+            "$id": "https://pmef.test/equipment.schema.json",
             "$defs": {
                 "Pump": schema
             }
-        }));
+        });
+        let mut schemas = HashMap::new();
+        schemas.insert("pmef-equipment.schema.json".to_string(), equip.clone());
+        let mut by_id = HashMap::new();
+        by_id.insert("https://pmef.test/equipment.schema.json".to_string(), equip);
 
-        let validator = PmefValidator { schemas };
+        let validator = PmefValidator {
+            schemas,
+            by_id,
+            compiled: std::sync::Mutex::new(HashMap::new()),
+        };
 
         // Valid object
         let valid = json!({"@type": "pmef:Pump", "@id": "pump-001"});
