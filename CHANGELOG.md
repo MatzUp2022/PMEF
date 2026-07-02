@@ -29,6 +29,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   NDJSON examples: unique `@id`, `connectedTo` resolution, and port
   reciprocity (with `--allow-external` for federated/cross-dataset boundaries).
   Wired into the `validate-examples` CI job.
+- **`pmef-validate` topology module** (`pmef-rs/pmef-validate/src/topology.rs`):
+  Rust reference implementation of the same connectivity checks (unique `@id`,
+  `connectedTo` resolution, port reciprocity), exposed as `check_topology()`
+  with a `TopologyReport`, at parity with `check-topology.py`.
+- **`pmef topology` CLI subcommand** — runs the topology checks over an NDJSON
+  package, with `--allow-external` for cross-dataset boundaries.
 
 ---
 

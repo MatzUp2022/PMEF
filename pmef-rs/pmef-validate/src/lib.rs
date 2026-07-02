@@ -8,6 +8,9 @@ use std::collections::HashMap;
 use std::fmt;
 use std::path::Path;
 
+pub mod topology;
+pub use topology::{check_topology, TopologyIssue, TopologyIssueKind, TopologyReport};
+
 /// A single validation error.
 #[derive(Debug, Clone)]
 pub struct ValidationError {
