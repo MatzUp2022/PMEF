@@ -195,7 +195,7 @@
         "catalogSnap": {
           "catalogRef": {
             "catalogId": "profiles-en",
-            "catalogVersion": "2024.1",
+            "catalogVersion": "2024.2",
             "entryId": "EN:HEB300"
           },
           "snappedSize": "HEB 300",
@@ -246,7 +246,7 @@
         "catalogSnap": {
           "catalogRef": {
             "catalogId": "profiles-en",
-            "catalogVersion": "2024.1",
+            "catalogVersion": "2024.2",
             "entryId": "EN:HEB300"
           },
           "snappedSize": "HEB 300",
@@ -502,6 +502,44 @@
         "length": 2000.0
       },
       "expected_error": "unknown parameter 'length' for kind 'pipe'"
+    },
+    {
+      "id": "SNAP-017",
+      "name": "HEA 300 vs HEB 300 distinguished by h and b alone (catalog 2024.2)",
+      "catalog": "catalogs/profiles-en.json",
+      "kind": "i-section",
+      "measured": {
+        "h": 291.0,
+        "b": 299.0
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "profiles-en",
+            "catalogVersion": "2024.2",
+            "entryId": "EN:HEA300"
+          },
+          "snappedSize": "HEA 300",
+          "residuals": [
+            {
+              "parameter": "h",
+              "measured_mm": 291.0,
+              "catalog_mm": 290.0,
+              "residual_mm": 1.0
+            },
+            {
+              "parameter": "b",
+              "measured_mm": 299.0,
+              "catalog_mm": 300.0,
+              "residual_mm": -1.0
+            }
+          ],
+          "algorithm": "pmef-snap/1",
+          "score": 0.169565,
+          "ambiguous": false
+        }
+      }
     }
   ]
 }

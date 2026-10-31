@@ -20,6 +20,17 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **`catalogs/profiles-en.json` HEA series corrected (catalog version 2024.1 → 2024.2).** All 24
+  HEA entries listed the nominal size as height (HEA 300: 300 instead of 290 mm), HEA 900/1000
+  had wrong flange thicknesses (28 instead of 30/31 mm), HEA 100 was listed as `EN:HEA96`, and
+  `Iy`, `Iz`, `Wel_y`, `Wel_z` were wrong by a factor of up to 15. Fixed: h and tf per the EN 10365
+  dimension tables (the corrected h also follows independently from the catalog's own,
+  correct cross-section areas); `EN:HEA96` → `EN:HEA100` (entry id change); section properties
+  recomputed from the dimensions with `scripts/i-section-properties.py`, which reproduces all
+  HEB and IPE entries within 0.31 % and the published HEA properties within 1 %. CI now checks
+  every I/H section's properties against its dimensions (±1 %). Snapping test vectors updated
+  (only `catalogVersion` changed) plus SNAP-017: HEA 300 and HEB 300 are now distinguishable by
+  h and b.
 - **Conformance fixtures no longer pick up 0.10.0 feature examples by accident.** The
   generator took the first object of a type from all examples, so after RFC-0001 several
   Level-1 fixtures (PIPE-U-002/004/005/016, STEEL-U-002/005) silently used objects from

@@ -145,11 +145,9 @@ Additive only. Snaps without `algorithm` (manual or tool-specific) stay valid.
 
 ## Open Questions
 
-1. Catalog data quality: `catalogs/profiles-en.json` lists HEA heights equal to the nominal size
-   (EN 10034: HEA 300 has h = 290 mm), `EN:HEA96` for HEA 100, and second moments of area that
-   do not match the standard. With these values HEA and HEB of the same size cannot be told
-   apart by h and b. The test vectors avoid HEA entries until the catalog is corrected (with a
-   catalog version bump). See `docs/AUDIT.md`.
+1. ~~Catalog data quality~~ — resolved: `profiles-en` 2024.2 corrects the HEA series (heights had
+   been the nominal size, so HEA and HEB of one size could not be told apart). Vector SNAP-017
+   now covers that case. Other catalogs still need the same check (`docs/AUDIT.md` P1.8).
 2. Kinds for fittings (elbow radius/angle), flanges, hollow sections and angles (`pmef-snap/2`).
 3. Should the ambiguity margin be configurable per project (then recorded like tolerances)?
 

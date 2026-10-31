@@ -105,6 +105,9 @@ jobs:
       - name: Validate all catalogs
         run: python scripts/validate-catalogs.py
 
+      - name: I/H-section properties consistent with their dimensions (±1 %)
+        run: python scripts/i-section-properties.py --check catalogs/profiles-en.json --tolerance 0.01
+
   # ──────────────────────────────────────────────────────────
   # 3b. Conformance test suite (spec 06 §5)
   # ──────────────────────────────────────────────────────────
