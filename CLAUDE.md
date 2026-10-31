@@ -3,6 +3,7 @@
 ## What this repo is
 
 Open, cross-discipline 3D plant model exchange format plus reference implementation.
+
 - `spec/` — normative specification (Markdown). **Single source of truth.**
 - `schemas/` — JSON Schema Draft 2020-12. Normative together with `spec/`.
 - `examples/` — annotated NDJSON reference instances (CC0).
@@ -17,6 +18,7 @@ Open, cross-discipline 3D plant model exchange format plus reference implementat
 PMEF is the backbone data model for a recognition product that builds plant models from
 2D drawings, isometrics, DWG/DXF/DGN/PCF/PDF and point clouds/scans, and derives standard-compliant
 2D drawings from the model. Implications for every design decision:
+
 - Every object may originate from automated recognition → provenance, confidence and review
   status must be representable.
 - As-built vs. design comparison is a core use case → object-level diffs must stay stable
