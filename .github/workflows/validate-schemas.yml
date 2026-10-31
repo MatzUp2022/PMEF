@@ -132,6 +132,14 @@ jobs:
       - name: Self-test (broken implementations must be detected)
         run: python tests/conformance/tools/selftest.py
 
+      - name: Catalog snapping test vectors (pmef-snap/1 Python reference)
+        run: python tests/snapping/reference_snap.py
+
+      - name: As-built example matches the snapping algorithm
+        run: |
+          python scripts/generate-asbuilt-example.py /tmp/asbuilt.ndjson
+          diff -u examples/asbuilt-recognition.ndjson /tmp/asbuilt.ndjson
+
   # ──────────────────────────────────────────────────────────
   # 4. Check Mermaid diagrams are syntactically valid
   # ──────────────────────────────────────────────────────────

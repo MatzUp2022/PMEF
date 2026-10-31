@@ -553,6 +553,52 @@
             },
             "additionalProperties": false
           }
+        },
+        "algorithm": {
+          "type": "string",
+          "pattern": "^[a-z0-9\\-]+/\\d+$",
+          "examples": [
+            "pmef-snap/1"
+          ],
+          "description": "Snapping algorithm and version that produced this result (RFC-0002). Absent for manual or tool-specific snaps."
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Normalised RMS residual of the chosen entry (pmef-snap/1: 0 = exact, 1 = at the tolerance limit)."
+        },
+        "runnerUp": {
+          "type": "object",
+          "required": [
+            "entryId",
+            "score"
+          ],
+          "properties": {
+            "entryId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "additionalProperties": false,
+          "description": "Second-best admissible entry."
+        },
+        "ambiguous": {
+          "type": "boolean",
+          "description": "True if the runner-up score is within the ambiguity margin (pmef-snap/1: 0.1); the object then needs human review."
+        },
+        "tolerances": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "description": "Non-default tolerance band per parameter [mm]. MUST be present when non-default tolerances were used."
         }
       },
       "additionalProperties": false

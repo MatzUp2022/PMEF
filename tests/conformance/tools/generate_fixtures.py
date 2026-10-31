@@ -27,9 +27,15 @@ REV = {"revisionId": "r2026-10-31-001", "changeState": "SHARED", "authoringTool"
 # ── base objects ────────────────────────────────────────────────────────────
 
 
-def _load_examples() -> list[dict]:
+RFC_EXAMPLES = {"asbuilt-recognition.ndjson"}  # 0.10.0 feature examples, used only where named
+
+
+def _load_examples(names: set[str] | None = None) -> list[dict]:
+    """Objects from examples/. Default: the 0.9.0 benchmark datasets only (stable fixtures)."""
     objs = []
     for p in sorted((ROOT / "examples").glob("*.ndjson")):
+        if (p.name in RFC_EXAMPLES) != (names is not None) or (names is not None and p.name not in names):
+            continue
         for line in p.read_text(encoding="utf-8").splitlines():
             if line.startswith("{"):
                 objs.append(json.loads(line))
@@ -37,11 +43,12 @@ def _load_examples() -> list[dict]:
 
 
 EXAMPLES = _load_examples()
+ASBUILT = _load_examples({"asbuilt-recognition.ndjson"})
 
 
-def ex(type_: str, pred=lambda o: True) -> dict:
+def ex(type_: str, pred=lambda o: True, source: list[dict] | None = None) -> dict:
     """First example object of a type (deep copy)."""
-    for o in EXAMPLES:
+    for o in source if source is not None else EXAMPLES:
         if o["@type"] == type_ and pred(o):
             return copy.deepcopy(o)
     raise SystemExit(f"no example object for {type_}")
@@ -175,7 +182,7 @@ UNIT = [
     ("STEEL-U-005", "SteelMember without profileId — rejected", 2, "steel", "CL1-02", "invalid",
      [without(MEMBER, "profileId")]),
     ("STEEL-U-006", "SteelMember with provenance / review / asBuilt (RFC-0001) — valid", 2, "steel",
-     "CL2-01", "valid", [ex("pmef:SteelMember", lambda o: "asBuilt" in o)]),
+     "CL2-01", "valid", [ex("pmef:SteelMember", lambda o: "asBuilt" in o, ASBUILT)]),
     # Relationships
     ("REL-U-001", "IsPartOf — valid", 2, "relationships", "CL2-01", "valid",
      [rel("pmef:IsPartOf", "IS_PART_OF", "R-1", oid("obj", "P-1"), oid("unit", "U-1"))]),

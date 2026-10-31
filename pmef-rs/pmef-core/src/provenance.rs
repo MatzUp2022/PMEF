@@ -155,6 +155,31 @@ pub struct CatalogSnap {
     /// Per-parameter residuals.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub residuals: Vec<Residual>,
+    /// Snapping algorithm identifier, e.g. `pmef-snap/1` (RFC-0002).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub algorithm: Option<String>,
+    /// Normalised RMS residual of the chosen entry (0..1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub score: Option<f64>,
+    /// Second-best admissible entry, if any.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub runner_up: Option<SnapCandidate>,
+    /// True if the runner-up is closer than the ambiguity margin (needs review).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ambiguous: Option<bool>,
+    /// Non-default tolerances used [mm], by parameter.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tolerances: Option<std::collections::BTreeMap<String, f64>>,
+}
+
+/// A catalog entry with its snapping score.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SnapCandidate {
+    /// Entry id.
+    pub entry_id: String,
+    /// Normalised RMS residual.
+    pub score: f64,
 }
 
 /// As-built fit data.

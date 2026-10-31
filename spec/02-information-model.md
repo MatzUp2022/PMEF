@@ -291,6 +291,16 @@ The **MUST** rules are enforced by the schema (`$defs/ReviewChangeStateRule`).
 as `HEB 300` or `DN 150 PN 40`). It **SHOULD** contain `residuals`: one entry per fitted
 parameter with `parameter`, `measured_mm`, `catalog_mm` and `residual_mm` (= measured − catalog).
 
+#### 2.9.4 Snapping algorithm
+
+*Since 0.10.0 ([RFC-0002](rfc/0002-catalog-snapping.md)).* `catalogSnap` **MAY** additionally carry
+`algorithm`, `score`, `runnerUp` (`entryId`, `score`), `ambiguous` and `tolerances`. A snap
+produced by the normative algorithm `pmef-snap/1` (straight pipes against `PIPING_CLASS`
+catalogs; HEA/HEB/HEM/IPE/W sections against `STEEL_PROFILES` catalogs) **MUST** set
+`algorithm = "pmef-snap/1"`, `score` and `ambiguous`, **MUST** record non-default tolerances in
+`tolerances`, and **MUST** reproduce the test vectors in `tests/snapping/vectors.json`. An object
+whose snap is `ambiguous` **MUST NOT** be created with `review.status = approved`.
+
 ---
 
 ## 3 Plant Hierarchy

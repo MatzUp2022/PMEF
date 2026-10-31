@@ -1,0 +1,10 @@
+{
+  "catalogId": "snap-test-tie-break",
+  "catalogType": "STEEL_PROFILES",
+  "version": "1",
+  "description": "Synthetic test catalog (CC0): two dimensionally identical entries to exercise the entryId tie-break of pmef-snap/1.",
+  "entries": [
+    {"family": "HEB", "catalogId": "TEST:HEB300-B", "h_mm": 300, "b_mm": 300, "tw_mm": 11.0, "tf_mm": 19.0},
+    {"family": "HEB", "catalogId": "TEST:HEB300-A", "h_mm": 300, "b_mm": 300, "tw_mm": 11.0, "tf_mm": 19.0}
+  ]
+}

@@ -1,0 +1,507 @@
+{
+  "description": "Test vectors for pmef-snap/1 (RFC-0002). Every implementation must reproduce `expected` (numbers within 1e-6) or fail with an error containing `expected_error`. Catalog data is pinned by catalogRef.catalogVersion: a catalog update changes the expected results deliberately.",
+  "vectors": [
+    {
+      "id": "SNAP-001",
+      "name": "Pipe exactly on catalog values → score 0",
+      "catalog": "catalogs/piping-class-en-p1a.json",
+      "kind": "pipe",
+      "measured": {
+        "outsideDiameter": 168.3,
+        "wallThickness": 5.0
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "piping-class-en-p1a",
+            "catalogVersion": "2024.1",
+            "entryId": "ENP1A-PIPE-150"
+          },
+          "snappedSize": "DN 150 PN40",
+          "residuals": [
+            {
+              "parameter": "outsideDiameter",
+              "measured_mm": 168.3,
+              "catalog_mm": 168.3,
+              "residual_mm": 0.0
+            },
+            {
+              "parameter": "wallThickness",
+              "measured_mm": 5.0,
+              "catalog_mm": 5.0,
+              "residual_mm": 0.0
+            }
+          ],
+          "algorithm": "pmef-snap/1",
+          "score": 0.0,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP-002",
+      "name": "Scanned DN150 pipe (RFC-0001 example)",
+      "catalog": "catalogs/piping-class-en-p1a.json",
+      "kind": "pipe",
+      "measured": {
+        "outsideDiameter": 169.1,
+        "wallThickness": 5.3
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "piping-class-en-p1a",
+            "catalogVersion": "2024.1",
+            "entryId": "ENP1A-PIPE-150"
+          },
+          "snappedSize": "DN 150 PN40",
+          "residuals": [
+            {
+              "parameter": "outsideDiameter",
+              "measured_mm": 169.1,
+              "catalog_mm": 168.3,
+              "residual_mm": 0.8
+            },
+            {
+              "parameter": "wallThickness",
+              "measured_mm": 5.3,
+              "catalog_mm": 5.0,
+              "residual_mm": 0.3
+            }
+          ],
+          "algorithm": "pmef-snap/1",
+          "score": 0.439289,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP-003",
+      "name": "Pipe with outside diameter only (wall not measurable from a scan)",
+      "catalog": "catalogs/piping-class-en-p1a.json",
+      "kind": "pipe",
+      "measured": {
+        "outsideDiameter": 168.9
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "piping-class-en-p1a",
+            "catalogVersion": "2024.1",
+            "entryId": "ENP1A-PIPE-150"
+          },
+          "snappedSize": "DN 150 PN40",
+          "residuals": [
+            {
+              "parameter": "outsideDiameter",
+              "measured_mm": 168.9,
+              "catalog_mm": 168.3,
+              "residual_mm": 0.6
+            }
+          ],
+          "algorithm": "pmef-snap/1",
+          "score": 0.356506,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP-004",
+      "name": "Pipe between DN125 and DN150 → no snap, nearest reported",
+      "catalog": "catalogs/piping-class-en-p1a.json",
+      "kind": "pipe",
+      "measured": {
+        "outsideDiameter": 154.0
+      },
+      "expected": {
+        "snapped": false,
+        "nearest": {
+          "entryId": "ENP1A-PIPE-150",
+          "score": 8.496732
+        }
+      }
+    },
+    {
+      "id": "SNAP-005",
+      "name": "ASME class A1A2, 8\" pipe",
+      "catalog": "catalogs/piping-class-a1a2.json",
+      "kind": "pipe",
+      "measured": {
+        "outsideDiameter": 219.5,
+        "wallThickness": 8.0
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "piping-class-a1a2",
+            "catalogVersion": "2024.1",
+            "entryId": "A1A2-PIPE-200"
+          },
+          "snappedSize": "DN 200 ANSI-150",
+          "residuals": [
+            {
+              "parameter": "outsideDiameter",
+              "measured_mm": 219.5,
+              "catalog_mm": 219.1,
+              "residual_mm": 0.4
+            },
+            {
+              "parameter": "wallThickness",
+              "measured_mm": 8.0,
+              "catalog_mm": 8.18,
+              "residual_mm": -0.18
+            }
+          ],
+          "algorithm": "pmef-snap/1",
+          "score": 0.165606,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP-006",
+      "name": "Wall thickness outside the class → no snap",
+      "catalog": "catalogs/piping-class-en-p1a.json",
+      "kind": "pipe",
+      "measured": {
+        "outsideDiameter": 168.3,
+        "wallThickness": 8.0
+      },
+      "expected": {
+        "snapped": false,
+        "nearest": {
+          "entryId": "ENP1A-PIPE-150",
+          "score": 2.828427
+        }
+      }
+    },
+    {
+      "id": "SNAP-007",
+      "name": "Scanned HEB 300 (RFC-0001 example)",
+      "catalog": "catalogs/profiles-en.json",
+      "kind": "i-section",
+      "measured": {
+        "h": 301.4,
+        "b": 299.1,
+        "tw": 11.6,
+        "tf": 18.7
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "profiles-en",
+            "catalogVersion": "2024.1",
+            "entryId": "EN:HEB300"
+          },
+          "snappedSize": "HEB 300",
+          "residuals": [
+            {
+              "parameter": "h",
+              "measured_mm": 301.4,
+              "catalog_mm": 300.0,
+              "residual_mm": 1.4
+            },
+            {
+              "parameter": "b",
+              "measured_mm": 299.1,
+              "catalog_mm": 300.0,
+              "residual_mm": -0.9
+            },
+            {
+              "parameter": "tw",
+              "measured_mm": 11.6,
+              "catalog_mm": 11.0,
+              "residual_mm": 0.6
+            },
+            {
+              "parameter": "tf",
+              "measured_mm": 18.7,
+              "catalog_mm": 19.0,
+              "residual_mm": -0.3
+            }
+          ],
+          "algorithm": "pmef-snap/1",
+          "score": 0.234657,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP-008",
+      "name": "I-section with family hint, h and b only",
+      "catalog": "catalogs/profiles-en.json",
+      "kind": "i-section",
+      "measured": {
+        "h": 300.0,
+        "b": 300.0
+      },
+      "family": "HEB",
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "profiles-en",
+            "catalogVersion": "2024.1",
+            "entryId": "EN:HEB300"
+          },
+          "snappedSize": "HEB 300",
+          "residuals": [
+            {
+              "parameter": "h",
+              "measured_mm": 300.0,
+              "catalog_mm": 300.0,
+              "residual_mm": 0.0
+            },
+            {
+              "parameter": "b",
+              "measured_mm": 300.0,
+              "catalog_mm": 300.0,
+              "residual_mm": 0.0
+            }
+          ],
+          "algorithm": "pmef-snap/1",
+          "score": 0.0,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP-009",
+      "name": "Family filter IPE excludes the HEB match → no snap, nearest reported",
+      "catalog": "catalogs/profiles-en.json",
+      "kind": "i-section",
+      "measured": {
+        "h": 301.4,
+        "b": 299.1,
+        "tw": 11.6,
+        "tf": 18.7
+      },
+      "family": "IPE",
+      "expected": {
+        "snapped": false,
+        "nearest": {
+          "entryId": "EN:IPE600",
+          "score": 15.349455
+        }
+      }
+    },
+    {
+      "id": "SNAP-010",
+      "name": "AISC W10, h and b only → ambiguous, runner-up reported",
+      "catalog": "catalogs/profiles-aisc.json",
+      "kind": "i-section",
+      "measured": {
+        "h": 255.0,
+        "b": 203.0
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "profiles-aisc",
+            "catalogVersion": "2023.1",
+            "entryId": "AISC:W10x33"
+          },
+          "snappedSize": "W10x33",
+          "residuals": [
+            {
+              "parameter": "h",
+              "measured_mm": 255.0,
+              "catalog_mm": 254.0,
+              "residual_mm": 1.0
+            },
+            {
+              "parameter": "b",
+              "measured_mm": 203.0,
+              "catalog_mm": 202.2,
+              "residual_mm": 0.8
+            }
+          ],
+          "algorithm": "pmef-snap/1",
+          "score": 0.197338,
+          "runnerUp": {
+            "entryId": "AISC:W10x45",
+            "score": 0.239811
+          },
+          "ambiguous": true
+        }
+      }
+    },
+    {
+      "id": "SNAP-011",
+      "name": "AISC W10 with tw and tf → disambiguated",
+      "catalog": "catalogs/profiles-aisc.json",
+      "kind": "i-section",
+      "measured": {
+        "h": 255.0,
+        "b": 203.0,
+        "tw": 8.8,
+        "tf": 15.5
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "profiles-aisc",
+            "catalogVersion": "2023.1",
+            "entryId": "AISC:W10x45"
+          },
+          "snappedSize": "W10x45",
+          "residuals": [
+            {
+              "parameter": "h",
+              "measured_mm": 255.0,
+              "catalog_mm": 256.5,
+              "residual_mm": -1.5
+            },
+            {
+              "parameter": "b",
+              "measured_mm": 203.0,
+              "catalog_mm": 203.7,
+              "residual_mm": -0.7
+            },
+            {
+              "parameter": "tw",
+              "measured_mm": 8.8,
+              "catalog_mm": 8.9,
+              "residual_mm": -0.1
+            },
+            {
+              "parameter": "tf",
+              "measured_mm": 15.5,
+              "catalog_mm": 15.7,
+              "residual_mm": -0.2
+            }
+          ],
+          "algorithm": "pmef-snap/1",
+          "score": 0.178775,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP-012",
+      "name": "Tie on score → lowest entryId wins",
+      "catalog": "tests/snapping/catalogs/tie-break.json",
+      "kind": "i-section",
+      "measured": {
+        "h": 300.0,
+        "b": 300.0
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "snap-test-tie-break",
+            "catalogVersion": "1",
+            "entryId": "TEST:HEB300-A"
+          },
+          "snappedSize": "HEB 300-A",
+          "residuals": [
+            {
+              "parameter": "h",
+              "measured_mm": 300.0,
+              "catalog_mm": 300.0,
+              "residual_mm": 0.0
+            },
+            {
+              "parameter": "b",
+              "measured_mm": 300.0,
+              "catalog_mm": 300.0,
+              "residual_mm": 0.0
+            }
+          ],
+          "algorithm": "pmef-snap/1",
+          "score": 0.0,
+          "runnerUp": {
+            "entryId": "TEST:HEB300-B",
+            "score": 0.0
+          },
+          "ambiguous": true
+        }
+      }
+    },
+    {
+      "id": "SNAP-013",
+      "name": "Tighter tolerance than default → no snap",
+      "catalog": "catalogs/piping-class-en-p1a.json",
+      "kind": "pipe",
+      "measured": {
+        "outsideDiameter": 169.1
+      },
+      "tolerances": {
+        "outsideDiameter": 0.5
+      },
+      "expected": {
+        "snapped": false,
+        "nearest": {
+          "entryId": "ENP1A-PIPE-150",
+          "score": 1.6
+        }
+      }
+    },
+    {
+      "id": "SNAP-014",
+      "name": "Tolerance override that still snaps is recorded",
+      "catalog": "catalogs/piping-class-en-p1a.json",
+      "kind": "pipe",
+      "measured": {
+        "outsideDiameter": 168.6
+      },
+      "tolerances": {
+        "outsideDiameter": 0.5
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "piping-class-en-p1a",
+            "catalogVersion": "2024.1",
+            "entryId": "ENP1A-PIPE-150"
+          },
+          "snappedSize": "DN 150 PN40",
+          "residuals": [
+            {
+              "parameter": "outsideDiameter",
+              "measured_mm": 168.6,
+              "catalog_mm": 168.3,
+              "residual_mm": 0.3
+            }
+          ],
+          "algorithm": "pmef-snap/1",
+          "score": 0.6,
+          "ambiguous": false,
+          "tolerances": {
+            "outsideDiameter": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "SNAP-015",
+      "name": "Missing required parameter → error",
+      "catalog": "catalogs/profiles-en.json",
+      "kind": "i-section",
+      "measured": {
+        "h": 300.0
+      },
+      "expected_error": "required parameter 'b' missing"
+    },
+    {
+      "id": "SNAP-016",
+      "name": "Unknown parameter → error",
+      "catalog": "catalogs/piping-class-en-p1a.json",
+      "kind": "pipe",
+      "measured": {
+        "outsideDiameter": 168.3,
+        "length": 2000.0
+      },
+      "expected_error": "unknown parameter 'length' for kind 'pipe'"
+    }
+  ]
+}

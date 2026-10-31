@@ -32,6 +32,7 @@ pub mod provenance;
 pub mod piping;
 pub mod relationships;
 pub mod revision;
+pub mod snapping;
 pub mod steel;
 pub mod traits;
 pub mod types;
@@ -55,7 +56,7 @@ pub use relationships::{
 };
 pub use provenance::{
     AsBuilt, CatalogSnap, CatalogSnapRef, Provenance, RecognitionMetadata, Recognizer, Residual,
-    ReviewState, ReviewStatus, SourceType,
+    ReviewState, ReviewStatus, SnapCandidate, SourceType,
 };
 pub use revision::{ChangeState, RevisionMetadata};
 pub use steel::{SteelConnection, SteelMember, SteelNode, SteelSystem};
