@@ -70,7 +70,13 @@ reference implementation. Dates are targets, not commitments.
 
 - 🗓️ **`pmef-adapter-plant3d`** — AutoCAD Plant 3D via Plant SDK + PCF bridge
 - 🗓️ **`pmef-adapter-cadmatic`** — CADMATIC via REST Web API (Swagger)
-- 🗓️ **`pmef-adapter-e3d`** — AVEVA E3D via RVM export + rvmparser + PML scripting
+- 🔄 **`pmef-adapter-e3d`** — AVEVA E3D via PML scripting only (semantics + design-primitive
+  geometry); no RVM parsing ([DD-011](docs/design-decisions.md#dd-011-e3d-geometry-via-pml-no-rvm-parsing))
+- 🗓️ **RVM-only models (DD-011, option D)** — no RVM code in PMEF. Instead:
+  - `mesh_ref` import path: attach glTF 2.0 meshes (produced by an external RVM→glTF tool
+    run by the user) to PMEF objects via `GeometryReference.ref`, matched by E3D name/address
+  - guide in `docs/` describing the workflow and the user's licence responsibility
+  - acceptance: synthetic glTF fixture, schema-valid output, round-trip of `@id`s
 - 🗓️ **`pmef-adapter-openplant`** — Bentley OpenPlant via ISO 15926/iRING API
 
 ### CLI + tooling

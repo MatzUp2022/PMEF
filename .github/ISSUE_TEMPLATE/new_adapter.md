@@ -37,8 +37,8 @@ assignees: ''
      - Via neutral format bridge (PCF, IFC, STEP, …)
      - Hybrid
 
-     Example: "E3D: RVM export → rvmparser → PMEF for geometry;
-               PML scripting for semantic attributes" -->
+     Example: "E3D: PML scripting for semantic attributes and design
+               primitives (official API; no binary-format parsing)" -->
 
 ## PMEF Domain Coverage
 

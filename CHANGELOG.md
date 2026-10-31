@@ -7,8 +7,19 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Removed
+
+- **RVM parser removed from `pmef-adapter-e3d`** (`src/rvm.rs`, `E3DConfig::rvm_export_path`,
+  `byteorder` dependency). AVEVA's RVM format is not publicly specified; the reference
+  implementation does not reverse-engineer it. See DD-011 in `docs/design-decisions.md`.
+  RVM-only models are planned via an external RVM→glTF conversion + `mesh_ref` (ROADMAP).
+
 ### Fixed
 
+- **E3D PML parser swallowed attributes after reference values.** Any attribute whose value
+  starts with `/` (e.g. `SPEC /SPEC-A1A2`, `CREF /PIPE-1`) was treated as a new element,
+  so all following attributes were attached to it. Only structural and component keywords
+  now start elements.
 - **`pmef validate` crashed on every real dataset.** `PmefValidator` compiled
   each `$defs` sub-schema in isolation with no document store, so cross-file
   `$ref`s (`pmef-base.schema.json`, `pmef-property-sets.schema.json`,
@@ -42,6 +53,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   and Conformance L1 PASS.
 
 ### Changed
+
+- **`pmef-adapter-e3d`: equipment geometry from PML design primitives.** `BOX`, `CYLI`,
+  `CONE`, `SNOU` and `DISH` children of an `EQUI` are mapped to `pmef:ParametricGeometry`
+  (single primitive or `COMPOSITE`) and referenced from the equipment via
+  `geometry: {type: "parametric", ref}`. Invalid primitives are reported via
+  `E3DAdapter::warnings()` instead of being dropped silently. Spec 05 §8.1 updated.
+- **`pmef-adapter-e3d` compiles again** (writer errors mapped to `AdapterError::Other`).
 
 - **Catalog schema (`schemas/pmef-catalog.schema.json`)**: tightened from a
   loose envelope into a per-`catalogType` contract. Each `entries` item is now

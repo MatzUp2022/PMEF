@@ -130,7 +130,7 @@ usable end-to-end) · **working** (builds, tested, usable). Active scope per CLA
 
 | Tool | Rust crate | Host-side plug-in | Maturity | Notes |
 |---|---|---|---|---|
-| ★ AVEVA E3D | `pmef-adapter-e3d` (~2.0 k LOC, 31 tests) | none (PML scripts referenced, not in repo) | **partial, does not compile** | ⚠ contains `rvm.rs`, a parser for the binary **RVM** format — see §6 |
+| ★ AVEVA E3D | `pmef-adapter-e3d` (31 unit + 1 integration test) | none (PML scripts referenced, not in repo) | **partial — compiles since 2026-10-31** | `rvm.rs` removed (DD-011); equipment geometry from PML primitives. Equipment objects are not yet schema-valid (`null` optional fields, missing `vesselDesign`) |
 | ★ AutoCAD Plant 3D | `pmef-adapter-plant3d` (~1.6 k LOC, 22 tests: PCF/IDF parsing) | `pmef-plant3d-dotnet` (C#, 442 LOC, Plant SDK) | **partial, does not compile** | PCF is a public text format; the .NET part could not be built here (no .NET SDK / AutoCAD SDK) |
 | CADMATIC | `pmef-adapter-cadmatic` (~2.0 k) | — | partial, does not compile | frozen |
 | COMOS | `pmef-adapter-comos` (~1.8 k) | `pmef-comos-dotnet` (640 LOC) | partial, does not compile | frozen |
@@ -146,11 +146,11 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 
 ## 6. Hard-rule / policy findings (need maintainer decision — nothing changed)
 
-1. **RVM reverse engineering.** `pmef-adapter-e3d/src/rvm.rs` parses the binary RVM format.
-   CLAUDE.md forbids reverse engineering RVM without explicit instruction. Provenance of
-   that format knowledge is undocumented. Options: (a) remove/feature-gate it, (b) document
-   the public source and get explicit sign-off, (c) replace with an E3D-side export via the
-   official PML/.NET API.
+1. **RVM reverse engineering — resolved 2026-10-31 (option A).** `rvm.rs` (undocumented origin,
+   used only for equipment bounding boxes, no test against a real file) was removed.
+   Equipment geometry now comes from PML design primitives; decision recorded as DD-011 in
+   `docs/design-decisions.md`, spec 05 §8.1 updated. Option D (RVM-only models via external
+   RVM→glTF conversion + `mesh_ref`) is planned in `ROADMAP.md`.
 2. **`@id` pattern conflict — resolved 2026-10-31.** CLAUDE.md said
    `urn:pmef:obj:<project>:<tag>`. Spec 02 §2.1 + spec 01 §7.3 (normative), the `PmefId`
    schema pattern, `pmef-core::PmefId` and all adapters use `urn:pmef:<domain>:<project>:<local-id>`;
@@ -179,7 +179,9 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
   remove/label Discord, OpenSSF, ghcr, crates.io, "14+ adapters", "bidirectional"; add `pmef-rs/`.
 - **P1.5** One version: `0.9.0` everywhere (badge, CHANGELOG headings, spec footer); collapse the three
   `[Unreleased]` sections; rename/label the docx as legacy draft (ask before renaming).
-- **P1.6** Decide on `rvm.rs` (§6 item 1).
+- **P1.6** ~~Decide on `rvm.rs`~~ — done, removed (§6 item 1).
+- **P1.7** Make E3D equipment objects schema-valid (drop `null` optional fields, map
+  type-specific required blocks such as `vesselDesign`) — found by the new integration test.
 
 ### P2 — make claims true
 
@@ -207,6 +209,6 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
   `1.0.0`? And what is `PMEF_Specification_v1.2.docx` — a v1.0 draft?
 - **Q2** Out-of-scope adapters: exclude from the Cargo workspace (keep code, frozen) or fix
   all ten? Recommendation: exclude, fix E3D + Plant 3D only.
-- **Q3** `rvm.rs`: remove, feature-gate, or keep with documented source?
+- **Q3** ~~`rvm.rs`~~ — answered: removed (A), external RVM→glTF path planned (D).
 - **Q4** ~~`@id` convention~~ — answered: CLAUDE.md follows the spec (§6 item 2).
 - **Q5** Is `github.com/MatzUp2022/PMEF` the canonical URL for now, or is a `pmef` org planned?

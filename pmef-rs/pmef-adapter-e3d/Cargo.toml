@@ -1,6 +1,6 @@
 [package]
 name        = "pmef-adapter-e3d"
-description = "PMEF adapter for AVEVA E3D Plant Design — PML + RVM"
+description = "PMEF adapter for AVEVA E3D Plant Design — PML export"
 version.workspace    = true
 edition.workspace    = true
 license.workspace    = true
@@ -17,8 +17,6 @@ pmef-core.workspace  = true
 pmef-io.workspace    = true
 pmef-validate.workspace = true
 
-# For RVM binary parsing
-byteorder = "1"
 # For E3D database address parsing
 regex     = "1"
 

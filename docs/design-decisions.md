@@ -157,3 +157,31 @@ link that PCF lacks entirely.
 | Angles | degrees | Industry convention (not radians) |
 
 All unit conversions are the adapter's responsibility. PMEF always stores in the above units.
+
+---
+
+## DD-011: E3D Geometry via PML, No RVM Parsing
+
+**Status:** Accepted (2026-10-31)
+
+**Decision:** The reference implementation does not read AVEVA's binary RVM (Review Model)
+format. `pmef-adapter-e3d` takes all data — including equipment geometry — from the PML
+export: E3D design primitives (BOX, CYLI, CONE, SNOU, DISH) are written by the PML script
+and mapped to `pmef:ParametricGeometry`. The former `rvm.rs` parser was removed.
+
+**Rationale:**
+
+- RVM is not publicly specified by AVEVA. Parsing it requires reverse engineering, which
+  the project rules exclude for an open standard (legal risk under licence terms,
+  credibility with tool vendors). The origin of the removed parser was undocumented.
+- The parser was used only for equipment bounding boxes and had no test against a real file.
+- PML provides parametric primitives with exact dimensions — better than bounding boxes and
+  consistent with "exactness comes from parameters and catalogs, not raw geometry".
+
+**Consequences:**
+
+- The PML export script must emit design primitives with world-coordinate `POS`, `AXIS` and
+  dimensions (contract documented in `pmef-adapter-e3d/src/primitives.rs`).
+- Models that exist only as RVM files are not covered by the adapter. Planned path (see
+  `ROADMAP.md`): convert RVM → glTF 2.0 with an external tool, chosen and run by the user,
+  and reference the result as `mesh_ref` geometry. PMEF itself never parses RVM.
