@@ -11,6 +11,7 @@
       "description": "A named structural sub-model or structure: e.g. pipe rack, equipment frame, building structure.",
       "type": "object",
       "required": ["@type","@id","pmefVersion","isPartOf","systemName"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type":       { "const": "pmef:SteelSystem" },
         "@id":         { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -27,7 +28,10 @@
         "designCode":  { "type": "string", "description": "Applicable design code, e.g. 'EN 1993-1-1', 'AISC 360', 'API RP 2A'" },
         "steelGrade":  { "type": "string", "description": "Primary steel grade, e.g. 'S355JR', 'A572 Gr.50'" },
         "memberIds":   { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" } },
-        "revision":    { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+        "revision":    { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
       },
       "additionalProperties": false
     },
@@ -37,6 +41,7 @@
       "description": "A single structural steel member (beam, column, brace, purlin). Corresponds to CIS/2 StructuralMember and IFC IfcBeam/IfcColumn.",
       "type": "object",
       "required": ["@type","@id","pmefVersion","isPartOf","memberType","profileId","startPoint","endPoint"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type":       { "const": "pmef:SteelMember" },
         "@id":         { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -103,6 +108,9 @@
         "geometry":   { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
         "documents":  { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/DocumentLink" } },
         "revision":   { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" },
         "customAttributes": { "type": "object", "additionalProperties": { "type": ["string","number","boolean","null"] } }
       },
       "additionalProperties": false
@@ -113,6 +121,7 @@
       "description": "A topology node (joint) in the structural model where members connect. Used for FEM export.",
       "type": "object",
       "required": ["@type","@id","isPartOf","coordinate"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type":       { "const": "pmef:SteelNode" },
         "@id":         { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -126,7 +135,10 @@
           "enum": ["FIXED","PINNED","ROLLER_X","ROLLER_Y","ROLLER_Z","SPRING","FREE",null],
           "description": "Boundary condition (null = internal node)"
         },
-        "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+        "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
       },
       "additionalProperties": false
     },
@@ -136,6 +148,7 @@
       "description": "A structural connection between members (bolted, welded, pinned). Aligns with CIS/2 Connection and Tekla connection objects.",
       "type": "object",
       "required": ["@type","@id","isPartOf","connectionType","memberIds"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type":          { "const": "pmef:SteelConnection" },
         "@id":            { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -189,7 +202,10 @@
         },
         "utilisationRatio": { "type": "number", "minimum": 0, "description": "Connection utilisation (0–1)" },
         "teklaConnectionNumber": { "type": "integer", "description": "Tekla connection template number for round-trip" },
-        "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+        "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
       },
       "additionalProperties": false
     }

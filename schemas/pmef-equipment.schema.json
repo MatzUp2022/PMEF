@@ -11,6 +11,7 @@
       "description": "Base type for all physical equipment. Never instantiated directly.",
       "type": "object",
       "required": ["@type","@id","pmefVersion","isPartOf","equipmentBasic"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type":        { "type": "string" },
         "@id":          { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -41,6 +42,9 @@
         "geometry":   { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
         "documents":  { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/DocumentLink" } },
         "revision":   { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" },
         "customAttributes": {
           "type": "object",
           "additionalProperties": { "type": ["string","number","boolean","null"] }

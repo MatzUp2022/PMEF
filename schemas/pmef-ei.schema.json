@@ -11,6 +11,7 @@
       "description": "A physical instrument, sensor, actuator or field device. Corresponds to the PhysicalObject realising a DEXPI ProcessInstrumentationFunction. Aligns with PA-DIM DeviceType.",
       "type": "object",
       "required": ["@type","@id","pmefVersion","isPartOf","tagNumber","instrumentClass"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type":        { "const": "pmef:InstrumentObject" },
         "@id":          { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -127,6 +128,9 @@
         "geometry":  { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
         "documents": { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/DocumentLink" } },
         "revision":  { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" },
         "customAttributes": { "type": "object", "additionalProperties": { "type": ["string","number","boolean","null"] } }
       },
       "additionalProperties": false
@@ -137,6 +141,7 @@
       "description": "A functional control or safety loop grouping one or more InstrumentObjects. Corresponds to DEXPI ProcessControlLoop.",
       "type": "object",
       "required": ["@type","@id","loopNumber","isPartOf"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type":      { "const": "pmef:InstrumentLoop" },
         "@id":        { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -163,7 +168,10 @@
           "additionalProperties": false
         },
         "silLevel": { "type": "integer", "minimum": 0, "maximum": 4 },
-        "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+        "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
       },
       "additionalProperties": false
     },
@@ -173,6 +181,7 @@
       "description": "A PLC rack, CPU module, or I/O module. Derived from AutomationML AR APC hardware configuration.",
       "type": "object",
       "required": ["@type","@id","isPartOf","plcClass"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type":    { "const": "pmef:PLCObject" },
         "@id":      { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -198,7 +207,10 @@
         "amlRef":         { "type": "string", "description": "AutomationML InternalElement ID for round-trip" },
         "iec81346":  { "$ref": "pmef-base.schema.json#/$defs/Iec81346Designation" },
         "geometry":  { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
-        "revision":  { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+        "revision":  { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
       },
       "additionalProperties": false
     },
@@ -208,6 +220,7 @@
       "description": "An electrical cable or cable bundle between two termination points.",
       "type": "object",
       "required": ["@type","@id","isPartOf","cableNumber"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type":      { "const": "pmef:CableObject" },
         "@id":        { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -236,7 +249,10 @@
         "routeLength":    { "type": "number", "description": "Routed cable length [m]" },
         "iec81346":  { "$ref": "pmef-base.schema.json#/$defs/Iec81346Designation" },
         "geometry":  { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
-        "revision":  { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+        "revision":  { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
       },
       "additionalProperties": false
     },
@@ -246,6 +262,7 @@
       "description": "A physical cable tray, conduit, or cable duct routing segment. The geometry is stored via CableTrayPrimitive.",
       "type": "object",
       "required": ["@type","@id","isPartOf","trayMark"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type":    { "const": "pmef:CableTrayRun" },
         "@id":      { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -259,7 +276,10 @@
         "reserveCapacity": { "type": "number", "description": "Reserved fill [%]", "minimum": 0, "maximum": 100 },
         "structuralSupportId": { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Steel member or civil structure supporting this tray" },
         "geometry": { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
-        "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+        "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
       },
       "additionalProperties": false
     },
@@ -269,6 +289,7 @@
       "description": "A modular process unit described by an MTP 2.0 file (VDI/VDE/NAMUR 2658, IEC 63280). The AML file is referenced as a document.",
       "type": "object",
       "required": ["@type","@id","isPartOf","moduleName"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type":      { "const": "pmef:MTPModule" },
         "@id":        { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -280,7 +301,10 @@
         "peaVendor":  { "type": "string" },
         "peaModel":   { "type": "string" },
         "memberIds":  { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" }, "description": "InstrumentObjects + EquipmentObjects in this PEA" },
-        "revision":   { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+        "revision":   { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
       },
       "additionalProperties": false
     }

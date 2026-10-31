@@ -156,6 +156,7 @@ jobs:
           globs: |
             *.md
             spec/*.md
+            spec/rfc/*.md
             docs/*.md
             diagrams/*.md
           config: .markdownlint.jsonc
