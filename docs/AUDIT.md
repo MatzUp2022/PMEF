@@ -64,6 +64,7 @@ mislabelled as v1.2. Decision needed from maintainer (see §8, Q1).
 | `pmef.net` homepage / schema host | **unverified** | used as `$id` base and `homepage`; link check excludes it |
 | Release PDF via `scripts/build-spec-pdf.py` | **missing** | script does not exist (step is `continue-on-error`, so silently skipped) |
 | Conformance test suite in `tests/`, `python run_tests.py --level N` (`spec/06-conformance.md` §5.1) | **missing** | no `tests/`, no `run_tests.py` |
+| Conformance Test Suite `pmef-conformance/`, "82 tests, 80/82 passing" (`CHANGELOG.md` [0.9.0-rc] and changelog docx) | **missing** | directory never existed in Git history; entry annotated 2026-10-31 |
 | Benchmark DS-05 "EAF Cooling Circuit Segment" (`06-conformance.md` §4.5) | **missing** | no such example |
 
 ## 4. Build and test status

@@ -206,6 +206,10 @@ Six normative Markdown chapters totalling 3,087 lines / 18,128 words:
 
 ### Added — Conformance Test Suite (pmef-conformance/)
 
+> **Note (2026-10-31):** `pmef-conformance/` is not part of this repository and does not appear
+> in its Git history; the figures below cannot be reproduced from the published sources.
+> See [docs/legacy-docx-review.md](docs/legacy-docx-review.md).
+
 82 tests: PIPE-U-001..016, EQUIP-U-001..012, EI-U-001..008, STEEL-U-001..006,
 REL-U-001..008, GEOM-U-001..008, RT-001..018, INTG-001..006.
 **80/82 passing (97.6%).**
