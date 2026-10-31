@@ -203,12 +203,22 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 - **P3.4** Rust dependency section in THIRD-PARTY-NOTICES.md; SBOM in releases.
 - **P3.5** Machine-readable standards crosswalks with round-trip tests (DEXPI, IFC, CAEX).
 
-## 8. Open questions for the maintainer
+## 8. Maintainer decisions (2026-10-31)
 
-- **Q1** Which version should be canonical for Phase 2: `0.9.0` (my recommendation) or jump to
-  `1.0.0`? And what is `PMEF_Specification_v1.2.docx` — a v1.0 draft?
-- **Q2** Out-of-scope adapters: exclude from the Cargo workspace (keep code, frozen) or fix
-  all ten? Recommendation: exclude, fix E3D + Plant 3D only.
-- **Q3** ~~`rvm.rs`~~ — answered: removed (A), external RVM→glTF path planned (D).
-- **Q4** ~~`@id` convention~~ — answered: CLAUDE.md follows the spec (§6 item 2).
-- **Q5** Is `github.com/MatzUp2022/PMEF` the canonical URL for now, or is a `pmef` org planned?
+- **Q1 Version — decided:** canonical data version stays `0.9.0`; `-rc` is a release tag only
+  (`v0.9.0-rc`), never a `pmefVersion` value. The next schema extension (provenance, Phase 3)
+  is `0.10.0`. `PMEF_Specification_v1.2.docx` is a German v1.0 *draft*: mark it as
+  non-normative legacy in the README and rename it to `PMEF_Specification_v1.0-draft_DE.docx`
+  (rename approved).
+- **Q2 Adapters — decided:** make **all ten** Rust adapters compile and keep them in the
+  workspace and CI. This authorises compile/build fixes in frozen adapters; it does not
+  authorise extending their scope (CLAUDE.md "Scope" still applies).
+- **Q3 `rvm.rs` — decided:** removed (A); RVM-only models via external RVM→glTF + `mesh_ref`
+  planned (D). See DD-011.
+- **Q4 `@id` convention — decided:** CLAUDE.md follows the spec (`urn:pmef:<domain>:…`).
+- **Q5 Canonical URL — decided in principle:** a dedicated `pmef` GitHub organisation is planned.
+  Until it exists, `github.com/MatzUp2022/PMEF` is canonical; placeholder `pmef/specification`
+  references are replaced in Phase 2. Facts checked 2026-10-31: `pmef.net` (current schema
+  `$id` base) and `pmef.org` are registered — ownership unconfirmed; `pmef.io`, `pmef.dev` and the
+  crates.io names `pmef`, `pmef-core`, `pmef-cli`, `pmef-io`, `pmef-validate`, `pmef-geom` are free.
+  **Still open:** exact org name, and whether the schema namespace stays on `pmef.net`.
