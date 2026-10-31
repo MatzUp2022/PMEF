@@ -1,0 +1,12 @@
+✗ equipment-steel-negative.ndjson (11 issue(s)) 
+     urn:pmef:obj:geomtest:B-ZERO: member has zero length
+     urn:pmef:obj:geomtest:B-LEN: length 4100.0 but start/end are 4000.0 mm apart
+     urn:pmef:obj:geomtest:B-PROF: profileId EN:HEA999 not found in catalogs/profiles-*.json
+     urn:pmef:obj:geomtest:N-OFF: node is not at an end of member urn:pmef:obj:geomtest:C-1
+     urn:pmef:obj:geomtest:CN-APART: members urn:pmef:obj:geomtest:B-LEN and urn:pmef:obj:geomtest:C-FAR are 5000 mm apart (> (h1 + h2) / 2 = 245 mm)
+     urn:pmef:obj:geomtest:V-BAD#IN: nozzle face is 500 mm inside the equipment body
+     urn:pmef:obj:geomtest:V-BAD#INWARD: nozzle direction points into the equipment (must point outward)
+     urn:pmef:obj:geomtest:V-BAD#FAR: nozzle face is 1179 mm away from the equipment body
+     urn:pmef:obj:geomtest:V-BAD#NONUNIT: nozzle direction is not a unit vector
+     urn:pmef:obj:geomtest:V-BAD#NOPORT: no free end of urn:pmef:line:geomtest:L-1 at the nozzle face
+     urn:pmef:obj:geomtest:V-ASM: DISH at [0.0, 0.0, 2000.0] does not sit on a cylinder end face (spec 04: DISH center = knuckle circle, axis outward)

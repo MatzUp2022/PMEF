@@ -20,6 +20,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **`compressor-train` equipment geometry**: V-101 shell `center` was the shell mid-point instead
+  of the bottom face centre (spec 04), so the heads floated inside the shell; nozzles of V-101 and
+  E-101 lay inside the bodies (outlet and vent both on the top centreline). Nozzles moved onto the
+  surfaces, E-101 shell nozzles made radial, channels flush with the shell. Conformance fixtures
+  regenerated.
+
 - **Rust model matches the schemas (docs/AUDIT.md P3.9).** `pmef-core` types for the active scope
   (hierarchy, piping, equipment, steel, relationships) now accept every schema-valid object and
   round-trip it without loss: fields required in Rust but optional in the schema became `Option`
@@ -156,6 +162,14 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   `RDL_MAPPING` to match its actual content.
 
 ### Added
+
+- **Geometry checks for equipment and structural steel** in `scripts/check-geometry.py`:
+  nozzle face not inside / not detached from the owner's parametric body, nozzle direction
+  outward (spec 02 §5.2), DISH heads on a cylinder end face (spec 04), connected line has a free
+  end at the nozzle face; steel member length, `profileId` resolvable in `catalogs/`, nodes at
+  member ends, connected members within (h1 + h2) / 2 (profile depths from the catalog).
+  Equipment findings are warnings until DS-01/DS-02 are corrected (docs/AUDIT.md P3.11),
+  `--strict` makes them errors. Golden negative fixture `tests/geometry/` (CI).
 
 - **AutoCAD Plant 3D import direction and round trip via PCF** (spec 05 §8.2).
   `pmef convert MODEL --to pcf -o DIR` writes one PCF per line (identity in

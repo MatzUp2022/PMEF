@@ -231,6 +231,14 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
   `functionalAspect`, so every IEC 81346 designation was lost; `GeometryReference.ref`,
   `teklaGUID`, `eclassIRDI`). A schema-valid `SteelMember` without `memberMark` could not be read at
   all. Frozen E&I types keep their drift (55 findings, listed by the test, not failing).
+- **P3.11** Equipment layouts of the benchmarks DS-01 (`pump-skid-complete`) and DS-02
+  (`heat-exchanger-station`) are geometrically inconsistent; `scripts/check-geometry.py` reports
+  12 equipment warnings (blocking with `--strict`). Examples: line CW-201 runs along the axis of
+  vessel V-201 through the vessel; V-201's top head sits mid-shell; E-301B nozzles lie 500 mm
+  inside the body; E-301A's shell inlet sits between a pipe and a valve instead of at a free line
+  end. Fixing needs re-routed piping in DS-01/DS-02 (affects spec 06 counts, conformance fixtures,
+  diff/merge/PCF golden data) → maintainer decision. `compressor-train` was fixed (V-101 shell
+  `center` violated spec 04, nozzles inside the bodies of V-101 and E-101).
 - **P3.10** Schema naming defect: `CompressorSpec.polytropic_efficiency` is the only snake_case
   property (all others camelCase). Renaming it is a breaking schema change → needs an RFC /
   maintainer decision. Rust reads both spellings and writes the schema spelling.

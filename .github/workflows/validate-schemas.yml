@@ -84,8 +84,11 @@ jobs:
       - name: Check dataset topology (connectivity integrity)
         run: python scripts/check-topology.py
 
-      - name: Check piping geometry consistency (bends, port directions, lengths)
+      - name: Check geometry consistency (piping; equipment nozzles as warnings; steel)
         run: python scripts/check-geometry.py
+
+      - name: Geometry checks detect broken equipment/steel (golden negative fixture)
+        run: python tests/geometry/run.py
 
   # ──────────────────────────────────────────────────────────
   # 3. Validate open catalogs against the catalog schema
