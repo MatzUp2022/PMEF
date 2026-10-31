@@ -84,6 +84,9 @@ jobs:
       - name: Check dataset topology (connectivity integrity)
         run: python scripts/check-topology.py
 
+      - name: Check piping geometry consistency (bends, port directions, lengths)
+        run: python scripts/check-geometry.py
+
   # ──────────────────────────────────────────────────────────
   # 3. Validate open catalogs against the catalog schema
   # ──────────────────────────────────────────────────────────

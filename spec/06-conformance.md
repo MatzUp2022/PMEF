@@ -240,7 +240,7 @@ The matrix below lists all normatively defined PMEF entity types and their requi
 ### 4.1 PMEF-DS-01 — Cooling Water Pump Skid
 
 **File:** `examples/pump-skid-complete.ndjson`  
-**Objects:** 16  
+**Objects:** 35  
 **Disciplines:** Piping + Equipment  
 **Required for:** Level 2 and Level 3 conformance.
 

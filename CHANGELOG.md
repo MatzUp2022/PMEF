@@ -20,6 +20,15 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **Benchmark geometry made consistent** (new CI check `scripts/check-geometry.py`: bend centre
+  points, port directions per spec 02 §2.6, pipe lengths). PMEF-DS-01 / stress model: elbow
+  CW-201-ELB-001 had both ports on the same vertical with no intersecting axes — it is now a real
+  90° LR DN200 bend (centre-to-end 304.8 mm around the original corner at x = 11500, z = 850):
+  CW-201-PIPE-001 ends at x = 11195.2 (length 2195.2 mm, weight 75.0 kg), CW-201-PIPE-002 starts at
+  z = 1154.8 (795.2 mm, 27.8 kg), welds W01/W02 moved accordingly, elbow torus geometry, spool
+  length/weight updated. Inward-pointing port directions fixed on CW-201-PIPE-002, -FL-001,
+  -GK-001, -FL-002 and on PMEF-DS-02 CW-301-FV-001, -PIPE-002; weld directions `[0,0,0]` replaced
+  by the pipe axis. No `@id` changed. Spec 06 §4.1 object count of DS-01 corrected (35, not 16).
 - **`catalogs/profiles-en.json` HEA series corrected (catalog version 2024.1 → 2024.2).** All 24
   HEA entries listed the nominal size as height (HEA 300: 300 instead of 290 mm), HEA 900/1000
   had wrong flange thicknesses (28 instead of 30/31 mm), HEA 100 was listed as `EN:HEA96`, and
