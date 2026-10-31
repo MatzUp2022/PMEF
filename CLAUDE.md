@@ -1,6 +1,7 @@
 # CLAUDE.md — PMEF (Plant Model Exchange Format)
 
 ## What this repo is
+
 Open, cross-discipline 3D plant model exchange format plus reference implementation.
 - `spec/` — normative specification (Markdown). **Single source of truth.**
 - `schemas/` — JSON Schema Draft 2020-12. Normative together with `spec/`.
@@ -12,6 +13,7 @@ Open, cross-discipline 3D plant model exchange format plus reference implementat
   If content conflicts, `spec/` + `schemas/` win; flag the conflict.
 
 ## Strategic context
+
 PMEF is the backbone data model for a recognition product that builds plant models from
 2D drawings, isometrics, DWG/DXF/DGN/PCF/PDF and point clouds/scans, and derives standard-compliant
 2D drawings from the model. Implications for every design decision:
@@ -22,10 +24,12 @@ PMEF is the backbone data model for a recognition product that builds plant mode
 - Exactness comes from catalog snapping (profiles, DN/PN, piping classes), not raw geometry.
 
 ## Scope (current focus)
+
 Active: Piping, Structural Steel, Equipment. Adapters: AVEVA E3D and AutoCAD Plant 3D only.
 All other disciplines/adapters are frozen: do not extend them unless explicitly asked.
 
 ## Conventions
+
 - IDs: `urn:pmef:obj:<project>:<tag>`; never reuse or change an existing `@id`.
 - Units: SI, lengths in mm, angles in degrees. No implicit units.
 - Versioning: SemVer for spec and schemas. Every schema change → CHANGELOG.md entry.
@@ -36,6 +40,7 @@ All other disciplines/adapters are frozen: do not extend them unless explicitly 
   IFC 4.3, AutomationML/CAEX (IEC 62424), AAS (IEC 63278), ISO 19650.
 
 ## Commands
+
 Verified 2026-10-31 (see `docs/AUDIT.md`). Do not invent commands.
 
 ```bash
@@ -61,6 +66,7 @@ CI also runs Mermaid validation (`mmdc` via `scripts/extract-mermaid.py`), markd
 `run_tests.py`, although `spec/06-conformance.md` §5.1 refers to them.
 
 ## Hard rules
+
 - No proprietary customer or employer project data in examples, catalogs or tests.
   Examples must be synthetic.
 - No copying of vendor-proprietary format documentation. No reverse engineering of closed

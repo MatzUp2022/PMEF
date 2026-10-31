@@ -105,6 +105,7 @@ Minor: the script uses the deprecated `jsonschema.RefResolver` (removal announce
 | all 10 `pmef-adapter-*` | ❌ (4–15 errors each) | cannot run (~196 `#[test]`s declared) |
 
 Error categories (representative):
+
 - API drift against `pmef-io`: `serde_json::Error: From<PmefIoError>` not satisfied (e3d, tekla, cadmatic, …).
 - Missing dependencies in crate manifests: `tracing` (plant3d), `phf` (tekla).
 - Lifetime error in `pmef-adapter-tekla/src/profile_map.rs`.
@@ -166,35 +167,38 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 ## 7. Prioritised fix list
 
 ### P1 — credibility and correctness (do first; Phase 2 material)
-1. Make `cargo build --workspace` green **or** exclude non-scope adapters from the
-   workspace (`members`/`exclude`) so core + E3D + Plant 3D build; fix `tracing`/`phf`
-   deps and the `PmefIoError` drift.
-2. Add a Rust CI job (`cargo build`, `cargo test`, `cargo clippy`) — today Rust is not in CI at all.
-3. Close the Python validation hole: map all steel/E&I types; make unknown `@type` an error
-   (or a counted, reported skip that fails CI above zero).
-4. README: correct repo path, folder names (`catalogs/`, adapter locations), file lists,
-   remove/label Discord, OpenSSF, ghcr, crates.io, "14+ adapters", "bidirectional"; add `pmef-rs/`.
-5. One version: `0.9.0` everywhere (badge, CHANGELOG headings, spec footer); collapse the three
-   `[Unreleased]` sections; rename/label the docx as legacy draft (ask before renaming).
-6. Decide on `rvm.rs` (§6.1).
+
+- **P1.1** Make `cargo build --workspace` green **or** exclude non-scope adapters from the
+  workspace (`members`/`exclude`) so core + E3D + Plant 3D build; fix `tracing`/`phf`
+  deps and the `PmefIoError` drift.
+- **P1.2** Add a Rust CI job (`cargo build`, `cargo test`, `cargo clippy`) — today Rust is not in CI at all.
+- **P1.3** Close the Python validation hole: map all steel/E&I types; make unknown `@type` an error
+  (or a counted, reported skip that fails CI above zero).
+- **P1.4** README: correct repo path, folder names (`catalogs/`, adapter locations), file lists,
+  remove/label Discord, OpenSSF, ghcr, crates.io, "14+ adapters", "bidirectional"; add `pmef-rs/`.
+- **P1.5** One version: `0.9.0` everywhere (badge, CHANGELOG headings, spec footer); collapse the three
+  `[Unreleased]` sections; rename/label the docx as legacy draft (ask before renaming).
+- **P1.6** Decide on `rvm.rs` (§6 item 1).
 
 ### P2 — make claims true
-7. Real conformance runner: honour `--level`, detect duplicate `@id`s (reader must not use a
-   last-wins map for this check), add `tests/` fixtures or update spec §5.1 to the real command.
-8. Deterministic `pmef diff` (sorted output) + field-level diff — prerequisite for the
-   as-built-vs-design use case.
-9. Either create DS-05 (`eaf-segment.ndjson`) or remove it from spec/README.
-10. Fix CHANGELOG so `extract-changelog.py` and `release.yml` can work; drop or implement
-    `build-spec-pdf.py`.
-11. Fix the 625 non-strict schema warnings (at least for steel/E&I `$defs`).
-12. Correct the `@id` convention in CLAUDE.md to match the schema (§6.2).
+
+- **P2.1** Real conformance runner: honour `--level`, detect duplicate `@id`s (reader must not use a
+  last-wins map for this check), add `tests/` fixtures or update spec §5.1 to the real command.
+- **P2.2** Deterministic `pmef diff` (sorted output) + field-level diff — prerequisite for the
+  as-built-vs-design use case.
+- **P2.3** Either create DS-05 (`eaf-segment.ndjson`) or remove it from spec/README.
+- **P2.4** Fix CHANGELOG so `extract-changelog.py` and `release.yml` can work; drop or implement
+   `build-spec-pdf.py`.
+- **P2.5** Fix the 625 non-strict schema warnings (at least for steel/E&I `$defs`).
+- **P2.6** Correct the `@id` convention in CLAUDE.md to match the schema (§6 item 2).
 
 ### P3 — maturity
-13. Unit tests for `pmef-cli`.
-14. PMEFX reader/writer in `pmef-io`.
-15. Migrate `validate-examples.py` from `RefResolver` to `referencing`.
-16. Rust dependency section in THIRD-PARTY-NOTICES.md; SBOM in releases.
-17. Machine-readable standards crosswalks with round-trip tests (DEXPI, IFC, CAEX).
+
+- **P3.1** Unit tests for `pmef-cli`.
+- **P3.2** PMEFX reader/writer in `pmef-io`.
+- **P3.3** Migrate `validate-examples.py` from `RefResolver` to `referencing`.
+- **P3.4** Rust dependency section in THIRD-PARTY-NOTICES.md; SBOM in releases.
+- **P3.5** Machine-readable standards crosswalks with round-trip tests (DEXPI, IFC, CAEX).
 
 ## 8. Open questions for the maintainer
 
