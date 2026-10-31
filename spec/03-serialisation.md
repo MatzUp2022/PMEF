@@ -1,7 +1,7 @@
 # PMEF Specification · Chapter 03 · Serialisation
 
 **Document number:** PMEF-SPEC-03  
-**Version:** 0.9.0-rc  
+**Version:** 0.9.0  
 **Status:** Normative  
 **Date:** 2026-03-31
 

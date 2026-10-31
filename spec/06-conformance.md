@@ -1,7 +1,7 @@
 # PMEF Specification · Chapter 06 · Conformance
 
 **Document number:** PMEF-SPEC-06  
-**Version:** 0.9.0-rc  
+**Version:** 0.9.0  
 **Status:** Normative  
 **Date:** 2026-03-31
 
@@ -566,6 +566,6 @@ The following table summarises all normative requirements by their unique identi
 
 ---
 
-*End of Chapter 06 and PMEF Specification v0.9.0-rc.*
+*End of Chapter 06 and PMEF Specification 0.9.0.*
 
 **[← Chapter 05](05-adapters.md)** · **[↑ Back to README](../README.md)**

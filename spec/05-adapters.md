@@ -1,7 +1,7 @@
 # PMEF Specification · Chapter 05 · Adapters
 
 **Document number:** PMEF-SPEC-05  
-**Version:** 0.9.0-rc  
+**Version:** 0.9.0  
 **Status:** Normative  
 **Date:** 2026-03-31
 

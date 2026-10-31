@@ -1,7 +1,7 @@
 # PMEF Specification · Chapter 01 · Introduction
 
 **Document number:** PMEF-SPEC-01  
-**Version:** 0.9.0-rc  
+**Version:** 0.9.0  
 **Status:** Release Candidate  
 **Date:** 2026-03-31
 

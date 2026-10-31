@@ -3,6 +3,10 @@
 All notable changes to the PMEF Specification are documented here.
 Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+**Version identifiers.** The data/spec version is plain SemVer (`pmefVersion: "0.9.0"`, schema
+`$id` path `/0.9/`). Pre-release labels such as `-rc` mark *releases* (Git tags, e.g.
+`v0.9.0-rc`) and never appear in data. The next schema extension is `0.10.0`.
+
 ---
 
 ## [Unreleased]
@@ -225,20 +229,3 @@ REL-U-001..008, GEOM-U-001..008, RT-001..018, INTG-001..006.
 | CADMATIC adapter | REST API adapter not yet produced | Planned v0.9.1 |
 
 ---
-
-## [Unreleased] — v0.9.1 Planned
-
-- Fix EQUIP-U-005 and PIPE-U-003 schema/test gaps
-- DS-05 benchmark (Mixed EAF + E&I + Steel, ~80 objects)
-- `pmef-adapter-cadmatic`: CADMATIC REST API adapter
-- `pmef-stress`: CAESAR II .cii import/export adapter (Rust)
-- Full `pmef-geom` AABB computation (all 15 primitives)
-- Full `pmef-validate` jsonschema Rust integration
-
-## [Unreleased] — v1.0 Planned
-
-- `cargo test --workspace` green (all Rust tests pass)
-- Published crates on crates.io
-- Published schemas on schema.pmef.net
-- pmef.net website with full documentation
-- First vendor Level 2 certification

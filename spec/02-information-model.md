@@ -1,7 +1,7 @@
 # PMEF Specification · Chapter 02 · Information Model
 
 **Document number:** PMEF-SPEC-02  
-**Version:** 0.9.0-rc  
+**Version:** 0.9.0  
 **Status:** Normative  
 **Date:** 2026-03-31
 

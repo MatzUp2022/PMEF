@@ -186,3 +186,23 @@ reference implementation. Dates are targets, not commitments.
 
 The TSC reviews and updates this roadmap quarterly.
 Last updated: **2026-03-31** · TSC approval: pending
+
+---
+
+## Backlog carried over from CHANGELOG (2026-10-31)
+
+Items previously listed as "planned" in CHANGELOG.md (moved here — a changelog records
+released changes only):
+
+- 🗓️ Fix EQUIP-U-005 and PIPE-U-003 schema/test gaps
+- 🗓️ DS-05 benchmark (Mixed EAF + E&I + Steel, ~80 objects)
+- 🗓️ `pmef-stress`: CAESAR II .cii import/export adapter (Rust)
+- 🗓️ Full `pmef-geom` AABB computation (all 15 primitives)
+- ✅ `pmef-validate` jsonschema Rust integration (cross-file `$ref` resolution)
+- ✅ `cargo test --workspace` green — enforced by `.github/workflows/rust.yml`
+- 🔄 `pmef-adapter-cadmatic`: CADMATIC REST API adapter (compiles and tests green; frozen scope)
+- 🗓️ Published crates on crates.io
+- 🗓️ Published schemas under a project-owned domain (namespace decision open, see docs/AUDIT.md §8)
+- 🗓️ Project website with full documentation
+- 🗓️ First vendor Level 2 certification
+
