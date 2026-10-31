@@ -1,0 +1,347 @@
+{
+  "summary": {
+    "added": 1,
+    "removed": 1,
+    "changed": 6,
+    "unchanged": 3
+  },
+  "objects": [
+    {
+      "@id": "urn:pmef:line:demo-asb:CW-301",
+      "@type": "pmef:PipingNetworkSystem",
+      "status": "changed",
+      "changes": [
+        {
+          "path": "provenance",
+          "kind": "added",
+          "new": {
+            "confidence": 0.97,
+            "createdAt": "2026-10-30T09:00:00Z",
+            "recognizer": {
+              "name": "demo-recognizer",
+              "version": "1.4.0"
+            },
+            "sourceRef": "urn:pmef:doc:demo-asb:ISO-CW-301#page=1&region=0.05,0.08,0.62,0.71",
+            "sourceType": "iso-drawing"
+          }
+        },
+        {
+          "path": "review",
+          "kind": "added",
+          "new": {
+            "reviewedAt": "2026-10-30T14:00:00Z",
+            "reviewedBy": "reviewer-01",
+            "status": "approved"
+          }
+        }
+      ]
+    },
+    {
+      "@id": "urn:pmef:obj:demo-asb:B-101",
+      "@type": "pmef:SteelMember",
+      "status": "changed",
+      "changes": [
+        {
+          "path": "asBuilt",
+          "kind": "added",
+          "new": {
+            "catalogSnap": {
+              "algorithm": "pmef-snap/1",
+              "ambiguous": false,
+              "catalogRef": {
+                "catalogId": "profiles-en",
+                "catalogVersion": "2024.2",
+                "entryId": "EN:HEB300"
+              },
+              "residuals": [
+                {
+                  "catalog_mm": 300.0,
+                  "measured_mm": 301.4,
+                  "parameter": "h",
+                  "residual_mm": 1.4
+                },
+                {
+                  "catalog_mm": 300.0,
+                  "measured_mm": 299.1,
+                  "parameter": "b",
+                  "residual_mm": -0.9
+                },
+                {
+                  "catalog_mm": 11.0,
+                  "measured_mm": 11.6,
+                  "parameter": "tw",
+                  "residual_mm": 0.6
+                },
+                {
+                  "catalog_mm": 19.0,
+                  "measured_mm": 18.7,
+                  "parameter": "tf",
+                  "residual_mm": -0.3
+                }
+              ],
+              "score": 0.234657,
+              "snappedSize": "HEB 300"
+            },
+            "deviationMax_mm": 6.2,
+            "deviationRms_mm": 1.8,
+            "fitMethod": "ransac-plane",
+            "pointCloudRef": "file:scans/demo-hall-2.e57#segment=beam-0042"
+          }
+        },
+        {
+          "path": "endPoint[0]",
+          "kind": "modified",
+          "old": 6025.0,
+          "new": 6000.0,
+          "delta": -25.0
+        },
+        {
+          "path": "provenance",
+          "kind": "added",
+          "new": {
+            "confidence": 0.91,
+            "createdAt": "2026-10-30T09:15:00Z",
+            "recognizer": {
+              "name": "demo-recognizer",
+              "version": "1.4.0"
+            },
+            "sourceRef": "file:scans/demo-hall-2.e57#segment=beam-0042",
+            "sourceType": "scan"
+          }
+        },
+        {
+          "path": "review",
+          "kind": "added",
+          "new": {
+            "reviewedAt": "2026-10-30T16:00:00Z",
+            "reviewedBy": "reviewer-01",
+            "status": "approved"
+          }
+        }
+      ]
+    },
+    {
+      "@id": "urn:pmef:obj:demo-asb:CW-301-ELB-001",
+      "@type": "pmef:Elbow",
+      "status": "changed",
+      "changes": [
+        {
+          "path": "asBuilt",
+          "kind": "added",
+          "new": {
+            "catalogSnap": {
+              "catalogRef": {
+                "catalogId": "piping-class-en-p1a",
+                "catalogVersion": "2024.1",
+                "entryId": "ENP1A-ELBOW90-150"
+              },
+              "residuals": [
+                {
+                  "catalog_mm": 168.3,
+                  "measured_mm": 170.2,
+                  "parameter": "outsideDiameter",
+                  "residual_mm": 1.9
+                }
+              ],
+              "snappedSize": "DN 150 90° 1.5D"
+            },
+            "deviationMax_mm": 11.5,
+            "deviationRms_mm": 3.9,
+            "fitMethod": "least-squares-torus",
+            "pointCloudRef": "file:scans/demo-hall-2.e57#segment=CW-301-seg-02"
+          }
+        },
+        {
+          "path": "provenance",
+          "kind": "added",
+          "new": {
+            "confidence": 0.71,
+            "createdAt": "2026-10-30T09:12:00Z",
+            "recognizer": {
+              "name": "demo-recognizer",
+              "version": "1.4.0"
+            },
+            "sourceRef": "file:scans/demo-hall-2.e57#segment=CW-301-seg-02",
+            "sourceType": "scan"
+          }
+        },
+        {
+          "path": "review",
+          "kind": "added",
+          "new": {
+            "status": "detected"
+          }
+        }
+      ]
+    },
+    {
+      "@id": "urn:pmef:obj:demo-asb:CW-301-PIPE-001",
+      "@type": "pmef:Pipe",
+      "status": "changed",
+      "changes": [
+        {
+          "path": "asBuilt",
+          "kind": "added",
+          "new": {
+            "catalogSnap": {
+              "algorithm": "pmef-snap/1",
+              "ambiguous": false,
+              "catalogRef": {
+                "catalogId": "piping-class-en-p1a",
+                "catalogVersion": "2024.1",
+                "entryId": "ENP1A-PIPE-150"
+              },
+              "residuals": [
+                {
+                  "catalog_mm": 168.3,
+                  "measured_mm": 169.1,
+                  "parameter": "outsideDiameter",
+                  "residual_mm": 0.8
+                },
+                {
+                  "catalog_mm": 5.0,
+                  "measured_mm": 5.3,
+                  "parameter": "wallThickness",
+                  "residual_mm": 0.3
+                }
+              ],
+              "score": 0.439289,
+              "snappedSize": "DN 150 PN40"
+            },
+            "deviationMax_mm": 4.8,
+            "deviationRms_mm": 1.2,
+            "fitMethod": "ransac-cylinder",
+            "pointCloudRef": "file:scans/demo-hall-2.e57#segment=CW-301-seg-01"
+          }
+        },
+        {
+          "path": "provenance",
+          "kind": "added",
+          "new": {
+            "confidence": 0.94,
+            "createdAt": "2026-10-30T09:12:00Z",
+            "recognizer": {
+              "name": "demo-recognizer",
+              "version": "1.4.0"
+            },
+            "sourceRef": "file:scans/demo-hall-2.e57#segment=CW-301-seg-01",
+            "sourceType": "scan"
+          }
+        },
+        {
+          "path": "review",
+          "kind": "added",
+          "new": {
+            "reviewedAt": "2026-10-30T14:00:00Z",
+            "reviewedBy": "reviewer-01",
+            "status": "approved"
+          }
+        }
+      ]
+    },
+    {
+      "@id": "urn:pmef:obj:demo-asb:CW-301-PIPE-002",
+      "@type": "pmef:Pipe",
+      "status": "changed",
+      "changes": [
+        {
+          "path": "asBuilt",
+          "kind": "added",
+          "new": {
+            "catalogSnap": {
+              "algorithm": "pmef-snap/1",
+              "ambiguous": false,
+              "catalogRef": {
+                "catalogId": "piping-class-en-p1a",
+                "catalogVersion": "2024.1",
+                "entryId": "ENP1A-PIPE-150"
+              },
+              "residuals": [
+                {
+                  "catalog_mm": 168.3,
+                  "measured_mm": 168.8,
+                  "parameter": "outsideDiameter",
+                  "residual_mm": 0.5
+                },
+                {
+                  "catalog_mm": 5.0,
+                  "measured_mm": 4.7,
+                  "parameter": "wallThickness",
+                  "residual_mm": -0.3
+                }
+              ],
+              "score": 0.352322,
+              "snappedSize": "DN 150 PN40"
+            },
+            "deviationMax_mm": 5.9,
+            "deviationRms_mm": 1.6,
+            "fitMethod": "ransac-cylinder",
+            "pointCloudRef": "file:scans/demo-hall-2.e57#segment=CW-301-seg-03"
+          }
+        },
+        {
+          "path": "pipeLength",
+          "kind": "modified",
+          "old": 2283.4,
+          "new": 2271.4,
+          "delta": -12.0
+        },
+        {
+          "path": "ports[portId=P2].coordinate[2]",
+          "kind": "modified",
+          "old": 988.0,
+          "new": 1000.0,
+          "delta": 12.0
+        },
+        {
+          "path": "provenance",
+          "kind": "added",
+          "new": {
+            "confidence": 0.88,
+            "createdAt": "2026-10-30T09:12:00Z",
+            "recognizer": {
+              "name": "demo-recognizer",
+              "version": "1.4.0"
+            },
+            "sourceRef": "file:scans/demo-hall-2.e57#segment=CW-301-seg-03",
+            "sourceType": "scan"
+          }
+        },
+        {
+          "path": "review",
+          "kind": "added",
+          "new": {
+            "reviewedAt": "2026-10-30T15:30:00Z",
+            "reviewedBy": "reviewer-02",
+            "status": "reviewed"
+          }
+        }
+      ]
+    },
+    {
+      "@id": "urn:pmef:obj:demo-asb:CW-301-PS-002",
+      "@type": "pmef:PipeSupport",
+      "status": "removed"
+    },
+    {
+      "@id": "urn:pmef:obj:demo-asb:CW-301-PS-901",
+      "@type": "pmef:PipeSupport",
+      "status": "added"
+    },
+    {
+      "@id": "urn:pmef:plant:demo-asb:DEMO-PLANT",
+      "@type": "pmef:Plant",
+      "status": "changed",
+      "changes": [
+        {
+          "path": "provenance",
+          "kind": "added",
+          "new": {
+            "createdAt": "2026-10-30T08:00:00Z",
+            "sourceType": "manual"
+          }
+        }
+      ]
+    }
+  ]
+}

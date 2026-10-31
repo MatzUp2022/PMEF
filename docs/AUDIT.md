@@ -195,8 +195,8 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
   §7.1 report, self-test). Still open: the Rust `pmef conformance` subcommand is a separate,
   shallow structural check (ignores `--level`; duplicate-`@id` check cannot fire) — make it
   delegate to the suite's rules or rename it.
-- **P2.2** Deterministic `pmef diff` (sorted output) + field-level diff — prerequisite for the
-  as-built-vs-design use case.
+- **P2.2** ~~Deterministic `pmef diff` + field-level diff~~ — done 2026-10-31 (spec 03 §9,
+  `pmef_core::diff`, golden tests). Next: 3-way merge with a conflict model.
 - **P2.3** Either create DS-05 (`eaf-segment.ndjson`) or remove it from spec/README.
 - **P2.4** CHANGELOG fixed (single `[Unreleased]`, `extract-changelog.py --version v0.9.0-rc`
   works); still open: drop or implement `build-spec-pdf.py`.

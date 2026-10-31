@@ -17,6 +17,7 @@
 6. [Encoding and Character Set](#6-encoding-and-character-set)
 7. [Version Declaration](#7-version-declaration)
 8. [Large Model Handling](#8-large-model-handling)
+9. [Object-Level Comparison](#9-object-level-comparison)
 
 ---
 
@@ -407,6 +408,66 @@ For large plant models that change incrementally, PMEF supports delta packages:
 - Every changed object **MUST** carry a `pmef:IsRevisionOf` relationship referencing the replaced object's `@id`.
 - Deleted objects are represented by a PMEF object with `changeState: "ARCHIVED"` and no other content changes.
 - Delta packages **MAY** reference objects defined in the base package using their full `urn:pmef:` URIs.
+
+---
+
+## 9 Object-Level Comparison
+
+*Since 0.10.0.* Comparing two PMEF packages — design vs. as-built, or two revisions — is a core
+use case. A tool that reports differences between PMEF packages (e.g. `pmef diff`) **MUST**
+follow the rules below, so that every tool reports the same differences for the same files.
+
+### 9.1 Matching
+
+1. Objects are matched by `@id` only. An object present in one package only is *added* (head)
+   or *removed* (base); an object present in both is *changed* if at least one field differs,
+   otherwise *unchanged*.
+2. A package containing the same `@id` twice is invalid input and **MUST** be reported as an
+   error, not compared.
+3. Comment lines (§2.1) and object order are irrelevant.
+
+### 9.2 Field comparison
+
+1. Fields are compared recursively. A field present on one side only is *added* or *removed*.
+2. **Keyed arrays:** if every element of both arrays is an object carrying the same key field,
+   with unique values per array, elements are matched by that key, not by position. Key fields,
+   in this order of precedence: `@id`, `portId`, `nozzleId`, `parameter`, `partName`,
+   `connectionId`. All other arrays are compared by position.
+3. **Numbers** are equal if they differ by at most the tolerance of chapter 06 §6.2, chosen by
+   the field name (pressure 1 Pa, temperature 0.01 K, flow 0.001, angle/direction/axis 0.001,
+   otherwise 0.01 — lengths in mm). Tools **MUST** offer an exact mode without tolerances.
+4. All other values are equal if they are identical JSON values (object key order is irrelevant).
+5. Tools **MAY** let the user ignore field paths; an ignored path also hides everything below it.
+
+### 9.3 Paths and ordering
+
+A field path joins object keys with `.`, positional array elements as `[i]` (0-based) and keyed
+array elements as `[key=value]`, e.g. `ports[portId=P2].coordinate[2]`. Results are ordered by
+`@id` (Unicode code point order), then by path in traversal order with object keys sorted. Values
+in a report are written with object keys sorted (§2.5).
+
+### 9.4 Report
+
+The machine-readable report is a JSON object:
+
+```json
+{
+  "summary": {"added": 1, "removed": 1, "changed": 2, "unchanged": 7},
+  "objects": [
+    {"@id": "urn:pmef:obj:demo-asb:B-101", "@type": "pmef:SteelMember", "status": "changed",
+     "changes": [{"path": "endPoint[0]", "kind": "modified", "old": 6025.0, "new": 6000.0, "delta": -25.0}]}
+  ]
+}
+```
+
+`kind` is `added`, `removed` or `modified`; `old` is absent for `added`, `new` for `removed`;
+`delta` (`new − old`, rounded to 6 decimals) is present for modified numbers. Unchanged objects
+are counted, not listed. A command-line tool **SHOULD** exit with 0 (no differences),
+1 (differences) or 2 (error).
+
+Reference implementation: `pmef_core::diff` and `pmef diff` (`--exact`, `--ignore <path>`,
+`--ignore-recognition` for the RFC-0001 blocks, `--format text|json`); golden tests in
+`tests/diff/`.
 
 ---
 

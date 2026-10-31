@@ -64,6 +64,7 @@ cargo build --workspace --all-targets
 cargo test --workspace --no-fail-fast
 cargo clippy --workspace --all-targets    # informational in CI (doc-comment warnings)
 cargo run -p pmef-cli -- validate ../examples/pump-skid-complete.ndjson --schemas ../schemas
+cargo run -p pmef-cli -- diff ../tests/diff/design.ndjson ../tests/diff/asbuilt.ndjson --ignore revision --ignore-recognition
 cargo run -p pmef-cli -- conformance ../examples/pump-skid-complete.ndjson   # shallow structural check only
 cd ..
 

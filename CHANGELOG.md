@@ -90,6 +90,9 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Changed
 
+- **`pmef diff` CLI options changed:** `--changed-only` removed (unchanged objects are never
+  listed); new `--exact`, `--ignore`, `--ignore-recognition`. The command now exits with 1 when
+  the files differ and 2 on errors.
 - **README and contributor docs match the repository.** Repo URL `MatzUp2022/PMEF` instead of
   the placeholder `pmef/specification` (README, spec 01, Cargo.toml, CONTRIBUTING, getting
   started, issue templates); real folder names and file lists; placeholder badges and links
@@ -119,6 +122,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **Deterministic object-level `pmef diff`** (spec 03 §9). Objects matched by `@id`, field-level
+  changes with stable paths (`ports[portId=P2].coordinate[2]`), keyed array matching (ports,
+  nozzles, residuals, composite parts), spec 06 §6.2 numeric tolerances (`--exact` to disable),
+  `--ignore <path>` and `--ignore-recognition`, text and JSON report, exit codes 0/1/2. Output
+  is independent of object order, JSON key order and keyed array order; duplicate `@id`s are an
+  error. Library: `pmef_core::diff`. Golden as-built-vs-design tests in `tests/diff/`.
 - **RFC-0002 — deterministic catalog snapping `pmef-snap/1`** ([RFC](spec/rfc/0002-catalog-snapping.md),
   spec 02 §2.9.4). Normative algorithm for straight pipes (`PIPING_CLASS`) and HEA/HEB/HEM/IPE/W
   sections (`STEEL_PROFILES`, EN and AISC field conventions): tolerance band per parameter,

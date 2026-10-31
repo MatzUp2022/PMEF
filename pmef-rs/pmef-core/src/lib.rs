@@ -24,6 +24,7 @@
 #![warn(missing_docs, clippy::all)]
 
 pub mod catalog;
+pub mod diff;
 pub mod ei;
 pub mod equipment;
 pub mod geometry;

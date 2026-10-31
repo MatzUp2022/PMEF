@@ -51,18 +51,28 @@ enum Commands {
         fail_fast: bool,
     },
 
-    /// Compare two PMEF NDJSON files and report differences.
+    /// Compare two PMEF NDJSON files object by object (spec 03 §9).
+    ///
+    /// Objects are matched by @id; output is sorted by @id and field path, so it is
+    /// deterministic. Exit code: 0 = no differences, 1 = differences, 2 = error.
     Diff {
-        /// Base (old) file.
+        /// Base (old / design) file.
         base: PathBuf,
-        /// Head (new) file.
+        /// Head (new / as-built) file.
         head: PathBuf,
-        /// Output format.
-        #[arg(long, default_value = "text")]
+        /// Output format: text or json.
+        #[arg(long, default_value = "text", value_parser = ["text", "json"])]
         format: String,
-        /// Only show objects with changes (hide unchanged).
+        /// Compare numbers exactly instead of with the spec 06 §6.2 tolerances.
         #[arg(long)]
-        changed_only: bool,
+        exact: bool,
+        /// Ignore a field path or path prefix (repeatable), e.g. --ignore revision.
+        #[arg(long = "ignore", value_name = "PATH")]
+        ignore: Vec<String>,
+        /// Ignore the RFC-0001 recognition blocks (provenance, review, asBuilt) — for
+        /// as-built vs. design comparisons that should show plant deviations only.
+        #[arg(long)]
+        ignore_recognition: bool,
     },
 
     /// Print statistics about a PMEF NDJSON file.
@@ -170,8 +180,11 @@ async fn main() -> Result<()> {
         Commands::Validate { file, schemas, level, format, fail_fast } => {
             cmd_validate(file, schemas, level, &format, fail_fast).await
         }
-        Commands::Diff { base, head, format, changed_only } => {
-            cmd_diff(base, head, &format, changed_only).await
+        Commands::Diff { base, head, format, exact, mut ignore, ignore_recognition } => {
+            if ignore_recognition {
+                ignore.extend(["provenance", "review", "asBuilt"].map(String::from));
+            }
+            cmd_diff(base, head, &format, exact, ignore)
         }
         Commands::Stats { file, by_type, by_domain } => {
             cmd_stats(file, by_type, by_domain).await
@@ -296,52 +309,39 @@ async fn cmd_validate(
     Ok(())
 }
 
-async fn cmd_diff(base: PathBuf, head: PathBuf, format: &str, changed_only: bool) -> Result<()> {
-    use pmef_io::{NdjsonReader, PmefPackageIndex, ReaderConfig};
-    use std::io::BufReader;
-    use std::fs::File;
+fn read_values(path: &PathBuf) -> Result<Vec<serde_json::Value>> {
+    let text = std::fs::read_to_string(path).with_context(|| format!("Cannot open {}", path.display()))?;
+    text.lines()
+        .enumerate()
+        .filter(|(_, l)| !l.trim().is_empty() && !l.trim_start().starts_with("//"))
+        .map(|(n, l)| {
+            serde_json::from_str(l).with_context(|| format!("{}:{}: invalid JSON", path.display(), n + 1))
+        })
+        .collect()
+}
 
-    let load = |p: &PathBuf| -> Result<PmefPackageIndex> {
-        let f = File::open(p).with_context(|| format!("Cannot open {}", p.display()))?;
-        let reader = NdjsonReader::new(BufReader::new(f), ReaderConfig::default());
-        let objs: Vec<_> = reader.collect::<Result<_, _>>()
-            .with_context(|| format!("Error reading {}", p.display()))?;
-        Ok(PmefPackageIndex::from_iter(objs.into_iter()))
+fn cmd_diff(base: PathBuf, head: PathBuf, format: &str, exact: bool, ignore: Vec<String>) -> Result<()> {
+    use pmef_core::diff::{diff, render_text, DiffOptions};
+
+    let run = || -> Result<pmef_core::diff::DiffReport> {
+        let (b, h) = (read_values(&base)?, read_values(&head)?);
+        Ok(diff(&b, &h, &DiffOptions { exact, ignore })?)
     };
-
-    let base_idx = load(&base)?;
-    let head_idx = load(&head)?;
-
-    let mut added = 0usize;
-    let mut removed = 0usize;
-    let mut changed = 0usize;
-
-    // Detect added / changed
-    for (id, head_obj) in &head_idx.objects {
-        match base_idx.resolve(id) {
-            None => {
-                added += 1;
-                if !changed_only {
-                    println!("+ {id} (@type: {})", head_obj.type_str);
-                }
-            }
-            Some(base_obj) => {
-                if base_obj.value != head_obj.value {
-                    changed += 1;
-                    println!("~ {id} (@type: {})", head_obj.type_str);
-                }
-            }
+    let report = match run() {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("error: {e:#}");
+            std::process::exit(2);
         }
+    };
+    if format == "json" {
+        println!("{}", serde_json::to_string_pretty(&report)?);
+    } else {
+        print!("{}", render_text(&report));
     }
-    // Detect removed
-    for id in base_idx.objects.keys() {
-        if head_idx.resolve(id).is_none() {
-            removed += 1;
-            println!("- {id}");
-        }
+    if !report.is_empty() {
+        std::process::exit(1);
     }
-
-    println!("\nDiff summary: +{added} added, -{removed} removed, ~{changed} changed");
     Ok(())
 }
 
