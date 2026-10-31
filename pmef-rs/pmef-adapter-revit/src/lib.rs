@@ -113,7 +113,7 @@ impl RevitAdapter {
 
         let proj = self.config.project_code.clone();
         for obj in self.make_header_objects(&export, &proj) {
-            writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+            writer.write_value(&obj).map_err(AdapterError::from)?;
             stats.objects_ok += 1;
         }
 
@@ -121,7 +121,7 @@ impl RevitAdapter {
         if self.config.include_equipment {
             for equip in &export.mechanical_equipment {
                 for obj in self.map_mechanical_equipment(equip) {
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                 }
             }
@@ -141,7 +141,7 @@ impl RevitAdapter {
             }
             for (sys_name, segments) in &systems {
                 for obj in self.map_pipe_system(sys_name, segments, &export) {
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                 }
             }
@@ -159,7 +159,7 @@ impl RevitAdapter {
                 fitting.material.as_deref(),
                 fitting.system_name.as_deref(),
             );
-            for o in obj { writer.write_value(&o).map_err(|e| AdapterError::Json(e.into()))?; stats.objects_ok += 1; }
+            for o in obj { writer.write_value(&o).map_err(AdapterError::from)?; stats.objects_ok += 1; }
         }
 
         // Pipe Accessories (valves)
@@ -178,20 +178,20 @@ impl RevitAdapter {
                 None, None, None,
                 acc.system_name.as_deref(),
             );
-            for o in obj { writer.write_value(&o).map_err(|e| AdapterError::Json(e.into()))?; stats.objects_ok += 1; }
+            for o in obj { writer.write_value(&o).map_err(AdapterError::from)?; stats.objects_ok += 1; }
         }
 
         // Structural framing + columns
         if self.config.include_structural {
             for fr in &export.structural_framing {
                 for obj in self.map_structural_framing(fr) {
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                 }
             }
             for col in &export.structural_columns {
                 for obj in self.map_structural_column(col) {
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                 }
             }

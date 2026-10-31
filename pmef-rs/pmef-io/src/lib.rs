@@ -26,6 +26,17 @@ pub enum PmefIoError {
     LineTooLong(usize, usize),
 }
 
+impl From<PmefIoError> for pmef_core::traits::AdapterError {
+    fn from(e: PmefIoError) -> Self {
+        use pmef_core::traits::AdapterError;
+        match e {
+            PmefIoError::Io { source, .. } => AdapterError::Io(source),
+            PmefIoError::Json { source, .. } => AdapterError::Json(source),
+            other => AdapterError::Other(other.to_string()),
+        }
+    }
+}
+
 /// A raw PMEF object parsed from NDJSON — `@type`, `@id`, and raw JSON.
 #[derive(Debug)]
 pub struct RawPmefObject {

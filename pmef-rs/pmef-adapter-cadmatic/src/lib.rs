@@ -32,7 +32,7 @@
 //!         .bearer_token("my-api-token")
 //!         .build()?;
 //!
-//!     let adapter = CadmaticAdapter::new(config).await?;
+//!     let mut adapter = CadmaticAdapter::new(config).await?;
 //!     let stats = adapter.export_to_pmef("output.ndjson").await?;
 //!     println!("Exported {} objects", stats.objects_ok);
 //!     Ok(())
@@ -86,7 +86,7 @@ impl CadmaticAdapter {
 
     /// Export the full CADMATIC plant model to a PMEF NDJSON file.
     pub async fn export_to_pmef(
-        &self,
+        &mut self,
         output_path: &str,
     ) -> Result<AdapterStats, AdapterError> {
         use pmef_io::{NdjsonWriter, WriterConfig};
@@ -106,13 +106,13 @@ impl CadmaticAdapter {
 
         // 1. FileHeader + Plant + Unit
         let header = self.mapper.make_file_header(&self.config.project_id);
-        writer.write_value(&header).map_err(|e| AdapterError::Json(e.into()))?;
+        writer.write_value(&header).map_err(AdapterError::from)?;
 
         let plant = self.mapper.make_plant(&self.config.project_id);
-        writer.write_value(&plant).map_err(|e| AdapterError::Json(e.into()))?;
+        writer.write_value(&plant).map_err(AdapterError::from)?;
 
         let unit = self.mapper.make_unit(&self.config.project_id);
-        writer.write_value(&unit).map_err(|e| AdapterError::Json(e.into()))?;
+        writer.write_value(&unit).map_err(AdapterError::from)?;
         stats.objects_ok += 3;
 
         // 2. Equipment
@@ -123,14 +123,14 @@ impl CadmaticAdapter {
                     match self.mapper.map_equipment(equip) {
                         Ok(pmef_obj) => {
                             writer.write_value(&pmef_obj)
-                                .map_err(|e| AdapterError::Json(e.into()))?;
+                                .map_err(AdapterError::from)?;
                             // Write HasEquivalentIn
                             let equiv = self.mapper.make_has_equivalent_in(
                                 &pmef_obj["@id"].as_str().unwrap_or(""),
                                 &equip.object_guid,
                             );
                             writer.write_value(&equiv)
-                                .map_err(|e| AdapterError::Json(e.into()))?;
+                                .map_err(AdapterError::from)?;
                             stats.objects_ok += 2;
                         }
                         Err(e) => {
@@ -156,7 +156,7 @@ impl CadmaticAdapter {
                     match self.mapper.map_pipeline(line) {
                         Ok(pmef_line) => {
                             writer.write_value(&pmef_line)
-                                .map_err(|e| AdapterError::Json(e.into()))?;
+                                .map_err(AdapterError::from)?;
                             stats.objects_ok += 1;
                         }
                         Err(e) => {
@@ -173,16 +173,16 @@ impl CadmaticAdapter {
                                 line, &components,
                             );
                             writer.write_value(&seg)
-                                .map_err(|e| AdapterError::Json(e.into()))?;
+                                .map_err(AdapterError::from)?;
                             stats.objects_ok += 1;
                             for obj in &comp_objs {
                                 writer.write_value(obj)
-                                    .map_err(|e| AdapterError::Json(e.into()))?;
+                                    .map_err(AdapterError::from)?;
                                 stats.objects_ok += 1;
                             }
                             for rel in &rels {
                                 writer.write_value(rel)
-                                    .map_err(|e| AdapterError::Json(e.into()))?;
+                                    .map_err(AdapterError::from)?;
                                 stats.objects_ok += 1;
                             }
                         }

@@ -789,9 +789,9 @@ mod tests {
 
     #[test]
     fn test_unit_conversion_barg_to_pa() {
-        // 15 barg → ~1.61 MPa abs
+        // 15 barg = 15 × 100 000 Pa + 101 325 Pa (atm) = 1 601 325 Pa abs
         let pa = barg_to_pa_abs(15.0);
-        assert!((pa - 1_613_250.0).abs() < 100.0, "Got {pa}");
+        assert!((pa - 1_601_325.0).abs() < 1.0, "Got {pa}");
         // 0 barg → 101325 Pa abs
         let atm = barg_to_pa_abs(0.0);
         assert!((atm - 101_325.0).abs() < 1.0);

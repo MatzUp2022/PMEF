@@ -225,7 +225,7 @@ impl InventorAdapter {
         // Header
         let proj = self.config.project_code.clone();
         for obj in self.make_header_objects(&export, &proj) {
-            writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+            writer.write_value(&obj).map_err(AdapterError::from)?;
             stats.objects_ok += 1;
         }
 
@@ -245,7 +245,7 @@ impl InventorAdapter {
             }
 
             for obj in self.map_assembly(asm, &export) {
-                writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                writer.write_value(&obj).map_err(AdapterError::from)?;
                 stats.objects_ok += 1;
             }
         }
@@ -254,7 +254,7 @@ impl InventorAdapter {
         if self.config.include_frame {
             for member in &export.frame_members {
                 for obj in self.map_frame_member(member) {
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                 }
             }
@@ -264,7 +264,7 @@ impl InventorAdapter {
         if self.config.include_tube_pipe {
             for run in &export.tube_runs {
                 for obj in self.map_tube_run(run) {
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                 }
             }
@@ -620,6 +620,7 @@ impl PmefAdapter for InventorAdapter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::export_schema::{InvProperties, InventorExportSummary};
 
     fn test_config() -> InventorConfig {
         InventorConfig {

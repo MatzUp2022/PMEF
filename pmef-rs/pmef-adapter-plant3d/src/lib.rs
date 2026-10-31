@@ -42,7 +42,7 @@
 //!         pcf_dir: Some("exports/pcf".into()),
 //!         ..Default::default()
 //!     };
-//!     let adapter = Plant3DAdapter::new(config);
+//!     let mut adapter = Plant3DAdapter::new(config);
 //!     let stats = adapter.export_pcf_dir_to_pmef("output.ndjson").await?;
 //!     Ok(())
 //! }
@@ -166,7 +166,7 @@ impl Default for MaterialMapper {
             ("CS",           "ASTM A106 Gr. B"),
             ("CARBONSTEEL",  "ASTM A106 Gr. B"),
         ];
-        for (k, v) in entries {
+        for &(k, v) in entries {
             t.insert(k.to_uppercase(), v);
         }
         Self { table: t }
@@ -174,7 +174,7 @@ impl Default for MaterialMapper {
 }
 
 impl MaterialMapper {
-    pub fn map(&self, mat: &str) -> &str {
+    pub fn map<'a>(&'a self, mat: &'a str) -> &'a str {
         let key = mat.trim().to_uppercase().replace(['-', ' '], "");
         self.table.get(&key).copied().unwrap_or(mat)
     }
@@ -189,6 +189,13 @@ impl MaterialMapper {
 pub fn pcf_to_pmef_type(keyword: &str, skey: Option<&str>) -> (&'static str, &'static str, &'static str) {
     let skey_prefix = skey.and_then(|s| s.get(..2)).unwrap_or("").to_uppercase();
     let skey_prefix = skey_prefix.as_str();
+    // PCF flange SKEYs start with "FL"; the flange type is in characters 3–4
+    // (FLWN weld neck, FLSO slip-on, FLBL blind, …).
+    let flange_kind = match skey.map(str::to_uppercase) {
+        Some(s) if s.starts_with("FL") => s.get(2..4).unwrap_or("").to_owned(),
+        Some(s) => s.get(..2).unwrap_or("").to_owned(),
+        None => String::new(),
+    };
 
     match keyword.to_uppercase().as_str() {
         "PIPE"                    => ("pmef:Pipe",       "PIPE",                "PIPW    "),
@@ -197,7 +204,7 @@ pub fn pcf_to_pmef_type(keyword: &str, skey: Option<&str>) -> (&'static str, &'s
         "CROSS"                   => ("pmef:Tee",        "TEE",                 "CRBWEQUL"),
         "REDUCER-CONCENTRIC"      => ("pmef:Reducer",    "REDUCER_CONCENTRIC",  "RDCWCNCN"),
         "REDUCER-ECCENTRIC"       => ("pmef:Reducer",    "REDUCER_ECCENTRIC",   "RDCWECCT"),
-        "FLANGE" => match skey_prefix {
+        "FLANGE" => match flange_kind.as_str() {
             "BL" | "FB"           => ("pmef:Flange",     "BLIND_FLANGE",        "FLBLRF  "),
             "SO"                  => ("pmef:Flange",     "FLANGE",              "FLSORF  "),
             "SW"                  => ("pmef:Flange",     "FLANGE",              "FLSWRF  "),
@@ -425,7 +432,7 @@ impl Plant3DAdapter {
             "revision": { "revisionId":"r2026-01-01-001","changeState":"WIP",
                           "authoringTool":"pmef-adapter-plant3d 0.9.0" }
         });
-        writer.write_value(&pns).map_err(|e| AdapterError::Json(e.into()))?;
+        writer.write_value(&pns).map_err(AdapterError::from)?;
 
         // Pre-generate component IDs
         let mut comp_ids: Vec<String> = Vec::new();
@@ -448,7 +455,7 @@ impl Plant3DAdapter {
             "components": comp_ids,
             "revision": { "revisionId":"r2026-01-01-001","changeState":"WIP" }
         });
-        writer.write_value(&seg).map_err(|e| AdapterError::Json(e.into()))?;
+        writer.write_value(&seg).map_err(AdapterError::from)?;
 
         // Map each component
         for (ci, comp) in components.iter().enumerate() {
@@ -562,12 +569,12 @@ impl Plant3DAdapter {
                 _ => {}
             }
 
-            writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+            writer.write_value(&obj).map_err(AdapterError::from)?;
 
             // HasEquivalentIn (use handle from ATTRIBUTE0 or sequential)
             let handle = comp.attr("ATTRIBUTE0").unwrap_or(&format!("{ci}")).to_owned();
             let equiv = self.make_has_equivalent_in(&obj_id, &handle);
-            writer.write_value(&equiv).map_err(|e| AdapterError::Json(e.into()))?;
+            writer.write_value(&equiv).map_err(AdapterError::from)?;
         }
 
         writer.flush().map_err(|e| AdapterError::Io(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
@@ -607,7 +614,7 @@ impl Plant3DAdapter {
         // FileHeader + Plant + Unit
         let pc = &self.config.project_code.clone();
         for hdr in self.make_header_objects(pc) {
-            writer.write_value(&hdr).map_err(|e| AdapterError::Json(e.into()))?;
+            writer.write_value(&hdr).map_err(AdapterError::from)?;
             stats.objects_ok += 1;
         }
 
@@ -620,7 +627,7 @@ impl Plant3DAdapter {
                             for equip in &equipment {
                                 for obj in self.map_equipment(equip) {
                                     writer.write_value(&obj)
-                                        .map_err(|e| AdapterError::Json(e.into()))?;
+                                        .map_err(AdapterError::from)?;
                                     stats.objects_ok += 1;
                                 }
                             }
@@ -644,7 +651,7 @@ impl Plant3DAdapter {
                                     let val: serde_json::Value = serde_json::from_str(line)
                                         .map_err(|e| AdapterError::Json(e))?;
                                     writer.write_value(&val)
-                                        .map_err(|e| AdapterError::Json(e.into()))?;
+                                        .map_err(AdapterError::from)?;
                                     stats.objects_ok += 1;
                                 }
                             }

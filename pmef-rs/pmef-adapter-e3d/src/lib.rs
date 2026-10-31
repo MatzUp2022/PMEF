@@ -113,11 +113,6 @@ impl E3DCoordinateSystem {
     }
 }
 
-/// Convert a writer error into an adapter error.
-fn io_err(e: pmef_io::PmefIoError) -> AdapterError {
-    AdapterError::Other(e.to_string())
-}
-
 // ── E3D Adapter ───────────────────────────────────────────────────────────────
 
 /// AVEVA E3D → PMEF adapter.
@@ -173,11 +168,11 @@ impl E3DAdapter {
         // Write FileHeader + Plant + Unit
         let proj = &self.config.project_code.clone();
         writer.write_value(&self.make_file_header(proj))
-            .map_err(io_err)?;
+            .map_err(AdapterError::from)?;
         writer.write_value(&self.make_plant(proj))
-            .map_err(io_err)?;
+            .map_err(AdapterError::from)?;
         writer.write_value(&self.make_unit(proj))
-            .map_err(io_err)?;
+            .map_err(AdapterError::from)?;
         stats.objects_ok += 3;
 
         // Walk PML elements
@@ -187,7 +182,7 @@ impl E3DAdapter {
                     let objs = self.map_equipment(elem);
                     for obj in objs {
                         writer.write_value(&obj)
-                            .map_err(io_err)?;
+                            .map_err(AdapterError::from)?;
                         stats.objects_ok += 1;
                     }
                 }
@@ -195,7 +190,7 @@ impl E3DAdapter {
                     let objs = self.map_pipe_line(elem);
                     for obj in objs {
                         writer.write_value(&obj)
-                            .map_err(io_err)?;
+                            .map_err(AdapterError::from)?;
                         stats.objects_ok += 1;
                     }
                 }

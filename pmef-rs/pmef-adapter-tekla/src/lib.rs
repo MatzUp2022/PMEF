@@ -160,7 +160,7 @@ impl TeklaAdapter {
         // Write FileHeader + Plant + Unit
         let proj = self.config.project_code.clone();
         for obj in self.make_header_objects(&export, &proj) {
-            writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+            writer.write_value(&obj).map_err(AdapterError::from)?;
             stats.objects_ok += 1;
         }
 
@@ -180,7 +180,7 @@ impl TeklaAdapter {
                 Ok(objs) => {
                     for obj in objs {
                         writer.write_value(&obj)
-                            .map_err(|e| AdapterError::Json(e.into()))?;
+                            .map_err(AdapterError::from)?;
                         stats.objects_ok += 1;
                     }
                 }
@@ -198,7 +198,7 @@ impl TeklaAdapter {
                     Ok(objs) => {
                         for obj in objs {
                             writer.write_value(&obj)
-                                .map_err(|e| AdapterError::Json(e.into()))?;
+                                .map_err(AdapterError::from)?;
                             stats.objects_ok += 1;
                         }
                     }

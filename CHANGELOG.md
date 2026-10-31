@@ -16,6 +16,18 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **The whole Rust workspace builds again** (`cargo build --workspace`): all ten
+  `pmef-adapter-*` crates failed to compile. `pmef-io` now implements
+  `From<PmefIoError> for AdapterError` (used by all adapters); missing `tracing` dependency
+  (Plant 3D); Tekla profile override table no longer needs the undeclared `phf` crate;
+  lifetime and `&mut self` fixes (Plant 3D, Tekla, CADMATIC); missing test imports
+  (Creo, Inventor). All 259 workspace tests pass.
+- **Creo STEP parser read digits inside entity names as coordinates**
+  (`CARTESIAN_POINT('NOZZLE_N1',(200,…))` yielded `1.0, 200, 400`). Quoted names are now skipped.
+- **Plant 3D PCF: blind/slip-on/socket-weld flanges were never detected.** The flange type was
+  read from SKEY characters 1–2 (always `FL`) instead of 3–4 (`FLBL`, `FLSO`, …).
+- **CADMATIC test expected a wrong value** for 15 barg → Pa(abs): correct is 1 601 325 Pa
+  (the implementation was right).
 - **E3D PML parser swallowed attributes after reference values.** Any attribute whose value
   starts with `/` (e.g. `SPEC /SPEC-A1A2`, `CREF /PIPE-1`) was treated as a new element,
   so all following attributes were attached to it. Only structural and component keywords
