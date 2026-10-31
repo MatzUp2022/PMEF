@@ -27,6 +27,15 @@ pub struct EquipmentBasic {
     pub model: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub serial_number: Option<String>,
+    /// Schema property `purchaseOrderRef`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub purchase_order_ref: Option<String>,
+    /// Schema property `installationDate`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub installation_date: Option<String>,
+    /// Nuclear Safety System: true if safety-classified
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nsss: Option<bool>,
 }
 
 /// Physical connection point on a piece of equipment.
@@ -37,15 +46,27 @@ pub struct Nozzle {
     pub nozzle_mark: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub service: Option<String>,
-    pub nominal_diameter: f64,
-    pub flange_rating: String,
-    pub facing_type: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nominal_diameter: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub flange_rating: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub facing_type: Option<String>,
     pub coordinate: Coordinate3D,
     pub direction: UnitVector3D,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub connected_line_id: Option<PmefId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub connected_port_id: Option<String>,
+    /// Elevation of nozzle face above datum [mm]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub elevation: Option<f64>,
+    /// Schema property `normallyOpen`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub normally_open: Option<bool>,
+    /// Schema property `blindedInService`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub blinded_in_service: Option<bool>,
 }
 
 impl Nozzle {
@@ -61,13 +82,16 @@ impl Nozzle {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PumpSpec {
-    pub pump_type: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pump_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub api_standard: Option<String>,
     /// Design flow [m³/h].
-    pub design_flow: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design_flow: Option<f64>,
     /// Design head [m].
-    pub design_head: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design_head: Option<f64>,
     /// Efficiency [%].
     #[serde(skip_serializing_if = "Option::is_none")]
     pub efficiency: Option<f64>,
@@ -81,7 +105,8 @@ pub struct PumpSpec {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rated_speed: Option<u32>,
     /// Installed motor power [kW].
-    pub motor_power: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub motor_power: Option<f64>,
     /// Motor voltage [V].
     #[serde(skip_serializing_if = "Option::is_none")]
     pub motor_voltage: Option<u32>,
@@ -95,6 +120,33 @@ pub struct PumpSpec {
     /// True if this is the spare pump in an A/B pair.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub spare_pump: Option<bool>,
+    /// Schema property `arrangementType`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub arrangement_type: Option<String>,
+    /// Minimum continuous stable flow [m³/h]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min_flow: Option<f64>,
+    /// Maximum flow [m³/h]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_flow: Option<f64>,
+    /// Shut-off head [m]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shutoff_head: Option<f64>,
+    /// [mm]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub impeller_diameter: Option<f64>,
+    /// Design fluid density [kg/m³]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fluid_density: Option<f64>,
+    /// Design kinematic viscosity [cSt]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fluid_viscosity: Option<f64>,
+    /// Design fluid temperature [K]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fluid_temperature: Option<f64>,
+    /// URI to H-Q performance curve document
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hq_curve_ref: Option<String>,
 }
 
 impl PumpSpec {
@@ -121,6 +173,7 @@ pub struct Pump {
     pub is_part_of: PmefId,
     pub equipment_basic: EquipmentBasic,
     pub pump_spec: PumpSpec,
+    #[serde(default)]
     pub nozzles: Vec<Nozzle>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_derived_from: Option<PmefId>,
@@ -139,6 +192,12 @@ pub struct Pump {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// Reference to a piping spec catalog entry, standard profile or equipment datasheet.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub catalog_ref: Option<crate::catalog::CatalogReference>,
+    /// PMEF ID of the associated Motor equipment object
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub motor_id: Option<String>,
 }
 
 // ── Vessel ────────────────────────────────────────────────────────────────
@@ -148,29 +207,57 @@ pub struct Pump {
 #[serde(rename_all = "camelCase")]
 pub struct VesselDesign {
     /// Internal design pressure [Pa, absolute].
-    pub design_pressure_internal: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design_pressure_internal: Option<f64>,
     /// External design pressure [Pa].
-    pub design_pressure_external: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design_pressure_external: Option<f64>,
     /// Maximum design temperature [K].
-    pub design_temperature_max: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design_temperature_max: Option<f64>,
     /// Minimum design temperature / MDMT [K].
-    pub design_temperature_min: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design_temperature_min: Option<f64>,
     /// Volume [m³].
-    pub volume: f64,
-    pub shell_material: String,
-    pub shell_inside_diameter: f64,
-    pub tangent_to_tangent: f64,
-    pub head_type: String,
-    pub orientation: String,
-    pub corrosion_allowance: f64,
-    pub shell_thickness: f64,
-    pub insulation_type: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub volume: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shell_material: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shell_inside_diameter: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tangent_to_tangent: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub head_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub orientation: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub corrosion_allowance: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shell_thickness: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub insulation_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub xray_requirement: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stress_relief: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fireproofing_required: Option<bool>,
+    /// Schema property `headMaterial`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub head_material: Option<String>,
+    /// Schema property `liningMaterial`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lining_material: Option<String>,
+    /// Schema property `numberOfShells`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub number_of_shells: Option<i64>,
+    /// [mm]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub insulation_thickness: Option<f64>,
+    /// [Pa] (if integral PSV)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub safety_valve_set_pressure: Option<f64>,
 }
 
 /// Pressure vessel.
@@ -187,6 +274,7 @@ pub struct Vessel {
     pub vessel_design: VesselDesign,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vessel_subtype: Option<String>,
+    #[serde(default)]
     pub nozzles: Vec<Nozzle>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub geometry: Option<GeometryReference>,
@@ -201,6 +289,15 @@ pub struct Vessel {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub is_derived_from: Option<String>,
+    /// Reference to a piping spec catalog entry, standard profile or equipment datasheet.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub catalog_ref: Option<crate::catalog::CatalogReference>,
+    /// Schema property `documents`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub documents: Option<Vec<crate::catalog::DocumentLink>>,
 }
 
 // ── HeatExchanger ─────────────────────────────────────────────────────────
@@ -209,36 +306,59 @@ pub struct Vessel {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HeatExchangerSpec {
-    pub hx_type: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hx_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tema: Option<String>,
-    pub duty_type: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub duty_type: Option<String>,
     /// Heat duty [W].
-    pub heat_duty: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub heat_duty: Option<f64>,
     /// Overall heat transfer coefficient [W/m²K].
-    pub overall_heat_transfer_coeff: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub overall_heat_transfer_coeff: Option<f64>,
     /// Heat transfer area [m²].
-    pub heat_transfer_area: f64,
-    pub shell_side_medium: String,
-    pub tube_side_medium: String,
-    pub shell_side_inlet_temp: f64,
-    pub shell_side_outlet_temp: f64,
-    pub tube_side_inlet_temp: f64,
-    pub tube_side_outlet_temp: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub heat_transfer_area: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shell_side_medium: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tube_side_medium: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shell_side_inlet_temp: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shell_side_outlet_temp: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tube_side_inlet_temp: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tube_side_outlet_temp: Option<f64>,
     /// Shell-side flow [m³/h].
-    pub shell_side_flow: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shell_side_flow: Option<f64>,
     /// Tube-side flow [m³/h].
-    pub tube_side_flow: f64,
-    pub shell_side_design_pressure: f64,
-    pub tube_side_design_pressure: f64,
-    pub number_of_shell_passes: u32,
-    pub number_of_tube_passes: u32,
-    pub tube_outside_diameter: f64,
-    pub tube_wall_thickness: f64,
-    pub tube_length: f64,
-    pub number_of_tubes: u32,
-    pub tube_material: String,
-    pub shell_material: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tube_side_flow: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shell_side_design_pressure: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tube_side_design_pressure: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub number_of_shell_passes: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub number_of_tube_passes: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tube_outside_diameter: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tube_wall_thickness: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tube_length: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub number_of_tubes: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tube_material: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shell_material: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fouling_factor_shell: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -247,14 +367,15 @@ pub struct HeatExchangerSpec {
 
 impl HeatExchangerSpec {
     /// Log Mean Temperature Difference (LMTD) [K] — counter-current.
-    pub fn lmtd_counter_current(&self) -> f64 {
-        let dt1 = (self.shell_side_inlet_temp - self.tube_side_outlet_temp).abs();
-        let dt2 = (self.shell_side_outlet_temp - self.tube_side_inlet_temp).abs();
-        if (dt1 - dt2).abs() < 0.001 {
+    /// `None` unless all four terminal temperatures are given.
+    pub fn lmtd_counter_current(&self) -> Option<f64> {
+        let dt1 = (self.shell_side_inlet_temp? - self.tube_side_outlet_temp?).abs();
+        let dt2 = (self.shell_side_outlet_temp? - self.tube_side_inlet_temp?).abs();
+        Some(if (dt1 - dt2).abs() < 0.001 {
             dt1
         } else {
             (dt1 - dt2) / (dt1 / dt2).ln()
-        }
+        })
     }
 }
 
@@ -270,6 +391,7 @@ pub struct HeatExchanger {
     pub is_part_of: PmefId,
     pub equipment_basic: EquipmentBasic,
     pub hx_spec: HeatExchangerSpec,
+    #[serde(default)]
     pub nozzles: Vec<Nozzle>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub geometry: Option<GeometryReference>,
@@ -282,6 +404,18 @@ pub struct HeatExchanger {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub is_derived_from: Option<String>,
+    /// URI pointing to a class in ISO 15926-4 (PCA-RDL), CFIHOS-RDL or a project-level catalog. Must be resolvable via SPARQL endpoint.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rdl_type: Option<crate::types::RdlUri>,
+    /// Reference to a piping spec catalog entry, standard profile or equipment datasheet.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub catalog_ref: Option<crate::catalog::CatalogReference>,
+    /// Schema property `documents`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub documents: Option<Vec<crate::catalog::DocumentLink>>,
 }
 
 // ── Compressor ────────────────────────────────────────────────────────────
@@ -289,23 +423,41 @@ pub struct HeatExchanger {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CompressorSpec {
-    pub compressor_type: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub compressor_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub api_standard: Option<String>,
-    pub design_inlet_flow: f64,
-    pub design_inlet_pressure: f64,
-    pub design_outlet_pressure: f64,
-    pub pressure_ratio: f64,
-    pub shaft_power: f64,
-    pub driver_type: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design_inlet_flow: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design_inlet_pressure: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design_outlet_pressure: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_ratio: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shaft_power: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub driver_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub seal_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub number_of_stages: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rated_speed: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Schema spells this property in snake_case (`polytropic_efficiency`); the camelCase
+    /// form is accepted on input (docs/AUDIT.md P3.9).
+    #[serde(rename = "polytropic_efficiency", alias = "polytropicEfficiency", skip_serializing_if = "Option::is_none")]
     pub polytropic_efficiency: Option<f64>,
+    /// Schema property `gasMedium`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gas_medium: Option<String>,
+    /// [K]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inlet_temperature: Option<f64>,
+    /// Schema property `molecularWeight`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub molecular_weight: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -319,6 +471,7 @@ pub struct Compressor {
     pub is_part_of: PmefId,
     pub equipment_basic: EquipmentBasic,
     pub compressor_spec: CompressorSpec,
+    #[serde(default)]
     pub nozzles: Vec<Nozzle>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub geometry: Option<GeometryReference>,
@@ -331,6 +484,24 @@ pub struct Compressor {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub is_derived_from: Option<String>,
+    /// URI pointing to a class in ISO 15926-4 (PCA-RDL), CFIHOS-RDL or a project-level catalog. Must be resolvable via SPARQL endpoint.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rdl_type: Option<crate::types::RdlUri>,
+    /// Reference to a piping spec catalog entry, standard profile or equipment datasheet.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub catalog_ref: Option<crate::catalog::CatalogReference>,
+    /// Schema property `documents`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub documents: Option<Vec<crate::catalog::DocumentLink>>,
+    /// Schema property `motorId`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub motor_id: Option<String>,
+    /// IDs of lube oil, seal gas, cooling systems
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub aux_system_ids: Option<Vec<String>>,
 }
 
 // ── Generic Equipment ─────────────────────────────────────────────────────
@@ -345,6 +516,7 @@ pub struct GenericEquipment {
     pub pmef_version: String,
     pub is_part_of: PmefId,
     pub equipment_basic: EquipmentBasic,
+    #[serde(default)]
     pub nozzles: Vec<Nozzle>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub generic_equipment_subtype: Option<String>,
@@ -357,6 +529,21 @@ pub struct GenericEquipment {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub is_derived_from: Option<String>,
+    /// Reference designation according to IEC 81346. Prefix defines the aspect: '=' function, '-' product, '+' location.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iec81346: Option<crate::types::Iec81346Designation>,
+    /// URI pointing to a class in ISO 15926-4 (PCA-RDL), CFIHOS-RDL or a project-level catalog. Must be resolvable via SPARQL endpoint.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rdl_type: Option<crate::types::RdlUri>,
+    /// Reference to a piping spec catalog entry, standard profile or equipment datasheet.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub catalog_ref: Option<crate::catalog::CatalogReference>,
+    /// Schema property `documents`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub documents: Option<Vec<crate::catalog::DocumentLink>>,
 }
 
 // ── Reactor ──────────────────────────────────────────────────────────────
@@ -372,7 +559,9 @@ pub struct Reactor {
     pub is_part_of: PmefId,
     pub equipment_basic: EquipmentBasic,
     pub vessel_design: VesselDesign,
-    pub reactor_type: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reactor_type: Option<String>,
+    #[serde(default)]
     pub nozzles: Vec<Nozzle>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub installed_power: Option<f64>,
@@ -385,6 +574,33 @@ pub struct Reactor {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub is_derived_from: Option<String>,
+    /// Reference designation according to IEC 81346. Prefix defines the aspect: '=' function, '-' product, '+' location.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iec81346: Option<crate::types::Iec81346Designation>,
+    /// URI pointing to a class in ISO 15926-4 (PCA-RDL), CFIHOS-RDL or a project-level catalog. Must be resolvable via SPARQL endpoint.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rdl_type: Option<crate::types::RdlUri>,
+    /// Reference to a piping spec catalog entry, standard profile or equipment datasheet.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub catalog_ref: Option<crate::catalog::CatalogReference>,
+    /// Schema property `documents`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub documents: Option<Vec<crate::catalog::DocumentLink>>,
+    /// Schema property `catalystType`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub catalyst_type: Option<String>,
+    /// e.g. 'Exothermic catalytic', 'Electrochemical smelting'
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reaction_type: Option<String>,
+    /// Schema property `heatRemovalType`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub heat_removal_type: Option<String>,
+    /// [V] for EAF / electrochemical reactors
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub power_supply_voltage: Option<f64>,
 }
 
 // ── Tank, Filter, Turbine (compact) ──────────────────────────────────────
@@ -397,12 +613,15 @@ pub struct Tank {
     pub pmef_version: String,
     pub is_part_of: PmefId,
     pub equipment_basic: EquipmentBasic,
-    pub tank_type: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tank_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub api_standard: Option<String>,
-    pub capacity: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub capacity: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub working_capacity: Option<f64>,
+    #[serde(default)]
     pub nozzles: Vec<Nozzle>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub geometry: Option<GeometryReference>,
@@ -413,6 +632,48 @@ pub struct Tank {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub is_derived_from: Option<String>,
+    /// Reference designation according to IEC 81346. Prefix defines the aspect: '=' function, '-' product, '+' location.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iec81346: Option<crate::types::Iec81346Designation>,
+    /// URI pointing to a class in ISO 15926-4 (PCA-RDL), CFIHOS-RDL or a project-level catalog. Must be resolvable via SPARQL endpoint.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rdl_type: Option<crate::types::RdlUri>,
+    /// Reference to a piping spec catalog entry, standard profile or equipment datasheet.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub catalog_ref: Option<crate::catalog::CatalogReference>,
+    /// Schema property `documents`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub documents: Option<Vec<crate::catalog::DocumentLink>>,
+    /// Tank shell inside diameter [mm]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diameter: Option<f64>,
+    /// Shell height [mm]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shell_height: Option<f64>,
+    /// [Pa]; 0 for atmospheric
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design_pressure: Option<f64>,
+    /// [K]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design_temperature: Option<f64>,
+    /// Stored fluid/product
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contents: Option<String>,
+    /// Schema property `heatingCoil`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub heating_coil: Option<bool>,
+    /// Schema property `coolingCoil`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cooling_coil: Option<bool>,
+    /// Schema property `mixerInstalled`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mixer_installed: Option<bool>,
+    /// Schema property `dikedArea`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diked_area: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -423,10 +684,15 @@ pub struct Filter {
     pub pmef_version: String,
     pub is_part_of: PmefId,
     pub equipment_basic: EquipmentBasic,
-    pub filter_type: String,
-    pub filtration_rating: f64,
-    pub design_flow: f64,
-    pub differential_pressure: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub filter_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub filtration_rating: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design_flow: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub differential_pressure: Option<f64>,
+    #[serde(default)]
     pub nozzles: Vec<Nozzle>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub revision: Option<RevisionMetadata>,
@@ -435,6 +701,27 @@ pub struct Filter {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub is_derived_from: Option<String>,
+    /// Reference designation according to IEC 81346. Prefix defines the aspect: '=' function, '-' product, '+' location.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iec81346: Option<crate::types::Iec81346Designation>,
+    /// URI pointing to a class in ISO 15926-4 (PCA-RDL), CFIHOS-RDL or a project-level catalog. Must be resolvable via SPARQL endpoint.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rdl_type: Option<crate::types::RdlUri>,
+    /// Reference to a piping spec catalog entry, standard profile or equipment datasheet.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub catalog_ref: Option<crate::catalog::CatalogReference>,
+    /// Link from a PMEF object to one or more geometry representations.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub geometry: Option<crate::geometry::GeometryReference>,
+    /// Schema property `documents`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub documents: Option<Vec<crate::catalog::DocumentLink>>,
+    /// Schema property `cleaningType`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cleaning_type: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -445,11 +732,17 @@ pub struct Turbine {
     pub pmef_version: String,
     pub is_part_of: PmefId,
     pub equipment_basic: EquipmentBasic,
-    pub turbine_type: String,
-    pub inlet_pressure: f64,
-    pub outlet_pressure: f64,
-    pub inlet_temperature: f64,
-    pub shaft_power: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub turbine_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inlet_pressure: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub outlet_pressure: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inlet_temperature: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shaft_power: Option<f64>,
+    #[serde(default)]
     pub nozzles: Vec<Nozzle>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub geometry: Option<GeometryReference>,
@@ -460,4 +753,28 @@ pub struct Turbine {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub is_derived_from: Option<String>,
+    /// Reference designation according to IEC 81346. Prefix defines the aspect: '=' function, '-' product, '+' location.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iec81346: Option<crate::types::Iec81346Designation>,
+    /// URI pointing to a class in ISO 15926-4 (PCA-RDL), CFIHOS-RDL or a project-level catalog. Must be resolvable via SPARQL endpoint.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rdl_type: Option<crate::types::RdlUri>,
+    /// Reference to a piping spec catalog entry, standard profile or equipment datasheet.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub catalog_ref: Option<crate::catalog::CatalogReference>,
+    /// Schema property `documents`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub documents: Option<Vec<crate::catalog::DocumentLink>>,
+    /// [K]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub outlet_temperature: Option<f64>,
+    /// [rpm]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rated_speed: Option<f64>,
+    /// [%]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub isentropic_efficiency: Option<f64>,
 }

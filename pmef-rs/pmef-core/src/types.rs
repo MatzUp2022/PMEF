@@ -342,6 +342,7 @@ impl fmt::Display for RdlUri {
 
 /// IEC 81346 reference designation.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct Iec81346Designation {
     /// Functional aspect, e.g. `"=U100.M01.A"`
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -352,4 +353,7 @@ pub struct Iec81346Designation {
     /// Location aspect, e.g. `"+F01.P01"`
     #[serde(skip_serializing_if = "Option::is_none")]
     pub location_aspect: Option<String>,
+    /// Full combined designation string
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub combined_code: Option<String>,
 }

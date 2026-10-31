@@ -222,8 +222,18 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 - **P3.8** Rust validator ignored `dependentRequired` (found in Phase 3; RFC-0001 schema uses
   `if/then` instead). Check other Draft 2020-12 keywords for Rust/Python divergence, or upgrade
   the `jsonschema` crate (currently 0.18).
-- **P3.9** Rust model vs. schema drift: `PipeSupport.supportsMark`/`supportSpec` are required in
-  `pmef-core` but optional in the schema. Generate or test Rust types against the schemas.
+- **P3.9** ~~Rust model vs. schema drift~~ — done 2026-10-31 for the active scope. New test
+  `pmef-rs/pmef-cli/tests/schema_drift.rs` checks every reference instance per `@type`: the Rust
+  type accepts it, re-serialises schema-valid, accepts the object reduced to its schema-required
+  properties, and drops no property. Fixed: 74 fields required in Rust but optional in the schema
+  (`supportsMark`, `pipeLength`, `PumpSpec.designFlow`, …), 122 schema properties missing from the
+  Rust types, and wrong JSON names (`Iec81346Designation` read `functional_aspect` instead of
+  `functionalAspect`, so every IEC 81346 designation was lost; `GeometryReference.ref`,
+  `teklaGUID`, `eclassIRDI`). A schema-valid `SteelMember` without `memberMark` could not be read at
+  all. Frozen E&I types keep their drift (55 findings, listed by the test, not failing).
+- **P3.10** Schema naming defect: `CompressorSpec.polytropic_efficiency` is the only snake_case
+  property (all others camelCase). Renaming it is a breaking schema change → needs an RFC /
+  maintainer decision. Rust reads both spellings and writes the schema spelling.
 
 ## 8. Maintainer decisions (2026-10-31)
 

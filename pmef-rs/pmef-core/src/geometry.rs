@@ -7,7 +7,7 @@ use crate::types::PmefId;
 pub struct GeometryReference {
     #[serde(rename="type")]
     pub layer: GeometryLayer,
-    #[serde(skip_serializing_if="Option::is_none")]
+    #[serde(rename = "ref", skip_serializing_if="Option::is_none")]
     pub ref_uri: Option<String>,
     #[serde(skip_serializing_if="Option::is_none")]
     pub lod: Option<Lod>,

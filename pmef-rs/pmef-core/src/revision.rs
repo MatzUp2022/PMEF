@@ -60,6 +60,12 @@ pub struct RevisionMetadata {
     /// SHA-256 checksum of the serialised object (excluding this field).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub checksum: Option<String>,
+    /// Schema property `validFrom`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub valid_from: Option<String>,
+    /// Schema property `validTo`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub valid_to: Option<String>,
 }
 
 impl RevisionMetadata {
@@ -75,6 +81,8 @@ impl RevisionMetadata {
             authoring_tool: Some(tool.into()),
             authoring_tool_object_id: None,
             checksum: None,
+            valid_from: None,
+            valid_to: None,
         }
     }
 
@@ -95,6 +103,8 @@ impl RevisionMetadata {
             authoring_tool: Some(tool.into()),
             authoring_tool_object_id: None,
             checksum: None,
+            valid_from: None,
+            valid_to: None,
         }
     }
 }

@@ -20,6 +20,15 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **Rust model matches the schemas (docs/AUDIT.md P3.9).** `pmef-core` types for the active scope
+  (hierarchy, piping, equipment, steel, relationships) now accept every schema-valid object and
+  round-trip it without loss: fields required in Rust but optional in the schema became `Option`
+  (e.g. `PipeSupport.supportsMark`, `Pipe.pipeLength`, the `PumpSpec`/`VesselDesign`/`hxSpec`
+  members), missing schema properties were added, and wrong JSON names were fixed —
+  `Iec81346Designation` (`functionalAspect` etc. were silently dropped), `GeometryReference.ref`,
+  `SteelMember.teklaGUID`, `CatalogReference.eclassIRDI`, `CompressorSpec.polytropic_efficiency`.
+  New test `pmef-cli/tests/schema_drift.rs` guards this against every reference instance.
+
 - **E3D adapter output is schema-valid (docs/AUDIT.md P1.7).** `pmef-adapter-e3d` no longer
   writes `null` for absent PML attributes, puts equipment design data into the required
   type-specific blocks (`vesselDesign`, `pumpSpec`, `compressorSpec`, `hxSpec`, tank fields)
@@ -106,6 +115,11 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   and Conformance L1 PASS.
 
 ### Changed
+
+- **`pmef-core` API (Rust):** helper methods on fields that are optional in the schema now return
+  `Option<f64>`: `PipingDesignConditions::design_temperature_celsius`/`design_pressure_barg`,
+  `PipingSpecification::bore_mm`/`effective_wall_mm`, `HeatExchangerSpec::lmtd_counter_current`.
+  The corresponding struct fields are `Option<_>`. No workspace caller was affected.
 
 - **`pmef convert` implemented** (was a stub): `--to pcf|pmef`, `--base`, `-o`; the unused
   `--from` and `--schemas` options were removed.

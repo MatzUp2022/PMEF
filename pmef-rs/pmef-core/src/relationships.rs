@@ -17,6 +17,14 @@ macro_rules! rel {
             #[serde(skip_serializing_if="Option::is_none")] pub derived_by:Option<String>,
             #[serde(skip_serializing_if="Option::is_none")] pub notes:Option<String>,
             #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
+            /// Expected `@type` of the source, for validation.
+            #[serde(default, skip_serializing_if="Option::is_none")] pub source_type:Option<String>,
+            /// Expected `@type` of the target, for validation.
+            #[serde(default, skip_serializing_if="Option::is_none")] pub target_type:Option<String>,
+            /// Start of validity (ISO 8601 date-time).
+            #[serde(default, skip_serializing_if="Option::is_none")] pub valid_from:Option<String>,
+            /// End of validity (ISO 8601 date-time).
+            #[serde(default, skip_serializing_if="Option::is_none")] pub valid_to:Option<String>,
             /// RFC-0001 provenance / review / asBuilt blocks.
             #[serde(flatten, default)]
             pub recognition: crate::provenance::RecognitionMetadata,
@@ -28,6 +36,7 @@ macro_rules! rel {
 rel!(HasEquivalentIn {
     target_system: String,
     target_system_id: String,
+    target_system_version: String,
     mapping_type: String,
 });
 rel!(IsDerivedFrom {
