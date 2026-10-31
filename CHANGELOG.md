@@ -66,6 +66,9 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Changed
 
+- **Rust CI** (`.github/workflows/rust.yml`): builds and tests the whole `pmef-rs` workspace
+  and runs `pmef validate` on every example; clippy runs informationally. The release workflow
+  now requires it.
 - **`pmef-adapter-e3d`: equipment geometry from PML design primitives.** `BOX`, `CYLI`,
   `CONE`, `SNOU` and `DISH` children of an `EQUI` are mapped to `pmef:ParametricGeometry`
   (single primitive or `COMPOSITE`) and referenced from the equipment via

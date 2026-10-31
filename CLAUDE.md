@@ -58,10 +58,11 @@ python scripts/check-ndjson-format.py     # one object per line
 python scripts/check-topology.py          # connectivity integrity
 python scripts/validate-catalogs.py       # catalogs/*.json against pmef-catalog schema
 
-# Rust reference implementation (NOT in CI yet)
+# Rust reference implementation (exactly what .github/workflows/rust.yml runs)
 cd pmef-rs
-cargo test -p pmef-core -p pmef-geom -p pmef-io -p pmef-validate -p pmef-cli   # green
-cargo build --workspace                   # currently FAILS: all pmef-adapter-* crates
+cargo build --workspace --all-targets
+cargo test --workspace --no-fail-fast
+cargo clippy --workspace --all-targets    # informational in CI (doc-comment warnings)
 cargo run -p pmef-cli -- validate ../examples/pump-skid-complete.ndjson --schemas ../schemas
 cargo run -p pmef-cli -- conformance ../examples/pump-skid-complete.ndjson
 ```
