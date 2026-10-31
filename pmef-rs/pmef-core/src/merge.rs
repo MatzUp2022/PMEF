@@ -124,7 +124,7 @@ fn merge3(b: Option<&Value>, o: Option<&Value>, t: Option<&Value>, path: &str, f
     }
     // both sides changed differently: descend where structure allows
     match (b, o, t) {
-        (bv, Some(Value::Object(om)), Some(Value::Object(tm))) if bv.map_or(true, Value::is_object) => {
+        (bv, Some(Value::Object(om)), Some(Value::Object(tm))) if bv.is_none() || bv.is_some_and(Value::is_object) => {
             let empty = Map::new();
             let bm = bv.and_then(Value::as_object).unwrap_or(&empty);
             let keys: BTreeSet<&String> = bm.keys().chain(om.keys()).chain(tm.keys()).collect();
@@ -255,7 +255,7 @@ mod tests {
         assert!(r.conflicts.is_empty() && r.objects.is_empty());
         // both add the same new object → taken once
         let new = json!({"@type": "pmef:Plant", "@id": "urn:pmef:plant:p:X", "name": "X"});
-        let r = merge(&[], &[new.clone()], &[new], &MergeOptions::default()).unwrap();
+        let r = merge(&[], std::slice::from_ref(&new), &[new.clone()], &MergeOptions::default()).unwrap();
         assert!(r.conflicts.is_empty() && r.objects.len() == 1);
     }
 
