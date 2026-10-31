@@ -104,6 +104,17 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **Executable conformance test suite** (`tests/`, spec 06 §5–§7). `python tests/run_tests.py`
+  runs the 82 normative test IDs — 50 unit and 8 negative schema tests (fixtures generated from
+  one catalogue, `tests/conformance/manifest.json`), INTG-001…006 integration checks and
+  RT-001…018 round-trip checks with aggregate and identity-field fidelity per spec 06 §6 — against
+  any implementation via command templates (`--validator "cmd {file}"`,
+  `--sut "cmd {input} {output}"`, `--kind validator|converter|adapter`). Produces the §7.1 JSON
+  report (schema-checked) and the §7.2 text summary. A self-test proves that seven deliberately
+  broken implementations and an accept-all validator are detected. CI runs the suite, the
+  self-test, and the Rust `pmef` CLI as a second validator (agrees with the Python reference on
+  all 58 unit/negative tests). This replaces the `pmef-conformance/` suite claimed for 0.9.0-rc,
+  which was never published.
 - **RFC-0001 — recognition provenance, review status and as-built data (schema 0.10.0,
   backward compatible).** Every object that carries `revision` may now carry three optional
   blocks ([spec 02 §2.9](spec/02-information-model.md), [RFC](spec/rfc/0001-provenance-asbuilt.md)):
@@ -228,7 +239,8 @@ Six normative Markdown chapters totalling 3,087 lines / 18,128 words:
 
 > **Note (2026-10-31):** `pmef-conformance/` is not part of this repository and does not appear
 > in its Git history; the figures below cannot be reproduced from the published sources.
-> See [docs/legacy-docx-review.md](docs/legacy-docx-review.md).
+> See [docs/legacy-docx-review.md](docs/legacy-docx-review.md). The executable suite now lives in
+> [`tests/`](tests/README.md) (see [Unreleased]).
 
 82 tests: PIPE-U-001..016, EQUIP-U-001..012, EI-U-001..008, STEEL-U-001..006,
 REL-U-001..008, GEOM-U-001..008, RT-001..018, INTG-001..006.

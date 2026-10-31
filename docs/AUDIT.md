@@ -186,15 +186,17 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 
 ### P2 — make claims true
 
-- **P2.1** Real conformance runner: honour `--level`, detect duplicate `@id`s (reader must not use a
-  last-wins map for this check), add `tests/` fixtures or update spec §5.1 to the real command.
+- **P2.1** ~~Real conformance runner~~ — done: `tests/run_tests.py` (82 tests, levels, kinds,
+  §7.1 report, self-test). Still open: the Rust `pmef conformance` subcommand is a separate,
+  shallow structural check (ignores `--level`; duplicate-`@id` check cannot fire) — make it
+  delegate to the suite's rules or rename it.
 - **P2.2** Deterministic `pmef diff` (sorted output) + field-level diff — prerequisite for the
   as-built-vs-design use case.
 - **P2.3** Either create DS-05 (`eaf-segment.ndjson`) or remove it from spec/README.
 - **P2.4** CHANGELOG fixed (single `[Unreleased]`, `extract-changelog.py --version v0.9.0-rc`
   works); still open: drop or implement `build-spec-pdf.py`.
-- **P2.7** Released 0.9.0-rc changelog claims an 82-test `pmef-conformance/` suite that never
-  existed in the repository (annotated) — build the real suite (overlaps P2.1).
+- **P2.7** ~~Missing 82-test suite~~ — done: suite published in `tests/`; the 0.9.0-rc
+  changelog note points to it.
 - **P2.5** Fix the 625 non-strict schema warnings (at least for steel/E&I `$defs`).
 - **P2.6** ~~Correct the `@id` convention in CLAUDE.md~~ — done (§6 item 2).
 

@@ -64,12 +64,19 @@ cargo build --workspace --all-targets
 cargo test --workspace --no-fail-fast
 cargo clippy --workspace --all-targets    # informational in CI (doc-comment warnings)
 cargo run -p pmef-cli -- validate ../examples/pump-skid-complete.ndjson --schemas ../schemas
-cargo run -p pmef-cli -- conformance ../examples/pump-skid-complete.ndjson
+cargo run -p pmef-cli -- conformance ../examples/pump-skid-complete.ndjson   # shallow structural check only
+cd ..
+
+# Conformance suite (spec 06; details in tests/README.md)
+python tests/run_tests.py --level 3                       # reference self-run, must reach level 3
+python tests/conformance/tools/generate_fixtures.py       # regenerate fixtures after schema changes
+python tests/conformance/tools/generate_fixtures.py --check
+python tests/conformance/tools/selftest.py                # broken implementations must be detected
 ```
 
 CI also runs Mermaid validation (`mmdc` via `scripts/extract-mermaid.py`), markdownlint
-(`.markdownlint.jsonc`) and lychee link checking. There is no `tests/` directory and no
-`run_tests.py`, although `spec/06-conformance.md` §5.1 refers to them.
+(`.markdownlint.jsonc`) and lychee link checking. A schema change that affects a tested type
+needs regenerated fixtures (`generate_fixtures.py`) — CI fails otherwise.
 
 ## Hard rules
 

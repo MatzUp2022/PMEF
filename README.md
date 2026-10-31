@@ -169,6 +169,7 @@ MatzUp2022/PMEF
 ├── diagrams/                   — Mermaid UML diagrams
 ├── docs/                       — design decisions, getting started, ISO 15926 mapping, audit
 ├── scripts/                    — Python validation and release helpers (run in CI)
+├── tests/                      — executable conformance test suite (spec 06)
 │
 ├── pmef-rs/                    — Rust workspace (Apache 2.0)
 │   ├── pmef-core · pmef-io · pmef-validate · pmef-geom · pmef-cli
@@ -199,6 +200,7 @@ The `.docx` files are **non-normative legacy artefacts**. Where they differ from
 | `pmef` CLI | `validate`, `stats`, `index`, `check-refs`, `topology` work; `diff` and `conformance` are basic; `convert` not implemented |
 | Adapters (Rust) | all 10 compile and pass their unit tests; export direction only; real-tool round-trips not yet verified |
 | Host plug-ins (C#, C) | source only, not built in CI |
+| Conformance suite ([`tests/`](tests/README.md)) | 82 normative tests (spec 06), runnable against any implementation; reference passes level 3 in CI |
 | PMEFX container | specified (spec 03 §3), not implemented |
 
 Details and known gaps: [docs/AUDIT.md](docs/AUDIT.md).
