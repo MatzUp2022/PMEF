@@ -255,7 +255,7 @@ mod tests {
         assert!(r.conflicts.is_empty() && r.objects.is_empty());
         // both add the same new object → taken once
         let new = json!({"@type": "pmef:Plant", "@id": "urn:pmef:plant:p:X", "name": "X"});
-        let r = merge(&[], std::slice::from_ref(&new), &[new.clone()], &MergeOptions::default()).unwrap();
+        let r = merge(&[], std::slice::from_ref(&new), std::slice::from_ref(&new), &MergeOptions::default()).unwrap();
         assert!(r.conflicts.is_empty() && r.objects.len() == 1);
     }
 
