@@ -66,6 +66,7 @@ cargo clippy --workspace --all-targets    # informational in CI (doc-comment war
 cargo run -p pmef-cli -- validate ../examples/pump-skid-complete.ndjson --schemas ../schemas
 cargo run -p pmef-cli -- diff ../tests/diff/design.ndjson ../tests/diff/asbuilt.ndjson --ignore revision --ignore-recognition
 cargo run -p pmef-cli -- diff ../tests/diff/design.ndjson ../tests/diff/asbuilt-scan.ndjson --ignore revision --ignore-recognition --match
+cargo run -p pmef-cli -- diff ../tests/diff/design.ndjson ../tests/diff/asbuilt-scan.ndjson --match --emit-matches /tmp/proposals.ndjson   # RFC-0003 proposals
 cargo run -p pmef-cli -- conformance ../examples/pump-skid-complete.ndjson   # shallow structural check only
 cd ..
 

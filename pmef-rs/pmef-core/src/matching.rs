@@ -4,7 +4,8 @@
 //! with the design model. Objects are matched in fixed passes, strongest evidence first; every
 //! pass only considers objects that are still unmatched, and every result is deterministic.
 //!
-//! 1. `id`         — same `@id`
+//! 1. `id`         — same `@id`; then `declared` — a confirmed `pmef:IsRevisionOf` with
+//!    `changeType = AS_BUILT` (RFC-0003); rejected ones forbid their pair in all later passes
 //! 2. `tag`        — same `@type` and same engineering identifier, unique on both sides
 //! 3. `equivalent` — same native tool object (`pmef:HasEquivalentIn` targetSystem + targetSystemId)
 //! 4. `geometry`   — same `@type`, mean distance of anchor points ≤ `max_distance_mm`
@@ -13,7 +14,7 @@
 use crate::diff::DiffError;
 use serde::Serialize;
 use serde_json::Value;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Matching options.
 #[derive(Debug, Clone, Copy)]
@@ -36,6 +37,8 @@ impl Default for MatchOptions {
 pub enum MatchMethod {
     /// Same `@id`.
     Id,
+    /// Confirmed as-built correspondence relationship (RFC-0003).
+    Declared,
     /// Same engineering identifier (tag, line number, mark …).
     Tag,
     /// Same native tool object via `pmef:HasEquivalentIn`.
@@ -131,6 +134,7 @@ struct State<'a> {
     head: BTreeMap<&'a str, &'a Value>,
     b2h: BTreeMap<String, String>,
     h2b: BTreeMap<String, String>,
+    forbidden: BTreeSet<(String, String)>,
     out: Vec<ObjectMatch>,
 }
 
@@ -142,6 +146,12 @@ impl State<'_> {
         self.head.keys().copied().filter(|k| !self.h2b.contains_key(*k)).collect()
     }
     fn add(&mut self, b: &str, h: &str, method: MatchMethod, distance_mm: Option<f64>, ambiguous: bool) {
+        if self.forbidden.contains(&(b.to_owned(), h.to_owned()))
+            || self.b2h.contains_key(b)
+            || self.h2b.contains_key(h)
+        {
+            return;
+        }
         self.b2h.insert(b.to_owned(), h.to_owned());
         self.h2b.insert(h.to_owned(), b.to_owned());
         self.out.push(ObjectMatch { base_id: b.into(), head_id: h.into(), method, distance_mm, ambiguous });
@@ -173,14 +183,54 @@ fn equivalents<'a>(objs: &BTreeMap<&'a str, &'a Value>) -> BTreeMap<&'a str, Str
     m
 }
 
+/// True for a `pmef:IsRevisionOf` with `changeType = AS_BUILT` — an as-built ↔ design
+/// correspondence (RFC-0003). Such objects are matching data, not compared by diff.
+pub fn is_as_built_correspondence(v: &Value) -> bool {
+    ty(v) == "pmef:IsRevisionOf" && v.get("changeType").and_then(Value::as_str) == Some("AS_BUILT")
+}
+
 /// Compute base ↔ head correspondences.
 pub fn match_objects(base: &[Value], head: &[Value], opts: &MatchOptions) -> Result<Vec<ObjectMatch>, DiffError> {
-    let mut st = State { base: crate::diff::index(base, "base")?, head: crate::diff::index(head, "head")?, b2h: BTreeMap::new(), h2b: BTreeMap::new(), out: vec![] };
+    let mut b = crate::diff::index(base, "base")?;
+    let mut h = crate::diff::index(head, "head")?;
+    // Correspondence relationships are evidence, not objects to match.
+    let decls: Vec<&Value> = b.values().chain(h.values()).copied().filter(|o| is_as_built_correspondence(o)).collect();
+    b.retain(|_, o| !is_as_built_correspondence(o));
+    h.retain(|_, o| !is_as_built_correspondence(o));
+    let mut st = State { base: b, head: h, b2h: BTreeMap::new(), h2b: BTreeMap::new(), forbidden: BTreeSet::new(), out: vec![] };
+
+    // Declared correspondences: (base id, head id, binding?) in either orientation.
+    let mut declared: Vec<(String, String, bool)> = Vec::new();
+    for d in decls {
+        let (Some(src), Some(tgt)) = (d.get("sourceId").and_then(Value::as_str), d.get("targetId").and_then(Value::as_str)) else {
+            continue;
+        };
+        let pair = if st.head.contains_key(src) && st.base.contains_key(tgt) {
+            (tgt, src)
+        } else if st.base.contains_key(src) && st.head.contains_key(tgt) {
+            (src, tgt)
+        } else {
+            continue;
+        };
+        match d.get("review").and_then(|r| r.get("status")).and_then(Value::as_str) {
+            Some("rejected") => declared.push((pair.0.to_owned(), pair.1.to_owned(), false)),
+            Some("detected") => {} // an unconfirmed proposal is not evidence
+            _ => declared.push((pair.0.to_owned(), pair.1.to_owned(), true)),
+        }
+    }
+    declared.sort();
+    st.forbidden = declared.iter().filter(|d| !d.2).map(|d| (d.0.clone(), d.1.clone())).collect();
 
     // 1. id
     let common: Vec<String> = st.base.keys().filter(|k| st.head.contains_key(*k)).map(|k| (*k).to_owned()).collect();
     for k in common {
         st.add(&k, &k, MatchMethod::Id, None, false);
+    }
+    // 1b. declared (confirmed); conflicting declarations: first in (base, head) order wins
+    for (bid, hid, binding) in &declared {
+        if *binding {
+            st.add(bid, hid, MatchMethod::Declared, None, false);
+        }
     }
     // 2. tag
     let (fb, fh) = (st.free_base(), st.free_head());
@@ -217,7 +267,7 @@ pub fn match_objects(base: &[Value], head: &[Value], opts: &MatchOptions) -> Res
     cands.sort_by(|x, y| x.0.total_cmp(&y.0).then_with(|| x.1.cmp(&y.1)).then_with(|| x.2.cmp(&y.2)));
     let all = cands.clone();
     for (d, b, h) in cands {
-        if st.b2h.contains_key(&b) || st.h2b.contains_key(&h) {
+        if st.b2h.contains_key(&b) || st.h2b.contains_key(&h) || st.forbidden.contains(&(b.clone(), h.clone())) {
             continue;
         }
         let ambiguous = all.iter().any(|(d2, b2, h2)| (*b2 == b) != (*h2 == h) && *d2 - d < opts.ambiguity_margin_mm);
@@ -247,6 +297,46 @@ pub fn match_objects(base: &[Value], head: &[Value], opts: &MatchOptions) -> Res
     }
     st.out.sort_by(|a, b| a.base_id.cmp(&b.base_id));
     Ok(st.out)
+}
+
+/// Correspondence proposals for `--emit-matches` (RFC-0003): one `pmef:IsRevisionOf`
+/// (`changeType = AS_BUILT`, `review.status = detected`) per match found by evidence
+/// (tag, equivalent, geometry, reference). `sourceId` = head (as-built), `targetId` = base.
+pub fn proposals(matches: &[ObjectMatch], revision_id: &str) -> Vec<Value> {
+    use serde_json::json;
+    matches
+        .iter()
+        .filter(|m| !matches!(m.method, MatchMethod::Id | MatchMethod::Declared))
+        .filter_map(|m| {
+            let parts: Vec<&str> = m.head_id.splitn(5, ':').collect();
+            let [_, _, _, project, local] = parts[..] else { return None };
+            let method = serde_json::to_value(m.method).ok()?;
+            let mut corr = json!({ "method": method });
+            if let Some(d) = m.distance_mm {
+                corr["distance_mm"] = json!(d);
+            }
+            if m.ambiguous {
+                corr["ambiguous"] = json!(true);
+            }
+            Some(json!({
+                "@type": "pmef:IsRevisionOf",
+                "@id": format!("urn:pmef:rel:{project}:{local}-asbuilt"),
+                "relationType": "IS_REVISION_OF",
+                "sourceId": m.head_id,
+                "targetId": m.base_id,
+                "changeType": "AS_BUILT",
+                "correspondence": corr,
+                "derivedBy": "RULE_BASED",
+                "review": { "status": "detected" },
+                "revision": { "revisionId": revision_id, "changeState": "WIP", "authoringTool": "pmef diff --match" }
+            }))
+        })
+        .collect()
+}
+
+/// `revisionId` for proposals written today (UTC), e.g. `r2026-10-31-001`.
+pub fn revision_id_today() -> String {
+    chrono::Utc::now().format("r%Y-%m-%d-001").to_string()
 }
 
 /// Rewrite every string in `v` that equals a mapped head id to its base id.
@@ -298,6 +388,55 @@ mod tests {
             ("urn:pmef:obj:d:PIPE-1", "urn:pmef:obj:s:x2", MatchMethod::Geometry),
         ]);
         assert_eq!(m[2].distance_mm, Some(3.0));
+    }
+
+    fn decl(src: &str, tgt: &str, status: Option<&str>) -> Value {
+        let mut v = json!({"@type": "pmef:IsRevisionOf", "@id": format!("urn:pmef:rel:s:{}", &src[16..]),
+            "relationType": "IS_REVISION_OF", "sourceId": src, "targetId": tgt, "changeType": "AS_BUILT",
+            "correspondence": {"method": "geometry"}});
+        if let Some(s) = status {
+            v["review"] = json!({"status": s, "reviewedBy": "r", "reviewedAt": "2026-10-31T00:00:00Z"});
+        }
+        v
+    }
+
+    #[test]
+    fn declared_correspondence_binds_and_rejection_forbids() {
+        let base = vec![pipe("urn:pmef:obj:d:A", 0.0, 1000.0), pipe("urn:pmef:obj:d:B", 0.0, 1001.0)];
+        // geometry alone would pair A↔x1 (distance 0) and B↔x2
+        let head = vec![pipe("urn:pmef:obj:s:x1", 0.0, 1000.0), pipe("urn:pmef:obj:s:x2", 0.0, 1001.0)];
+        let pairs = |m: &[ObjectMatch]| -> Vec<(String, String, MatchMethod)> {
+            m.iter().map(|m| (m.base_id.clone(), m.head_id.clone(), m.method)).collect()
+        };
+        // confirmed: A↔x2 is taken as given, B then pairs with x1 geometrically
+        let mut h = head.clone();
+        h.push(decl("urn:pmef:obj:s:x2", "urn:pmef:obj:d:A", Some("approved")));
+        let m = match_objects(&base, &h, &MatchOptions::default()).unwrap();
+        assert_eq!(pairs(&m), [
+            ("urn:pmef:obj:d:A".into(), "urn:pmef:obj:s:x2".into(), MatchMethod::Declared),
+            ("urn:pmef:obj:d:B".into(), "urn:pmef:obj:s:x1".into(), MatchMethod::Geometry),
+        ]);
+        // rejected: A↔x1 is never proposed again
+        let mut h = head.clone();
+        h.push(decl("urn:pmef:obj:s:x1", "urn:pmef:obj:d:A", Some("rejected")));
+        let m = match_objects(&base, &h, &MatchOptions::default()).unwrap();
+        assert!(!pairs(&m).iter().any(|p| p.0 == "urn:pmef:obj:d:A" && p.1 == "urn:pmef:obj:s:x1"));
+        // detected (unconfirmed proposal) is ignored
+        let mut h = head.clone();
+        h.push(decl("urn:pmef:obj:s:x2", "urn:pmef:obj:d:A", Some("detected")));
+        let m = match_objects(&base, &h, &MatchOptions::default()).unwrap();
+        assert!(m.iter().all(|m| m.method == MatchMethod::Geometry));
+    }
+
+    #[test]
+    fn proposals_are_detected_as_built_revisions() {
+        let m = vec![ObjectMatch { base_id: "urn:pmef:obj:d:A".into(), head_id: "urn:pmef:obj:scan-1:R-7".into(),
+            method: MatchMethod::Geometry, distance_mm: Some(6.5), ambiguous: true }];
+        let p = proposals(&m, "r2026-10-31-001");
+        assert_eq!(p.len(), 1);
+        assert_eq!(p[0]["@id"], "urn:pmef:rel:scan-1:R-7-asbuilt");
+        assert_eq!(p[0]["correspondence"], json!({"method": "geometry", "distance_mm": 6.5, "ambiguous": true}));
+        assert_eq!(p[0]["review"]["status"], "detected");
     }
 
     #[test]

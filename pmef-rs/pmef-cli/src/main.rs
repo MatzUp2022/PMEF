@@ -79,6 +79,10 @@ enum Commands {
         /// Largest mean anchor distance for a geometric match [mm] (with --match).
         #[arg(long, default_value_t = 100.0, value_name = "MM")]
         match_distance: f64,
+        /// Write the matches found by evidence as proposed as-built correspondences
+        /// (pmef:IsRevisionOf, changeType AS_BUILT, review.status detected; RFC-0003) to FILE.
+        #[arg(long, value_name = "FILE", requires = "match_objects")]
+        emit_matches: Option<PathBuf>,
     },
 
     /// Print statistics about a PMEF NDJSON file.
@@ -186,7 +190,7 @@ async fn main() -> Result<()> {
         Commands::Validate { file, schemas, level, format, fail_fast } => {
             cmd_validate(file, schemas, level, &format, fail_fast).await
         }
-        Commands::Diff { base, head, format, exact, mut ignore, ignore_recognition, match_objects, match_distance } => {
+        Commands::Diff { base, head, format, exact, mut ignore, ignore_recognition, match_objects, match_distance, emit_matches } => {
             if ignore_recognition {
                 ignore.extend(["provenance", "review", "asBuilt"].map(String::from));
             }
@@ -194,7 +198,7 @@ async fn main() -> Result<()> {
                 max_distance_mm: match_distance,
                 ..Default::default()
             });
-            cmd_diff(base, head, &format, exact, ignore, matching)
+            cmd_diff(base, head, &format, exact, ignore, matching, emit_matches)
         }
         Commands::Stats { file, by_type, by_domain } => {
             cmd_stats(file, by_type, by_domain).await
@@ -337,6 +341,7 @@ fn cmd_diff(
     exact: bool,
     ignore: Vec<String>,
     matching: Option<pmef_core::matching::MatchOptions>,
+    emit_matches: Option<PathBuf>,
 ) -> Result<()> {
     use pmef_core::diff::{diff, diff_matched, render_text, DiffOptions};
 
@@ -355,6 +360,18 @@ fn cmd_diff(
             std::process::exit(2);
         }
     };
+    if let Some(path) = &emit_matches {
+        use pmef_core::matching::{proposals, revision_id_today};
+        let lines: Vec<String> = proposals(&report.matches, &revision_id_today())
+            .iter()
+            .map(|v| serde_json::to_string(&pmef_core::diff::canonical(v)))
+            .collect::<Result<_, _>>()?;
+        let text = if lines.is_empty() { String::new() } else { lines.join("\n") + "\n" };
+        if let Err(e) = std::fs::write(path, text) {
+            eprintln!("error: cannot write {}: {e}", path.display());
+            std::process::exit(2);
+        }
+    }
     if format == "json" {
         println!("{}", serde_json::to_string_pretty(&report)?);
     } else {

@@ -215,8 +215,12 @@ pub fn diff_matched(
     opts: &DiffOptions,
     mopts: &crate::matching::MatchOptions,
 ) -> Result<DiffReport, DiffError> {
-    use crate::matching::{match_objects, rewrite_ids, MatchMethod};
+    use crate::matching::{is_as_built_correspondence, match_objects, rewrite_ids, MatchMethod};
     let matches = match_objects(base, head, mopts)?;
+    // Correspondence relationships (RFC-0003) are matching evidence, not compared.
+    let keep = |objs: &[Value]| -> Vec<Value> { objs.iter().filter(|o| !is_as_built_correspondence(o)).cloned().collect() };
+    let (base, head) = (keep(base), keep(head));
+    let (base, head) = (&base[..], &head[..]);
     let h2b: BTreeMap<&str, &str> =
         matches.iter().filter(|m| m.base_id != m.head_id).map(|m| (m.head_id.as_str(), m.base_id.as_str())).collect();
     let rewritten: Vec<Value> = head.iter().map(|o| rewrite_ids(o, &h2b)).collect();

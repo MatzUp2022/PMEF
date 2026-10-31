@@ -56,7 +56,39 @@ rel!(IsDocumentedBy {
 rel!(IsRevisionOf {
     change_reason: String,
     change_type: String,
+    correspondence: AsBuiltCorrespondence,
 });
+
+/// Evidence for an as-built ↔ design correspondence (RFC-0003).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum CorrespondenceMethod {
+    /// Same engineering identifier.
+    Tag,
+    /// Same native tool object (`pmef:HasEquivalentIn`).
+    Equivalent,
+    /// Geometric proximity of anchor points.
+    Geometry,
+    /// Derived from matched owner / relationship endpoints.
+    Reference,
+    /// Assigned by a person.
+    Manual,
+}
+
+/// How an as-built object (`sourceId`) was matched to its design object (`targetId`).
+/// Carried by `pmef:IsRevisionOf` with `changeType = AS_BUILT`; confirmation lives in the
+/// relationship's `review` block.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct AsBuiltCorrespondence {
+    /// Evidence used.
+    pub method: CorrespondenceMethod,
+    /// Mean anchor distance [mm] (geometry matches).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub distance_mm: Option<f64>,
+    /// A competing candidate was nearly as close.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ambiguous: Option<bool>,
+}
 rel!(IsCollocatedWith {});
 rel!(ReplacedBy {
     replacement_date: String,

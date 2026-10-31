@@ -478,6 +478,7 @@ each pass considering only objects not matched by an earlier pass:
 | Pass | Method | Rule |
 |---|---|---|
 | 1 | `id` | same `@id` |
+| 1b | `declared` | a binding as-built correspondence (`pmef:IsRevisionOf`, `changeType = AS_BUILT`, review status absent, `reviewed` or `approved`; [RFC-0003](rfc/0003-as-built-correspondence.md)) between objects of the two sides; correspondences with `review.status = rejected` forbid their pair in all later passes |
 | 2 | `tag` | same `@type` and same engineering identifier — the first present of `equipmentBasic.tagNumber`, `lineNumber`, `tagNumber`, `memberMark`, `supportsMark`, `spoolMark`, `weldSpec.weldNumber`, `loopNumber` — where the value is unique per `@type` on both sides |
 | 3 | `equivalent` | same `@type` and same native tool object: a `pmef:HasEquivalentIn` with equal `targetSystem` and `targetSystemId` on both sides, unique on both sides |
 | 4 | `geometry` | same `@type`; distance ≤ limit (default 100 mm) |
@@ -491,6 +492,10 @@ are assigned greedily in the order (distance, base `@id`, head `@id`). A geometr
 **ambiguous** if another candidate pair sharing exactly one of its two objects has a distance
 smaller than the chosen distance plus the ambiguity margin (default 10 mm); ambiguous matches
 need review.
+
+Correspondence relationships are matching evidence: they are excluded from the objects to
+match and are not compared. A tool **MAY** write the matches found by passes 2–5 as proposed
+correspondences (`review.status = detected`, RFC-0003), e.g. `pmef diff --match --emit-matches FILE`.
 
 After matching, every string in the head package equal to a matched head `@id` is replaced by
 the base `@id`, and the packages are compared per §9.1–§9.4. The report lists matched objects

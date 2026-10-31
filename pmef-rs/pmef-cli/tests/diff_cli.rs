@@ -107,3 +107,56 @@ fn without_match_differing_ids_are_added_and_removed() {
     assert_eq!(v["summary"]["added"], 6);
     assert_eq!(v["summary"]["removed"], 6);
 }
+
+/// RFC-0003 workflow: propose → confirm/reject → the next run reuses the decisions.
+#[test]
+fn correspondence_workflow_confirm_and_reject() {
+    let dir = std::env::temp_dir().join(format!("pmef-diff-rfc3-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let proposals = dir.join("proposals.ndjson");
+    let base_args = ["diff", DESIGN, SCAN, "--ignore", "revision", "--ignore-recognition", "--match", "--format", "json"];
+
+    // 1. propose
+    let (code, first, _) = pmef(&[&base_args[..], &["--emit-matches", proposals.to_str().unwrap()]].concat());
+    assert_eq!(code, 1);
+    let props: Vec<serde_json::Value> = std::fs::read_to_string(&proposals).unwrap().lines()
+        .map(|l| serde_json::from_str(l).unwrap()).collect();
+    assert_eq!(props.len(), 5);
+    assert!(props.iter().all(|p| p["changeType"] == "AS_BUILT" && p["review"]["status"] == "detected"));
+    let (vcode, vout, _) = pmef(&["validate", proposals.to_str().unwrap(), "--schemas", "schemas"]);
+    assert_eq!(vcode, 0, "proposals must be schema-valid:\n{vout}");
+
+    // 2. a reviewer approves everything except the beam, which is rejected
+    let decided: Vec<String> = props.iter().map(|p| {
+        let mut p = p.clone();
+        let reject = p["targetId"] == "urn:pmef:obj:demo-asb:B-101";
+        p["review"] = serde_json::json!({"status": if reject { "rejected" } else { "approved" },
+                                          "reviewedBy": "reviewer-01", "reviewedAt": "2026-10-31T12:00:00Z"});
+        serde_json::to_string(&p).unwrap()
+    }).collect();
+    let scan_with = dir.join("asbuilt-scan-reviewed.ndjson");
+    let scan_text = std::fs::read_to_string(root().join(SCAN)).unwrap();
+    std::fs::write(&scan_with, scan_text + &decided.join("\n") + "\n").unwrap();
+
+    // 3. rerun: approved pairs are declared, the rejected beam pair is no longer matched
+    let args = ["diff", DESIGN, scan_with.to_str().unwrap(), "--ignore", "revision", "--ignore-recognition", "--match", "--format", "json"];
+    let (code, second, _) = pmef(&args);
+    assert_eq!(code, 1);
+    let v: serde_json::Value = serde_json::from_str(&second).unwrap();
+    let methods: Vec<(&str, &str)> = v["matches"].as_array().unwrap().iter()
+        .map(|m| (m["baseId"].as_str().unwrap(), m["method"].as_str().unwrap())).collect();
+    assert!(methods.iter().all(|(_, m)| *m == "declared"), "{methods:?}");
+    assert_eq!(methods.len(), 4);
+    let status = |id: &str| v["objects"].as_array().unwrap().iter()
+        .find(|o| o["@id"] == id).map(|o| o["status"].as_str().unwrap().to_owned());
+    assert_eq!(status("urn:pmef:obj:demo-asb:B-101").as_deref(), Some("removed"));
+    assert_eq!(status("urn:pmef:obj:scan-2026-10:R-0002").as_deref(), Some("added"));
+    // correspondence relationships are evidence, never reported as added objects
+    assert!(v["objects"].as_array().unwrap().iter().all(|o| o["@type"] != "pmef:IsRevisionOf"));
+    // the pipe deviation found in the first run is still found
+    let first: serde_json::Value = serde_json::from_str(&first).unwrap();
+    let pipe = |v: &serde_json::Value| v["objects"].as_array().unwrap().iter()
+        .find(|o| o["@id"] == "urn:pmef:obj:demo-asb:CW-301-PIPE-002").unwrap()["changes"].clone();
+    assert_eq!(pipe(&first), pipe(&v));
+    std::fs::remove_dir_all(dir).ok();
+}

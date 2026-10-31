@@ -213,4 +213,4 @@ released changes only):
 - ✅ Deterministic object-level `pmef diff` (spec 03 §9)
 - 🗓️ 3-way merge (`pmef merge`) with a conflict model on top of the diff rules
 - ✅ `pmef diff --match` for differing `@id`s (spec 03 §9.5)
-- 🗓️ Persist matches as data (needs an RFC for an as-built ↔ design correspondence relationship)
+- 🔄 RFC-0003 persisted as-built ↔ design correspondence (`--emit-matches`, pass 1b) — draft, awaiting review

@@ -122,6 +122,14 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **RFC-0003 — persisted as-built ↔ design correspondence** ([RFC](spec/rfc/0003-as-built-correspondence.md)).
+  `pmef:IsRevisionOf` with `changeType = AS_BUILT` gains an optional `correspondence` block
+  (`method`, `distance_mm`, `ambiguous`; schema requires `AS_BUILT` when present); confirmation via
+  the RFC-0001 `review` block. `pmef diff --match` uses confirmed correspondences as a new pass 1b
+  (`declared`), never re-proposes rejected pairs, and treats correspondences as evidence rather
+  than compared objects. `--emit-matches FILE` writes proposals (`review.status = detected`) for
+  review. Rust: `relationships::AsBuiltCorrespondence`. Example and tests (schema rules, matching
+  units, CLI propose → approve/reject → rerun workflow) added.
 - **`pmef diff --match`: comparison when `@id`s differ** (spec 03 §9.5) — typical for as-built
   models with recogniser ids. Objects are matched one-to-one in fixed passes: same `@id`, same
   engineering identifier (tag, line number, mark — only if unique), same native tool object

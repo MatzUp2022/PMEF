@@ -125,8 +125,18 @@ objs = [
   "asBuilt": {"pointCloudRef": f"{SCAN}#segment=beam-0042", "fitMethod": "ransac-plane",
               "deviationRms_mm": 1.8, "deviationMax_mm": 6.2,
               "catalogSnap": snap("profiles-en.json", "i-section", {"h": 301.4, "b": 299.1, "tw": 11.6, "tf": 18.7})}},
+ # RFC-0003: as-built ↔ design correspondences (design package project "demo-dsn")
+ {"@type": "pmef:IsRevisionOf", "@id": f"urn:pmef:rel:{P}:B-101-asbuilt", "relationType": "IS_REVISION_OF",
+  "sourceId": f"urn:pmef:obj:{P}:B-101", "targetId": "urn:pmef:obj:demo-dsn:B-101", "changeType": "AS_BUILT",
+  "correspondence": {"method": "geometry", "distance_mm": 12.5}, "derivedBy": "RULE_BASED",
+  "revision": rev("SHARED", "2026-10-30T16:05:00Z"),
+  "review": {"status": "approved", "reviewedBy": "reviewer-01", "reviewedAt": "2026-10-30T16:05:00Z"}},
+ {"@type": "pmef:IsRevisionOf", "@id": f"urn:pmef:rel:{P}:CW-301-ELB-001-asbuilt", "relationType": "IS_REVISION_OF",
+  "sourceId": f"urn:pmef:obj:{P}:CW-301-ELB-001", "targetId": "urn:pmef:obj:demo-dsn:CW-301-ELB-001",
+  "changeType": "AS_BUILT", "correspondence": {"method": "geometry", "distance_mm": 4.1, "ambiguous": True},
+  "derivedBy": "RULE_BASED", "revision": rev("WIP", "2026-10-30T09:30:00Z"), "review": {"status": "detected"}},
 ]
 with open(sys.argv[1], "w") as f:
-    f.write("// PMEF RFC-0001 example — provenance, review and as-built data (synthetic, CC0)\n")
+    f.write("// PMEF RFC-0001/0002/0003 example — provenance, review, as-built data, snapping, correspondences (synthetic, CC0)\n")
     for o in objs:
         f.write(json.dumps(o, ensure_ascii=False, separators=(",", ":")) + "\n")
