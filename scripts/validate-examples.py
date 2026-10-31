@@ -30,49 +30,33 @@ ROOT = Path(__file__).parent.parent
 SCHEMAS_DIR = ROOT / "schemas"
 EXAMPLES_DIR = ROOT / "examples"
 
-# Map @type prefix → schema file
-TYPE_TO_SCHEMA: dict[str, str] = {
-    "pmef:PipingNetworkSystem": "pmef-piping-component.schema.json",
-    "pmef:PipingSegment":       "pmef-piping-component.schema.json",
-    "pmef:Pipe":                "pmef-piping-component.schema.json",
-    "pmef:Elbow":               "pmef-piping-component.schema.json",
-    "pmef:Tee":                 "pmef-piping-component.schema.json",
-    "pmef:Reducer":             "pmef-piping-component.schema.json",
-    "pmef:Flange":              "pmef-piping-component.schema.json",
-    "pmef:Valve":               "pmef-piping-component.schema.json",
-    "pmef:Olet":                "pmef-piping-component.schema.json",
-    "pmef:Gasket":              "pmef-piping-component.schema.json",
-    "pmef:Weld":                "pmef-piping-component.schema.json",
-    "pmef:PipeSupport":         "pmef-piping-component.schema.json",
-    "pmef:Spool":               "pmef-piping-component.schema.json",
-    "pmef:Vessel":              "pmef-equipment.schema.json",
-    "pmef:Tank":                "pmef-equipment.schema.json",
-    "pmef:Pump":                "pmef-equipment.schema.json",
-    "pmef:Compressor":          "pmef-equipment.schema.json",
-    "pmef:HeatExchanger":       "pmef-equipment.schema.json",
-    "pmef:Column":              "pmef-equipment.schema.json",
-    "pmef:Reactor":             "pmef-equipment.schema.json",
-    "pmef:Filter":              "pmef-equipment.schema.json",
-    "pmef:Turbine":             "pmef-equipment.schema.json",
-    "pmef:GenericEquipment":    "pmef-equipment.schema.json",
-    "pmef:ParametricGeometry":  "pmef-geometry.schema.json",
-    # Plant hierarchy types
-    "pmef:FileHeader": "pmef-hierarchy.schema.json",
-    "pmef:Plant":      "pmef-hierarchy.schema.json",
-    "pmef:Unit":       "pmef-hierarchy.schema.json",
-    "pmef:Area":       "pmef-hierarchy.schema.json",
-    # Relationship types
-    "pmef:IsPartOf":        "pmef-relationships.schema.json",
-    "pmef:IsConnectedTo":   "pmef-relationships.schema.json",
-    "pmef:IsDerivedFrom":   "pmef-relationships.schema.json",
-    "pmef:Supports":        "pmef-relationships.schema.json",
-    "pmef:ControlledBy":    "pmef-relationships.schema.json",
-    "pmef:IsDocumentedBy":  "pmef-relationships.schema.json",
-    "pmef:IsRevisionOf":    "pmef-relationships.schema.json",
-    "pmef:HasEquivalentIn": "pmef-relationships.schema.json",
-    "pmef:IsCollocatedWith":"pmef-relationships.schema.json",
-    "pmef:ReplacedBy":      "pmef-relationships.schema.json",
-}
+def build_type_map(schemas: dict[str, dict]) -> dict[str, str]:
+    """Derive @type → schema file from the schemas themselves.
+
+    Every object definition declares its type as ``"@type": {"const": ...}``
+    (or an ``enum``). Deriving the map avoids a second hand-maintained list that
+    can drift from the schemas (it previously missed all steel and E&I types).
+    """
+    type_map: dict[str, str] = {}
+
+    def walk(node, schema_file):
+        if isinstance(node, dict):
+            props = node.get("properties")
+            if isinstance(props, dict) and isinstance(props.get("@type"), dict):
+                t = props["@type"]
+                for value in ([t["const"]] if "const" in t else []) + list(t.get("enum", [])):
+                    other = type_map.setdefault(value, schema_file)
+                    if other != schema_file:
+                        raise SystemExit(f"@type {value} defined in {other} and {schema_file}")
+            for v in node.values():
+                walk(v, schema_file)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v, schema_file)
+
+    for name, schema in sorted(schemas.items()):
+        walk(schema, name)
+    return type_map
 
 
 def load_schemas() -> dict[str, dict]:
@@ -86,15 +70,16 @@ def load_schemas() -> dict[str, dict]:
     return schemas, store
 
 
-def validate_object(obj: dict, schemas: dict, store: dict) -> list[str]:
+def validate_object(obj: dict, schemas: dict, store: dict, type_map: dict) -> list[str]:
     """Validate a single PMEF object. Returns list of error messages."""
     type_ = obj.get("@type")
     if not type_:
         return ["Missing '@type' field"]
 
-    schema_file = TYPE_TO_SCHEMA.get(type_)
+    schema_file = type_map.get(type_)
     if schema_file is None:
-        return []  # Hierarchy objects: skip schema validation
+        # Unknown types are errors, never silently skipped.
+        return [f"Unknown @type '{type_}': no schema defines it"]
 
     if schema_file not in schemas:
         return [f"Schema '{schema_file}' not found for type '{type_}'"]
@@ -113,7 +98,7 @@ def validate_object(obj: dict, schemas: dict, store: dict) -> list[str]:
     return errors
 
 
-def validate_file(ndjson_path: Path, schemas: dict, store: dict, verbose: bool) -> int:
+def validate_file(ndjson_path: Path, schemas: dict, store: dict, type_map: dict, verbose: bool) -> int:
     """Validate all objects in an NDJSON file. Returns error count."""
     errors_total = 0
     obj_count = 0
@@ -135,7 +120,7 @@ def validate_file(ndjson_path: Path, schemas: dict, store: dict, verbose: bool) 
         type_ = obj.get("@type", "?")
 
         # Validate against schema
-        errors = validate_object(obj, schemas, store)
+        errors = validate_object(obj, schemas, store, type_map)
         if errors:
             print(f"  ✗  Line {line_no} [{type_}]:")
             for e in errors:
@@ -157,7 +142,8 @@ def main():
     args = parser.parse_args()
 
     schemas, store = load_schemas()
-    print(f"Loaded {len(schemas)} schema(s)\n")
+    type_map = build_type_map(schemas)
+    print(f"Loaded {len(schemas)} schema(s), {len(type_map)} object type(s)\n")
 
     files = [args.file] if args.file else sorted(EXAMPLES_DIR.glob("*.ndjson"))
     if not files:
@@ -167,7 +153,7 @@ def main():
     total_errors = 0
     for ndjson_path in files:
         print(f"Validating {ndjson_path.name} ...")
-        errors = validate_file(ndjson_path, schemas, store, args.verbose)
+        errors = validate_file(ndjson_path, schemas, store, type_map, args.verbose)
         total_errors += errors
         print()
 

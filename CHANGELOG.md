@@ -16,6 +16,11 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **`validate-examples.py` silently skipped 21 of 117 example objects** (all structural-steel
+  and E&I types) because its hand-written type list was incomplete, and unknown `@type`s passed.
+  The `@type` → schema map is now derived from the schemas themselves; unknown types are errors.
+  A Rust test (`pmef-validate/tests/type_map_matches_schemas.rs`) fails if `schema_for_type`
+  drifts from the schemas.
 - **The whole Rust workspace builds again** (`cargo build --workspace`): all ten
   `pmef-adapter-*` crates failed to compile. `pmef-io` now implements
   `From<PmefIoError> for AdapterError` (used by all adapters); missing `tracing` dependency
