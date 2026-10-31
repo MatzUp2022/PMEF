@@ -151,10 +151,11 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
    that format knowledge is undocumented. Options: (a) remove/feature-gate it, (b) document
    the public source and get explicit sign-off, (c) replace with an E3D-side export via the
    official PML/.NET API.
-2. **`@id` pattern conflict.** CLAUDE.md says `urn:pmef:obj:<project>:<tag>`. Schema
-   (`pmef-base`) and examples use `urn:pmef:<domain>:<project>:<local-id>` with domains
-   `obj, line, seg, spool, rel, geom, plant, unit, pkg, loop`. The schema is normative, so
-   CLAUDE.md should be corrected — but per the hard rules I did not touch `@id`s.
+2. **`@id` pattern conflict — resolved 2026-10-31.** CLAUDE.md said
+   `urn:pmef:obj:<project>:<tag>`. Spec 02 §2.1 + spec 01 §7.3 (normative), the `PmefId`
+   schema pattern, `pmef-core::PmefId` and all adapters use `urn:pmef:<domain>:<project>:<local-id>`;
+   all 117 example `@id`s match the schema pattern. The rule was wrong, not the data:
+   CLAUDE.md now states the `<domain>` form. No `@id` was changed.
 3. **Example realism.** Examples are labelled synthetic ("PMEF Reference Generator 0.9"),
    but use a real location (`"Duisburg, Germany"`) and real Siemens S7-1500 article
    numbers. Public catalogue data is fine; please confirm none of this mirrors a real
@@ -190,7 +191,7 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 - **P2.4** Fix CHANGELOG so `extract-changelog.py` and `release.yml` can work; drop or implement
    `build-spec-pdf.py`.
 - **P2.5** Fix the 625 non-strict schema warnings (at least for steel/E&I `$defs`).
-- **P2.6** Correct the `@id` convention in CLAUDE.md to match the schema (§6 item 2).
+- **P2.6** ~~Correct the `@id` convention in CLAUDE.md~~ — done (§6 item 2).
 
 ### P3 — maturity
 
@@ -207,5 +208,5 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 - **Q2** Out-of-scope adapters: exclude from the Cargo workspace (keep code, frozen) or fix
   all ten? Recommendation: exclude, fix E3D + Plant 3D only.
 - **Q3** `rvm.rs`: remove, feature-gate, or keep with documented source?
-- **Q4** OK to change CLAUDE.md's `@id` convention to the schema's `<domain>` form?
+- **Q4** ~~`@id` convention~~ — answered: CLAUDE.md follows the spec (§6 item 2).
 - **Q5** Is `github.com/MatzUp2022/PMEF` the canonical URL for now, or is a `pmef` org planned?

@@ -32,7 +32,10 @@ All other disciplines/adapters are frozen: do not extend them unless explicitly 
 
 ## Conventions
 
-- IDs: `urn:pmef:obj:<project>:<tag>`; never reuse or change an existing `@id`.
+- IDs: `urn:pmef:<domain>:<project>:<local-id>` (spec 02 §2.1, schema `pmef-base` `PmefId`).
+  `<domain>` per spec 01 §7.3: `obj` (physical object: equipment, piping component, instrument),
+  `line`, `seg`, `spool`, `loop`, `geom`, `rel`, `plant`, `unit`, `pkg`, `doc`, `functional`, `catalog`.
+  Never reuse or change an existing `@id`; adding a new domain segment is a spec change.
 - Units: SI, lengths in mm, angles in degrees. No implicit units.
 - Versioning: SemVer for spec and schemas. Every schema change → CHANGELOG.md entry.
 - Every schema change requires: updated example in `examples/`, a passing validation test,
