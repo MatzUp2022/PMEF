@@ -205,4 +205,3 @@ released changes only):
 - 🗓️ Published schemas under a project-owned domain (namespace decision open, see docs/AUDIT.md §8)
 - 🗓️ Project website with full documentation
 - 🗓️ First vendor Level 2 certification
-
