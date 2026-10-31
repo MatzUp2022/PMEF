@@ -43,7 +43,7 @@ Correction to the earlier informal review: PMEFX **is** defined in the spec (§3
 | Spec Markdown | "v0.9", footer "PMEF Specification v0.9.0-rc" (`06-conformance.md`) | |
 | `pmef-rs` workspace + CLI `--version` | `0.9.0` | |
 | `PMEF_CHANGELOG_v0.9.0-rc.docx` | 0.9.0-rc | consistent |
-| `PMEF_Specification_v1.2.docx` | **file name says v1.2, title page says "Version 1.0 – April 2026", Document ID `PMEF-SPEC-0001 Rev.1`, predecessor "v0.9, März 2026"**; German; claims "35+ CAx systems, 42+ formats analysed" | conflicts internally and with everything else |
+| `PMEF_Specification_v1.2.docx` (renamed 2026-10-31 to `PMEF_Specification_v1.0-draft_DE.docx`) | **file name says v1.2, title page says "Version 1.0 – April 2026", Document ID `PMEF-SPEC-0001 Rev.1`, predecessor "v0.9, März 2026"**; German; claims "35+ CAx systems, 42+ formats analysed" | conflicts internally and with everything else |
 | `ROADMAP.md` | v0.9 = current; v1.0/v1.1/v1.2 = planned 2026 Q3 – 2027 Q1 | the "v1.2" docx name collides with the roadmap's future v1.2 (MVP-3) |
 
 **Recommendation:** the normative version is **0.9.0** (spec + schemas + examples + Rust agree);

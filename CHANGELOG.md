@@ -75,6 +75,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Changed
 
+- **README and contributor docs match the repository.** Repo URL `MatzUp2022/PMEF` instead of
+  the placeholder `pmef/specification` (README, spec 01, Cargo.toml, CONTRIBUTING, getting
+  started, issue templates); real folder names and file lists; placeholder badges and links
+  removed (Discord, OpenSSF, ghcr.io image, crates.io install); "14+ bidirectional adapters"
+  replaced by an implementation-status table; CLI install from source.
+- **`PMEF_Specification_v1.2.docx` renamed to `PMEF_Specification_v1.0-draft_DE.docx`** — its
+  title page says v1.0 draft; it is a non-normative legacy artefact.
 - **Rust CI** (`.github/workflows/rust.yml`): builds and tests the whole `pmef-rs` workspace
   and runs `pmef validate` on every example; clippy runs informationally. The release workflow
   now requires it.

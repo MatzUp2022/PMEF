@@ -1,12 +1,6 @@
 blank_issues_enabled: false
 
 contact_links:
-  - name: 💬 Discord Community
-    url: https://discord.gg/pmef
-    about: Ask questions, share ideas, and connect with the PMEF community
-  - name: 📖 Specification Documentation
-    url: https://pmef.net/spec
-    about: Browse the full PMEF specification
-  - name: 🗣️ GitHub Discussions
-    url: https://github.com/pmef/specification/discussions
-    about: For longer-form discussion about design questions and proposals
+  - name: 📖 Specification
+    url: https://github.com/MatzUp2022/PMEF/tree/main/spec
+    about: Browse the normative PMEF specification (Markdown)

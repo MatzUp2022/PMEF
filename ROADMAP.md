@@ -43,7 +43,7 @@ reference implementation. Dates are targets, not commitments.
 - ✅ README, CONTRIBUTING, ROADMAP, GOVERNANCE
 - ✅ Issue templates (bug, feature, RFC)
 - ✅ CI/CD pipeline (schema validation)
-- 🔄 Discord server setup
+- 🗓️ Community channel (none yet — use GitHub Issues)
 - 🔄 First working group sessions (WG-Piping, WG-Equipment)
 
 ---

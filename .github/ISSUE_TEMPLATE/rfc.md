@@ -8,7 +8,7 @@ assignees: ''
 
 <!--
 BEFORE SUBMITTING: Check that no existing RFC covers the same ground.
-Open RFCs: https://github.com/pmef/specification/issues?q=label%3ARFC+is%3Aopen
+Open RFCs: https://github.com/MatzUp2022/PMEF/issues?q=label%3ARFC+is%3Aopen
 
 RFC numbering: The TSC will assign the final number. Use NNN as placeholder.
 Discussion period: Minimum 30 days before merge.
