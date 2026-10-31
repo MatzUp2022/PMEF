@@ -1,0 +1,95 @@
+{
+  "summary": {
+    "added": 1,
+    "removed": 1,
+    "changed": 2,
+    "unchanged": 7
+  },
+  "objects": [
+    {
+      "@id": "urn:pmef:obj:demo-asb:B-101",
+      "@type": "pmef:SteelMember",
+      "status": "changed",
+      "headId": "urn:pmef:obj:scan-2026-10:R-0002",
+      "matchedBy": "geometry",
+      "changes": [
+        {
+          "path": "endPoint[0]",
+          "kind": "modified",
+          "old": 6025.0,
+          "new": 6000.0,
+          "delta": -25.0
+        },
+        {
+          "path": "memberMark",
+          "kind": "removed",
+          "old": "B-101"
+        }
+      ]
+    },
+    {
+      "@id": "urn:pmef:obj:demo-asb:CW-301-PIPE-002",
+      "@type": "pmef:Pipe",
+      "status": "changed",
+      "headId": "urn:pmef:obj:scan-2026-10:R-0005",
+      "matchedBy": "geometry",
+      "changes": [
+        {
+          "path": "pipeLength",
+          "kind": "modified",
+          "old": 2283.4,
+          "new": 2271.4,
+          "delta": -12.0
+        },
+        {
+          "path": "ports[portId=P2].coordinate[2]",
+          "kind": "modified",
+          "old": 988.0,
+          "new": 1000.0,
+          "delta": 12.0
+        }
+      ]
+    },
+    {
+      "@id": "urn:pmef:obj:demo-asb:CW-301-PS-002",
+      "@type": "pmef:PipeSupport",
+      "status": "removed"
+    },
+    {
+      "@id": "urn:pmef:obj:scan-2026-10:R-0006",
+      "@type": "pmef:PipeSupport",
+      "status": "added"
+    }
+  ],
+  "matches": [
+    {
+      "baseId": "urn:pmef:line:demo-asb:CW-301",
+      "headId": "urn:pmef:line:scan-2026-10:R-0001",
+      "method": "tag"
+    },
+    {
+      "baseId": "urn:pmef:obj:demo-asb:B-101",
+      "headId": "urn:pmef:obj:scan-2026-10:R-0002",
+      "method": "geometry",
+      "distanceMm": 12.5
+    },
+    {
+      "baseId": "urn:pmef:obj:demo-asb:CW-301-ELB-001",
+      "headId": "urn:pmef:obj:scan-2026-10:R-0003",
+      "method": "geometry",
+      "distanceMm": 0.0
+    },
+    {
+      "baseId": "urn:pmef:obj:demo-asb:CW-301-PIPE-001",
+      "headId": "urn:pmef:obj:scan-2026-10:R-0004",
+      "method": "geometry",
+      "distanceMm": 0.0
+    },
+    {
+      "baseId": "urn:pmef:obj:demo-asb:CW-301-PIPE-002",
+      "headId": "urn:pmef:obj:scan-2026-10:R-0005",
+      "method": "geometry",
+      "distanceMm": 6.0
+    }
+  ]
+}

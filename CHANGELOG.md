@@ -122,6 +122,15 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **`pmef diff --match`: comparison when `@id`s differ** (spec 03 §9.5) — typical for as-built
+  models with recogniser ids. Objects are matched one-to-one in fixed passes: same `@id`, same
+  engineering identifier (tag, line number, mark — only if unique), same native tool object
+  (`HasEquivalentIn`), geometric proximity of anchor points (ports, nozzles, member ends;
+  direction-free mean distance ≤ `--match-distance`, default 100 mm, with an ambiguity flag), and
+  references (geometry owners, relationship endpoints). References in the head package are
+  rewritten to the matched ids before comparing, so differing ids cause no spurious changes.
+  Library: `pmef_core::matching`, `pmef_core::diff::diff_matched`. Golden test: an as-built
+  model with scanner ids yields the same plant deviations as the identical-id case.
 - **Deterministic object-level `pmef diff`** (spec 03 §9). Objects matched by `@id`, field-level
   changes with stable paths (`ports[portId=P2].coordinate[2]`), keyed array matching (ports,
   nozzles, residuals, composite parts), spec 06 §6.2 numeric tolerances (`--exact` to disable),

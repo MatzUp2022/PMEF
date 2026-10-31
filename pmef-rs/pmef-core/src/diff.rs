@@ -75,6 +75,12 @@ pub struct ObjectDiff {
     pub entity_type: String,
     /// Status.
     pub status: ObjectStatus,
+    /// `@id` of the matched head object, if it differs (matching mode, spec 03 §9.5).
+    #[serde(rename = "headId", skip_serializing_if = "Option::is_none")]
+    pub head_id: Option<String>,
+    /// How the head object was matched, if its `@id` differs.
+    #[serde(rename = "matchedBy", skip_serializing_if = "Option::is_none")]
+    pub matched_by: Option<crate::matching::MatchMethod>,
     /// Field changes (only for `changed`).
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub changes: Vec<FieldChange>,
@@ -100,6 +106,9 @@ pub struct DiffReport {
     pub summary: DiffSummary,
     /// Added, removed and changed objects, sorted by `@id`.
     pub objects: Vec<ObjectDiff>,
+    /// Correspondences between differing `@id`s (matching mode only), sorted by base `@id`.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub matches: Vec<crate::matching::ObjectMatch>,
 }
 
 impl DiffReport {
@@ -148,7 +157,7 @@ pub fn tolerance(field: &str) -> f64 {
     }
 }
 
-fn index<'a>(objs: &'a [Value], side: &'static str) -> Result<BTreeMap<&'a str, &'a Value>, DiffError> {
+pub(crate) fn index<'a>(objs: &'a [Value], side: &'static str) -> Result<BTreeMap<&'a str, &'a Value>, DiffError> {
     let mut map = BTreeMap::new();
     for (i, o) in objs.iter().enumerate() {
         let id = o.get("@id").and_then(Value::as_str).ok_or(DiffError::MissingId { side, index: i + 1 })?;
@@ -174,11 +183,11 @@ pub fn diff(base: &[Value], head: &[Value], opts: &DiffOptions) -> Result<DiffRe
         match (b.get(id), h.get(id)) {
             (None, Some(o)) => {
                 summary.added += 1;
-                objects.push(ObjectDiff { id: id.into(), entity_type: type_of(o), status: ObjectStatus::Added, changes: vec![] });
+                objects.push(ObjectDiff { id: id.into(), entity_type: type_of(o), status: ObjectStatus::Added, head_id: None, matched_by: None, changes: vec![] });
             }
             (Some(o), None) => {
                 summary.removed += 1;
-                objects.push(ObjectDiff { id: id.into(), entity_type: type_of(o), status: ObjectStatus::Removed, changes: vec![] });
+                objects.push(ObjectDiff { id: id.into(), entity_type: type_of(o), status: ObjectStatus::Removed, head_id: None, matched_by: None, changes: vec![] });
             }
             (Some(old), Some(new)) => {
                 let mut changes = Vec::new();
@@ -187,13 +196,41 @@ pub fn diff(base: &[Value], head: &[Value], opts: &DiffOptions) -> Result<DiffRe
                     summary.unchanged += 1;
                 } else {
                     summary.changed += 1;
-                    objects.push(ObjectDiff { id: id.into(), entity_type: type_of(new), status: ObjectStatus::Changed, changes });
+                    objects.push(ObjectDiff { id: id.into(), entity_type: type_of(new), status: ObjectStatus::Changed, head_id: None, matched_by: None, changes });
                 }
             }
             (None, None) => unreachable!(),
         }
     }
-    Ok(DiffReport { summary, objects })
+    Ok(DiffReport { summary, objects, matches: vec![] })
+}
+
+/// Compare two packages whose objects may carry different `@id`s (spec 03 §9.5).
+///
+/// Objects are first matched with [`crate::matching::match_objects`]; references in the head
+/// package are rewritten to the matched base ids, then the packages are compared as usual.
+pub fn diff_matched(
+    base: &[Value],
+    head: &[Value],
+    opts: &DiffOptions,
+    mopts: &crate::matching::MatchOptions,
+) -> Result<DiffReport, DiffError> {
+    use crate::matching::{match_objects, rewrite_ids, MatchMethod};
+    let matches = match_objects(base, head, mopts)?;
+    let h2b: BTreeMap<&str, &str> =
+        matches.iter().filter(|m| m.base_id != m.head_id).map(|m| (m.head_id.as_str(), m.base_id.as_str())).collect();
+    let rewritten: Vec<Value> = head.iter().map(|o| rewrite_ids(o, &h2b)).collect();
+    let mut report = diff(base, &rewritten, opts)?;
+    let by_base: BTreeMap<&str, &crate::matching::ObjectMatch> =
+        matches.iter().filter(|m| m.method != MatchMethod::Id).map(|m| (m.base_id.as_str(), m)).collect();
+    for o in &mut report.objects {
+        if let Some(m) = by_base.get(o.id.as_str()) {
+            o.head_id = Some(m.head_id.clone());
+            o.matched_by = Some(m.method);
+        }
+    }
+    report.matches = matches.into_iter().filter(|m| m.method != MatchMethod::Id).collect();
+    Ok(report)
 }
 
 fn ignored(path: &str, opts: &DiffOptions) -> bool {
@@ -311,7 +348,19 @@ pub fn render_text(r: &DiffReport) -> String {
             ObjectStatus::Removed => '-',
             ObjectStatus::Changed => '~',
         };
-        let _ = writeln!(s, "{sign} {} ({})", o.id, o.entity_type);
+        match (&o.head_id, o.matched_by) {
+            (Some(h), Some(m)) => {
+                let detail = r.matches.iter().find(|x| x.base_id == o.id).map_or_else(String::new, |x| {
+                    let d = x.distance_mm.map_or_else(String::new, |d| format!(" {d} mm"));
+                    format!(" [{}{d}{}]", serde_json::to_value(m).ok().and_then(|v| v.as_str().map(str::to_owned)).unwrap_or_default(),
+                        if x.ambiguous { ", ambiguous" } else { "" })
+                });
+                let _ = writeln!(s, "{sign} {} ⇐ {h} ({}){detail}", o.id, o.entity_type);
+            }
+            _ => {
+                let _ = writeln!(s, "{sign} {} ({})", o.id, o.entity_type);
+            }
+        }
         for c in &o.changes {
             let v = |x: &Option<Value>| x.as_ref().map_or_else(String::new, Value::to_string);
             let _ = match c.kind {
@@ -323,6 +372,16 @@ pub fn render_text(r: &DiffReport) -> String {
                 },
             };
         }
+    }
+    if !r.matches.is_empty() {
+        let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+        for x in &r.matches {
+            let k = serde_json::to_value(x.method).ok().and_then(|v| v.as_str().map(str::to_owned)).unwrap_or_default();
+            *counts.entry(k).or_default() += 1;
+        }
+        let list: Vec<String> = counts.iter().map(|(k, n)| format!("{k} {n}")).collect();
+        let amb = r.matches.iter().filter(|x| x.ambiguous).count();
+        let _ = writeln!(s, "Matched with different @id: {} ({}), ambiguous {amb}", r.matches.len(), list.join(", "));
     }
     let m = &r.summary;
     let _ = writeln!(

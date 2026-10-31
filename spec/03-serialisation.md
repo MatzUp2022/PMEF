@@ -469,6 +469,36 @@ Reference implementation: `pmef_core::diff` and `pmef diff` (`--exact`, `--ignor
 `--ignore-recognition` for the RFC-0001 blocks, `--format text|json`); golden tests in
 `tests/diff/`.
 
+### 9.5 Matching Objects with Different `@id`s
+
+An as-built model produced by a recogniser usually carries its own `@id`s. A tool **MAY** offer a
+matching mode; if it does, it **MUST** match base and head objects one-to-one in these passes,
+each pass considering only objects not matched by an earlier pass:
+
+| Pass | Method | Rule |
+|---|---|---|
+| 1 | `id` | same `@id` |
+| 2 | `tag` | same `@type` and same engineering identifier — the first present of `equipmentBasic.tagNumber`, `lineNumber`, `tagNumber`, `memberMark`, `supportsMark`, `spoolMark`, `weldSpec.weldNumber`, `loopNumber` — where the value is unique per `@type` on both sides |
+| 3 | `equivalent` | same `@type` and same native tool object: a `pmef:HasEquivalentIn` with equal `targetSystem` and `targetSystemId` on both sides, unique on both sides |
+| 4 | `geometry` | same `@type`; distance ≤ limit (default 100 mm) |
+| 5 | `reference` | objects with `ownerRef` whose owners are matched; relationships whose `sourceId` and `targetId` are matched (same `@type`); repeated until no new match |
+
+**Geometry distance.** Anchor points are the `coordinate`s of `ports` and `nozzles`, and
+`startPoint`, `endPoint` and `coordinate`. The distance of two objects is the symmetric mean
+nearest-neighbour distance of their anchor sets (independent of anchor order and direction),
+rounded to 6 decimals; objects without anchors are not matched geometrically. Candidate pairs
+are assigned greedily in the order (distance, base `@id`, head `@id`). A geometric match is
+**ambiguous** if another candidate pair sharing exactly one of its two objects has a distance
+smaller than the chosen distance plus the ambiguity margin (default 10 mm); ambiguous matches
+need review.
+
+After matching, every string in the head package equal to a matched head `@id` is replaced by
+the base `@id`, and the packages are compared per §9.1–§9.4. The report lists matched objects
+with `headId` and `matchedBy`, and a `matches` array of all non-`id` correspondences
+(`baseId`, `headId`, `method`, `distanceMm` for geometry, `ambiguous` when true), sorted by
+`baseId`. Reference implementation: `pmef_core::matching`, `pmef diff --match
+[--match-distance <mm>]`.
+
 ---
 
 *End of Chapter 03.*

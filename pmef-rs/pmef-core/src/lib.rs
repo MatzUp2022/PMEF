@@ -28,6 +28,7 @@ pub mod diff;
 pub mod ei;
 pub mod equipment;
 pub mod geometry;
+pub mod matching;
 pub mod plant;
 pub mod provenance;
 pub mod piping;

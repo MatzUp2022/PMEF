@@ -73,6 +73,12 @@ enum Commands {
         /// as-built vs. design comparisons that should show plant deviations only.
         #[arg(long)]
         ignore_recognition: bool,
+        /// Match objects whose @id differs (tag, HasEquivalentIn, geometry, references; spec 03 §9.5).
+        #[arg(long = "match")]
+        match_objects: bool,
+        /// Largest mean anchor distance for a geometric match [mm] (with --match).
+        #[arg(long, default_value_t = 100.0, value_name = "MM")]
+        match_distance: f64,
     },
 
     /// Print statistics about a PMEF NDJSON file.
@@ -180,11 +186,15 @@ async fn main() -> Result<()> {
         Commands::Validate { file, schemas, level, format, fail_fast } => {
             cmd_validate(file, schemas, level, &format, fail_fast).await
         }
-        Commands::Diff { base, head, format, exact, mut ignore, ignore_recognition } => {
+        Commands::Diff { base, head, format, exact, mut ignore, ignore_recognition, match_objects, match_distance } => {
             if ignore_recognition {
                 ignore.extend(["provenance", "review", "asBuilt"].map(String::from));
             }
-            cmd_diff(base, head, &format, exact, ignore)
+            let matching = match_objects.then(|| pmef_core::matching::MatchOptions {
+                max_distance_mm: match_distance,
+                ..Default::default()
+            });
+            cmd_diff(base, head, &format, exact, ignore, matching)
         }
         Commands::Stats { file, by_type, by_domain } => {
             cmd_stats(file, by_type, by_domain).await
@@ -320,12 +330,23 @@ fn read_values(path: &PathBuf) -> Result<Vec<serde_json::Value>> {
         .collect()
 }
 
-fn cmd_diff(base: PathBuf, head: PathBuf, format: &str, exact: bool, ignore: Vec<String>) -> Result<()> {
-    use pmef_core::diff::{diff, render_text, DiffOptions};
+fn cmd_diff(
+    base: PathBuf,
+    head: PathBuf,
+    format: &str,
+    exact: bool,
+    ignore: Vec<String>,
+    matching: Option<pmef_core::matching::MatchOptions>,
+) -> Result<()> {
+    use pmef_core::diff::{diff, diff_matched, render_text, DiffOptions};
 
     let run = || -> Result<pmef_core::diff::DiffReport> {
         let (b, h) = (read_values(&base)?, read_values(&head)?);
-        Ok(diff(&b, &h, &DiffOptions { exact, ignore })?)
+        let opts = DiffOptions { exact, ignore };
+        Ok(match &matching {
+            Some(m) => diff_matched(&b, &h, &opts, m)?,
+            None => diff(&b, &h, &opts)?,
+        })
     };
     let report = match run() {
         Ok(r) => r,

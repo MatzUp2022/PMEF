@@ -3,6 +3,8 @@
 //! Regenerate the golden files after an intended output change:
 //!   pmef diff tests/diff/design.ndjson tests/diff/asbuilt.ndjson --ignore revision --ignore-recognition > tests/diff/expected-asbuilt.txt
 //!   pmef diff tests/diff/design.ndjson tests/diff/asbuilt.ndjson --ignore revision --format json > tests/diff/expected-full.json
+//!   pmef diff tests/diff/design.ndjson tests/diff/asbuilt-scan.ndjson --ignore revision --ignore-recognition --match > tests/diff/expected-match.txt
+//!   (same with --format json > tests/diff/expected-match.json)
 
 use std::path::PathBuf;
 use std::process::Command;
@@ -68,4 +70,40 @@ fn duplicate_ids_are_an_error() {
     assert_eq!(code, 2);
     assert!(err.contains("duplicate @id"), "{err}");
     std::fs::remove_dir_all(dir).ok();
+}
+
+const SCAN: &str = "tests/diff/asbuilt-scan.ndjson";
+
+#[test]
+fn golden_matching_with_recogniser_ids() {
+    let args = ["diff", DESIGN, SCAN, "--ignore", "revision", "--ignore-recognition", "--match"];
+    let (code, out, _) = pmef(&args);
+    assert_eq!(code, 1);
+    assert_eq!(out, std::fs::read_to_string(root().join("tests/diff/expected-match.txt")).unwrap());
+    let (_, json, _) = pmef(&[&args[..], &["--format", "json"]].concat());
+    assert_eq!(json, std::fs::read_to_string(root().join("tests/diff/expected-match.json")).unwrap());
+}
+
+#[test]
+fn matching_reports_the_same_plant_deviations_as_identical_ids() {
+    // Recogniser ids + --match must find the same field changes as the identical-id case,
+    // apart from memberMark, which the recogniser does not know.
+    let changes = |file: &str, extra: &[&str]| -> Vec<(String, String)> {
+        let args = [&["diff", DESIGN, file, "--ignore", "revision", "--ignore-recognition", "--format", "json"][..], extra].concat();
+        let v: serde_json::Value = serde_json::from_str(&pmef(&args).1).unwrap();
+        v["objects"].as_array().unwrap().iter()
+            .flat_map(|o| o["changes"].as_array().cloned().unwrap_or_default().into_iter()
+                .map(move |c| (o["@id"].as_str().unwrap().to_owned(), c["path"].as_str().unwrap().to_owned())))
+            .filter(|(_, p)| p != "memberMark")
+            .collect()
+    };
+    assert_eq!(changes(ASBUILT, &[]), changes(SCAN, &["--match"]));
+}
+
+#[test]
+fn without_match_differing_ids_are_added_and_removed() {
+    let v: serde_json::Value =
+        serde_json::from_str(&pmef(&["diff", DESIGN, SCAN, "--format", "json"]).1).unwrap();
+    assert_eq!(v["summary"]["added"], 6);
+    assert_eq!(v["summary"]["removed"], 6);
 }
