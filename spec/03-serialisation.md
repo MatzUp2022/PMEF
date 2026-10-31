@@ -18,6 +18,7 @@
 7. [Version Declaration](#7-version-declaration)
 8. [Large Model Handling](#8-large-model-handling)
 9. [Object-Level Comparison](#9-object-level-comparison)
+10. [Three-Way Merge](#10-three-way-merge)
 
 ---
 
@@ -503,6 +504,42 @@ with `headId` and `matchedBy`, and a `matches` array of all non-`id` corresponde
 (`baseId`, `headId`, `method`, `distanceMm` for geometry, `ambiguous` when true), sorted by
 `baseId`. Reference implementation: `pmef_core::matching`, `pmef diff --match
 [--match-distance <mm>]`.
+
+---
+
+## 10 Three-Way Merge
+
+*Since 0.10.0.* A three-way merge combines two independent edits (`ours`, `theirs`) of a common
+ancestor (`base`) — e.g. design changes made while confirmed as-built deviations were being
+recorded. A tool that merges PMEF packages (e.g. `pmef merge`) **MUST** follow these rules.
+
+### 10.1 Rules
+
+1. Objects are matched by `@id` (§9.1; duplicates are an error). Packages whose objects carry
+   different `@id`s for the same item **SHOULD** first be reconciled via as-built correspondences
+   ([RFC-0003](rfc/0003-as-built-correspondence.md)).
+2. For every object and, recursively, every field — with absent meaning "not present / deleted":
+   - `ours` equals `theirs` → that value;
+   - `ours` equals `base` → `theirs`; `theirs` equals `base` → `ours`;
+   - otherwise, if all present values are objects → merge per key; if all three are arrays with a
+     common key field (§9.2) → merge per key; if all three are arrays of equal length → merge per
+     position;
+   - otherwise → **conflict**.
+3. Equality uses §9.2 (numeric tolerances unless exact mode, keyed arrays order-free).
+4. Conflict kinds: `modify-modify` (both changed differently), `modify-delete` (one side deleted
+   what the other changed), `add-add` (both added different values where base had none). The
+   merged output contains the value of the preferred side (default `ours`); every conflict
+   **MUST** be reported with object `@id`, path (§9.3) and the base, ours and theirs values.
+5. Keyed arrays keep the element order of `ours`, followed by keys only in `theirs` in key order.
+
+### 10.2 Output
+
+The merged package is written one object per line, `pmef:FileHeader` first, all other objects
+ordered by `@id`, object keys sorted (§2.5) — so the same inputs always produce the same bytes,
+and swapping `ours` and `theirs` together with the preferred side yields identical output.
+A command-line tool **SHOULD** exit with 0 (merged cleanly), 1 (conflicts; output written) or
+2 (error). Reference implementation: `pmef_core::merge`, `pmef merge BASE OURS THEIRS -o OUT
+[--prefer ours|theirs] [--exact] [--format text|json]`; golden tests in `tests/merge/`.
 
 ---
 

@@ -160,3 +160,61 @@ fn correspondence_workflow_confirm_and_reject() {
     assert_eq!(pipe(&first), pipe(&v));
     std::fs::remove_dir_all(dir).ok();
 }
+
+// ── pmef merge (spec 03 §10) ─────────────────────────────────────────────────
+// Regenerate after an intended change:
+//   pmef merge tests/diff/design.ndjson tests/merge/ours-design-change.ndjson \
+//     tests/merge/theirs-asbuilt-update.ndjson -o tests/merge/expected-merged.ndjson > tests/merge/expected-report.txt
+
+const OURS: &str = "tests/merge/ours-design-change.ndjson";
+const THEIRS: &str = "tests/merge/theirs-asbuilt-update.ndjson";
+
+fn tmp(name: &str) -> PathBuf {
+    let dir = std::env::temp_dir().join(format!("pmef-merge-{}-{name}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    dir.join("out.ndjson")
+}
+
+#[test]
+fn merge_golden_with_conflicts() {
+    let out = tmp("golden");
+    let (code, report, _) = pmef(&["merge", DESIGN, OURS, THEIRS, "-o", out.to_str().unwrap()]);
+    assert_eq!(code, 1, "conflicts must exit with 1");
+    let expected_report = std::fs::read_to_string(root().join("tests/merge/expected-report.txt")).unwrap();
+    // the report names the output path; compare everything else
+    let strip = |s: &str| s.lines().filter(|l| !l.starts_with("Merged ")).collect::<Vec<_>>().join("\n");
+    assert_eq!(strip(&report), strip(&expected_report));
+    assert_eq!(std::fs::read_to_string(&out).unwrap(),
+               std::fs::read_to_string(root().join("tests/merge/expected-merged.ndjson")).unwrap());
+    let (vcode, vout, _) = pmef(&["validate", out.to_str().unwrap(), "--schemas", "schemas"]);
+    assert_eq!(vcode, 0, "merged output must be schema-valid:\n{vout}");
+}
+
+#[test]
+fn merge_prefer_theirs_and_symmetry() {
+    let out = tmp("prefer");
+    pmef(&["merge", DESIGN, OURS, THEIRS, "-o", out.to_str().unwrap(), "--prefer", "theirs"]);
+    let merged: Vec<serde_json::Value> = std::fs::read_to_string(&out).unwrap().lines()
+        .map(|l| serde_json::from_str(l).unwrap()).collect();
+    let pipe = merged.iter().find(|o| o["@id"] == "urn:pmef:obj:demo-asb:CW-301-PIPE-002").unwrap();
+    assert_eq!(pipe["pipeLength"], 2271.4);
+    // swapping sides with --prefer theirs gives the same bytes as the default
+    let swapped = tmp("swapped");
+    pmef(&["merge", DESIGN, THEIRS, OURS, "-o", swapped.to_str().unwrap(), "--prefer", "theirs"]);
+    let default = tmp("default");
+    pmef(&["merge", DESIGN, OURS, THEIRS, "-o", default.to_str().unwrap()]);
+    assert_eq!(std::fs::read_to_string(swapped).unwrap(), std::fs::read_to_string(default).unwrap());
+}
+
+#[test]
+fn merge_clean_exits_zero_and_errors_exit_two() {
+    let out = tmp("clean");
+    // theirs == base: result equals ours, no conflicts
+    let (code, _, _) = pmef(&["merge", DESIGN, OURS, DESIGN, "-o", out.to_str().unwrap()]);
+    assert_eq!(code, 0);
+    let (code, _, _) = pmef(&["diff", OURS, out.to_str().unwrap()]);
+    assert_eq!(code, 0, "merge(base, ours, base) must equal ours");
+    let (code, _, err) = pmef(&["merge", DESIGN, OURS, "tests/merge/missing.ndjson", "-o", out.to_str().unwrap()]);
+    assert_eq!(code, 2);
+    assert!(err.contains("Cannot open"), "{err}");
+}

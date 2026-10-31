@@ -122,6 +122,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **Three-way `pmef merge`** (spec 03 §10). Merges two edits of a common base object by object and
+  field by field with the diff rules (keyed arrays, numeric tolerances); one-sided changes are
+  taken, differing changes on both sides are conflicts (`modify-modify`, `modify-delete`,
+  `add-add`) reported with base/ours/theirs values; `--prefer ours|theirs` decides the written
+  value. Deterministic output (FileHeader first, `@id` order, sorted keys); exit 0/1/2.
+  Library `pmef_core::merge`; golden test: design change merged with confirmed as-built deviations.
 - **RFC-0003 — persisted as-built ↔ design correspondence** ([RFC](spec/rfc/0003-as-built-correspondence.md)).
   `pmef:IsRevisionOf` with `changeType = AS_BUILT` gains an optional `correspondence` block
   (`method`, `distance_mm`, `ambiguous`; schema requires `AS_BUILT` when present); confirmation via

@@ -211,6 +211,6 @@ released changes only):
 - ✅ `catalogs/profiles-en.json` HEA data corrected (2024.2)
 - 🗓️ Same consistency check for AISC, hollow-section and piping-class catalogs
 - ✅ Deterministic object-level `pmef diff` (spec 03 §9)
-- 🗓️ 3-way merge (`pmef merge`) with a conflict model on top of the diff rules
+- ✅ 3-way merge (`pmef merge`, spec 03 §10)
 - ✅ `pmef diff --match` for differing `@id`s (spec 03 §9.5)
 - 🔄 RFC-0003 persisted as-built ↔ design correspondence (`--emit-matches`, pass 1b) — draft, awaiting review

@@ -199,7 +199,7 @@ The `.docx` files are **non-normative legacy artefacts**. Where they differ from
 | Catalog snapping `pmef-snap/1` ([RFC-0002](spec/rfc/0002-catalog-snapping.md)) | pipes and I-sections; Python reference + Rust, shared test vectors (draft for review) |
 | As-built ↔ design correspondence ([RFC-0003](spec/rfc/0003-as-built-correspondence.md)) | `IsRevisionOf` + `correspondence`; reused by `pmef diff --match` (draft for review) |
 | `pmef-core`, `pmef-io`, `pmef-validate`, `pmef-geom` | builds and tests green in CI |
-| `pmef` CLI | `validate`, `diff` (deterministic, field-level, `--match` for differing ids; spec 03 §9), `stats`, `index`, `check-refs`, `topology` work; `conformance` is a basic structural check (full suite: `tests/`); `convert` not implemented |
+| `pmef` CLI | `validate`, `diff` (deterministic, field-level, `--match` for differing ids; spec 03 §9), `merge` (three-way, spec 03 §10), `stats`, `index`, `check-refs`, `topology` work; `conformance` is a basic structural check (full suite: `tests/`); `convert` not implemented |
 | Adapters (Rust) | all 10 compile and pass their unit tests; export direction only; real-tool round-trips not yet verified |
 | Host plug-ins (C#, C) | source only, not built in CI |
 | Conformance suite ([`tests/`](tests/README.md)) | 82 normative tests (spec 06), runnable against any implementation; reference passes level 3 in CI |

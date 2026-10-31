@@ -85,6 +85,32 @@ enum Commands {
         emit_matches: Option<PathBuf>,
     },
 
+    /// Three-way merge of PMEF NDJSON files (spec 03 §10).
+    ///
+    /// Takes changes made on only one side, reports differing changes on both sides as
+    /// conflicts. Output: FileHeader first, then sorted by @id, keys sorted.
+    /// Exit code: 0 = merged cleanly, 1 = conflicts (output written), 2 = error.
+    Merge {
+        /// Common ancestor.
+        base: PathBuf,
+        /// Our edit of base.
+        ours: PathBuf,
+        /// Their edit of base.
+        theirs: PathBuf,
+        /// Merged output file.
+        #[arg(short, long)]
+        output: PathBuf,
+        /// Side written for conflicting values: ours or theirs.
+        #[arg(long, default_value = "ours", value_parser = ["ours", "theirs"])]
+        prefer: String,
+        /// Compare numbers exactly instead of with the spec 06 §6.2 tolerances.
+        #[arg(long)]
+        exact: bool,
+        /// Conflict report format: text or json.
+        #[arg(long, default_value = "text", value_parser = ["text", "json"])]
+        format: String,
+    },
+
     /// Print statistics about a PMEF NDJSON file.
     Stats {
         /// Path to the NDJSON file.
@@ -199,6 +225,9 @@ async fn main() -> Result<()> {
                 ..Default::default()
             });
             cmd_diff(base, head, &format, exact, ignore, matching, emit_matches)
+        }
+        Commands::Merge { base, ours, theirs, output, prefer, exact, format } => {
+            cmd_merge(base, ours, theirs, output, &prefer, exact, &format)
         }
         Commands::Stats { file, by_type, by_domain } => {
             cmd_stats(file, by_type, by_domain).await
@@ -332,6 +361,54 @@ fn read_values(path: &PathBuf) -> Result<Vec<serde_json::Value>> {
             serde_json::from_str(l).with_context(|| format!("{}:{}: invalid JSON", path.display(), n + 1))
         })
         .collect()
+}
+
+fn cmd_merge(
+    base: PathBuf,
+    ours: PathBuf,
+    theirs: PathBuf,
+    output: PathBuf,
+    prefer: &str,
+    exact: bool,
+    format: &str,
+) -> Result<()> {
+    use pmef_core::merge::{merge, MergeOptions, Prefer};
+    let prefer = if prefer == "theirs" { Prefer::Theirs } else { Prefer::Ours };
+    let run = || -> Result<pmef_core::merge::MergeResult> {
+        let (b, o, t) = (read_values(&base)?, read_values(&ours)?, read_values(&theirs)?);
+        let r = merge(&b, &o, &t, &MergeOptions { exact, prefer })?;
+        let mut text = String::new();
+        for v in &r.objects {
+            text.push_str(&serde_json::to_string(v)?);
+            text.push('\n');
+        }
+        std::fs::write(&output, text).with_context(|| format!("Cannot write {}", output.display()))?;
+        Ok(r)
+    };
+    let r = match run() {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("error: {e:#}");
+            std::process::exit(2);
+        }
+    };
+    if format == "json" {
+        println!("{}", serde_json::to_string_pretty(&serde_json::json!({
+            "objects": r.objects.len(), "conflicts": r.conflicts
+        }))?);
+    } else {
+        for c in &r.conflicts {
+            let v = |x: &Option<serde_json::Value>| x.as_ref().map_or_else(|| "(absent)".to_owned(), |v| v.to_string());
+            println!("! {} {} [{}]: base {} | ours {} | theirs {}",
+                c.id, if c.path.is_empty() { "(object)" } else { &c.path },
+                serde_json::to_value(c.kind)?.as_str().unwrap_or(""), v(&c.base), v(&c.ours), v(&c.theirs));
+        }
+        println!("Merged {} objects into {}, {} conflict(s)", r.objects.len(), output.display(), r.conflicts.len());
+    }
+    if !r.conflicts.is_empty() {
+        std::process::exit(1);
+    }
+    Ok(())
 }
 
 fn cmd_diff(
