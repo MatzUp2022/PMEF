@@ -156,14 +156,15 @@ MatzUp2022/PMEF
 ├── CLAUDE.md                   — contributor/agent working rules and verified commands
 ├── THIRD-PARTY-NOTICES.md
 │
-├── spec/                       — normative specification (Markdown, chapters 01–06)
+├── spec/                       — normative specification (Markdown, chapters 01–06; RFCs in spec/rfc/)
 ├── schemas/                    — JSON Schema Draft 2020-12 (10 files, normative with spec/)
 ├── examples/                   — NDJSON benchmark datasets (CC0)
 │   ├── pump-skid-complete.ndjson       (PMEF-DS-01)
 │   ├── heat-exchanger-station.ndjson   (PMEF-DS-02)
 │   ├── compressor-train.ndjson         (PMEF-DS-03)
 │   ├── ei-loop-fic-10101.ndjson        (PMEF-DS-04)
-│   └── stress-model-cw201.ndjson       (pipe-stress example)
+│   ├── stress-model-cw201.ndjson       (pipe-stress example)
+│   └── asbuilt-recognition.ndjson      (RFC-0001 provenance / review / as-built, 0.10.0)
 ├── catalogs/                   — open piping-class, profile, dimension and material catalogs
 ├── diagrams/                   — Mermaid UML diagrams
 ├── docs/                       — design decisions, getting started, ISO 15926 mapping, audit
@@ -193,6 +194,7 @@ The `.docx` files are **non-normative legacy artefacts**. Where they differ from
 | Component | Status |
 |-----------|--------|
 | Specification (`spec/`) + schemas | 0.9.0 release candidate; schemas and examples validated in CI |
+| Recognition provenance / review / as-built ([RFC-0001](spec/rfc/0001-provenance-asbuilt.md)) | in schemas, spec 02 §2.9 and `pmef-core` (0.10.0, draft for review) |
 | `pmef-core`, `pmef-io`, `pmef-validate`, `pmef-geom` | builds and tests green in CI |
 | `pmef` CLI | `validate`, `stats`, `index`, `check-refs`, `topology` work; `diff` and `conformance` are basic; `convert` not implemented |
 | Adapters (Rust) | all 10 compile and pass their unit tests; export direction only; real-tool round-trips not yet verified |

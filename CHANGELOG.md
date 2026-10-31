@@ -104,6 +104,26 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **RFC-0001 — recognition provenance, review status and as-built data (schema 0.10.0,
+  backward compatible).** Every object that carries `revision` may now carry three optional
+  blocks ([spec 02 §2.9](spec/02-information-model.md), [RFC](spec/rfc/0001-provenance-asbuilt.md)):
+  - `provenance` — `sourceType` (`manual`, `cad-import`, `iso-drawing`, `2d-drawing`, `scan`,
+    `photo`), `sourceRef` URI (document page/region or point-cloud segment), `recognizer`
+    (name + version), `confidence` 0..1, `createdAt`;
+  - `review` — `detected` / `reviewed` / `approved` / `rejected` with `reviewedBy`/`reviewedAt`;
+    schema-enforced ISO 19650 rule: `detected` ⇒ `WIP`, `rejected` ⇒ not `PUBLISHED`;
+  - `asBuilt` — `pointCloudRef`, `fitMethod`, `deviationRms_mm`, `deviationMax_mm`, and
+    `catalogSnap` (catalog id **+ version** + entry, snapped size, per-parameter residuals).
+  - Schemas: `pmef-base` `$defs` `Provenance`, `ReviewStatus`, `AsBuilt`, `CatalogSnap`,
+    `ReviewChangeStateRule`, referenced from all 20 object definitions. `$id` paths unchanged.
+  - Rust: `pmef-core::provenance` types, flattened into all 27 object structs.
+  - Example: `examples/asbuilt-recognition.ndjson` — DN 150 pipe run recognised from a scan and
+    an isometric, snapped to `piping-class-en-p1a` 2024.1; HEB 300 beam snapped to `profiles-en`
+    2024.1; one `detected`, one `reviewed`, one `rejected` object (synthetic, CC0).
+  - Tests: Rust positive/negative schema tests (`pmef-validate/tests/provenance.rs`) and a lossless
+    serde round trip of every example object (`pmef-core/tests/provenance_roundtrip.rs`).
+  - CAEX/AutomationML mapping documented in the RFC.
+
 - `scripts/validate-catalogs.py` — validates every file in `catalogs/` against
   the catalog schema and flags duplicate `catalogId` values within a catalog.
 - CI job `validate-catalogs` (and `catalogs/**` path trigger) in the

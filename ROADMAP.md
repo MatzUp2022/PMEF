@@ -205,3 +205,5 @@ released changes only):
 - 🗓️ Published schemas under a project-owned domain (namespace decision open, see docs/AUDIT.md §8)
 - 🗓️ Project website with full documentation
 - 🗓️ First vendor Level 2 certification
+- 🔄 RFC-0001 provenance / review / as-built — implemented as 0.10.0 draft, awaiting review
+- 🗓️ Follow-up RFC: catalog-snapping algorithm and residual definitions per catalog type

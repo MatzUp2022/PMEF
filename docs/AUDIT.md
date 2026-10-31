@@ -208,6 +208,11 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 - **P3.6** Make clippy gating: add doc comments, fix the remaining logic lints (e.g. unreachable
   `"GL"` arm in the Plant 3D valve SKEY mapping — `GL` always maps to globe, never control).
 - **P3.7** Commit `pmef-rs/Cargo.lock` (workspace ships a binary) for reproducible CI builds.
+- **P3.8** Rust validator ignored `dependentRequired` (found in Phase 3; RFC-0001 schema uses
+  `if/then` instead). Check other Draft 2020-12 keywords for Rust/Python divergence, or upgrade
+  the `jsonschema` crate (currently 0.18).
+- **P3.9** Rust model vs. schema drift: `PipeSupport.supportsMark`/`supportSpec` are required in
+  `pmef-core` but optional in the schema. Generate or test Rust types against the schemas.
 
 ## 8. Maintainer decisions (2026-10-31)
 
