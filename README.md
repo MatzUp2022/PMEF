@@ -196,6 +196,7 @@ The `.docx` files are **non-normative legacy artefacts**. Where they differ from
 |-----------|--------|
 | Specification (`spec/`) + schemas | 0.9.0 release candidate; schemas and examples validated in CI |
 | Recognition provenance / review / as-built ([RFC-0001](spec/rfc/0001-provenance-asbuilt.md)) | in schemas, spec 02 §2.9 and `pmef-core` (0.10.0, draft for review) |
+| Catalog snapping `pmef-snap/1` ([RFC-0002](spec/rfc/0002-catalog-snapping.md)) | pipes and I-sections; Python reference + Rust, shared test vectors (draft for review) |
 | `pmef-core`, `pmef-io`, `pmef-validate`, `pmef-geom` | builds and tests green in CI |
 | `pmef` CLI | `validate`, `stats`, `index`, `check-refs`, `topology` work; `diff` and `conformance` are basic; `convert` not implemented |
 | Adapters (Rust) | all 10 compile and pass their unit tests; export direction only; real-tool round-trips not yet verified |

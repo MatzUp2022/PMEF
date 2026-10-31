@@ -184,6 +184,14 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 - **P1.7** Make E3D equipment objects schema-valid (drop `null` optional fields, map
   type-specific required blocks such as `vesselDesign`) — found by the new integration test.
 
+- **P1.8** `catalogs/profiles-en.json` data defects (found 2026-10-31 while writing RFC-0002):
+  all HEA heights equal the nominal size (EN 10034: HEA 300 h = 290 mm, HEA 1000 h = 990 mm),
+  HEA 100 is listed as `EN:HEA96`, and the second moments of area `Iy_cm4` do not match the
+  standard (HEA 300: 118 000 vs. about 18 260 cm⁴). A, mass, tw, tf look plausible. Impact:
+  HEA and HEB of the same size are indistinguishable by h and b; any use of Iy is wrong.
+  Fix needs a source check against EN 10034 tables, a catalog `version` bump and a decision
+  on renaming `EN:HEA96` (entry id change). Other profile catalogs not yet checked.
+
 ### P2 — make claims true
 
 - **P2.1** ~~Real conformance runner~~ — done: `tests/run_tests.py` (82 tests, levels, kinds,

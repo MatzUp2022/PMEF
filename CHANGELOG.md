@@ -20,6 +20,10 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **Conformance fixtures no longer pick up 0.10.0 feature examples by accident.** The
+  generator took the first object of a type from all examples, so after RFC-0001 several
+  Level-1 fixtures (PIPE-U-002/004/005/016, STEEL-U-002/005) silently used objects from
+  `asbuilt-recognition.ndjson`. They now come from the 0.9.0 benchmark datasets only.
 - **`validate-examples.py` silently skipped 21 of 117 example objects** (all structural-steel
   and E&I types) because its hand-written type list was incomplete, and unknown `@type`s passed.
   The `@type` → schema map is now derived from the schemas themselves; unknown types are errors.
@@ -104,6 +108,16 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **RFC-0002 — deterministic catalog snapping `pmef-snap/1`** ([RFC](spec/rfc/0002-catalog-snapping.md),
+  spec 02 §2.9.4). Normative algorithm for straight pipes (`PIPING_CLASS`) and HEA/HEB/HEM/IPE/W
+  sections (`STEEL_PROFILES`, EN and AISC field conventions): tolerance band per parameter,
+  admissibility, normalised RMS score, total ordering (score → primary residual → `catalogId`),
+  runner-up and `ambiguous` flag (margin 0.1), recorded non-default tolerances. Schema:
+  `CatalogSnap` gains optional `algorithm`, `score`, `runnerUp`, `ambiguous`, `tolerances`.
+  Two implementations — Python reference (`tests/snapping/reference_snap.py`) and Rust
+  (`pmef_core::snapping`) — pass the same 16 test vectors (`tests/snapping/vectors.json`) in CI.
+  `examples/asbuilt-recognition.ndjson` is now generated with the reference implementation
+  (`scripts/generate-asbuilt-example.py`).
 - **Executable conformance test suite** (`tests/`, spec 06 §5–§7). `python tests/run_tests.py`
   runs the 82 normative test IDs — 50 unit and 8 negative schema tests (fixtures generated from
   one catalogue, `tests/conformance/manifest.json`), INTG-001…006 integration checks and

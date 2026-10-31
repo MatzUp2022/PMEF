@@ -206,4 +206,6 @@ released changes only):
 - 🗓️ Project website with full documentation
 - 🗓️ First vendor Level 2 certification
 - 🔄 RFC-0001 provenance / review / as-built — implemented as 0.10.0 draft, awaiting review
-- 🗓️ Follow-up RFC: catalog-snapping algorithm and residual definitions per catalog type
+- 🔄 RFC-0002 catalog snapping `pmef-snap/1` (pipes, I-sections) — implemented as draft, awaiting review
+- 🗓️ `pmef-snap/2`: fittings, flanges, hollow sections, angles
+- 🗓️ Correct `catalogs/profiles-en.json` HEA data (see docs/AUDIT.md P1.8)

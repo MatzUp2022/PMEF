@@ -72,6 +72,8 @@ python tests/run_tests.py --level 3                       # reference self-run, 
 python tests/conformance/tools/generate_fixtures.py       # regenerate fixtures after schema changes
 python tests/conformance/tools/generate_fixtures.py --check
 python tests/conformance/tools/selftest.py                # broken implementations must be detected
+python tests/snapping/reference_snap.py                   # pmef-snap/1 test vectors (RFC-0002)
+python scripts/generate-asbuilt-example.py examples/asbuilt-recognition.ndjson   # after catalog/algorithm changes
 ```
 
 CI also runs Mermaid validation (`mmdc` via `scripts/extract-mermaid.py`), markdownlint
