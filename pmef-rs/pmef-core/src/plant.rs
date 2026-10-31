@@ -35,6 +35,9 @@ pub struct Plant {
     pub epsg_code: Option<u32>,
     #[serde(skip_serializing_if="Option::is_none")]
     pub revision: Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
 }
 
 #[derive(Debug,Clone,Serialize,Deserialize)]
@@ -51,6 +54,9 @@ pub struct Unit {
     pub process_type: Option<String>,
     #[serde(skip_serializing_if="Option::is_none")]
     pub revision: Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
 }
 
 #[derive(Debug,Clone,Serialize,Deserialize)]
@@ -66,4 +72,7 @@ pub struct Area {
     pub area_name: Option<String>,
     #[serde(skip_serializing_if="Option::is_none")]
     pub revision: Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
 }

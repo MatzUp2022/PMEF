@@ -134,6 +134,9 @@ pub struct Pump {
     pub documents: Vec<DocumentLink>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub revision: Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
 }
@@ -193,6 +196,9 @@ pub struct Vessel {
     pub rdl_type: Option<RdlUri>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub revision: Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
 }
@@ -271,6 +277,9 @@ pub struct HeatExchanger {
     pub iec81346: Option<Iec81346Designation>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub revision: Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
 }
@@ -317,6 +326,9 @@ pub struct Compressor {
     pub iec81346: Option<Iec81346Designation>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub revision: Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
 }
@@ -340,6 +352,9 @@ pub struct GenericEquipment {
     pub geometry: Option<GeometryReference>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub revision: Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
 }
@@ -365,6 +380,9 @@ pub struct Reactor {
     pub geometry: Option<GeometryReference>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub revision: Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
 }
@@ -390,6 +408,9 @@ pub struct Tank {
     pub geometry: Option<GeometryReference>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub revision: Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
 }
@@ -409,6 +430,9 @@ pub struct Filter {
     pub nozzles: Vec<Nozzle>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub revision: Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
 }
@@ -431,6 +455,9 @@ pub struct Turbine {
     pub geometry: Option<GeometryReference>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub revision: Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
 }

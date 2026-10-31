@@ -28,6 +28,7 @@ pub mod ei;
 pub mod equipment;
 pub mod geometry;
 pub mod plant;
+pub mod provenance;
 pub mod piping;
 pub mod relationships;
 pub mod revision;
@@ -51,6 +52,10 @@ pub use piping::{
 pub use relationships::{
     ControlledBy, HasEquivalentIn, IsCollocatedWith, IsConnectedTo, IsDerivedFrom,
     IsDocumentedBy, IsPartOf, IsRevisionOf, ReplacedBy, Supports,
+};
+pub use provenance::{
+    AsBuilt, CatalogSnap, CatalogSnapRef, Provenance, RecognitionMetadata, Recognizer, Residual,
+    ReviewState, ReviewStatus, SourceType,
 };
 pub use revision::{ChangeState, RevisionMetadata};
 pub use steel::{SteelConnection, SteelMember, SteelNode, SteelSystem};

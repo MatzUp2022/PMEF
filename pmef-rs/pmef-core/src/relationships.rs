@@ -17,6 +17,9 @@ macro_rules! rel {
             #[serde(skip_serializing_if="Option::is_none")] pub derived_by:Option<String>,
             #[serde(skip_serializing_if="Option::is_none")] pub notes:Option<String>,
             #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
+            /// RFC-0001 provenance / review / asBuilt blocks.
+            #[serde(flatten, default)]
+            pub recognition: crate::provenance::RecognitionMetadata,
             $( #[serde(skip_serializing_if="Option::is_none")] pub $f: Option<$t> ),*
         }
     }
