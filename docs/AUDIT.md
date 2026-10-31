@@ -170,16 +170,16 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 
 ### P1 — credibility and correctness (do first; Phase 2 material)
 
-- **P1.1** Make `cargo build --workspace` green **or** exclude non-scope adapters from the
-  workspace (`members`/`exclude`) so core + E3D + Plant 3D build; fix `tracing`/`phf`
-  deps and the `PmefIoError` drift.
-- **P1.2** Add a Rust CI job (`cargo build`, `cargo test`, `cargo clippy`) — today Rust is not in CI at all.
-- **P1.3** Close the Python validation hole: map all steel/E&I types; make unknown `@type` an error
-  (or a counted, reported skip that fails CI above zero).
-- **P1.4** README: correct repo path, folder names (`catalogs/`, adapter locations), file lists,
-  remove/label Discord, OpenSSF, ghcr, crates.io, "14+ adapters", "bidirectional"; add `pmef-rs/`.
-- **P1.5** One version: `0.9.0` everywhere (badge, CHANGELOG headings, spec footer); collapse the three
-  `[Unreleased]` sections; rename/label the docx as legacy draft (ask before renaming).
+- **P1.1** ~~Make `cargo build --workspace` green~~ — done 2026-10-31: all 10 adapters compile,
+  260 tests pass (3 real bugs fixed: Creo STEP names, Plant 3D flange SKEY, CADMATIC test value).
+- **P1.2** ~~Add a Rust CI job~~ — done: `.github/workflows/rust.yml`; clippy informational
+  (~1600 warnings, >90 % missing doc comments — follow-up P3.6).
+- **P1.3** ~~Close the Python validation hole~~ — done: type map derived from schemas, unknown
+  `@type` fails, Rust drift test.
+- **P1.4** ~~README~~ — done: matches tree, placeholder claims removed, status table added.
+- **P1.5** ~~One version~~ — done: 0.9.0 everywhere, `-rc` only as release tag; planned items
+  moved from CHANGELOG to ROADMAP; docx renamed + marked legacy; docx review in
+  `docs/legacy-docx-review.md` (nothing normative to move).
 - **P1.6** ~~Decide on `rvm.rs`~~ — done, removed (§6 item 1).
 - **P1.7** Make E3D equipment objects schema-valid (drop `null` optional fields, map
   type-specific required blocks such as `vesselDesign`) — found by the new integration test.
@@ -191,8 +191,10 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 - **P2.2** Deterministic `pmef diff` (sorted output) + field-level diff — prerequisite for the
   as-built-vs-design use case.
 - **P2.3** Either create DS-05 (`eaf-segment.ndjson`) or remove it from spec/README.
-- **P2.4** Fix CHANGELOG so `extract-changelog.py` and `release.yml` can work; drop or implement
-   `build-spec-pdf.py`.
+- **P2.4** CHANGELOG fixed (single `[Unreleased]`, `extract-changelog.py --version v0.9.0-rc`
+  works); still open: drop or implement `build-spec-pdf.py`.
+- **P2.7** Released 0.9.0-rc changelog claims an 82-test `pmef-conformance/` suite that never
+  existed in the repository (annotated) — build the real suite (overlaps P2.1).
 - **P2.5** Fix the 625 non-strict schema warnings (at least for steel/E&I `$defs`).
 - **P2.6** ~~Correct the `@id` convention in CLAUDE.md~~ — done (§6 item 2).
 
@@ -203,6 +205,9 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 - **P3.3** Migrate `validate-examples.py` from `RefResolver` to `referencing`.
 - **P3.4** Rust dependency section in THIRD-PARTY-NOTICES.md; SBOM in releases.
 - **P3.5** Machine-readable standards crosswalks with round-trip tests (DEXPI, IFC, CAEX).
+- **P3.6** Make clippy gating: add doc comments, fix the remaining logic lints (e.g. unreachable
+  `"GL"` arm in the Plant 3D valve SKEY mapping — `GL` always maps to globe, never control).
+- **P3.7** Commit `pmef-rs/Cargo.lock` (workspace ships a binary) for reproducible CI builds.
 
 ## 8. Maintainer decisions (2026-10-31)
 
