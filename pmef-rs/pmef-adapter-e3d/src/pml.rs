@@ -154,6 +154,35 @@ impl E3dElementType {
         }
     }
 
+    /// The PML keyword of this element type (inverse of [`Self::from_str`]).
+    pub fn keyword(&self) -> &str {
+        match self {
+            Self::Site => "SITE",
+            Self::Zone => "ZONE",
+            Self::Pipe => "PIPE",
+            Self::Branch => "BRAN",
+            Self::Equipment => "EQUI",
+            Self::Nozzle => "NOZZ",
+            Self::StraightPipe => "STPIPE",
+            Self::Elbow => "ELBOW",
+            Self::Tee => "TEE",
+            Self::Reducer => "REDU",
+            Self::Flange => "FLAN",
+            Self::Valve => "VALV",
+            Self::Gasket => "GASK",
+            Self::Weld => "WELD",
+            Self::PipeSupport => "PSUP",
+            Self::CableTray => "CTRAY",
+            Self::Structure => "STRU",
+            Self::PrimBox => "BOX",
+            Self::PrimCylinder => "CYLI",
+            Self::PrimCone => "CONE",
+            Self::PrimSnout => "SNOU",
+            Self::PrimDish => "DISH",
+            Self::Unknown(k) => k,
+        }
+    }
+
     /// Returns the PMEF `@type` for this element type, if known.
     pub fn pmef_type(&self) -> Option<&'static str> {
         match self {

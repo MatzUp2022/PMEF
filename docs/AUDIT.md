@@ -131,7 +131,7 @@ usable end-to-end) · **working** (builds, tested, usable). Active scope per CLA
 
 | Tool | Rust crate | Host-side plug-in | Maturity | Notes |
 |---|---|---|---|---|
-| ★ AVEVA E3D | `pmef-adapter-e3d` (31 unit + 1 integration test) | none (PML scripts referenced, not in repo) | **partial — compiles since 2026-10-31** | `rvm.rs` removed (DD-011); equipment geometry from PML primitives. Equipment objects are not yet schema-valid (`null` optional fields, missing `vesselDesign`) |
+| ★ AVEVA E3D | `pmef-adapter-e3d` (31 unit + 2 integration tests) | none (PML scripts referenced, not in repo) | **partial — compiles since 2026-10-31** | `rvm.rs` removed (DD-011); equipment geometry from PML primitives. All exported objects schema-valid (P1.7) |
 | ★ AutoCAD Plant 3D | `pmef-adapter-plant3d` | `pmef-plant3d-dotnet` (C#, not built in CI) | **partial — export + import via PCF (2026-10-31)** | PCF bridge round trip lossless, conformance L3 as converter; L1 as adapter (no native id → INTG-006); not verified inside Plant 3D |
 | CADMATIC | `pmef-adapter-cadmatic` (~2.0 k) | — | partial, does not compile | frozen |
 | COMOS | `pmef-adapter-comos` (~1.8 k) | `pmef-comos-dotnet` (640 LOC) | partial, does not compile | frozen |
@@ -181,8 +181,12 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
   moved from CHANGELOG to ROADMAP; docx renamed + marked legacy; docx review in
   `docs/legacy-docx-review.md` (nothing normative to move).
 - **P1.6** ~~Decide on `rvm.rs`~~ — done, removed (§6 item 1).
-- **P1.7** Make E3D equipment objects schema-valid (drop `null` optional fields, map
-  type-specific required blocks such as `vesselDesign`) — found by the new integration test.
+- **P1.7** ~~Make E3D equipment objects schema-valid~~ — done 2026-10-31: absent PML attributes
+  are omitted instead of written as `null`; design data goes into the required type blocks
+  (`vesselDesign`, `pumpSpec`, `compressorSpec`, `hxSpec`, tank fields); nozzles always carry
+  `nozzleMark`. Also fixed: in-line components (FLAN, VALV, PSUP, TEE, REDU, …) were all
+  exported as `pmef:Pipe` because the mapper received the Rust enum name instead of the PML
+  keyword. `tests/output_validates.rs` validates every exported object.
 
 - **P1.8** ~~`catalogs/profiles-en.json` HEA data defects~~ — done 2026-10-31: version 2024.2
   (h, tf of HEA 900/1000, `EN:HEA96` → `EN:HEA100`, Iy/Iz/Wel recomputed and checked against

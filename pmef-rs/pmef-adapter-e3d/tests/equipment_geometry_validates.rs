@@ -2,9 +2,8 @@
 //! normative schemas in `schemas/`. Covers the PML design-primitive geometry
 //! path that replaced the former RVM parser.
 //!
-//! Only the geometry objects are schema-validated here. The equipment objects
-//! themselves are not yet schema-valid (pre-existing mapping gaps, e.g. `null`
-//! optional fields and missing `vesselDesign`; tracked in docs/AUDIT.md).
+//! Only the geometry objects are checked here; `output_validates.rs` validates
+//! every object the adapter writes.
 
 use pmef_adapter_e3d::{E3DAdapter, E3DConfig};
 use pmef_validate::PmefValidator;

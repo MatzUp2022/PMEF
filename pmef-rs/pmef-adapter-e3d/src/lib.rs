@@ -113,6 +113,30 @@ impl E3DCoordinateSystem {
     }
 }
 
+/// Remove `null` members recursively. Absent PML attributes map to absent PMEF fields:
+/// optional properties are omitted, never written as `null` (the schemas type them as
+/// string/number), so the output validates (docs/AUDIT.md P1.7).
+fn drop_nulls(v: &mut serde_json::Value) {
+    match v {
+        serde_json::Value::Object(m) => {
+            m.retain(|_, x| !x.is_null());
+            m.values_mut().for_each(drop_nulls);
+        }
+        serde_json::Value::Array(a) => a.iter_mut().for_each(drop_nulls),
+        _ => {}
+    }
+}
+
+/// `PumpSpec.pumpType` from the equipment class of [`e3d_dtyp_to_pmef`].
+fn pump_type(equip_class: &str) -> Option<&'static str> {
+    match equip_class {
+        "CENTRIFUGAL_PUMP" => Some("CENTRIFUGAL"),
+        "RECIPROCATING_PUMP" => Some("RECIPROCATING"),
+        "GEAR_PUMP" => Some("GEAR"),
+        _ => None,
+    }
+}
+
 // ── E3D Adapter ───────────────────────────────────────────────────────────────
 
 /// AVEVA E3D → PMEF adapter.
@@ -188,7 +212,8 @@ impl E3DAdapter {
                 }
                 E3dElementType::Pipe => {
                     let objs = self.map_pipe_line(elem);
-                    for obj in objs {
+                    for mut obj in objs {
+                        drop_nulls(&mut obj);
                         writer.write_value(&obj)
                             .map_err(AdapterError::from)?;
                         stats.objects_ok += 1;
@@ -314,7 +339,7 @@ impl E3DAdapter {
                 let (dx, dy, dz) = self.config.coordinate_system.to_pmef(dir.0, dir.1, dir.2);
                 serde_json::json!({
                     "nozzleId": noz.attr_str("TAG").unwrap_or(noz.local_name()),
-                    "nozzleMark": noz.attr_str("TAG"),
+                    "nozzleMark": noz.attr_str("TAG").unwrap_or(noz.local_name()),
                     "nominalDiameter": noz.attr_f64("HBOR").unwrap_or(100.),
                     "flangeRating": noz.attr_str("NFRAT").unwrap_or("ANSI-150"),
                     "facingType": noz.attr_str("NFTYP").unwrap_or("RF"),
@@ -338,7 +363,7 @@ impl E3DAdapter {
         };
 
         let mut result = Vec::new();
-        let obj = serde_json::json!({
+        let mut obj = serde_json::json!({
             "@type": pmef_type,
             "@id": obj_id,
             "pmefVersion": "0.9.0",
@@ -354,10 +379,7 @@ impl E3DAdapter {
             "geometry": geometry,
             "customAttributes": {
                 "e3dDbAddress": equi.db_address,
-                "designPressure_Pa": equi.attr_f64("DPRES"),
-                "designTemperature_K": equi.attr_f64("DTEMP"),
-                "weightKg": equi.attr_f64("WGHT"),
-                "designVolume_m3": equi.attr_f64("DVOL")
+                "weightKg": equi.attr_f64("WGHT")
             },
             "revision": {
                 "revisionId": "r2026-01-01-001",
@@ -366,6 +388,45 @@ impl E3DAdapter {
                 "authoringTool": "pmef-adapter-e3d 0.9.0"
             }
         });
+        // Design data goes into the type-specific block the schema requires (pmef-equipment).
+        let (dpres, dtemp, dvol) = (equi.attr_f64("DPRES"), equi.attr_f64("DTEMP"), equi.attr_f64("DVOL"));
+        let o = obj.as_object_mut().expect("object literal");
+        match pmef_type {
+            "pmef:Vessel" | "pmef:Column" | "pmef:Reactor" => {
+                o.insert("vesselDesign".into(), serde_json::json!({
+                    "designPressureInternal": dpres,
+                    "designTemperatureMax": dtemp,
+                    "volume": dvol
+                }));
+            }
+            "pmef:Pump" => {
+                o.insert("pumpSpec".into(), serde_json::json!({
+                    "pumpType": pump_type(equip_class)
+                }));
+            }
+            "pmef:Compressor" => {
+                o.insert("compressorSpec".into(), serde_json::json!({
+                    "compressorType": equip_class.strip_suffix("_COMPRESSOR")
+                }));
+            }
+            "pmef:HeatExchanger" => {
+                o.insert("hxSpec".into(), serde_json::json!({
+                    "hxType": equip_class.strip_suffix("_HEAT_EXCHANGER")
+                }));
+            }
+            "pmef:Tank" => {
+                o.insert("designPressure".into(), serde_json::json!(dpres));
+                o.insert("designTemperature".into(), serde_json::json!(dtemp));
+                o.insert("capacity".into(), serde_json::json!(dvol));
+            }
+            _ => {
+                let ca = o["customAttributes"].as_object_mut().expect("object literal");
+                ca.insert("designPressure_Pa".into(), serde_json::json!(dpres));
+                ca.insert("designTemperature_K".into(), serde_json::json!(dtemp));
+                ca.insert("designVolume_m3".into(), serde_json::json!(dvol));
+            }
+        }
+        drop_nulls(&mut obj);
         result.push(obj);
         if let Some(primitive) = geom.primitive {
             result.push(serde_json::json!({
@@ -418,7 +479,7 @@ impl E3DAdapter {
         for bran in &branches {
             for comp in &bran.children {
                 let (pmef_type, comp_class) = e3d_element_to_pmef(
-                    &format!("{:?}", comp.element_type),
+                    comp.element_type.keyword(),
                     comp.attr_str("SKEY"),
                 );
                 let short = &comp_class.chars().take(4).collect::<String>();

@@ -20,6 +20,14 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **E3D adapter output is schema-valid (docs/AUDIT.md P1.7).** `pmef-adapter-e3d` no longer
+  writes `null` for absent PML attributes, puts equipment design data into the required
+  type-specific blocks (`vesselDesign`, `pumpSpec`, `compressorSpec`, `hxSpec`, tank fields)
+  and always sets `nozzleMark`. In-line piping components (flanges, valves, supports, tees,
+  reducers, …) were all exported as `pmef:Pipe` (enum name passed instead of the PML keyword);
+  they now get their proper `@type`. New integration test `tests/output_validates.rs` validates
+  every exported object against `schemas/`.
+
 - **Benchmark geometry made consistent** (new CI check `scripts/check-geometry.py`: bend centre
   points, port directions per spec 02 §2.6, pipe lengths). PMEF-DS-01 / stress model: elbow
   CW-201-ELB-001 had both ports on the same vertical with no intersecting axes — it is now a real
