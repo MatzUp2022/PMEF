@@ -250,7 +250,8 @@ Includes: `pmef:Pump` P-201A (API 610, 3 nozzles, VFD),
 (Pipe, Elbow, Flange, Gasket), Weld record, PipeSupport, Spool,
 and ParametricGeometry.
 
-**Round-trip test:** 18 individual assertions (RT-001 through RT-018). See `tests/roundtrip/test_roundtrip.py`.
+**Round-trip test:** 18 individual assertions (RT-001 through RT-018), defined in
+`tests/conformance/manifest.json` and evaluated by `tests/conformance/runner.py`.
 
 ### 4.2 PMEF-DS-02 — Heat Exchanger Station
 
@@ -303,15 +304,25 @@ instrumentation, structural steel supports.
 
 ### 5.1 Test Suite Location
 
-The PMEF conformance test suite is located in `tests/` and is executable via:
+The PMEF conformance test suite is located in `tests/` and is executable from the repository root:
 
 ```bash
-python run_tests.py              # All tests
-python run_tests.py --level 1   # Level 1 tests only
-python run_tests.py --level 2   # Level 1 + 2 tests
-python run_tests.py --level 3   # All tests
-python run_tests.py --report json > conformance-report.json
+python tests/run_tests.py              # All tests
+python tests/run_tests.py --level 1   # Level 1 tests only
+python tests/run_tests.py --level 2   # Level 1 + 2 tests
+python tests/run_tests.py --level 3   # All tests
+python tests/run_tests.py --report json --output conformance-report.json
 ```
+
+The implementation under test is connected through two command templates:
+`--validator "<cmd> {file}"` (exit code 0 = valid) for the `unit` and `negative` tests, and
+`--sut "<cmd> {input} {output}"` (PMEF → implementation → PMEF) for the `integration` and
+`roundtrip` tests. `--kind validator|converter|adapter` declares what the implementation does;
+tests that do not apply to that kind are reported as skipped. Usage details: `tests/README.md`.
+
+The **normative definition** of every test ID (name, level, requirement, fixture, expected
+result) is `tests/conformance/manifest.json`. A pure validator receives a validator verdict, not
+a conformance level, because every level requires reading and writing (CL1-09).
 
 ### 5.2 Test Categories
 
@@ -321,7 +332,7 @@ python run_tests.py --report json > conformance-report.json
 | `negative` | Invalid input must be rejected | PIPE-U-003, EI-U-003, REL-U-008, … |
 | `integration` | Multi-object consistency (topology, cross-refs) | INTG-001 through INTG-006 |
 | `roundtrip` | Attribute fidelity against benchmark datasets | RT-001 through RT-018 |
-| `performance` | Large model handling (> 10k objects) | PERF-001 through PERF-005 |
+| `performance` | Large model handling (> 10k objects) | PERF-001 through PERF-005 (not yet implemented; not normative, §5.4) |
 
 ### 5.3 Test Pass Requirements
 
@@ -487,7 +498,8 @@ PMEF Conformance Test Suite  (v0.9)
 
 Implementations **MAY** self-certify at any conformance level by:
 
-1. Running the PMEF conformance test suite with `python run_tests.py --level <N> --report json`.
+1. Running the PMEF conformance test suite with
+   `python tests/run_tests.py --level <N> --report json --output report.json`.
 2. Publishing the test report on the implementation's product page or repository.
 3. Including the PMEF conformance badge in documentation.
 

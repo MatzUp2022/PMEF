@@ -1,0 +1,1 @@
+{"@type":"pmef:MTPModule","@id":"urn:pmef:obj:conf:MTP-1","isPartOf":"urn:pmef:unit:conf:U-1","moduleName":"DosingModule","revision":{"revisionId":"r2026-10-31-001","changeState":"SHARED","authoringTool":"PMEF conformance fixtures"}}

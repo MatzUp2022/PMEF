@@ -1,0 +1,1 @@
+{"@type":"pmef:IsRevisionOf","@id":"urn:pmef:rel:conf:R-7","relationType":"IS_REVISION_OF","sourceId":"urn:pmef:obj:conf:P-1","targetId":"urn:pmef:obj:conf:P-1-OLD","revision":{"revisionId":"r2026-10-31-001","changeState":"SHARED","authoringTool":"PMEF conformance fixtures"}}

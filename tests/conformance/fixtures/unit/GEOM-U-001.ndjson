@@ -1,0 +1,1 @@
+{"@type":"pmef:ParametricGeometry","@id":"urn:pmef:geom:conf:G-1","ownerRef":"urn:pmef:obj:conf:OWNER-1","lod":"LOD2_MEDIUM","primitive":{"type":"CYLINDER","center":[0,0,0],"axis":[0,0,1],"radius":100.0,"length":500.0},"revision":{"revisionId":"r2026-10-31-001","changeState":"SHARED","authoringTool":"PMEF conformance fixtures"}}

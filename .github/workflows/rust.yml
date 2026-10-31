@@ -7,6 +7,7 @@ on:
       - 'pmef-rs/**'
       - 'schemas/**'
       - 'examples/**'
+      - 'tests/**'
       - '.github/workflows/rust.yml'
   pull_request:
     branches: [main, develop]
@@ -14,6 +15,7 @@ on:
       - 'pmef-rs/**'
       - 'schemas/**'
       - 'examples/**'
+      - 'tests/**'
       - '.github/workflows/rust.yml'
   workflow_call:
 
@@ -56,6 +58,18 @@ jobs:
             echo "== $f"
             cargo run -q -p pmef-cli -- validate "$f" --schemas ../schemas
           done
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Conformance suite — pmef CLI as validator (cross-check with the Python reference)
+        run: |
+          pip install jsonschema
+          cargo build -p pmef-cli
+          cd ..
+          python tests/run_tests.py --kind validator --name pmef-cli \
+            --validator "pmef-rs/target/debug/pmef validate {file} --schemas schemas >/dev/null 2>&1"
 
   # ──────────────────────────────────────────────────────────
   # Lints — reported, not yet gating (~1600 pre-existing warnings,

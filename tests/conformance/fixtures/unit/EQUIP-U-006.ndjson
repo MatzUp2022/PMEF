@@ -1,0 +1,1 @@
+{"@type":"pmef:GenericEquipment","@id":"urn:pmef:obj:conf:X-1","pmefVersion":"0.9.0","isPartOf":"urn:pmef:unit:conf:U-1","equipmentBasic":{"tagNumber":"X-1","equipmentClass":"GENERIC"},"revision":{"revisionId":"r2026-10-31-001","changeState":"SHARED","authoringTool":"PMEF conformance fixtures"}}

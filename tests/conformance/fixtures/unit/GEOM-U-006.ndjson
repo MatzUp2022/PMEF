@@ -1,0 +1,1 @@
+{"@type":"pmef:ParametricGeometry","@id":"urn:pmef:geom:conf:G-6","ownerRef":"urn:pmef:obj:conf:OWNER-1","lod":"LOD2_MEDIUM","primitive":{"type":"MESH_REF","meshUri":"file:meshes/demo.glb","meshFormat":"GLTF"},"revision":{"revisionId":"r2026-10-31-001","changeState":"SHARED","authoringTool":"PMEF conformance fixtures"}}
