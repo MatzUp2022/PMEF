@@ -125,20 +125,17 @@ enum Commands {
 
     /// Convert between PMEF and other formats.
     Convert {
-        /// Input file.
+        /// Input: a PMEF NDJSON file (--to pcf) or a PCF file / directory of *.pcf (--to pmef).
         input: PathBuf,
-        /// Input format (auto-detected from extension if omitted).
-        #[arg(long)]
-        from: Option<String>,
-        /// Output format (pmef, pcf, ifc, caex).
-        #[arg(long)]
+        /// Target format: pcf (PMEF → AutoCAD Plant 3D) or pmef (Plant 3D PCF → PMEF).
+        #[arg(long, value_parser = ["pcf", "pmef"])]
         to: String,
-        /// Output file path.
+        /// Reference PMEF model updated from the PCF (required with --to pmef).
+        #[arg(long, required_if_eq("to", "pmef"))]
+        base: Option<PathBuf>,
+        /// Output: a directory for PCF files (--to pcf) or an NDJSON file (--to pmef).
         #[arg(long, short)]
         output: PathBuf,
-        /// Schemas directory for validation.
-        #[arg(long, default_value = "schemas")]
-        schemas: PathBuf,
     },
 
     /// Build a lookup index from a PMEF package.
@@ -232,9 +229,7 @@ async fn main() -> Result<()> {
         Commands::Stats { file, by_type, by_domain } => {
             cmd_stats(file, by_type, by_domain).await
         }
-        Commands::Convert { input, from, to, output, schemas } => {
-            cmd_convert(input, from, to, output, schemas).await
-        }
+        Commands::Convert { input, to, base, output } => cmd_convert(input, &to, base, output),
         Commands::Index { file, key, filter_type, output } => {
             cmd_index(file, &key, filter_type, output).await
         }
@@ -493,20 +488,55 @@ async fn cmd_stats(file: PathBuf, by_type: bool, by_domain: bool) -> Result<()> 
     Ok(())
 }
 
-async fn cmd_convert(
-    input: PathBuf, from: Option<String>, to: String,
-    output: PathBuf, _schemas: PathBuf,
-) -> Result<()> {
-    let from = from.unwrap_or_else(|| {
-        input.extension()
-            .and_then(|s| s.to_str())
-            .unwrap_or("unknown")
-            .to_lowercase()
-    });
-    info!("Converting {} ({from} → {to}) → {}", input.display(), output.display());
-    // Full implementation: dispatch to pmef-adapter-* crates
-    anyhow::bail!("Conversion from '{from}' to '{to}' not yet implemented in this build. \
-                   Use pmef-adapter-plant3d for Plant 3D PCF → PMEF.");
+fn cmd_convert(input: PathBuf, to: &str, base: Option<PathBuf>, output: PathBuf) -> Result<()> {
+    use pmef_adapter_plant3d::pcf_bridge::{apply_pcf, write_pcf};
+    let run = || -> Result<()> {
+        if to == "pcf" {
+            let objs = read_values(&input)?;
+            let export = write_pcf(&objs);
+            std::fs::create_dir_all(&output).with_context(|| format!("Cannot create {}", output.display()))?;
+            for (line, text) in &export.files {
+                let name: String = line.chars().map(|c| if c.is_alphanumeric() || matches!(c, '-' | '_') { c } else { '_' }).collect();
+                let path = output.join(format!("{name}.pcf"));
+                std::fs::write(&path, text).with_context(|| format!("Cannot write {}", path.display()))?;
+            }
+            for w in &export.warnings {
+                eprintln!("warning: {w}");
+            }
+            eprintln!("wrote {} PCF file(s) to {}", export.files.len(), output.display());
+        } else {
+            let base = base.as_ref().context("--base is required with --to pmef")?;
+            let reference = read_values(base)?;
+            let mut files: Vec<PathBuf> = if input.is_dir() {
+                std::fs::read_dir(&input)?.filter_map(|e| e.ok().map(|e| e.path()))
+                    .filter(|p| p.extension().is_some_and(|x| x.eq_ignore_ascii_case("pcf"))).collect()
+            } else {
+                vec![input.clone()]
+            };
+            files.sort();
+            let pcfs: Vec<String> = files.iter()
+                .map(|p| std::fs::read_to_string(p).with_context(|| format!("Cannot open {}", p.display())))
+                .collect::<Result<_>>()?;
+            let (objs, stats) = apply_pcf(&reference, &pcfs);
+            let mut text = String::new();
+            for o in &objs {
+                text.push_str(&serde_json::to_string(o)?);
+                text.push('\n');
+            }
+            std::fs::write(&output, text).with_context(|| format!("Cannot write {}", output.display()))?;
+            for l in &stats.unknown_lines {
+                eprintln!("warning: PIPELINE-REFERENCE {l} matches no line in the base model (skipped)");
+            }
+            eprintln!("updated {}, created {}, deleted {} component(s) from {} PCF file(s)",
+                      stats.updated, stats.created, stats.deleted, pcfs.len());
+        }
+        Ok(())
+    };
+    if let Err(e) = run() {
+        eprintln!("error: {e:#}");
+        std::process::exit(2);
+    }
+    Ok(())
 }
 
 async fn cmd_index(

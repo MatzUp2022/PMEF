@@ -68,6 +68,8 @@ cargo run -p pmef-cli -- diff ../tests/diff/design.ndjson ../tests/diff/asbuilt.
 cargo run -p pmef-cli -- diff ../tests/diff/design.ndjson ../tests/diff/asbuilt-scan.ndjson --ignore revision --ignore-recognition --match
 cargo run -p pmef-cli -- diff ../tests/diff/design.ndjson ../tests/diff/asbuilt-scan.ndjson --match --emit-matches /tmp/proposals.ndjson   # RFC-0003 proposals
 cargo run -p pmef-cli -- merge ../tests/diff/design.ndjson ../tests/merge/ours-design-change.ndjson ../tests/merge/theirs-asbuilt-update.ndjson -o /tmp/merged.ndjson
+cargo run -p pmef-cli -- convert ../examples/pump-skid-complete.ndjson --to pcf -o /tmp/pcf   # PMEF -> Plant 3D (PCF)
+cargo run -p pmef-cli -- convert /tmp/pcf --to pmef --base ../examples/pump-skid-complete.ndjson -o /tmp/back.ndjson
 cargo run -p pmef-cli -- conformance ../examples/pump-skid-complete.ndjson   # shallow structural check only
 cd ..
 
@@ -76,6 +78,7 @@ python tests/run_tests.py --level 3                       # reference self-run, 
 python tests/conformance/tools/generate_fixtures.py       # regenerate fixtures after schema changes
 python tests/conformance/tools/generate_fixtures.py --check
 python tests/conformance/tools/selftest.py                # broken implementations must be detected
+python tests/run_tests.py --kind converter --domains piping --sut "sh tests/conformance/suts/plant3d-pcf.sh {input} {output}"   # Plant 3D PCF bridge
 python tests/snapping/reference_snap.py                   # pmef-snap/1 test vectors (RFC-0002)
 python scripts/generate-asbuilt-example.py examples/asbuilt-recognition.ndjson   # after catalog/algorithm changes
 ```

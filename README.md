@@ -199,8 +199,8 @@ The `.docx` files are **non-normative legacy artefacts**. Where they differ from
 | Catalog snapping `pmef-snap/1` ([RFC-0002](spec/rfc/0002-catalog-snapping.md)) | pipes and I-sections; Python reference + Rust, shared test vectors (draft for review) |
 | As-built ↔ design correspondence ([RFC-0003](spec/rfc/0003-as-built-correspondence.md)) | `IsRevisionOf` + `correspondence`; reused by `pmef diff --match` (draft for review) |
 | `pmef-core`, `pmef-io`, `pmef-validate`, `pmef-geom` | builds and tests green in CI |
-| `pmef` CLI | `validate`, `diff` (deterministic, field-level, `--match` for differing ids; spec 03 §9), `merge` (three-way, spec 03 §10), `stats`, `index`, `check-refs`, `topology` work; `conformance` is a basic structural check (full suite: `tests/`); `convert` not implemented |
-| Adapters (Rust) | all 10 compile and pass their unit tests; export direction only; real-tool round-trips not yet verified |
+| `pmef` CLI | `validate`, `diff` (deterministic, field-level, `--match` for differing ids; spec 03 §9), `merge` (three-way, spec 03 §10), `stats`, `index`, `check-refs`, `topology` work; `convert` (PMEF ⇄ PCF for Plant 3D); `conformance` is a basic structural check (full suite: `tests/`) |
+| Adapters (Rust) | all 10 compile and pass their unit tests; Plant 3D also has the import direction via PCF (`pmef convert`, lossless bridge round trip, conformance level 3 as converter); other adapters export only; no round trip verified inside a real tool yet |
 | Host plug-ins (C#, C) | source only, not built in CI |
 | Conformance suite ([`tests/`](tests/README.md)) | 82 normative tests (spec 06), runnable against any implementation; reference passes level 3 in CI |
 | PMEFX container | specified (spec 03 §3), not implemented |

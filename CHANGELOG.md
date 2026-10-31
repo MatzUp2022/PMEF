@@ -90,6 +90,10 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Changed
 
+- **`pmef convert` implemented** (was a stub): `--to pcf|pmef`, `--base`, `-o`; the unused
+  `--from` and `--schemas` options were removed.
+- **Conformance suite: INTG-006 checks only objects of the claimed `--domains`** (spec 06 CL3-05:
+  "every *exported* object"); before, an adapter exporting only piping failed for equipment and steel.
 - **`pmef diff` CLI options changed:** `--changed-only` removed (unchanged objects are never
   listed); new `--exact`, `--ignore`, `--ignore-recognition`. The command now exits with 1 when
   the files differ and 2 on errors.
@@ -122,6 +126,15 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **AutoCAD Plant 3D import direction and round trip via PCF** (spec 05 §8.2).
+  `pmef convert MODEL --to pcf -o DIR` writes one PCF per line (identity in
+  `UNIQUE-COMPONENT-IDENTIFIER`); `pmef convert DIR --to pmef --base MODEL -o OUT` updates the
+  model from the PCF exported by Plant 3D (re-identification, create, delete; fields PCF does not
+  carry are kept). Library: `pmef_adapter_plant3d::pcf_bridge`. The PCF reader now also reads
+  `CO-ORDS` (supports). Round trip of PMEF-DS-01 is lossless; 15 % of its attributes travel
+  through PCF. Conformance: level 3 as converter
+  (`tests/conformance/suts/plant3d-pcf.sh`, run in CI), not yet as adapter (INTG-006: no native
+  Plant 3D id in PCF). Not yet verified with a Plant 3D installation.
 - **Three-way `pmef merge`** (spec 03 §10). Merges two edits of a common base object by object and
   field by field with the diff rules (keyed arrays, numeric tolerances); one-sided changes are
   taken, differing changes on both sides are conflicts (`modify-modify`, `modify-delete`,

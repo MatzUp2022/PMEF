@@ -71,6 +71,12 @@ jobs:
           python tests/run_tests.py --kind validator --name pmef-cli \
             --validator "pmef-rs/target/debug/pmef validate {file} --schemas schemas >/dev/null 2>&1"
 
+      - name: Conformance suite — Plant 3D PCF bridge as round-trip converter
+        run: |
+          cd ..
+          python tests/run_tests.py --level 3 --kind converter --domains piping \
+            --name pmef-adapter-plant3d --sut "sh tests/conformance/suts/plant3d-pcf.sh {input} {output}"
+
   # ──────────────────────────────────────────────────────────
   # Lints — reported, not yet gating (~1600 pre-existing warnings,
   # mostly missing doc comments; see docs/AUDIT.md)

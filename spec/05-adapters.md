@@ -354,6 +354,27 @@ stored in `authoringToolObjectId` and
   read from line spec.
 - Curved pipes in Plant 3D export as multiple PCF segments.
 
+**Import direction (PMEF → Plant 3D) and round trip — since 0.10.0:**
+
+1. `pmef convert MODEL.ndjson --to pcf -o DIR` writes one PCF per `PipingNetworkSystem`
+   (`PIPELINE-REFERENCE` = `lineNumber`; components in segment order; `END-POINT`/`CO-ORDS` from
+   ports, `CENTRE-POINT` for bends when the port axes intersect, `SKEY`, `WEIGHT`, valve tag).
+   The PMEF `@id` is written as `UNIQUE-COMPONENT-IDENTIFIER`. Plant 3D reads the files with its
+   built-in PCF import.
+2. `pmef convert DIR --to pmef --base MODEL.ndjson -o OUT.ndjson` reads the PCF exported by
+   Plant 3D and **updates** the base model: components are re-identified by
+   `UNIQUE-COMPONENT-IDENTIFIER`; only port coordinates, bores, SKEY, weight and tag are taken
+   from the PCF; all other fields are kept; components without a known identifier are created;
+   base components of a written line that are missing from its PCF are deleted.
+
+An unchanged round trip is lossless (byte-identical values). Measured on PMEF-DS-01, 15 % of all
+attributes (28 % of the piping-component attributes) travel through the PCF file; the rest is
+preserved by the update. With `tests/conformance/suts/plant3d-pcf.sh` the bridge reaches
+conformance level 3 as a *converter*; as an *adapter* it fails INTG-006 (CL2-05) because PCF
+carries no native Plant 3D object identifier for `pmef:HasEquivalentIn`. The suite run does not
+include Plant 3D itself: the steps *through* the tool (PCF import, PCF export, preservation of
+`UNIQUE-COMPONENT-IDENTIFIER`) must be confirmed once with a Plant 3D installation.
+
 ### 8.3 CADMATIC Adapter (`pmef-adapter-cadmatic`)
 
 **Approach:** CADMATIC REST Web API (Swagger-documented).

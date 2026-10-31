@@ -218,3 +218,39 @@ fn merge_clean_exits_zero_and_errors_exit_two() {
     assert_eq!(code, 2);
     assert!(err.contains("Cannot open"), "{err}");
 }
+
+// ── pmef convert: AutoCAD Plant 3D via PCF ───────────────────────────────────
+
+#[test]
+fn pcf_round_trip_of_benchmark_is_lossless_and_detects_tool_edits() {
+    let dir = std::env::temp_dir().join(format!("pmef-pcf-{}", std::process::id()));
+    let pcf = dir.join("pcf");
+    let back = dir.join("back.ndjson");
+    let ds01 = "examples/pump-skid-complete.ndjson";
+    let (code, _, err) = pmef(&["convert", ds01, "--to", "pcf", "-o", pcf.to_str().unwrap()]);
+    assert_eq!(code, 0, "{err}");
+    assert!(err.contains("wrote 2 PCF file(s)"), "{err}");
+    let (code, _, err) = pmef(&["convert", pcf.to_str().unwrap(), "--to", "pmef", "--base", ds01, "-o", back.to_str().unwrap()]);
+    assert_eq!(code, 0, "{err}");
+    assert!(err.contains("updated 14, created 0, deleted 0"), "{err}");
+    assert_eq!(pmef(&["diff", ds01, back.to_str().unwrap(), "--exact"]).0, 0, "unchanged round trip must be lossless");
+
+    // simulate an edit in Plant 3D: move the start of pipe CW-202-PIPE-001 by 25 mm
+    let file = pcf.join("6_-CW-202-A1A2.pcf");
+    let text = std::fs::read_to_string(&file).unwrap();
+    assert!(text.contains("END-POINT 10200.0 5400.0 1250.0 150.0"));
+    std::fs::write(&file, text.replacen("END-POINT 10200.0 5400.0 1250.0 150.0", "END-POINT 10200.0 5400.0 1225.0 150.0", 1)).unwrap();
+    pmef(&["convert", pcf.to_str().unwrap(), "--to", "pmef", "--base", ds01, "-o", back.to_str().unwrap()]);
+    let (code, out, _) = pmef(&["diff", ds01, back.to_str().unwrap()]);
+    assert_eq!(code, 1);
+    assert!(out.contains("~ ports[portId=P1].coordinate[2]: 1250.0 → 1225.0 (Δ -25)"), "{out}");
+    assert!(out.contains("~ pipeLength: 1200.0 → 1225.0 (Δ +25)"), "{out}");
+    std::fs::remove_dir_all(dir).ok();
+}
+
+#[test]
+fn convert_to_pmef_requires_base() {
+    let (code, _, err) = pmef(&["convert", "tests/diff", "--to", "pmef", "-o", "/dev/null"]);
+    assert_ne!(code, 0);
+    assert!(err.contains("--base"), "{err}");
+}

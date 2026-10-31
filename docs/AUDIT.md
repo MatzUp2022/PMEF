@@ -132,7 +132,7 @@ usable end-to-end) · **working** (builds, tested, usable). Active scope per CLA
 | Tool | Rust crate | Host-side plug-in | Maturity | Notes |
 |---|---|---|---|---|
 | ★ AVEVA E3D | `pmef-adapter-e3d` (31 unit + 1 integration test) | none (PML scripts referenced, not in repo) | **partial — compiles since 2026-10-31** | `rvm.rs` removed (DD-011); equipment geometry from PML primitives. Equipment objects are not yet schema-valid (`null` optional fields, missing `vesselDesign`) |
-| ★ AutoCAD Plant 3D | `pmef-adapter-plant3d` (~1.6 k LOC, 22 tests: PCF/IDF parsing) | `pmef-plant3d-dotnet` (C#, 442 LOC, Plant SDK) | **partial, does not compile** | PCF is a public text format; the .NET part could not be built here (no .NET SDK / AutoCAD SDK) |
+| ★ AutoCAD Plant 3D | `pmef-adapter-plant3d` | `pmef-plant3d-dotnet` (C#, not built in CI) | **partial — export + import via PCF (2026-10-31)** | PCF bridge round trip lossless, conformance L3 as converter; L1 as adapter (no native id → INTG-006); not verified inside Plant 3D |
 | CADMATIC | `pmef-adapter-cadmatic` (~2.0 k) | — | partial, does not compile | frozen |
 | COMOS | `pmef-adapter-comos` (~1.8 k) | `pmef-comos-dotnet` (640 LOC) | partial, does not compile | frozen |
 | Creo | `pmef-adapter-creo` (~1.7 k) | `pmef-creo-toolkit` (C, 624 LOC, no build files) | partial, does not compile | frozen |

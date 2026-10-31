@@ -199,7 +199,26 @@ def fidelity(inp: list[dict], out: list[dict]) -> dict:
 PHYSICAL_ID = "urn:pmef:obj:"
 
 
-def intg(tid: str, objs: list[dict]) -> list[str]:
+# claimed domain -> schema files whose object types belong to it (INTG-006 checks exported objects only)
+DOMAIN_SCHEMAS = {
+    "piping": {"pmef-piping-component.schema.json"},
+    "equipment": {"pmef-equipment.schema.json"},
+    "ei": {"pmef-ei.schema.json"},
+    "steel": {"pmef-steel.schema.json"},
+}
+
+
+def domain_types(domains: list[str]) -> set[str]:
+    """@types belonging to the claimed domains (derived from the schemas)."""
+    spec = importlib.util.spec_from_file_location("pmef_validate_examples", ROOT / "scripts" / "validate-examples.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)  # type: ignore[union-attr]
+    schemas, _ = mod.load_schemas()
+    files = set().union(*(DOMAIN_SCHEMAS.get(d, set()) for d in domains)) if domains else set()
+    return {t for t, f in mod.build_type_map(schemas).items() if f in files}
+
+
+def intg(tid: str, objs: list[dict], exported_types: set[str] | None = None) -> list[str]:
     ids = by_id(objs)
     if tid == "INTG-001":
         headers = [o for o in objs if o.get("@type") == "pmef:FileHeader"]
@@ -239,7 +258,8 @@ def intg(tid: str, objs: list[dict]) -> list[str]:
                 and not ({"revisionId", "changeState"} <= set((o.get("revision") or {}).keys()))]
     if tid == "INTG-006":
         heq = {o.get("sourceId") for o in objs if o.get("@type") == "pmef:HasEquivalentIn"}
-        return [o["@id"] for o in objs if o.get("@id", "").startswith(PHYSICAL_ID) and o["@id"] not in heq]
+        return [o["@id"] for o in objs if o.get("@id", "").startswith(PHYSICAL_ID) and o["@id"] not in heq
+                and (exported_types is None or o.get("@type") in exported_types)]
     raise KeyError(tid)
 
 
@@ -365,6 +385,7 @@ def main(argv: list[str] | None = None) -> int:
     THRESHOLDS.update(manifest["thresholds"])
     validator = ReferenceValidator() if args.validator == "reference" else CommandValidator(args.validator)
     tests = [t for t in manifest["tests"] if t["level"] <= args.level]
+    exported = domain_types([d for d in args.domains.split(",") if d])
     results, ds_fid, extra_fid = [], None, []
 
     with tempfile.TemporaryDirectory(prefix="pmef-conformance-") as tmp:
@@ -409,7 +430,7 @@ def main(argv: list[str] | None = None) -> int:
                     if out is None:
                         status, detail = "FAIL", err
                     else:
-                        problems = intg(t["id"], out) if t["category"] == "integration" else \
+                        problems = intg(t["id"], out, exported) if t["category"] == "integration" else \
                             rt(t["id"], inp, out, args.level, ds_fid, extra_fid)
                         if problems:
                             status, detail = "FAIL", f"{len(problems)} issue(s): " + "; ".join(problems[:5])

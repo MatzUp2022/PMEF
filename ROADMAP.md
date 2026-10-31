@@ -214,3 +214,5 @@ released changes only):
 - ✅ 3-way merge (`pmef merge`, spec 03 §10)
 - ✅ `pmef diff --match` for differing `@id`s (spec 03 §9.5)
 - 🔄 RFC-0003 persisted as-built ↔ design correspondence (`--emit-matches`, pass 1b) — draft, awaiting review
+- 🔄 Plant 3D import via PCF (`pmef convert`) — bridge done; open: confirm with a Plant 3D
+  installation; native object id for `HasEquivalentIn`
