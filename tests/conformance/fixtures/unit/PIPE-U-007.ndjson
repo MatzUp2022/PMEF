@@ -1,0 +1,2 @@
+{"@type":"pmef:Reducer","@id":"urn:pmef:obj:conf:RED-1","pmefVersion":"0.9.0","isPartOf":"urn:pmef:seg:conf:L-1-S1","componentSpec":{"componentClass":"REDUCER_CONCENTRIC"},"revision":{"revisionId":"r2026-10-31-001","changeState":"SHARED","authoringTool":"PMEF conformance fixtures"}}
+{"@type":"pmef:Reducer","@id":"urn:pmef:obj:conf:RED-2","pmefVersion":"0.9.0","isPartOf":"urn:pmef:seg:conf:L-1-S1","componentSpec":{"componentClass":"REDUCER_ECCENTRIC"},"revision":{"revisionId":"r2026-10-31-001","changeState":"SHARED","authoringTool":"PMEF conformance fixtures"}}

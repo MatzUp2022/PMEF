@@ -1,7 +1,7 @@
 # PMEF Specification · Chapter 05 · Adapters
 
 **Document number:** PMEF-SPEC-05  
-**Version:** 0.9.0-rc  
+**Version:** 0.9.0  
 **Status:** Normative  
 **Date:** 2026-03-31
 
@@ -307,15 +307,17 @@ Adapters for tools using CIS/2 (Tekla Structures, Advance Steel) **MUST**:
 
 ### 8.1 AVEVA E3D Adapter (`pmef-adapter-e3d`)
 
-**Approach:** RVM file export for geometry; PML scripting for semantic data.
+**Approach:** PML scripting (AVEVA's official, documented interface) for both semantic
+data and geometry. The adapter **MUST NOT** parse AVEVA's binary RVM format (see
+`docs/design-decisions.md` DD-011).
 
 | PMEF Entity | AVEVA E3D Source | Method |
 |-------------|-----------------|--------|
 | `PipingNetworkSystem` | PIPE/BRAN hierarchy | PML: `CE OBJ` traversal |
-| `pmef:Pipe` | PIPE elements | RVM cylinder + PML attributes |
-| `pmef:Elbow` | ELBOW elements | RVM CIRC_TORUS + PML |
-| `pmef:Valve` | VALV elements | RVM + PML tag attributes |
-| `EquipmentObject` | EQUI elements | RVM mesh + PML tag |
+| `pmef:Pipe` | PIPE elements | PML attributes (POS, BORE, …) |
+| `pmef:Elbow` | ELBOW elements | PML attributes (ANGL, RADI, …) |
+| `pmef:Valve` | VALV elements | PML tag attributes |
+| `EquipmentObject` | EQUI elements | PML tag + design primitives (BOX, CYLI, CONE, SNOU, DISH) → `pmef:ParametricGeometry` |
 | `Nozzle` | NOZZ elements | PML coordinates + direction |
 | `PipingDesignConditions` | Line attributes (TEMP, PRES) | PML |
 | `PipingSpecification` | SPEC and BORESIZE | PML |
@@ -326,8 +328,10 @@ stored in `authoringToolObjectId` and
 
 **Known limitations:**
 
-- E3D RVM does not carry piping class data; class must be read
-  via PML.
+- Piping class data is read via PML (SPEC reference), not from geometry.
+- Models available only as RVM files are out of scope for this adapter. They can be
+  converted to glTF 2.0 with external tools under the user's responsibility and
+  referenced as `mesh_ref` geometry (see `ROADMAP.md`, "RVM-only models").
 - Instrument tags in E3D are stored on nozzle elements, not as
   separate objects; the adapter creates `InstrumentObject` stubs.
 

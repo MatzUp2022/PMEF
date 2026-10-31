@@ -167,7 +167,7 @@ impl CreoAdapter {
         // Header objects
         let proj = self.config.project_code.clone();
         for obj in self.make_header_objects(&export, &proj) {
-            writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+            writer.write_value(&obj).map_err(AdapterError::from)?;
             stats.objects_ok += 1;
         }
 
@@ -188,7 +188,7 @@ impl CreoAdapter {
             let step_result = self.try_load_step(asm);
 
             for obj in self.map_assembly(asm, &export, step_result.as_ref()) {
-                writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                writer.write_value(&obj).map_err(AdapterError::from)?;
                 stats.objects_ok += 1;
             }
         }
@@ -202,7 +202,7 @@ impl CreoAdapter {
             }
             for (network_name, segments) in &networks {
                 for obj in self.map_piping_network(network_name, segments, &export) {
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                 }
             }
@@ -615,6 +615,7 @@ impl PmefAdapter for CreoAdapter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::export_schema::CreoExportSummary;
 
     fn test_config() -> CreoConfig {
         CreoConfig {

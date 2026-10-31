@@ -1,0 +1,1 @@
+{"@type":"pmef:Tank","@id":"urn:pmef:obj:conf:T-1","pmefVersion":"0.9.0","isPartOf":"urn:pmef:unit:conf:U-1","equipmentBasic":{"tagNumber":"T-1","equipmentClass":"STORAGE_TANK"},"revision":{"revisionId":"r2026-10-31-001","changeState":"SHARED","authoringTool":"PMEF conformance fixtures"}}

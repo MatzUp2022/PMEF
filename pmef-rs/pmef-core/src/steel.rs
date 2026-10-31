@@ -29,6 +29,9 @@ pub struct SteelMember {
     #[serde(skip_serializing_if="Option::is_none")] pub cis2_ref:Option<String>,
     #[serde(skip_serializing_if="Option::is_none")] pub tekla_guid:Option<String>,
     #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if="Option::is_none")] pub custom_attributes:Option<HashMap<String,serde_json::Value>>,
 }
 impl SteelMember {
@@ -46,6 +49,9 @@ pub struct SteelNode {
     pub member_ids: Vec<PmefId>,
     #[serde(skip_serializing_if="Option::is_none")] pub support_type:Option<String>,
     #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
 }
 
 #[derive(Debug,Clone,Serialize,Deserialize)]
@@ -61,6 +67,9 @@ pub struct SteelConnection {
     #[serde(skip_serializing_if="Option::is_none")] pub utilisation_ratio:Option<f64>,
     #[serde(skip_serializing_if="Option::is_none")] pub tekla_connection_number:Option<u32>,
     #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
 }
 
 #[derive(Debug,Clone,Serialize,Deserialize)]
@@ -76,4 +85,7 @@ pub struct SteelSystem {
     #[serde(skip_serializing_if="Option::is_none")] pub steel_grade:Option<String>,
     pub member_ids: Vec<PmefId>,
     #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
 }

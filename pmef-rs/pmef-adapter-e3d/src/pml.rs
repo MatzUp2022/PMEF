@@ -111,6 +111,16 @@ pub enum E3dElementType {
     CableTray,
     /// Structural member (SREF / STRU).
     Structure,
+    /// Equipment design primitive: box (BOX).
+    PrimBox,
+    /// Equipment design primitive: cylinder (CYLI).
+    PrimCylinder,
+    /// Equipment design primitive: cone (CONE).
+    PrimCone,
+    /// Equipment design primitive: snout / offset cone (SNOU).
+    PrimSnout,
+    /// Equipment design primitive: dish / vessel head (DISH).
+    PrimDish,
     /// Unknown element type.
     Unknown(String),
 }
@@ -135,6 +145,11 @@ impl E3dElementType {
             "PSUP"  => Self::PipeSupport,
             "CTRAY" => Self::CableTray,
             "STRU" | "SREF" => Self::Structure,
+            "BOX"   => Self::PrimBox,
+            "CYLI"  => Self::PrimCylinder,
+            "CONE"  => Self::PrimCone,
+            "SNOU"  => Self::PrimSnout,
+            "DISH"  => Self::PrimDish,
             other   => Self::Unknown(other.to_owned()),
         }
     }
@@ -243,10 +258,13 @@ pub fn parse_pml_text(text: &str) -> Result<Vec<PmlElement>, PmlError> {
         let keyword = parts[0].to_uppercase();
         let rest = parts.get(1).map(|s| s.trim()).unwrap_or("");
 
-        // Check if this is an element declaration (rest starts with '/')
-        let is_element = rest.starts_with('/') || is_element_keyword(&keyword);
+        // Element declaration: a structural keyword, or a component/primitive keyword
+        // that is either bare or followed by its DB address. Reference attributes such
+        // as `SPEC /SPEC-A1A2` or `CREF /PIPE-1` also start with '/' but are attributes.
+        let is_element = is_element_keyword(&keyword)
+            || (is_component_type(&keyword) && (rest.is_empty() || rest.starts_with('/')));
 
-        if is_element || (rest.is_empty() && is_component_type(&keyword)) {
+        if is_element {
             // Pop stack elements that are at a deeper or equal indent
             while let Some(&(si, _)) = stack.last() {
                 if si >= indent {
@@ -298,7 +316,9 @@ fn is_element_keyword(kw: &str) -> bool {
 fn is_component_type(kw: &str) -> bool {
     matches!(kw,
         "ELBOW" | "TEE" | "REDU" | "FLAN" | "VALV" | "GASK" |
-        "WELD"  | "PSUP" | "NOZZ" | "STPIPE" | "STRAIG"
+        "WELD"  | "PSUP" | "NOZZ" | "STPIPE" | "STRAIG" |
+        // Equipment design primitives (geometry, see crate::primitives)
+        "BOX" | "CYLI" | "CONE" | "SNOU" | "DISH"
     )
 }
 

@@ -52,6 +52,9 @@ pub struct InstrumentObject {
     #[serde(skip_serializing_if="Option::is_none")] pub eplan_bkz:Option<String>,
     #[serde(skip_serializing_if="Option::is_none")] pub tia_plc_address:Option<String>,
     #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if="Option::is_none")] pub custom_attributes:Option<HashMap<String,serde_json::Value>>,
 }
 
@@ -68,6 +71,9 @@ pub struct InstrumentLoop {
     #[serde(skip_serializing_if="Option::is_none")] pub final_element_tag_id:Option<PmefId>,
     #[serde(skip_serializing_if="Option::is_none")] pub sil_level:Option<u8>,
     #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
 }
 
 #[derive(Debug,Clone,Serialize,Deserialize)]
@@ -86,6 +92,9 @@ pub struct PlcObject {
     #[serde(skip_serializing_if="Option::is_none")] pub safety_cpu:Option<bool>,
     #[serde(skip_serializing_if="Option::is_none")] pub aml_ref:Option<String>,
     #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
 }
 
 #[derive(Debug,Clone,Serialize,Deserialize)]
@@ -102,6 +111,9 @@ pub struct CableObject {
     pub to_id: PmefId,
     #[serde(skip_serializing_if="Option::is_none")] pub route_length:Option<f64>,
     #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
 }
 
 #[derive(Debug,Clone,Serialize,Deserialize)]
@@ -117,6 +129,9 @@ pub struct CableTrayRun {
     #[serde(skip_serializing_if="Option::is_none")] pub fill_level:Option<f64>,
     #[serde(skip_serializing_if="Option::is_none")] pub reserve_capacity:Option<f64>,
     #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
 }
 
 #[derive(Debug,Clone,Serialize,Deserialize)]
@@ -130,4 +145,7 @@ pub struct MtpModule {
     pub pol_endpoint: String,
     pub member_ids: Vec<PmefId>,
     #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
 }

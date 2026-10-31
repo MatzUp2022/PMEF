@@ -1,7 +1,7 @@
 # PMEF Specification · Chapter 01 · Introduction
 
 **Document number:** PMEF-SPEC-01  
-**Version:** 0.9.0-rc  
+**Version:** 0.9.0  
 **Status:** Release Candidate  
 **Date:** 2026-03-31
 
@@ -563,7 +563,7 @@ The PMEF Specification (Markdown text, JSON Schemas, UML diagrams) is published 
 
 You are free to reproduce, adapt, and build upon this specification provided you give
 appropriate attribution: "Based on the PMEF Specification,
-<https://github.com/pmef/specification>, CC BY 4.0."
+<https://github.com/MatzUp2022/PMEF>, CC BY 4.0."
 
 ### 9.2 Reference Implementation Licence
 

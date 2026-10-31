@@ -4,34 +4,29 @@
 //!
 //! ## Architecture
 //!
-//! AVEVA E3D does not have a REST API. The adapter uses two complementary
-//! data sources:
+//! AVEVA E3D does not have a REST API. The adapter reads a single data source:
+//! the **PML export** — text written by PML scripts (`*.pml`) run inside E3D
+//! via AVEVA's official, documented PML interface. It carries the plant
+//! hierarchy, line data, equipment tags, component attributes and the
+//! equipment design primitives used for geometry (see [`primitives`]).
 //!
-//! 1. **PML export** — semantic data (attributes, connectivity, materials).
-//!    PML scripts (`*.pml`) are run from within E3D or AVEVA Engage to dump
-//!    the plant hierarchy, line data, equipment tags, and component attributes.
-//!
-//! 2. **RVM export** — 3D geometry (primitives: cylinders, elbows, tees).
-//!    E3D exports RVM files via the Review export dialog. The adapter parses
-//!    the binary RVM format to extract bounding boxes and parametric primitives.
+//! The adapter deliberately does **not** parse AVEVA's binary RVM format
+//! (undocumented; see `docs/design-decisions.md`). RVM-only models can be
+//! converted to glTF with external tools and referenced as `mesh_ref`.
 //!
 //! ## Export pipeline
 //!
 //! ```text
 //! E3D Plant Model
 //!   │
-//!   ├── PML Script Export ──→ plant.pml (hierarchical text)
-//!   │                              │
-//!   │                              ▼
-//!   │                        PML Parser (src/pml.rs)
-//!   │                              │
-//!   ├── RVM Export ─────────→ plant.rvm (binary geometry)
-//!   │                              │
-//!   │                              ▼
-//!   │                        RVM Parser (src/rvm.rs)
-//!   │                              │
-//!   └── Field Mapping ─────────────┤
-//!                                   ▼
+//!   └── PML Script Export ──→ plant.pml (hierarchical text)
+//!                                  │
+//!                                  ▼
+//!                            PML Parser (src/pml.rs)
+//!                                  │
+//!                     Field mapping + design primitives
+//!                     (src/mapping.rs, src/primitives.rs)
+//!                                  ▼
 //!                             PMEF NDJSON
 //! ```
 //!
@@ -45,10 +40,9 @@
 //!     let config = E3DConfig {
 //!         project_code: "eaf-2026".to_owned(),
 //!         pml_export_path: "exports/plant.pml".into(),
-//!         rvm_export_path: Some("exports/plant.rvm".into()),
 //!         ..Default::default()
 //!     };
-//!     let adapter = E3DAdapter::new(config);
+//!     let mut adapter = E3DAdapter::new(config);
 //!     let stats = adapter.export_to_pmef("output.ndjson").await?;
 //!     Ok(())
 //! }
@@ -59,14 +53,14 @@
 
 pub mod mapping;
 pub mod pml;
-pub mod rvm;
+pub mod primitives;
 
 pub use mapping::{
     classify_elbow_radius, e3d_dtyp_to_pmef, e3d_element_to_pmef,
     e3d_material_to_pmef, e3d_psup_to_support_type, skey_to_flange_type,
 };
 pub use pml::{parse_pml_text, PmlElement, PmlError, PmlValue, E3dElementType};
-pub use rvm::{parse_rvm_bytes, RvmBbox, RvmFile, RvmGroup, RvmPrimitive};
+pub use primitives::{equipment_geometry, EquipmentGeometry};
 
 use pmef_core::traits::{AdapterError, AdapterStats, PmefAdapter};
 use std::collections::HashMap;
@@ -81,8 +75,6 @@ pub struct E3DConfig {
     pub project_code: String,
     /// Path to the PML export file.
     pub pml_export_path: PathBuf,
-    /// Path to the RVM geometry export file (optional).
-    pub rvm_export_path: Option<PathBuf>,
     /// Unit area / process unit ID for isPartOf references.
     pub unit_area: String,
     /// Coordinate system of the E3D model.
@@ -105,7 +97,6 @@ impl Default for E3DConfig {
         Self {
             project_code: "proj".to_owned(),
             pml_export_path: PathBuf::from("export.pml"),
-            rvm_export_path: None,
             unit_area: "U-100".to_owned(),
             coordinate_system: E3DCoordinateSystem::XEastYNorthZUp,
         }
@@ -131,6 +122,8 @@ pub struct E3DAdapter {
     addr_to_id: HashMap<String, String>,
     /// Sequential counters per component type.
     counters: HashMap<String, usize>,
+    /// Problems found while mapping (e.g. skipped design primitives).
+    warnings: Vec<String>,
 }
 
 impl E3DAdapter {
@@ -140,10 +133,16 @@ impl E3DAdapter {
             config,
             addr_to_id: HashMap::new(),
             counters: HashMap::new(),
+            warnings: Vec::new(),
         }
     }
 
-    /// Export the E3D plant model (PML + optional RVM) to a PMEF NDJSON file.
+    /// Problems found during the last export (skipped or approximated primitives).
+    pub fn warnings(&self) -> &[String] {
+        &self.warnings
+    }
+
+    /// Export the E3D plant model (PML export) to a PMEF NDJSON file.
     pub async fn export_to_pmef(
         &mut self,
         output_path: &str,
@@ -162,17 +161,6 @@ impl E3DAdapter {
             .map_err(|e| AdapterError::Other(e.to_string()))?;
         tracing::info!("Parsed {} top-level PML elements", elements.len());
 
-        // Load RVM geometry (optional)
-        let rvm: Option<RvmFile> = if let Some(ref rvm_path) = self.config.rvm_export_path {
-            match std::fs::read(rvm_path) {
-                Ok(bytes) => match parse_rvm_bytes(&bytes) {
-                    Ok(f) => { tracing::info!("Loaded RVM: {} primitives", f.primitive_count); Some(f) }
-                    Err(e) => { tracing::warn!("Could not parse RVM: {e}"); None }
-                },
-                Err(e) => { tracing::warn!("Could not read RVM file: {e}"); None }
-            }
-        } else { None };
-
         // Open output
         let file = File::create(output_path).map_err(AdapterError::Io)?;
         let mut writer = NdjsonWriter::new(BufWriter::new(file), WriterConfig::default());
@@ -180,29 +168,29 @@ impl E3DAdapter {
         // Write FileHeader + Plant + Unit
         let proj = &self.config.project_code.clone();
         writer.write_value(&self.make_file_header(proj))
-            .map_err(|e| AdapterError::Json(e.into()))?;
+            .map_err(AdapterError::from)?;
         writer.write_value(&self.make_plant(proj))
-            .map_err(|e| AdapterError::Json(e.into()))?;
+            .map_err(AdapterError::from)?;
         writer.write_value(&self.make_unit(proj))
-            .map_err(|e| AdapterError::Json(e.into()))?;
+            .map_err(AdapterError::from)?;
         stats.objects_ok += 3;
 
         // Walk PML elements
         for elem in &elements {
             match elem.element_type {
                 E3dElementType::Equipment => {
-                    let objs = self.map_equipment(elem, rvm.as_ref());
+                    let objs = self.map_equipment(elem);
                     for obj in objs {
                         writer.write_value(&obj)
-                            .map_err(|e| AdapterError::Json(e.into()))?;
+                            .map_err(AdapterError::from)?;
                         stats.objects_ok += 1;
                     }
                 }
                 E3dElementType::Pipe => {
-                    let objs = self.map_pipe_line(elem, rvm.as_ref());
+                    let objs = self.map_pipe_line(elem);
                     for obj in objs {
                         writer.write_value(&obj)
-                            .map_err(|e| AdapterError::Json(e.into()))?;
+                            .map_err(AdapterError::from)?;
                         stats.objects_ok += 1;
                     }
                 }
@@ -309,7 +297,7 @@ impl E3DAdapter {
     // ── Equipment mapping ─────────────────────────────────────────────────────
 
     fn map_equipment(
-        &mut self, equi: &PmlElement, rvm: Option<&RvmFile>,
+        &mut self, equi: &PmlElement,
     ) -> Vec<serde_json::Value> {
         let tag = equi.attr_str("TAG").unwrap_or(equi.local_name());
         let dtyp = equi.attr_str("DTYP").unwrap_or("GENERIC");
@@ -336,20 +324,16 @@ impl E3DAdapter {
                 })
             }).collect();
 
-        // Optional bounding box from RVM
-        let rvm_bbox = rvm.and_then(|f| f.find_group(equi.local_name()))
-            .and_then(|g| g.local_bbox());
-
-        let geometry = match rvm_bbox {
-            Some(bb) => serde_json::json!({
-                "type": "mesh_ref",
-                "lod": "LOD2_MEDIUM",
-                "boundingBox": {
-                    "xMin": bb.xmin, "xMax": bb.xmax,
-                    "yMin": bb.ymin, "yMax": bb.ymax,
-                    "zMin": bb.zmin, "zMax": bb.zmax
-                }
-            }),
+        // Geometry from the design primitives in the PML export
+        let geom = equipment_geometry(equi, self.config.coordinate_system);
+        for issue in &geom.issues {
+            tracing::warn!("E3D equipment geometry: {issue}");
+        }
+        self.warnings.extend(geom.issues);
+        let geom_id = format!("urn:pmef:geom:{}:{}-prim", self.config.project_code,
+            obj_id.rsplit(':').next().unwrap_or(tag));
+        let geometry = match geom.primitive {
+            Some(_) => serde_json::json!({ "type": "parametric", "ref": geom_id }),
             None => serde_json::json!({ "type": "none" }),
         };
 
@@ -383,6 +367,16 @@ impl E3DAdapter {
             }
         });
         result.push(obj);
+        if let Some(primitive) = geom.primitive {
+            result.push(serde_json::json!({
+                "@type": "pmef:ParametricGeometry",
+                "@id": geom_id,
+                "ownerRef": obj_id,
+                "lod": "LOD2_MEDIUM",
+                "primitive": primitive,
+                "revision": { "revisionId": "r2026-01-01-001", "changeState": "SHARED" }
+            }));
+        }
         result.push(self.make_has_equivalent_in(&obj_id, &equi.db_address));
         result
     }
@@ -390,7 +384,7 @@ impl E3DAdapter {
     // ── Piping line mapping ───────────────────────────────────────────────────
 
     fn map_pipe_line(
-        &mut self, pipe: &PmlElement, rvm: Option<&RvmFile>,
+        &mut self, pipe: &PmlElement,
     ) -> Vec<serde_json::Value> {
         let line_ref = pipe.attr_str("LINREF").unwrap_or(pipe.local_name());
         let line_clean: String = line_ref.chars()
@@ -431,7 +425,7 @@ impl E3DAdapter {
                 let comp_id = self.component_id(&line_clean, short);
                 comp_ids.push(comp_id.clone());
 
-                let obj = self.map_component(comp, pmef_type, comp_class, &comp_id, &seg_id, rvm);
+                let obj = self.map_component(comp, pmef_type, comp_class, &comp_id, &seg_id);
                 all_objs.push(obj);
                 all_objs.push(self.make_has_equivalent_in(&comp_id, &comp.db_address));
             }
@@ -504,7 +498,6 @@ impl E3DAdapter {
         comp_class: &str,
         comp_id: &str,
         seg_id: &str,
-        _rvm: Option<&RvmFile>,
     ) -> serde_json::Value {
         let skey = comp.attr_str("SKEY");
         let dn   = comp.attr_f64("BORE")
@@ -589,7 +582,7 @@ impl PmefAdapter for E3DAdapter {
     fn supported_domains(&self) -> &[&str] { &["piping", "equipment", "steel"] }
     fn conformance_level(&self) -> u8 { 2 }
     fn description(&self) -> &str {
-        "AVEVA E3D → PMEF adapter. Reads PML export (semantic data) and RVM binary (geometry). \
+        "AVEVA E3D → PMEF adapter. Reads the PML export (semantic data + equipment design primitives). \
          Level 2 conformance. No live E3D connection required — works from offline exports."
     }
 }
@@ -604,7 +597,6 @@ mod tests {
         E3DConfig {
             project_code: "test".to_owned(),
             pml_export_path: PathBuf::from("nonexistent.pml"),
-            rvm_export_path: None,
             unit_area: "U-100".to_owned(),
             coordinate_system: E3DCoordinateSystem::XEastYNorthZUp,
         }
@@ -668,7 +660,7 @@ EQUI /SITE01/ZONE-U100/EQUI-P-201A
         let elements = parse_pml_text(pml).unwrap();
         assert_eq!(elements.len(), 1);
         let mut adapter = E3DAdapter::new(test_config());
-        let objs = adapter.map_equipment(&elements[0], None);
+        let objs = adapter.map_equipment(&elements[0]);
         assert_eq!(objs.len(), 2); // object + HasEquivalentIn
         let eq = &objs[0];
         assert_eq!(eq["@type"], "pmef:Pump");
@@ -706,7 +698,7 @@ PIPE /SITE01/ZONE-CW/PIPE-CW-201
 ";
         let elements = parse_pml_text(pml).unwrap();
         let mut adapter = E3DAdapter::new(test_config());
-        let objs = adapter.map_pipe_line(&elements[0], None);
+        let objs = adapter.map_pipe_line(&elements[0]);
 
         // Should produce: PipingNetworkSystem + HasEquivalentIn + PipingSegment + component + HasEquivalentIn
         assert!(objs.len() >= 3);

@@ -1,7 +1,7 @@
 # PMEF Specification · Chapter 04 · Geometry
 
 **Document number:** PMEF-SPEC-04  
-**Version:** 0.9.0-rc  
+**Version:** 0.9.0  
 **Status:** Normative  
 **Date:** 2026-03-31
 

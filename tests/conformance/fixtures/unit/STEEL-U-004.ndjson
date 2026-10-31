@@ -1,0 +1,1 @@
+{"@type":"pmef:SteelConnection","@id":"urn:pmef:obj:conf:CN-1","isPartOf":"urn:pmef:obj:conf:SS-1","connectionType":"BOLTED_ENDPLATE","memberIds":["urn:pmef:obj:conf:B-1","urn:pmef:obj:conf:C-1"],"revision":{"revisionId":"r2026-10-31-001","changeState":"SHARED","authoringTool":"PMEF conformance fixtures"}}

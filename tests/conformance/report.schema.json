@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MatzUp2022/PMEF/tests/conformance/report.schema.json",
+  "title": "PMEF Conformance Report",
+  "description": "Machine-readable conformance report (spec 06 §7.1) produced by tests/run_tests.py --report json.",
+  "type": "object",
+  "required": ["pmefVersion", "implementationName", "implementationVersion", "implementationKind",
+               "conformanceLevel", "conformanceName", "levelTested", "domains", "testDate", "sut",
+               "validator", "summary", "fidelity", "tests"],
+  "properties": {
+    "pmefVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "implementationName": { "type": "string", "minLength": 1 },
+    "implementationVersion": { "type": "string", "minLength": 1 },
+    "implementationKind": { "enum": ["validator", "converter", "adapter"] },
+    "conformanceLevel": { "type": "integer", "minimum": 0, "maximum": 3 },
+    "conformanceName": { "type": "string" },
+    "validatorConformance": { "type": "boolean" },
+    "levelTested": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "domains": { "type": "array", "items": { "type": "string" } },
+    "testDate": { "type": "string", "format": "date" },
+    "sut": { "type": "string" },
+    "validator": { "type": "string" },
+    "summary": {
+      "type": "object",
+      "required": ["total", "passed", "failed", "skipped"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "fidelity": {
+      "type": "object",
+      "required": ["dataset", "aggregateFidelity", "identityFieldFidelity"],
+      "properties": {
+        "dataset": { "type": "string" },
+        "aggregateFidelity": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "identityFieldFidelity": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "attributesTested": { "type": ["integer", "null"], "minimum": 0 },
+        "additional": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["dataset", "aggregate", "identity"],
+            "properties": {
+              "dataset": { "type": "string" },
+              "aggregate": { "type": "number", "minimum": 0, "maximum": 1 },
+              "identity": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "status", "duration_ms"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^(PIPE|EQUIP|EI|STEEL|REL|GEOM)-U-\\d{3}$|^(INTG|RT)-\\d{3}$" },
+          "name": { "type": "string" },
+          "category": { "enum": ["unit", "negative", "integration", "roundtrip"] },
+          "level": { "type": "integer", "minimum": 1, "maximum": 3 },
+          "status": { "enum": ["PASS", "FAIL", "SKIP"] },
+          "duration_ms": { "type": "number", "minimum": 0 },
+          "detail": { "type": "string" }
+        }
+      }
+    }
+  }
+}

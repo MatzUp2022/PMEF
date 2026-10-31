@@ -372,7 +372,7 @@ impl NavisworksAdapter {
                 "revision":{"revisionId":"r2026-01-01-001","changeState":"SHARED"}
             }),
         ] {
-            writer.write_value(&hdr).map_err(|e| AdapterError::Json(e.into()))?;
+            writer.write_value(&hdr).map_err(AdapterError::from)?;
             stats.objects_ok += 1;
         }
 
@@ -387,7 +387,7 @@ impl NavisworksAdapter {
                 "itemCount": src.item_count,
                 "appendedAt": src.appended_at
             });
-            writer.write_value(&src_obj).map_err(|e| AdapterError::Json(e.into()))?;
+            writer.write_value(&src_obj).map_err(AdapterError::from)?;
             stats.objects_ok += 1;
         }
 
@@ -395,7 +395,7 @@ impl NavisworksAdapter {
         if self.config.include_items {
             for item in &export.model_items {
                 for obj in self.map_model_item(item) {
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                 }
             }
@@ -420,7 +420,7 @@ impl NavisworksAdapter {
                     }
 
                     let obj = self.map_clash_result(clash, &test.test_name);
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                     clash_count += 1;
                 }

@@ -236,10 +236,20 @@ fn extract_direction(attrs: &str) -> Option<[f64; 3]> {
 }
 
 fn extract_floats(s: &str) -> Vec<f64> {
-    // Extract all floating-point numbers from a string
+    // Extract all floating-point numbers from a string, ignoring quoted
+    // names (e.g. 'NOZZLE_N1' must not yield 1.0).
     let mut result = Vec::new();
     let mut current = String::new();
+    let mut in_string = false;
     for c in s.chars() {
+        if c == '\'' {
+            in_string = !in_string;
+            current.clear();
+            continue;
+        }
+        if in_string {
+            continue;
+        }
         match c {
             '0'..='9' | '.' | '-' | 'E' | 'e' | '+' => current.push(c),
             _ => {

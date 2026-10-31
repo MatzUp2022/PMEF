@@ -343,14 +343,14 @@ impl AdvSteelAdapter {
                 "revision":{"revisionId":"r2026-01-01-001","changeState":"SHARED"}
             }),
         ] {
-            writer.write_value(&hdr).map_err(|e| AdapterError::Json(e.into()))?;
+            writer.write_value(&hdr).map_err(AdapterError::from)?;
             stats.objects_ok += 1;
         }
 
         // Beams
         for beam in &export.beams {
             for obj in self.map_beam(beam) {
-                writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                writer.write_value(&obj).map_err(AdapterError::from)?;
                 stats.objects_ok += 1;
             }
         }
@@ -360,7 +360,7 @@ impl AdvSteelAdapter {
             for bp in &export.bolt_patterns {
                 let objs = self.map_bolt_pattern(bp);
                 for obj in objs {
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                 }
             }
@@ -371,7 +371,7 @@ impl AdvSteelAdapter {
             for ws in &export.weld_seams {
                 let objs = self.map_weld_seam(ws);
                 for obj in objs {
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                 }
             }

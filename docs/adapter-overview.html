@@ -669,7 +669,6 @@
           <span class="format-arrow fa-in">IN</span>
           <div class="format-tags">
             <span class="format-tag">PML *.pml (text)</span>
-            <span class="format-tag">RVM *.rvm (binary)</span>
           </div>
         </div>
         <div class="format-row">
@@ -681,9 +680,9 @@
         <span class="card-row-key">Identity</span><span class="card-row-val">E3D DB address (/SITE/ZONE/ELEM/…)</span>
         <span class="card-row-key">Native units</span><span class="card-row-val">mm · K · Pa (E3D export)</span>
         <span class="card-row-key">Coord sys</span><span class="card-row-val">Z-up · legacy PDMS Y-up swap included</span>
-        <span class="card-row-key">Tech stack</span><span class="card-row-val">Rust PML indent-parser · RVM binary (15 primitive types)</span>
+        <span class="card-row-key">Tech stack</span><span class="card-row-val">Rust PML indent-parser · PML design primitives (BOX, CYLI, CONE, SNOU, DISH)</span>
       </div>
-      <div class="card-note">Fully offline — no live E3D connection. PML export from AVEVA Engage or PML scripts. RVM provides 15 primitive geometry types (Box, Cyl, Sphere, Snout, Torus, Dish…). Port-based topology resolution.</div>
+      <div class="card-note">Fully offline — no live E3D connection. PML export from AVEVA Engage or PML scripts, including equipment design primitives for geometry. No RVM parsing (DD-011). Port-based topology resolution.</div>
       <div class="code-lines"><span class="code-rs">Rust 2,009 lines</span></div>
     </div>
 
@@ -1201,7 +1200,7 @@
       <tr>
         <td><div class="tool-name-cell">AVEVA E3D</div></td>
         <td style="font-size:11px;color:#94a3b8">PipingNetworkSystem · PipingSegment · Pipe · Elbow · Tee · Reducer · Flange · Valve · Weld · PipeSupport · 40+ equipment types · SteelMember · HasEquivalentIn</td>
-        <td style="font-size:11px;color:#64748b">PML element tree · RVM primitives (15 types) · 5-support types · elbow radius classification</td>
+        <td style="font-size:11px;color:#64748b">PML element tree · PML design primitives · 5-support types · elbow radius classification</td>
       </tr>
       <tr>
         <td><div class="tool-name-cell">Tekla</div></td>

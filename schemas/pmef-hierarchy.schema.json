@@ -98,6 +98,7 @@
       "description": "Top-level container representing an industrial plant or facility. All Units and Areas are children of a Plant.",
       "type": "object",
       "required": ["@type", "@id", "pmefVersion"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type": {
           "const": "pmef:Plant",
@@ -134,7 +135,10 @@
         },
         "revision": {
           "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata"
-        }
+        },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
       },
       "additionalProperties": false
     },
@@ -144,6 +148,7 @@
       "description": "A process unit within a plant, e.g. a cooling water unit, a distillation train, or a utility section.",
       "type": "object",
       "required": ["@type", "@id", "pmefVersion", "isPartOf"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type": {
           "const": "pmef:Unit",
@@ -180,7 +185,10 @@
         },
         "revision": {
           "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata"
-        }
+        },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
       },
       "additionalProperties": false
     },
@@ -190,6 +198,7 @@
       "description": "A physical area or zone within a plant, used for spatial partitioning of equipment and piping.",
       "type": "object",
       "required": ["@type", "@id", "pmefVersion", "isPartOf"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type": {
           "const": "pmef:Area",
@@ -218,7 +227,10 @@
         },
         "revision": {
           "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata"
-        }
+        },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
       },
       "additionalProperties": false
     }

@@ -8,6 +8,7 @@ on:
       - 'examples/**'
       - 'catalogs/**'
       - 'scripts/**'
+      - 'tests/**'
       - 'diagrams/**'
       - 'spec/**'
       - 'docs/**'
@@ -20,6 +21,7 @@ on:
       - 'examples/**'
       - 'catalogs/**'
       - 'scripts/**'
+      - 'tests/**'
       - 'diagrams/**'
       - 'spec/**'
       - 'docs/**'
@@ -103,6 +105,44 @@ jobs:
       - name: Validate all catalogs
         run: python scripts/validate-catalogs.py
 
+      - name: I/H-section properties consistent with their dimensions (±1 %)
+        run: python scripts/i-section-properties.py --check catalogs/profiles-en.json --tolerance 0.01
+
+  # ──────────────────────────────────────────────────────────
+  # 3b. Conformance test suite (spec 06 §5)
+  # ──────────────────────────────────────────────────────────
+  conformance-suite:
+    name: Conformance suite
+    runs-on: ubuntu-latest
+    needs: validate-schemas
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install jsonschema
+
+      - name: Fixtures and manifest are up to date
+        run: python tests/conformance/tools/generate_fixtures.py --check
+
+      - name: Run suite (reference implementation, level 3)
+        run: python tests/run_tests.py --level 3
+
+      - name: Self-test (broken implementations must be detected)
+        run: python tests/conformance/tools/selftest.py
+
+      - name: Catalog snapping test vectors (pmef-snap/1 Python reference)
+        run: python tests/snapping/reference_snap.py
+
+      - name: As-built example matches the snapping algorithm
+        run: |
+          python scripts/generate-asbuilt-example.py /tmp/asbuilt.ndjson
+          diff -u examples/asbuilt-recognition.ndjson /tmp/asbuilt.ndjson
+
   # ──────────────────────────────────────────────────────────
   # 4. Check Mermaid diagrams are syntactically valid
   # ──────────────────────────────────────────────────────────
@@ -156,6 +196,7 @@ jobs:
           globs: |
             *.md
             spec/*.md
+            spec/rfc/*.md
             docs/*.md
             diagrams/*.md
           config: .markdownlint.jsonc
@@ -185,7 +226,7 @@ jobs:
   ci-success:
     name: CI passed
     runs-on: ubuntu-latest
-    needs: [validate-schemas, validate-examples, validate-catalogs, validate-diagrams, lint-markdown]
+    needs: [validate-schemas, validate-examples, validate-catalogs, conformance-suite, validate-diagrams, lint-markdown]
     if: always()
     steps:
       - name: Check all jobs passed
@@ -193,6 +234,7 @@ jobs:
           if [[ "${{ needs.validate-schemas.result }}" != "success" ]] || \
              [[ "${{ needs.validate-examples.result }}" != "success" ]] || \
              [[ "${{ needs.validate-catalogs.result }}" != "success" ]] || \
+             [[ "${{ needs.conformance-suite.result }}" != "success" ]] || \
              [[ "${{ needs.validate-diagrams.result }}" != "success" ]] || \
              [[ "${{ needs.lint-markdown.result }}" != "success" ]]; then
             echo "One or more required checks failed"

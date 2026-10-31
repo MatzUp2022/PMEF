@@ -19,7 +19,7 @@ interoperability purposes.
 | `flange-dimensions.json` | ASME B16.5 (Pipe Flanges and Flanged Fittings) |
 | `piping-class-a1a2.json` | ASME B16.5, ASME B16.9 (Factory-Made Wrought Buttwelding Fittings), ASME B16.11 (Forged Fittings, Socket-Welding and Threaded) |
 | `piping-class-b3c1.json` | ASME B16.5, ASME B16.9 |
-| `profiles-en.json` | EN 10034, EN 10055, EN 10056-1, EN 10058, EN 10210-2, EN 10219-2, EN 10279 |
+| `profiles-en.json` | EN 10034, EN 10055, EN 10056-1, EN 10058, EN 10210-2, EN 10219-2, EN 10279; HEA dimensions (2024.2) checked against the EN 10365 dimension tables as published at wermac.org, section properties computed from the dimensions |
 | `profiles-aisc.json` | AISC Steel Construction Manual, 16th Edition |
 | `rdl-uri-map.json` | ISO 15926-4 via PCA Reference Data Library (public SPARQL endpoint) |
 | `materials-en.json` | EN 10025-2:2019 (Structural steels), EN 10028-2:2017 (Pressure vessel steels), EN 10028-7:2016 (Stainless steels), EN 10216-1/2:2013 (Seamless tubes), EN 10217-1:2019 (Welded tubes), EN 10222-2:2017 (Forgings) |

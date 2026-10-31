@@ -146,6 +146,9 @@ pub struct PipingNetworkSystem {
     pub isometric_ref: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub revision: Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
 }
@@ -182,6 +185,9 @@ pub struct PipingSegment {
     pub components: Vec<PmefId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub revision: Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
 }
 
 // ── Macro for piping component boilerplate ────────────────────────────────
@@ -212,6 +218,9 @@ macro_rules! piping_component_base {
             pub documents: Vec<DocumentLink>,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub revision: Option<RevisionMetadata>,
+            /// RFC-0001 provenance / review / asBuilt blocks.
+            #[serde(flatten, default)]
+            pub recognition: crate::provenance::RecognitionMetadata,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
             $( $(#[$field_meta])* pub $field: $ty ),*
@@ -413,4 +422,7 @@ pub struct Spool {
     pub isometric_ref: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub revision: Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
 }

@@ -17,13 +17,17 @@ jobs:
     name: Full validation
     uses: ./.github/workflows/validate-schemas.yml
 
+  rust:
+    name: Rust build and test
+    uses: ./.github/workflows/rust.yml
+
   # ──────────────────────────────────────────────────────────
   # 2. Build distribution artefacts
   # ──────────────────────────────────────────────────────────
   build-artifacts:
     name: Build release artefacts
     runs-on: ubuntu-latest
-    needs: validate
+    needs: [validate, rust]
     env:
       REF_NAME: ${{ github.ref_name }}
     steps:

@@ -59,7 +59,8 @@ pub fn map_profile(tekla_profile: &str) -> ProfileId {
     let normalised = normalise_profile_string(s);
 
     // Try exact lookup in the override table first
-    if let Some(pid) = OVERRIDE_TABLE.get(normalised.to_uppercase().as_str()) {
+    let key = normalised.to_uppercase();
+    if let Some((_, pid)) = OVERRIDE_TABLE.iter().find(|(k, _)| *k == key) {
         return ProfileId::new(pid.0, pid.1);
     }
 
@@ -170,30 +171,30 @@ fn classify_by_pattern(s: &str) -> ProfileId {
 
 /// Hardcoded override table for known Tekla→PMEF profile name differences.
 /// Format: TEKLA_UPPER → ("standard", "designation")
-static OVERRIDE_TABLE: phf::Map<&'static str, (&'static str, &'static str)> = phf::phf_map! {
+static OVERRIDE_TABLE: &[(&str, (&str, &str))] = &[
     // Tekla sometimes writes HE200A instead of HEA200
-    "HE200A" => ("EN", "HEA200"),
-    "HE200B" => ("EN", "HEB200"),
-    "HE240A" => ("EN", "HEA240"),
-    "HE240B" => ("EN", "HEB240"),
-    "HE300A" => ("EN", "HEA300"),
-    "HE300B" => ("EN", "HEB300"),
-    "HE400A" => ("EN", "HEA400"),
-    "HE400B" => ("EN", "HEB400"),
-    "HE500A" => ("EN", "HEA500"),
-    "HE500B" => ("EN", "HEB500"),
+    ("HE200A", ("EN", "HEA200")),
+    ("HE200B", ("EN", "HEB200")),
+    ("HE240A", ("EN", "HEA240")),
+    ("HE240B", ("EN", "HEB240")),
+    ("HE300A", ("EN", "HEA300")),
+    ("HE300B", ("EN", "HEB300")),
+    ("HE400A", ("EN", "HEA400")),
+    ("HE400B", ("EN", "HEB400")),
+    ("HE500A", ("EN", "HEA500")),
+    ("HE500B", ("EN", "HEB500")),
     // AISC variants Tekla sometimes uses
-    "W12*53" => ("AISC", "W12x53"),
-    "W14*82" => ("AISC", "W14x82"),
-    "W18*50" => ("AISC", "W18x50"),
+    ("W12*53", ("AISC", "W12x53")),
+    ("W14*82", ("AISC", "W14x82")),
+    ("W18*50", ("AISC", "W18x50")),
     // Square hollow section: Tekla SHS100*6 → EN:SHS100x100x6
-    "SHS100*6"  => ("EN", "SHS100x6"),
-    "SHS120*6"  => ("EN", "SHS120x6"),
-    "SHS150*6"  => ("EN", "SHS150x6"),
-    "SHS150*8"  => ("EN", "SHS150x8"),
-    "SHS200*8"  => ("EN", "SHS200x8"),
-    "SHS200*10" => ("EN", "SHS200x10"),
-};
+    ("SHS100*6", ("EN", "SHS100x6")),
+    ("SHS120*6", ("EN", "SHS120x6")),
+    ("SHS150*6", ("EN", "SHS150x6")),
+    ("SHS150*8", ("EN", "SHS150x8")),
+    ("SHS200*8", ("EN", "SHS200x8")),
+    ("SHS200*10", ("EN", "SHS200x10")),
+];
 
 // Note: phf (perfect hash function) is used above for compile-time static maps.
 // In practice without the phf crate available, we use a runtime HashMap.
@@ -235,7 +236,7 @@ pub fn map_profile_with_table(
 }
 
 /// Map a Tekla material/grade string to PMEF steel grade + standard.
-pub fn map_material(tekla_material: &str) -> (&'static str, &'static str) {
+pub fn map_material(tekla_material: &str) -> (&str, &'static str) {
     match tekla_material.trim().to_uppercase().replace(['-', ' '], "").as_str() {
         "S235" | "S235JR"              => ("S235JR",  "EN 10025-2"),
         "S275" | "S275JR" | "S275J0"  => ("S275JR",  "EN 10025-2"),

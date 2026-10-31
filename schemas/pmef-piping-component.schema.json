@@ -11,6 +11,7 @@
       "description": "A complete piping line from the P&ID. Corresponds to DEXPI PipingNetworkSystem and ISO 15926 ProcessSystem.",
       "type": "object",
       "required": ["@type","@id","pmefVersion","lineNumber","isPartOf"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type":        { "const": "pmef:PipingNetworkSystem" },
         "@id":          { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -58,6 +59,9 @@
         "isometricRef":  { "type": "string", "description": "Isometric drawing reference" },
         "documents":     { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/DocumentLink" } },
         "revision":      { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" },
 
         "customAttributes": {
           "type": "object",
@@ -73,6 +77,7 @@
       "description": "A contiguous section of a piping line sharing uniform specification. Maps to DEXPI PipingNetworkSegment.",
       "type": "object",
       "required": ["@type","@id","isPartOf"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type":   { "const": "pmef:PipingSegment" },
         "@id":     { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -88,7 +93,10 @@
           "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" }
         },
 
-        "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+        "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
       },
       "additionalProperties": false
     },
@@ -98,6 +106,7 @@
       "description": "Base type for all physical piping components. Never instantiated directly — use a specific subtype.",
       "type": "object",
       "required": ["@type","@id","pmefVersion","isPartOf","componentSpec"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type":       { "type": "string", "description": "Concrete type: pmef:Pipe, pmef:Elbow, pmef:Valve, etc." },
         "@id":         { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -127,6 +136,9 @@
         "geometry":   { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
         "documents":  { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/DocumentLink" } },
         "revision":   { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" },
 
         "customAttributes": {
           "type": "object",
@@ -322,6 +334,7 @@
       "description": "A prefabricated piping assembly, defined for shop or field fabrication. Contains an ordered list of components.",
       "type": "object",
       "required": ["@type","@id","spoolMark","isPartOf","components"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type":     { "const": "pmef:Spool" },
         "@id":       { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -332,7 +345,10 @@
         "spoolLength":   { "type": "number", "description": "Overall envelope length [mm]" },
         "fabricationLocation": { "type": "string", "enum": ["SHOP","FIELD","VENDOR"] },
         "isometricRef":  { "type": "string" },
-        "revision":      { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+        "revision":      { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
       },
       "additionalProperties": false
     }

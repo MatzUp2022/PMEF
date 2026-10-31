@@ -38,23 +38,19 @@ You need a few tools on your machine before working with PMEF files:
 - **Git** -- PMEF files are designed for version control; you will want Git to
   track changes at the object level
 - **jq** (optional) -- handy for pretty-printing individual NDJSON lines on the command line
-- **Docker** (optional) -- for running the future `pmef-cli` container image
+- **Rust** (optional) -- stable toolchain, to build the `pmef` CLI from source
 
-### Installing the PMEF CLI (future)
+### Installing the PMEF CLI (from source)
 
-Once the Rust CLI is published to crates.io you will be able to install it directly:
-
-```bash
-cargo install pmef-cli
-```
-
-Or pull the Docker image:
+The CLI is not yet published on crates.io and there is no container image. Build it from
+this repository:
 
 ```bash
-docker pull ghcr.io/pmef/pmef-cli:latest
+cargo install --path pmef-rs/pmef-cli   # installs the `pmef` binary
+pmef validate examples/pump-skid-complete.ndjson --schemas schemas
 ```
 
-Until then, use the Python validation scripts in the `scripts/` directory.
+The Python validation scripts in `scripts/` work without Rust.
 
 ---
 
@@ -65,8 +61,8 @@ schemas with the Python helper:
 
 ```bash
 # Clone the repository
-git clone https://github.com/pmef/specification.git
-cd specification
+git clone https://github.com/MatzUp2022/PMEF.git
+cd PMEF
 
 # Install Python dependencies
 pip install -r requirements.txt
@@ -227,8 +223,8 @@ All JSON Schema files live in [`schemas/`](../schemas/). Key files:
 ### Contribute
 
 See [`CONTRIBUTING.md`](../CONTRIBUTING.md) for how to file issues, propose schema
-changes, and submit adapters. Join the community on
-[Discord](https://discord.gg/pmef).
+changes, and submit adapters. Questions and proposals go to
+[GitHub Issues](https://github.com/MatzUp2022/PMEF/issues).
 
 ### Design rationale
 

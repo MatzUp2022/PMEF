@@ -1,0 +1,10 @@
+~ urn:pmef:obj:demo-asb:B-101 ⇐ urn:pmef:obj:scan-2026-10:R-0002 (pmef:SteelMember) [geometry 12.5 mm]
+    ~ endPoint[0]: 6025.0 → 6000.0 (Δ -25)
+    - memberMark: "B-101"
+~ urn:pmef:obj:demo-asb:CW-301-PIPE-002 ⇐ urn:pmef:obj:scan-2026-10:R-0005 (pmef:Pipe) [geometry 6 mm]
+    ~ pipeLength: 2283.4 → 2271.4 (Δ -12)
+    ~ ports[portId=P2].coordinate[2]: 988.0 → 1000.0 (Δ +12)
+- urn:pmef:obj:demo-asb:CW-301-PS-002 (pmef:PipeSupport)
++ urn:pmef:obj:scan-2026-10:R-0006 (pmef:PipeSupport)
+Matched with different @id: 5 (geometry 4, tag 1), ambiguous 0
+Summary: 1 added, 1 removed, 2 changed, 7 unchanged

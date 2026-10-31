@@ -356,6 +356,351 @@
         }
       },
       "additionalProperties": false
+    },
+    "Provenance": {
+      "title": "Provenance",
+      "description": "Origin of a PMEF object: manual modelling, CAD import or automated recognition from drawings, scans or photos (RFC-0001, spec 02 §2.9).",
+      "type": "object",
+      "required": [
+        "sourceType"
+      ],
+      "properties": {
+        "sourceType": {
+          "type": "string",
+          "enum": [
+            "manual",
+            "cad-import",
+            "iso-drawing",
+            "2d-drawing",
+            "scan",
+            "photo"
+          ],
+          "description": "Kind of source the object was created from."
+        },
+        "sourceRef": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI of the source document/page/region or point-cloud segment, e.g. '…/ISO-CW-201.pdf#page=2&region=0.12,0.40,0.31,0.55' or '…/scan.e57#segment=CW-201-seg-07'."
+        },
+        "recognizer": {
+          "type": "object",
+          "required": [
+            "name",
+            "version"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "description": "Recognition software that produced the object."
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Recognizer confidence for this object (0..1)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the object was created from the source (ISO 8601)."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "recognizer"
+            ]
+          },
+          "then": {
+            "required": [
+              "confidence"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "sourceType": {
+                "const": "manual"
+              }
+            }
+          },
+          "else": {
+            "required": [
+              "sourceRef"
+            ]
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "ReviewStatus": {
+      "title": "Review Status",
+      "description": "Human review of an (automatically recognised) object. Orthogonal to the ISO 19650 CDE changeState; see spec 02 §2.9.2 for the allowed combinations.",
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "detected",
+            "reviewed",
+            "approved",
+            "rejected"
+          ]
+        },
+        "reviewedBy": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Person or role identifier."
+        },
+        "reviewedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "if": {
+        "properties": {
+          "status": {
+            "const": "detected"
+          }
+        }
+      },
+      "else": {
+        "required": [
+          "reviewedBy",
+          "reviewedAt"
+        ]
+      },
+      "additionalProperties": false
+    },
+    "CatalogSnap": {
+      "title": "Catalog Snap",
+      "description": "Catalog entry a measured/recognised object was snapped to, with per-parameter residuals.",
+      "type": "object",
+      "required": [
+        "catalogRef",
+        "snappedSize"
+      ],
+      "properties": {
+        "catalogRef": {
+          "type": "object",
+          "required": [
+            "catalogId",
+            "catalogVersion",
+            "entryId"
+          ],
+          "properties": {
+            "catalogId": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Catalog id, e.g. 'profiles-en'."
+            },
+            "catalogVersion": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Catalog version, e.g. '2024.1'."
+            },
+            "entryId": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Entry catalogId, e.g. 'EN:HEB300'."
+            }
+          },
+          "additionalProperties": false
+        },
+        "snappedSize": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Designation, e.g. 'HEB 300', 'DN 150 PN 40'."
+        },
+        "residuals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "parameter",
+              "measured_mm",
+              "catalog_mm",
+              "residual_mm"
+            ],
+            "properties": {
+              "parameter": {
+                "type": "string",
+                "minLength": 1
+              },
+              "measured_mm": {
+                "type": "number"
+              },
+              "catalog_mm": {
+                "type": "number"
+              },
+              "residual_mm": {
+                "type": "number",
+                "description": "measured_mm − catalog_mm"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "algorithm": {
+          "type": "string",
+          "pattern": "^[a-z0-9\\-]+/\\d+$",
+          "examples": [
+            "pmef-snap/1"
+          ],
+          "description": "Snapping algorithm and version that produced this result (RFC-0002). Absent for manual or tool-specific snaps."
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Normalised RMS residual of the chosen entry (pmef-snap/1: 0 = exact, 1 = at the tolerance limit)."
+        },
+        "runnerUp": {
+          "type": "object",
+          "required": [
+            "entryId",
+            "score"
+          ],
+          "properties": {
+            "entryId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "additionalProperties": false,
+          "description": "Second-best admissible entry."
+        },
+        "ambiguous": {
+          "type": "boolean",
+          "description": "True if the runner-up score is within the ambiguity margin (pmef-snap/1: 0.1); the object then needs human review."
+        },
+        "tolerances": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "description": "Non-default tolerance band per parameter [mm]. MUST be present when non-default tolerances were used."
+        }
+      },
+      "additionalProperties": false
+    },
+    "AsBuilt": {
+      "title": "As-Built Data",
+      "description": "Fit of the object to measured data and its catalog snap (RFC-0001).",
+      "type": "object",
+      "properties": {
+        "pointCloudRef": {
+          "type": "string",
+          "format": "uri",
+          "description": "Point cloud (segment) the object was fitted to."
+        },
+        "fitMethod": {
+          "type": "string",
+          "minLength": 1,
+          "examples": [
+            "ransac-cylinder",
+            "least-squares-cylinder",
+            "ransac-plane",
+            "icp",
+            "manual"
+          ]
+        },
+        "deviationRms_mm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "deviationMax_mm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "catalogSnap": {
+          "$ref": "#/$defs/CatalogSnap"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ReviewChangeStateRule": {
+      "title": "Review / CDE state consistency",
+      "description": "review.status 'detected' requires changeState WIP; 'rejected' must not be PUBLISHED (spec 02 §2.9.2).",
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "review",
+              "revision"
+            ],
+            "properties": {
+              "review": {
+                "properties": {
+                  "status": {
+                    "const": "detected"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "revision": {
+                "properties": {
+                  "changeState": {
+                    "const": "WIP"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "review",
+              "revision"
+            ],
+            "properties": {
+              "review": {
+                "properties": {
+                  "status": {
+                    "const": "rejected"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "revision": {
+                "properties": {
+                  "changeState": {
+                    "not": {
+                      "const": "PUBLISHED"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

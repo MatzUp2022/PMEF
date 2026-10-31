@@ -147,14 +147,14 @@ impl ComosAdapter {
 
         // Header objects
         for obj in self.make_header_objects(&export) {
-            writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+            writer.write_value(&obj).map_err(AdapterError::from)?;
             stats.objects_ok += 1;
         }
 
         // Plant units
         for unit in &export.plant_units {
             let obj = self.map_unit(unit);
-            writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+            writer.write_value(&obj).map_err(AdapterError::from)?;
             stats.objects_ok += 1;
         }
 
@@ -162,7 +162,7 @@ impl ComosAdapter {
         if self.config.include_equipment {
             for equip in &export.equipment {
                 for obj in self.map_equipment(equip) {
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                 }
             }
@@ -172,7 +172,7 @@ impl ComosAdapter {
         if self.config.include_piping {
             for line in &export.piping_lines {
                 for obj in self.map_piping_line(line) {
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                 }
             }
@@ -182,13 +182,13 @@ impl ComosAdapter {
         if self.config.include_instruments {
             for inst in &export.instruments {
                 for obj in self.map_instrument(inst) {
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                 }
             }
             for lp in &export.instrument_loops {
                 for obj in self.map_loop(lp) {
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                 }
             }
@@ -198,7 +198,7 @@ impl ComosAdapter {
         if self.config.include_cables {
             for cable in &export.cables {
                 for obj in self.map_cable(cable) {
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                 }
             }
@@ -208,7 +208,7 @@ impl ComosAdapter {
         if self.config.include_plc {
             for plc in &export.plc_objects {
                 for obj in self.map_plc(plc) {
-                    writer.write_value(&obj).map_err(|e| AdapterError::Json(e.into()))?;
+                    writer.write_value(&obj).map_err(AdapterError::from)?;
                     stats.objects_ok += 1;
                 }
             }

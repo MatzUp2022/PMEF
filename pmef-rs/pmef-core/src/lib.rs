@@ -24,13 +24,17 @@
 #![warn(missing_docs, clippy::all)]
 
 pub mod catalog;
+pub mod diff;
 pub mod ei;
 pub mod equipment;
 pub mod geometry;
+pub mod matching;
 pub mod plant;
+pub mod provenance;
 pub mod piping;
 pub mod relationships;
 pub mod revision;
+pub mod snapping;
 pub mod steel;
 pub mod traits;
 pub mod types;
@@ -51,6 +55,10 @@ pub use piping::{
 pub use relationships::{
     ControlledBy, HasEquivalentIn, IsCollocatedWith, IsConnectedTo, IsDerivedFrom,
     IsDocumentedBy, IsPartOf, IsRevisionOf, ReplacedBy, Supports,
+};
+pub use provenance::{
+    AsBuilt, CatalogSnap, CatalogSnapRef, Provenance, RecognitionMetadata, Recognizer, Residual,
+    ReviewState, ReviewStatus, SnapCandidate, SourceType,
 };
 pub use revision::{ChangeState, RevisionMetadata};
 pub use steel::{SteelConnection, SteelMember, SteelNode, SteelSystem};

@@ -43,7 +43,7 @@ reference implementation. Dates are targets, not commitments.
 - ✅ README, CONTRIBUTING, ROADMAP, GOVERNANCE
 - ✅ Issue templates (bug, feature, RFC)
 - ✅ CI/CD pipeline (schema validation)
-- 🔄 Discord server setup
+- 🗓️ Community channel (none yet — use GitHub Issues)
 - 🔄 First working group sessions (WG-Piping, WG-Equipment)
 
 ---
@@ -70,7 +70,13 @@ reference implementation. Dates are targets, not commitments.
 
 - 🗓️ **`pmef-adapter-plant3d`** — AutoCAD Plant 3D via Plant SDK + PCF bridge
 - 🗓️ **`pmef-adapter-cadmatic`** — CADMATIC via REST Web API (Swagger)
-- 🗓️ **`pmef-adapter-e3d`** — AVEVA E3D via RVM export + rvmparser + PML scripting
+- 🔄 **`pmef-adapter-e3d`** — AVEVA E3D via PML scripting only (semantics + design-primitive
+  geometry); no RVM parsing ([DD-011](docs/design-decisions.md#dd-011-e3d-geometry-via-pml-no-rvm-parsing))
+- 🗓️ **RVM-only models (DD-011, option D)** — no RVM code in PMEF. Instead:
+  - `mesh_ref` import path: attach glTF 2.0 meshes (produced by an external RVM→glTF tool
+    run by the user) to PMEF objects via `GeometryReference.ref`, matched by E3D name/address
+  - guide in `docs/` describing the workflow and the user's licence responsibility
+  - acceptance: synthetic glTF fixture, schema-valid output, round-trip of `@id`s
 - 🗓️ **`pmef-adapter-openplant`** — Bentley OpenPlant via ISO 15926/iRING API
 
 ### CLI + tooling
@@ -180,3 +186,31 @@ reference implementation. Dates are targets, not commitments.
 
 The TSC reviews and updates this roadmap quarterly.
 Last updated: **2026-03-31** · TSC approval: pending
+
+---
+
+## Backlog carried over from CHANGELOG (2026-10-31)
+
+Items previously listed as "planned" in CHANGELOG.md (moved here — a changelog records
+released changes only):
+
+- 🗓️ Fix EQUIP-U-005 and PIPE-U-003 schema/test gaps
+- 🗓️ DS-05 benchmark (Mixed EAF + E&I + Steel, ~80 objects)
+- 🗓️ `pmef-stress`: CAESAR II .cii import/export adapter (Rust)
+- 🗓️ Full `pmef-geom` AABB computation (all 15 primitives)
+- ✅ `pmef-validate` jsonschema Rust integration (cross-file `$ref` resolution)
+- ✅ `cargo test --workspace` green — enforced by `.github/workflows/rust.yml`
+- 🔄 `pmef-adapter-cadmatic`: CADMATIC REST API adapter (compiles and tests green; frozen scope)
+- 🗓️ Published crates on crates.io
+- 🗓️ Published schemas under a project-owned domain (namespace decision open, see docs/AUDIT.md §8)
+- 🗓️ Project website with full documentation
+- 🗓️ First vendor Level 2 certification
+- 🔄 RFC-0001 provenance / review / as-built — implemented as 0.10.0 draft, awaiting review
+- 🔄 RFC-0002 catalog snapping `pmef-snap/1` (pipes, I-sections) — implemented as draft, awaiting review
+- 🗓️ `pmef-snap/2`: fittings, flanges, hollow sections, angles
+- ✅ `catalogs/profiles-en.json` HEA data corrected (2024.2)
+- 🗓️ Same consistency check for AISC, hollow-section and piping-class catalogs
+- ✅ Deterministic object-level `pmef diff` (spec 03 §9)
+- 🗓️ 3-way merge (`pmef merge`) with a conflict model on top of the diff rules
+- ✅ `pmef diff --match` for differing `@id`s (spec 03 §9.5)
+- 🗓️ Persist matches as data (needs an RFC for an as-built ↔ design correspondence relationship)

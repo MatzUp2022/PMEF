@@ -1,7 +1,7 @@
 # PMEF Specification · Chapter 02 · Information Model
 
 **Document number:** PMEF-SPEC-02  
-**Version:** 0.9.0-rc  
+**Version:** 0.9.0  
 **Status:** Normative  
 **Date:** 2026-03-31
 
@@ -234,6 +234,72 @@ PMEF uses the following units unconditionally. Adapters are responsible for all 
 | Heat transfer coefficient | watt per square metre kelvin | `W/m²K` |
 | Angle | degree | `°` (not radian) |
 | Density | kilogram per cubic metre | `kg/m³` |
+
+### 2.9 Provenance, Review and As-Built Data
+
+*Since 0.10.0 ([RFC-0001](rfc/0001-provenance-asbuilt.md)).* Every PMEF object that carries
+`revision` (all object types except `FileHeader`) **MAY** carry the three optional blocks
+`provenance`, `review` and `asBuilt` (`pmef-base.schema.json` `$defs/Provenance`,
+`$defs/ReviewStatus`, `$defs/AsBuilt`). Objects created by automated recognition
+(`sourceType` other than `manual` or `cad-import`) **SHOULD** carry `provenance` and `review`.
+
+#### 2.9.1 `provenance`
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `sourceType` | **MUST** | enum | `manual`, `cad-import`, `iso-drawing`, `2d-drawing`, `scan`, `photo` |
+| `sourceRef` | **MUST** unless `manual` | URI | Source document / page / region or point-cloud segment |
+| `recognizer` | SHOULD for recognised objects | object | `name` and `version` (both **MUST**) |
+| `confidence` | **MUST** if `recognizer` is present | number 0..1 | Recognizer confidence for this object |
+| `createdAt` | SHOULD | date-time | When the object was created from the source |
+
+Recommended `sourceRef` fragments: `#page=<n>&region=<x0>,<y0>,<x1>,<y1>` for documents
+(page-relative coordinates 0..1, origin top-left) and `#segment=<id>` for point clouds.
+
+#### 2.9.2 `review`
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `status` | **MUST** | enum | `detected`, `reviewed`, `approved`, `rejected` |
+| `reviewedBy` | **MUST** unless `detected` | string | Person or role identifier |
+| `reviewedAt` | **MUST** unless `detected` | date-time | Time of the review |
+
+`review.status` describes object-level checking; `revision.changeState` describes the ISO 19650
+CDE state of the information container. Allowed combinations:
+
+| `review.status` | `revision.changeState` |
+|-----------------|------------------------|
+| `detected` | **MUST** be `WIP` |
+| `reviewed` | `WIP` or `SHARED` (SHOULD) |
+| `approved` | any |
+| `rejected` | **MUST NOT** be `PUBLISHED` (SHOULD be `WIP` or `ARCHIVED`) |
+
+The **MUST** rules are enforced by the schema (`$defs/ReviewChangeStateRule`).
+
+#### 2.9.3 `asBuilt`
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `pointCloudRef` | SHOULD | URI | Point cloud (segment) the object was fitted to |
+| `fitMethod` | SHOULD | string | e.g. `ransac-cylinder`, `least-squares-cylinder`, `ransac-plane`, `icp`, `manual` |
+| `deviationRms_mm` | SHOULD | number ≥ 0 | RMS deviation of the measured points from the fitted object [mm] |
+| `deviationMax_mm` | SHOULD | number ≥ 0 | Maximum deviation [mm]; SHOULD be ≥ `deviationRms_mm` |
+| `catalogSnap` | MAY | object | Catalog entry the object was snapped to |
+
+`catalogSnap` **MUST** contain `catalogRef` (`catalogId`, `catalogVersion`, `entryId` — all
+**MUST**; the catalog version makes snapping reproducible) and `snappedSize` (designation such
+as `HEB 300` or `DN 150 PN 40`). It **SHOULD** contain `residuals`: one entry per fitted
+parameter with `parameter`, `measured_mm`, `catalog_mm` and `residual_mm` (= measured − catalog).
+
+#### 2.9.4 Snapping algorithm
+
+*Since 0.10.0 ([RFC-0002](rfc/0002-catalog-snapping.md)).* `catalogSnap` **MAY** additionally carry
+`algorithm`, `score`, `runnerUp` (`entryId`, `score`), `ambiguous` and `tolerances`. A snap
+produced by the normative algorithm `pmef-snap/1` (straight pipes against `PIPING_CLASS`
+catalogs; HEA/HEB/HEM/IPE/W sections against `STEEL_PROFILES` catalogs) **MUST** set
+`algorithm = "pmef-snap/1"`, `score` and `ambiguous`, **MUST** record non-default tolerances in
+`tolerances`, and **MUST** reproduce the test vectors in `tests/snapping/vectors.json`. An object
+whose snap is `ambiguous` **MUST NOT** be created with `review.status = approved`.
 
 ---
 

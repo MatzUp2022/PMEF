@@ -34,9 +34,9 @@ We are committed to a welcoming, inclusive, and harassment-free community.
 | 💡 **Feature suggestion** | [Feature request template](.github/ISSUE_TEMPLATE/feature_request.md) |
 | 📝 **Schema change / new property** | [RFC template](.github/ISSUE_TEMPLATE/rfc.md) → PR |
 | 🔧 **Fix typo / improve docs** | Direct PR — no RFC needed for non-normative changes |
-| 🗺️ **New adapter specification** | RFC + separate adapter repo under `pmef/` org |
+| 🗺️ **New adapter specification** | RFC + PR (adapter crates live in `pmef-rs/`) |
 | 🧪 **New example / benchmark data** | PR to `examples/` — CC0 licence required |
-| 🌐 **Translation** | Contact [i18n working group](https://github.com/pmef/specification/discussions) |
+| 🌐 **Translation** | Open an [issue](https://github.com/MatzUp2022/PMEF/issues) |
 | 🏗️ **Working group participation** | See [Working Groups](#working-groups) |
 
 ---
@@ -58,7 +58,7 @@ docker                  # for CI reproduction
 ### Clone and validate locally
 
 ```bash
-git clone https://github.com/pmef/specification.git
+git clone https://github.com/MatzUp2022/PMEF.git
 cd specification
 
 # Install Python validation dependencies
@@ -187,8 +187,8 @@ Current RFCs: see [open RFC issues](../../issues?q=label%3ARFC+is%3Aopen).
 | **WG-Adapters** | Tool-specific adapters, round-trip testing | Monthly |
 | **WG-Catalogs** | Open catalog format, RDL resolution, eCl@ss | Monthly |
 
-Join via [GitHub Discussions](https://github.com/pmef/specification/discussions)
-or [Discord #working-groups](https://discord.gg/pmef).
+Working groups are planned, not yet running. Express interest via
+[GitHub Issues](https://github.com/MatzUp2022/PMEF/issues).
 
 ---
 

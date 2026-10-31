@@ -3,12 +3,59 @@
 All notable changes to the PMEF Specification are documented here.
 Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+**Version identifiers.** The data/spec version is plain SemVer (`pmefVersion: "0.9.0"`, schema
+`$id` path `/0.9/`). Pre-release labels such as `-rc` mark *releases* (Git tags, e.g.
+`v0.9.0-rc`) and never appear in data. The next schema extension is `0.10.0`.
+
 ---
 
 ## [Unreleased]
 
+### Removed
+
+- **RVM parser removed from `pmef-adapter-e3d`** (`src/rvm.rs`, `E3DConfig::rvm_export_path`,
+  `byteorder` dependency). AVEVA's RVM format is not publicly specified; the reference
+  implementation does not reverse-engineer it. See DD-011 in `docs/design-decisions.md`.
+  RVM-only models are planned via an external RVM→glTF conversion + `mesh_ref` (ROADMAP).
+
 ### Fixed
 
+- **`catalogs/profiles-en.json` HEA series corrected (catalog version 2024.1 → 2024.2).** All 24
+  HEA entries listed the nominal size as height (HEA 300: 300 instead of 290 mm), HEA 900/1000
+  had wrong flange thicknesses (28 instead of 30/31 mm), HEA 100 was listed as `EN:HEA96`, and
+  `Iy`, `Iz`, `Wel_y`, `Wel_z` were wrong by a factor of up to 15. Fixed: h and tf per the EN 10365
+  dimension tables (the corrected h also follows independently from the catalog's own,
+  correct cross-section areas); `EN:HEA96` → `EN:HEA100` (entry id change); section properties
+  recomputed from the dimensions with `scripts/i-section-properties.py`, which reproduces all
+  HEB and IPE entries within 0.31 % and the published HEA properties within 1 %. CI now checks
+  every I/H section's properties against its dimensions (±1 %). Snapping test vectors updated
+  (only `catalogVersion` changed) plus SNAP-017: HEA 300 and HEB 300 are now distinguishable by
+  h and b.
+- **Conformance fixtures no longer pick up 0.10.0 feature examples by accident.** The
+  generator took the first object of a type from all examples, so after RFC-0001 several
+  Level-1 fixtures (PIPE-U-002/004/005/016, STEEL-U-002/005) silently used objects from
+  `asbuilt-recognition.ndjson`. They now come from the 0.9.0 benchmark datasets only.
+- **`validate-examples.py` silently skipped 21 of 117 example objects** (all structural-steel
+  and E&I types) because its hand-written type list was incomplete, and unknown `@type`s passed.
+  The `@type` → schema map is now derived from the schemas themselves; unknown types are errors.
+  A Rust test (`pmef-validate/tests/type_map_matches_schemas.rs`) fails if `schema_for_type`
+  drifts from the schemas.
+- **The whole Rust workspace builds again** (`cargo build --workspace`): all ten
+  `pmef-adapter-*` crates failed to compile. `pmef-io` now implements
+  `From<PmefIoError> for AdapterError` (used by all adapters); missing `tracing` dependency
+  (Plant 3D); Tekla profile override table no longer needs the undeclared `phf` crate;
+  lifetime and `&mut self` fixes (Plant 3D, Tekla, CADMATIC); missing test imports
+  (Creo, Inventor). All 259 workspace tests pass.
+- **Creo STEP parser read digits inside entity names as coordinates**
+  (`CARTESIAN_POINT('NOZZLE_N1',(200,…))` yielded `1.0, 200, 400`). Quoted names are now skipped.
+- **Plant 3D PCF: blind/slip-on/socket-weld flanges were never detected.** The flange type was
+  read from SKEY characters 1–2 (always `FL`) instead of 3–4 (`FLBL`, `FLSO`, …).
+- **CADMATIC test expected a wrong value** for 15 barg → Pa(abs): correct is 1 601 325 Pa
+  (the implementation was right).
+- **E3D PML parser swallowed attributes after reference values.** Any attribute whose value
+  starts with `/` (e.g. `SPEC /SPEC-A1A2`, `CREF /PIPE-1`) was treated as a new element,
+  so all following attributes were attached to it. Only structural and component keywords
+  now start elements.
 - **`pmef validate` crashed on every real dataset.** `PmefValidator` compiled
   each `$defs` sub-schema in isolation with no document store, so cross-file
   `$ref`s (`pmef-base.schema.json`, `pmef-property-sets.schema.json`,
@@ -43,6 +90,26 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Changed
 
+- **`pmef diff` CLI options changed:** `--changed-only` removed (unchanged objects are never
+  listed); new `--exact`, `--ignore`, `--ignore-recognition`. The command now exits with 1 when
+  the files differ and 2 on errors.
+- **README and contributor docs match the repository.** Repo URL `MatzUp2022/PMEF` instead of
+  the placeholder `pmef/specification` (README, spec 01, Cargo.toml, CONTRIBUTING, getting
+  started, issue templates); real folder names and file lists; placeholder badges and links
+  removed (Discord, OpenSSF, ghcr.io image, crates.io install); "14+ bidirectional adapters"
+  replaced by an implementation-status table; CLI install from source.
+- **`PMEF_Specification_v1.2.docx` renamed to `PMEF_Specification_v1.0-draft_DE.docx`** — its
+  title page says v1.0 draft; it is a non-normative legacy artefact.
+- **Rust CI** (`.github/workflows/rust.yml`): builds and tests the whole `pmef-rs` workspace
+  and runs `pmef validate` on every example; clippy runs informationally. The release workflow
+  now requires it.
+- **`pmef-adapter-e3d`: equipment geometry from PML design primitives.** `BOX`, `CYLI`,
+  `CONE`, `SNOU` and `DISH` children of an `EQUI` are mapped to `pmef:ParametricGeometry`
+  (single primitive or `COMPOSITE`) and referenced from the equipment via
+  `geometry: {type: "parametric", ref}`. Invalid primitives are reported via
+  `E3DAdapter::warnings()` instead of being dropped silently. Spec 05 §8.1 updated.
+- **`pmef-adapter-e3d` compiles again** (writer errors mapped to `AdapterError::Other`).
+
 - **Catalog schema (`schemas/pmef-catalog.schema.json`)**: tightened from a
   loose envelope into a per-`catalogType` contract. Each `entries` item is now
   validated against a type-specific `$def` (steel profile, piping class, pipe
@@ -54,6 +121,62 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   `RDL_MAPPING` to match its actual content.
 
 ### Added
+
+- **`pmef diff --match`: comparison when `@id`s differ** (spec 03 §9.5) — typical for as-built
+  models with recogniser ids. Objects are matched one-to-one in fixed passes: same `@id`, same
+  engineering identifier (tag, line number, mark — only if unique), same native tool object
+  (`HasEquivalentIn`), geometric proximity of anchor points (ports, nozzles, member ends;
+  direction-free mean distance ≤ `--match-distance`, default 100 mm, with an ambiguity flag), and
+  references (geometry owners, relationship endpoints). References in the head package are
+  rewritten to the matched ids before comparing, so differing ids cause no spurious changes.
+  Library: `pmef_core::matching`, `pmef_core::diff::diff_matched`. Golden test: an as-built
+  model with scanner ids yields the same plant deviations as the identical-id case.
+- **Deterministic object-level `pmef diff`** (spec 03 §9). Objects matched by `@id`, field-level
+  changes with stable paths (`ports[portId=P2].coordinate[2]`), keyed array matching (ports,
+  nozzles, residuals, composite parts), spec 06 §6.2 numeric tolerances (`--exact` to disable),
+  `--ignore <path>` and `--ignore-recognition`, text and JSON report, exit codes 0/1/2. Output
+  is independent of object order, JSON key order and keyed array order; duplicate `@id`s are an
+  error. Library: `pmef_core::diff`. Golden as-built-vs-design tests in `tests/diff/`.
+- **RFC-0002 — deterministic catalog snapping `pmef-snap/1`** ([RFC](spec/rfc/0002-catalog-snapping.md),
+  spec 02 §2.9.4). Normative algorithm for straight pipes (`PIPING_CLASS`) and HEA/HEB/HEM/IPE/W
+  sections (`STEEL_PROFILES`, EN and AISC field conventions): tolerance band per parameter,
+  admissibility, normalised RMS score, total ordering (score → primary residual → `catalogId`),
+  runner-up and `ambiguous` flag (margin 0.1), recorded non-default tolerances. Schema:
+  `CatalogSnap` gains optional `algorithm`, `score`, `runnerUp`, `ambiguous`, `tolerances`.
+  Two implementations — Python reference (`tests/snapping/reference_snap.py`) and Rust
+  (`pmef_core::snapping`) — pass the same 16 test vectors (`tests/snapping/vectors.json`) in CI.
+  `examples/asbuilt-recognition.ndjson` is now generated with the reference implementation
+  (`scripts/generate-asbuilt-example.py`).
+- **Executable conformance test suite** (`tests/`, spec 06 §5–§7). `python tests/run_tests.py`
+  runs the 82 normative test IDs — 50 unit and 8 negative schema tests (fixtures generated from
+  one catalogue, `tests/conformance/manifest.json`), INTG-001…006 integration checks and
+  RT-001…018 round-trip checks with aggregate and identity-field fidelity per spec 06 §6 — against
+  any implementation via command templates (`--validator "cmd {file}"`,
+  `--sut "cmd {input} {output}"`, `--kind validator|converter|adapter`). Produces the §7.1 JSON
+  report (schema-checked) and the §7.2 text summary. A self-test proves that seven deliberately
+  broken implementations and an accept-all validator are detected. CI runs the suite, the
+  self-test, and the Rust `pmef` CLI as a second validator (agrees with the Python reference on
+  all 58 unit/negative tests). This replaces the `pmef-conformance/` suite claimed for 0.9.0-rc,
+  which was never published.
+- **RFC-0001 — recognition provenance, review status and as-built data (schema 0.10.0,
+  backward compatible).** Every object that carries `revision` may now carry three optional
+  blocks ([spec 02 §2.9](spec/02-information-model.md), [RFC](spec/rfc/0001-provenance-asbuilt.md)):
+  - `provenance` — `sourceType` (`manual`, `cad-import`, `iso-drawing`, `2d-drawing`, `scan`,
+    `photo`), `sourceRef` URI (document page/region or point-cloud segment), `recognizer`
+    (name + version), `confidence` 0..1, `createdAt`;
+  - `review` — `detected` / `reviewed` / `approved` / `rejected` with `reviewedBy`/`reviewedAt`;
+    schema-enforced ISO 19650 rule: `detected` ⇒ `WIP`, `rejected` ⇒ not `PUBLISHED`;
+  - `asBuilt` — `pointCloudRef`, `fitMethod`, `deviationRms_mm`, `deviationMax_mm`, and
+    `catalogSnap` (catalog id **+ version** + entry, snapped size, per-parameter residuals).
+  - Schemas: `pmef-base` `$defs` `Provenance`, `ReviewStatus`, `AsBuilt`, `CatalogSnap`,
+    `ReviewChangeStateRule`, referenced from all 20 object definitions. `$id` paths unchanged.
+  - Rust: `pmef-core::provenance` types, flattened into all 27 object structs.
+  - Example: `examples/asbuilt-recognition.ndjson` — DN 150 pipe run recognised from a scan and
+    an isometric, snapped to `piping-class-en-p1a` 2024.1; HEB 300 beam snapped to `profiles-en`
+    2024.1; one `detected`, one `reviewed`, one `rejected` object (synthetic, CC0).
+  - Tests: Rust positive/negative schema tests (`pmef-validate/tests/provenance.rs`) and a lossless
+    serde round trip of every example object (`pmef-core/tests/provenance_roundtrip.rs`).
+  - CAEX/AutomationML mapping documented in the RFC.
 
 - `scripts/validate-catalogs.py` — validates every file in `catalogs/` against
   the catalog schema and flags duplicate `catalogId` values within a catalog.
@@ -157,6 +280,11 @@ Six normative Markdown chapters totalling 3,087 lines / 18,128 words:
 
 ### Added — Conformance Test Suite (pmef-conformance/)
 
+> **Note (2026-10-31):** `pmef-conformance/` is not part of this repository and does not appear
+> in its Git history; the figures below cannot be reproduced from the published sources.
+> See [docs/legacy-docx-review.md](docs/legacy-docx-review.md). The executable suite now lives in
+> [`tests/`](tests/README.md) (see [Unreleased]).
+
 82 tests: PIPE-U-001..016, EQUIP-U-001..012, EI-U-001..008, STEEL-U-001..006,
 REL-U-001..008, GEOM-U-001..008, RT-001..018, INTG-001..006.
 **80/82 passing (97.6%).**
@@ -187,20 +315,3 @@ REL-U-001..008, GEOM-U-001..008, RT-001..018, INTG-001..006.
 | CADMATIC adapter | REST API adapter not yet produced | Planned v0.9.1 |
 
 ---
-
-## [Unreleased] — v0.9.1 Planned
-
-- Fix EQUIP-U-005 and PIPE-U-003 schema/test gaps
-- DS-05 benchmark (Mixed EAF + E&I + Steel, ~80 objects)
-- `pmef-adapter-cadmatic`: CADMATIC REST API adapter
-- `pmef-stress`: CAESAR II .cii import/export adapter (Rust)
-- Full `pmef-geom` AABB computation (all 15 primitives)
-- Full `pmef-validate` jsonschema Rust integration
-
-## [Unreleased] — v1.0 Planned
-
-- `cargo test --workspace` green (all Rust tests pass)
-- Published crates on crates.io
-- Published schemas on schema.pmef.net
-- pmef.net website with full documentation
-- First vendor Level 2 certification

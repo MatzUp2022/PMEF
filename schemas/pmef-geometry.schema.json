@@ -14,6 +14,7 @@
         "primitive",
         "ownerRef"
       ],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type": {
           "const": "pmef:ParametricGeometry"
@@ -40,7 +41,10 @@
         },
         "revision": {
           "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata"
-        }
+        },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
       },
       "additionalProperties": false
     },

@@ -11,6 +11,7 @@
       "description": "Abstract base for all PMEF typed relationships. Never instantiated directly.",
       "type": "object",
       "required": ["@type","@id","relationType","sourceId","targetId"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
       "properties": {
         "@type":        { "type": "string", "description": "Concrete relationship type, e.g. pmef:IsPartOf" },
         "@id":          { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -24,7 +25,10 @@
         "confidence":   { "type": "number", "minimum": 0, "maximum": 1, "description": "Mapping confidence 0–1 (1=exact, <1=derived/inferred)" },
         "derivedBy":    { "type": "string", "description": "How this relationship was established: MANUAL, ADAPTER_IMPORT, AI_INFERRED, RULE_BASED" },
         "notes":        { "type": "string", "description": "Free-text annotation" },
-        "revision":     { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" }
+        "revision":     { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
       }
     },
 
