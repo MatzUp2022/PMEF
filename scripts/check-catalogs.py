@@ -15,7 +15,8 @@ Pipe dimensions (pipe-dimensions*.json)
   - bore = OD − 2t, mass from OD and t, OD and DN strictly increasing, wall increasing with
     the schedule (XXS excluded: thinner than SCH160 from NPS 8 per ASME B36.10M)
 Flange dimensions (flange-dimensions*.json)
-  - bolt circle < flange OD; OD, bolt circle, thickness non-decreasing with DN per class
+  - bolt circle < flange OD; bolt hole > bolt; raised face inside the bolt holes; OD and bolt
+    circle increasing with DN per class
 Piping classes (piping-class-*.json)
   - pipes and flanges agree with the dimension catalogs (OD, wall, bore, mass; flange OD,
     bolt circle, number of bolts, thickness)
@@ -278,6 +279,11 @@ def check_flanges():
                 bad(w, "bolt circle not inside the flange OD")
             if e["boltHoles"] % 4:
                 bad(w, f"{e['boltHoles']} bolt holes (multiple of 4 expected)")
+            if "boltHoleDiameter_mm" in e and e["boltHoleDiameter_mm"] <= e.get("boltDiameter_mm", 0):
+                bad(w, "bolt hole not larger than the bolt")
+            hole = e.get("boltHoleDiameter_mm", 0)
+            if "raisedFace_mm" in e and e["raisedFace_mm"] >= e["boltCircle_mm"] - hole:
+                bad(w, "raised face reaches the bolt holes")
             by_class.setdefault(e["pressureClass"], []).append(e)
         for cls, es in by_class.items():
             es.sort(key=lambda e: e["nominalDiameter"])

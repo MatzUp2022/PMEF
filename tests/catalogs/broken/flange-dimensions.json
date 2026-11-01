@@ -15,6 +15,20 @@
       "boltDiameter_mm": 19.0,
       "raisedFace_mm": 92.1,
       "facingType": "RF"
+    },
+    {
+      "catalogId": "B165-150-DN80",
+      "nominalDiameter": 80,
+      "NPS": 3,
+      "pressureClass": 150,
+      "flangeOD_mm": 190.5,
+      "flangeThickness_mm": 22.4,
+      "boltCircle_mm": 152.4,
+      "boltHoles": 4,
+      "boltDiameter_mm": 19.1,
+      "boltHoleDiameter_mm": 15.9,
+      "raisedFace_mm": 150.0,
+      "facingType": "RF"
     }
   ]
 }

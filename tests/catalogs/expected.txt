@@ -10,8 +10,11 @@
 ✗ pipe-dimensions.json:ASME-NPS2: SCH80 wall 3.5 thinner than SCH40 (3.91)
 ✗ flange-dimensions.json:B165-150-DN50: bolt circle not inside the flange OD
 ✗ flange-dimensions.json:B165-150-DN50: 6 bolt holes (multiple of 4 expected)
+✗ flange-dimensions.json:B165-150-DN80: bolt hole not larger than the bolt
+✗ flange-dimensions.json:B165-150-DN80: raised face reaches the bolt holes
+✗ flange-dimensions.json:B165-150-DN80: boltCircle_mm 152.4 not larger than DN50 (160.0)
 ✗ piping-class-x.json:X-PIPE-50: mass_kg_per_m 7.0 vs 5.44 in the pipe dimension catalog
 ✗ piping-class-x.json:X-PIPE-80: DN80 SCH40 not in the pipe dimension catalog
 ✗ piping-class-x.json:X-FLWN-50: boltCircleDiameter_mm 120.7 vs 160.0 in the flange dimension catalog
 ✗ piping-class-x.json:X-FLWN-50: numberOfBolts 4 vs 6 in the flange dimension catalog
-✗ catalogs: 16 inconsistencies
+✗ catalogs: 19 inconsistencies
