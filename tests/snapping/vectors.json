@@ -138,7 +138,7 @@
         "catalogSnap": {
           "catalogRef": {
             "catalogId": "piping-class-a1a2",
-            "catalogVersion": "2024.1",
+            "catalogVersion": "2024.2",
             "entryId": "A1A2-PIPE-200"
           },
           "snappedSize": "DN 200 ANSI-150",
@@ -195,7 +195,7 @@
         "catalogSnap": {
           "catalogRef": {
             "catalogId": "profiles-en",
-            "catalogVersion": "2024.2",
+            "catalogVersion": "2024.3",
             "entryId": "EN:HEB300"
           },
           "snappedSize": "HEB 300",
@@ -246,7 +246,7 @@
         "catalogSnap": {
           "catalogRef": {
             "catalogId": "profiles-en",
-            "catalogVersion": "2024.2",
+            "catalogVersion": "2024.3",
             "entryId": "EN:HEB300"
           },
           "snappedSize": "HEB 300",
@@ -296,7 +296,7 @@
       "catalog": "catalogs/profiles-aisc.json",
       "kind": "i-section",
       "measured": {
-        "h": 255.0,
+        "h": 252.0,
         "b": 203.0
       },
       "expected": {
@@ -304,29 +304,29 @@
         "catalogSnap": {
           "catalogRef": {
             "catalogId": "profiles-aisc",
-            "catalogVersion": "2023.1",
-            "entryId": "AISC:W10x33"
+            "catalogVersion": "2023.2",
+            "entryId": "AISC:W10x45"
           },
-          "snappedSize": "W10x33",
+          "snappedSize": "W10x45",
           "residuals": [
             {
               "parameter": "h",
-              "measured_mm": 255.0,
-              "catalog_mm": 254.0,
-              "residual_mm": 1.0
+              "measured_mm": 252.0,
+              "catalog_mm": 256.5,
+              "residual_mm": -4.5
             },
             {
               "parameter": "b",
               "measured_mm": 203.0,
-              "catalog_mm": 202.2,
-              "residual_mm": 0.8
+              "catalog_mm": 203.7,
+              "residual_mm": -0.7
             }
           ],
           "algorithm": "pmef-snap/1",
-          "score": 0.197338,
+          "score": 0.632056,
           "runnerUp": {
-            "entryId": "AISC:W10x45",
-            "score": 0.239811
+            "entryId": "AISC:W10x33",
+            "score": 0.714916
           },
           "ambiguous": true
         }
@@ -338,7 +338,7 @@
       "catalog": "catalogs/profiles-aisc.json",
       "kind": "i-section",
       "measured": {
-        "h": 255.0,
+        "h": 252.0,
         "b": 203.0,
         "tw": 8.8,
         "tf": 15.5
@@ -348,16 +348,16 @@
         "catalogSnap": {
           "catalogRef": {
             "catalogId": "profiles-aisc",
-            "catalogVersion": "2023.1",
+            "catalogVersion": "2023.2",
             "entryId": "AISC:W10x45"
           },
           "snappedSize": "W10x45",
           "residuals": [
             {
               "parameter": "h",
-              "measured_mm": 255.0,
+              "measured_mm": 252.0,
               "catalog_mm": 256.5,
-              "residual_mm": -1.5
+              "residual_mm": -4.5
             },
             {
               "parameter": "b",
@@ -379,7 +379,7 @@
             }
           ],
           "algorithm": "pmef-snap/1",
-          "score": 0.178775,
+          "score": 0.450503,
           "ambiguous": false
         }
       }
@@ -517,7 +517,7 @@
         "catalogSnap": {
           "catalogRef": {
             "catalogId": "profiles-en",
-            "catalogVersion": "2024.2",
+            "catalogVersion": "2024.3",
             "entryId": "EN:HEA300"
           },
           "snappedSize": "HEA 300",
