@@ -254,17 +254,19 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
   - Piping classes A1A2/B3C1/C5D1 2024.2 — pipe walls and flange dimensions taken from the
     dimension catalogs (bolt circles, bolt counts, flange thicknesses, DN ≥ 300 walls).
 
-  Open — needs a maintainer decision:
-  1. Seven AISC entries are not AISC designations: `HSS1.5x0.125`, `HSS2.0x0.125`,
-     `HSS4.5x0.25`, `HSS5.5x0.25`, `HSS8.0x0.25`, `HSS9.0x0.375`, `WT18x150` (nearest real:
-     HSS1.660x0.140, HSS1.900x0.145, HSS4.500x0.237, HSS5.500x0.258, —, —, WT18x151). Rename or
-     remove changes `catalogId`s; listed as `KNOWN` in `check-catalogs.py` meanwhile.
-  2. T-section Iy/Iz (`profiles-en-extended`) are unverified (tapered legs, no reference at hand).
-  3. Piping classes use two field layouts for flanges: A1A2/B3C1 `outsideDiameter_mm` = flange
-     OD, C5D1/EN-P1A `outsideDiameter_mm` = pipe OD plus `flangeOD_mm`. Unify in the catalog
-     schema (breaking for consumers of one layout).
-  4. Not covered by references: flange dimension catalogs (checked for geometry and monotony
+  Maintainer decisions (2026-11-01):
+  1. The seven entries that are not AISC designations were removed: `HSS1.5x0.125`,
+     `HSS2.0x0.125`, `HSS4.5x0.25`, `HSS5.5x0.25`, `HSS8.0x0.25`, `HSS9.0x0.375`, `WT18x150`
+     (no references in the repository).
+  2. The two flange field layouts in the piping classes stay as they are (A1A2/B3C1
+     `outsideDiameter_mm` = flange OD; C5D1/EN-P1A `outsideDiameter_mm` = pipe OD plus
+     `flangeOD_mm`). Consumers must handle both; `check-catalogs.py` does.
+
+  Still open:
+  1. T-section Iy/Iz (`profiles-en-extended`) are unverified (tapered legs, no reference at hand).
+  2. Not covered by references: flange dimension catalogs (checked for geometry and monotony
      only), EN pipe walls (EN 10220 preferred series), materials, instruments.
+
 - **P3.10** Schema naming defect: `CompressorSpec.polytropic_efficiency` is the only snake_case
   property (all others camelCase). Renaming it is a breaking schema change → needs an RFC /
   maintainer decision. Rust reads both spellings and writes the schema spelling.

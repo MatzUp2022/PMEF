@@ -46,13 +46,6 @@ _spec.loader.exec_module(isp)
 issues = []
 checked = {}
 
-# Entries whose designation does not exist in the AISC Shapes Database v16.0 (renaming or
-# removing a catalogId needs a maintainer decision, docs/AUDIT.md P3.12). Reported, not failing.
-KNOWN = {
-    "AISC:HSS1.5x0.125", "AISC:HSS2.0x0.125", "AISC:HSS4.5x0.25", "AISC:HSS5.5x0.25",
-    "AISC:HSS8.0x0.25", "AISC:HSS9.0x0.375", "AISC:WT18x150",
-}
-
 
 def rel(a, b):
     return (a - b) / b
@@ -354,15 +347,10 @@ def main():
     if "--verbose" in sys.argv:
         for k, v in sorted(checked.items()):
             print(f"  {k}: {v} checks")
-    known = [i for i in issues if i.split(":", 1)[1].split(":")[0] + ":" + i.split(":")[2] in KNOWN]
-    real = [i for i in issues if i not in known]
-    for i in known:
-        print("  known:", i)
-    for i in real:
+    for i in issues:
         print("✗", i)
-    print(f"{'✗' if real else '✓'} catalogs: {len(real)} inconsistenc{'y' if len(real) == 1 else 'ies'}"
-          + (f" ({len(known)} known, see docs/AUDIT.md P3.12)" if known else ""))
-    return 1 if real else 0
+    print(f"{'✗' if issues else '✓'} catalogs: {len(issues)} inconsistenc{'y' if len(issues) == 1 else 'ies'}")
+    return 1 if issues else 0
 
 
 if __name__ == "__main__":

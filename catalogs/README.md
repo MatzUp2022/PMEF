@@ -9,8 +9,8 @@ All catalogs are licensed under **CC0 1.0 Universal** (public domain).
 |------|---------|----------|---------|
 | `profiles-en.json` | European structural steel profiles (HEA, HEB, IPE, UPE, RHS, SHS, CHS, angles, flats) | EN 10034, EN 10279, EN 10210, EN 10219 | 202 |
 | `profiles-en-extended.json` | European T-sections and unequal angles | EN 10055, EN 10056-2 | 45 |
-| `profiles-aisc.json` | AISC structural steel sections (W, HSS, L) | AISC Steel Construction Manual 16th ed. | 119 |
-| `profiles-aisc-extended.json` | AISC channels (C, MC) and structural tees (WT) | AISC Steel Construction Manual 16th ed. | 52 |
+| `profiles-aisc.json` | AISC structural steel sections (W, HSS, L) | AISC Steel Construction Manual 16th ed. | 113 |
+| `profiles-aisc-extended.json` | AISC channels (C, MC) and structural tees (WT) | AISC Steel Construction Manual 16th ed. | 51 |
 | `piping-class-a1a2.json` | Piping class A1A2 (CS, ANSI-150, DN15–DN600) | ASME B16.5, B16.9, B16.11 | 203 |
 | `piping-class-b3c1.json` | Piping class B3C1 (CS, ANSI-300, DN15–DN400) | ASME B16.5, B16.9 | 143 |
 | `piping-class-c5d1.json` | Piping class C5D1 (316L SS, ANSI-150, DN15–DN300) | ASME B16.5, B16.9, B36.19M | 48 |
@@ -58,8 +58,8 @@ python scripts/validate-catalogs.py
 
 Steel profile IDs follow the format `<standard>:<designation>`:
 
-```
-EN:HEA200       — European wide-flange beam, h=200mm
+```text
+EN:HEA200       — European wide-flange beam, h=190mm
 EN:IPE300       — European I-beam, h=300mm
 EN:RHS200x100x6 — Rectangular hollow section
 EN:CHS219.1x8   — Circular hollow section
@@ -70,6 +70,7 @@ AISC:HSS6x4x0.25 — Rectangular hollow section (US)
 ## Piping Class Structure
 
 Each piping class entry specifies for every component:
+
 - `componentClass` — PMEF componentClass enum value
 - `skey` — 8-character PMEF SKEY
 - `nominalDiameter` — DN [mm]

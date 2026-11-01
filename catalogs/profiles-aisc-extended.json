@@ -18,7 +18,7 @@
     "mass_per_length": "lb/ft"
   },
   "notes": [
-    "Version 2024.2 aligns C, MC and WT entries with the AISC Shapes Database v16.0 (WT Ix/Sx were about half the AISC values). WT18x150 is not an AISC designation (open, docs/AUDIT.md P3.12). Checked with scripts/check-catalogs.py.",
+    "Version 2024.2 aligns C, MC and WT entries with the AISC Shapes Database v16.0 (WT Ix/Sx were about half the AISC values). Removed WT18x150 (not an AISC designation; the nearest section is WT18x151). Checked with scripts/check-catalogs.py.",
     "All section properties from AISC Steel Construction Manual, 16th Edition.",
     "C-shapes per ASTM A6/A6M. WT-shapes are halves of corresponding W-shapes.",
     "This catalog is not a substitute for the official published standards."
@@ -635,18 +635,6 @@
       "Sx_in3": 49.7,
       "mass_lb_ft": 67.5,
       "catalogId": "AISC:WT18x67.5"
-    },
-    {
-      "family": "WT",
-      "d_in": 18.37,
-      "bf_in": 16.655,
-      "tw_in": 0.945,
-      "tf_in": 1.68,
-      "A_in2": 44.1,
-      "Ix_in4": 652,
-      "Sx_in3": 47.3,
-      "mass_lb_ft": 150.0,
-      "catalogId": "AISC:WT18x150"
     }
   ]
 }

@@ -13,6 +13,11 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Removed
 
+- **Seven entries that are not AISC designations** from `profiles-aisc` (`HSS1.5x0.125`,
+  `HSS2.0x0.125`, `HSS4.5x0.25`, `HSS5.5x0.25`, `HSS8.0x0.25`, `HSS9.0x0.375`) and
+  `profiles-aisc-extended` (`WT18x150`; nearest is WT18x151). Not referenced anywhere in the
+  repository (docs/AUDIT.md P3.12).
+
 - **RVM parser removed from `pmef-adapter-e3d`** (`src/rvm.rs`, `E3DConfig::rvm_export_path`,
   `byteorder` dependency). AVEVA's RVM format is not publicly specified; the reference
   implementation does not reverse-engineer it. See DD-011 in `docs/design-decisions.md`.

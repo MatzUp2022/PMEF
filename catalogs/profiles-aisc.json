@@ -19,7 +19,7 @@
     "HSS_ROUND": "Circular hollow structural sections (Pipe)",
     "L": "Equal and unequal leg angles"
   },
-  "note": "Dimensions are nominal values per AISC. Wall thickness shown is design thickness (= 0.93 × nominal for HSS). For design use, verify against the current AISC Manual. Version 2023.2 aligns W, HSS and L entries with the AISC Shapes Database v16.0 (all L masses were about 38 % low; W36x150/W40x167/W44x230 flange widths and Iy/Sy; HSS weights). t_mm is the nominal wall thickness (AISC design thickness = 0.93 t). HSS1.5x0.125, HSS2.0x0.125, HSS4.5x0.25, HSS5.5x0.25, HSS8.0x0.25 and HSS9.0x0.375 are not AISC designations (open, docs/AUDIT.md P3.12). Checked with scripts/check-catalogs.py.",
+  "note": "Dimensions are nominal values per AISC. Wall thickness shown is design thickness (= 0.93 × nominal for HSS). For design use, verify against the current AISC Manual. Version 2023.2 aligns W, HSS and L entries with the AISC Shapes Database v16.0 (all L masses were about 38 % low; W36x150/W40x167/W44x230 flange widths and Iy/Sy; HSS weights). t_mm is the nominal wall thickness (AISC design thickness = 0.93 t). Removed HSS1.5x0.125, HSS2.0x0.125, HSS4.5x0.25, HSS5.5x0.25, HSS8.0x0.25 and HSS9.0x0.375 (not AISC designations). Checked with scripts/check-catalogs.py.",
   "entries": [
     {
       "family": "W",
@@ -1031,26 +1031,6 @@
     },
     {
       "family": "HSS_ROUND",
-      "designation": "HSS1.5x0.125",
-      "OD_mm": 38.1,
-      "t_mm": 3.17,
-      "mass_kg_m": 2.8,
-      "lbft": 1.88,
-      "standard": "AISC 360-22",
-      "catalogId": "AISC:HSS1.5x0.125"
-    },
-    {
-      "family": "HSS_ROUND",
-      "designation": "HSS2.0x0.125",
-      "OD_mm": 50.8,
-      "t_mm": 3.17,
-      "mass_kg_m": 3.7,
-      "lbft": 2.51,
-      "standard": "AISC 360-22",
-      "catalogId": "AISC:HSS2.0x0.125"
-    },
-    {
-      "family": "HSS_ROUND",
       "designation": "HSS2.5x0.125",
       "OD_mm": 63.5,
       "t_mm": 3.17,
@@ -1141,16 +1121,6 @@
     },
     {
       "family": "HSS_ROUND",
-      "designation": "HSS4.5x0.25",
-      "OD_mm": 114.3,
-      "t_mm": 6.35,
-      "mass_kg_m": 16.5,
-      "lbft": 11.1,
-      "standard": "AISC 360-22",
-      "catalogId": "AISC:HSS4.5x0.25"
-    },
-    {
-      "family": "HSS_ROUND",
       "designation": "HSS5.0x0.25",
       "OD_mm": 127.0,
       "t_mm": 6.35,
@@ -1158,16 +1128,6 @@
       "lbft": 12.69,
       "standard": "AISC 360-22",
       "catalogId": "AISC:HSS5.0x0.25"
-    },
-    {
-      "family": "HSS_ROUND",
-      "designation": "HSS5.5x0.25",
-      "OD_mm": 139.7,
-      "t_mm": 6.35,
-      "mass_kg_m": 20.2,
-      "lbft": 13.6,
-      "standard": "AISC 360-22",
-      "catalogId": "AISC:HSS5.5x0.25"
     },
     {
       "family": "HSS_ROUND",
@@ -1221,16 +1181,6 @@
     },
     {
       "family": "HSS_ROUND",
-      "designation": "HSS8.0x0.25",
-      "OD_mm": 203.2,
-      "t_mm": 6.35,
-      "mass_kg_m": 29.3,
-      "lbft": 19.7,
-      "standard": "AISC 360-22",
-      "catalogId": "AISC:HSS8.0x0.25"
-    },
-    {
-      "family": "HSS_ROUND",
       "designation": "HSS8.625x0.25",
       "OD_mm": 219.1,
       "t_mm": 6.35,
@@ -1238,16 +1188,6 @@
       "lbft": 22.38,
       "standard": "AISC 360-22",
       "catalogId": "AISC:HSS8.625x0.25"
-    },
-    {
-      "family": "HSS_ROUND",
-      "designation": "HSS9.0x0.375",
-      "OD_mm": 228.6,
-      "t_mm": 9.52,
-      "mass_kg_m": 49.7,
-      "lbft": 33.4,
-      "standard": "AISC 360-22",
-      "catalogId": "AISC:HSS9.0x0.375"
     },
     {
       "family": "HSS_ROUND",
