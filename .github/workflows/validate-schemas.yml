@@ -84,7 +84,7 @@ jobs:
       - name: Check dataset topology (connectivity integrity)
         run: python scripts/check-topology.py
 
-      - name: Check geometry consistency (piping; equipment nozzles as warnings; steel)
+      - name: Check geometry consistency (piping, equipment, steel)
         run: python scripts/check-geometry.py
 
       - name: Geometry checks detect broken equipment/steel (golden negative fixture)

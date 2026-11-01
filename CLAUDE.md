@@ -56,7 +56,7 @@ python scripts/check-schema-ids.py        # $id matches file path
 python scripts/validate-examples.py       # examples/*.ndjson against schemas
 python scripts/check-ndjson-format.py     # one object per line
 python scripts/check-topology.py          # connectivity integrity
-python scripts/check-geometry.py          # piping bends/ports/lengths, equipment nozzles (warnings; --strict), steel
+python scripts/check-geometry.py          # piping bends/ports/lengths, equipment nozzles/heads, steel
 python scripts/validate-catalogs.py       # catalogs/*.json against pmef-catalog schema
 
 # Rust reference implementation (exactly what .github/workflows/rust.yml runs)

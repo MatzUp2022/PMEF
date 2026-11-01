@@ -238,8 +238,8 @@ fn pcf_round_trip_of_benchmark_is_lossless_and_detects_tool_edits() {
     // simulate an edit in Plant 3D: move the start of pipe CW-202-PIPE-001 by 25 mm
     let file = pcf.join("6_-CW-202-A1A2.pcf");
     let text = std::fs::read_to_string(&file).unwrap();
-    assert!(text.contains("END-POINT 10200.0 5400.0 1250.0 150.0"));
-    std::fs::write(&file, text.replacen("END-POINT 10200.0 5400.0 1250.0 150.0", "END-POINT 10200.0 5400.0 1225.0 150.0", 1)).unwrap();
+    assert!(text.contains("END-POINT 8500.0 5400.0 1250.0 150.0"));
+    std::fs::write(&file, text.replacen("END-POINT 8500.0 5400.0 1250.0 150.0", "END-POINT 8500.0 5400.0 1225.0 150.0", 1)).unwrap();
     pmef(&["convert", pcf.to_str().unwrap(), "--to", "pmef", "--base", ds01, "-o", back.to_str().unwrap()]);
     let (code, out, _) = pmef(&["diff", ds01, back.to_str().unwrap()]);
     assert_eq!(code, 1);

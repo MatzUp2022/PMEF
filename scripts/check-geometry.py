@@ -15,7 +15,8 @@ Equipment (spec 02 §5.2, spec 04 primitives)
   5. Nozzle directions are unit vectors.
   6. Nozzle vs. the owner's ParametricGeometry: the nozzle face is not inside the body, the
      direction points away from it (outward, spec 02 §5.2), and the face is at most
-     MAX_STANDOFF from the body surface.
+     MAX_STANDOFF from the body surface. Without parametric geometry, the face must not lie
+     inside the `geometry.boundingBox` (mesh_ref equipment).
   7. Primitive assembly: every DISH sits on an end face of a CYLINDER of the same COMPOSITE
      (DISH `center` = knuckle circle = cylinder face, `axis` pointing away from the cylinder,
      shellRadius ≈ cylinder radius).
@@ -29,13 +30,9 @@ Structural steel (spec 02 §7)
  11. SteelNode coordinates coincide with an end of each listed member; members of a
      SteelConnection come within (h1 + h2) / 2 of each other (profile depths from the catalog).
 
-Equipment findings (5-8) are warnings until the DS-01/DS-02 benchmark layouts are corrected
-(docs/AUDIT.md P3.11); `--strict` makes them errors.
-
 Usage:
     python scripts/check-geometry.py                 # all examples/*.ndjson
     python scripts/check-geometry.py FILE [FILE ...]
-    python scripts/check-geometry.py --strict        # equipment findings are errors too
 """
 import json
 import math
@@ -112,8 +109,9 @@ def check(objs):
             bend = 180.0 - math.degrees(math.acos(cosang))
             if "angle" in o and abs(bend - o["angle"]) > 0.5:
                 issues.append(f"{oid}: angle {o['angle']}° but port directions give {bend:.1f}°")
+    issues += check_equipment(objs, by_id)
     issues += check_steel(objs, by_id)
-    return issues, check_equipment(objs, by_id)
+    return issues
 
 
 # ── equipment ─────────────────────────────────────────────────────────────────
@@ -200,6 +198,12 @@ def check_equipment(objs, by_id):
             if d is not None and abs(norm(d) - 1) > 1e-3:
                 issues.append(f"{nid}: nozzle direction is not a unit vector")
                 continue
+            bbox = (o.get("geometry") or {}).get("boundingBox")
+            if not prim and bbox and c:  # mesh_ref equipment: the face must not lie inside the box
+                depth = min(min(c[i] - bbox[lo], bbox[hi] - c[i]) for i, (lo, hi)
+                            in enumerate((("xMin", "xMax"), ("yMin", "yMax"), ("zMin", "zMax"))))
+                if depth > TOL:
+                    issues.append(f"{nid}: nozzle face is {depth:.0f} mm inside the equipment bounding box")
             if prim and c:
                 s0 = sdist(prim, c)
                 if s0 is not None:
@@ -313,25 +317,15 @@ def check_steel(objs, by_id):
 
 
 def main():
-    args = sys.argv[1:]
-    strict = "--strict" in args
-    files = [Path(a) for a in args if a != "--strict"] or sorted((ROOT / "examples").glob("*.ndjson"))
+    files = [Path(a) for a in sys.argv[1:]] or sorted((ROOT / "examples").glob("*.ndjson"))
     total = 0
     for f in files:
         objs = [json.loads(line) for line in f.read_text(encoding="utf-8").splitlines() if line.startswith("{")]
-        errors, equipment = check(objs)
-        if strict:
-            errors, warnings = errors + equipment, []
-        else:
-            warnings = equipment
-        total += len(errors)
-        mark = "✗" if errors else ("⚠" if warnings else "✓")
-        print(mark, f.name, f"({len(errors)} issue(s))" if errors else "",
-              f"({len(warnings)} equipment warning(s))" if warnings else "")
-        for i in errors:
+        issues = check(objs)
+        total += len(issues)
+        print(("✗" if issues else "✓"), f.name, f"({len(issues)} issue(s))" if issues else "")
+        for i in issues:
             print("    ", i)
-        for i in warnings:
-            print("     warning:", i)
     sys.exit(1 if total else 0)
 
 

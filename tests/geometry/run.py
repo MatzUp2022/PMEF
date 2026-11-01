@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Golden test for scripts/check-geometry.py: every equipment/steel rule must fire on the
 negative fixture exactly as recorded in expected.txt (and nothing else, so the correct
-counterparts V-OK, N-OK, CN-OK and line L-1 stay clean).
+counterparts V-OK, P-BOX#OK, N-OK, CN-OK and line L-1 stay clean).
 
     python tests/geometry/run.py            # compare
     python tests/geometry/run.py --update   # re-record after an intended change
@@ -12,7 +12,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-run = subprocess.run([sys.executable, str(ROOT / "scripts/check-geometry.py"), "--strict",
+run = subprocess.run([sys.executable, str(ROOT / "scripts/check-geometry.py"),
                       str(HERE / "equipment-steel-negative.ndjson")], capture_output=True, text=True)
 expected = HERE / "expected.txt"
 if "--update" in sys.argv:

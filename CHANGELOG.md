@@ -20,6 +20,20 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **Benchmark equipment consistent with the piping (docs/AUDIT.md P3.11)** — `@id`s and object
+  counts unchanged:
+  - PMEF-DS-01 (`pump-skid-complete`): P-201A moved so its suction meets the free end of CW-201
+    (CW-201 unchanged, it is shared with `stress-model-cw201`); discharge line CW-202, its support
+    beam STEEL-BM-C02 and V-201 shifted by −1700 mm in x; V-201 now sits above the pump with its
+    bottom inlet on CW-202's flange end, top head on the shell end (spec 04).
+    `connectedPortId` now names real port IDs (`P1`/`P2`) instead of `P-first`/`P-last`.
+  - PMEF-DS-02 (`heat-exchanger-station`): CW-301 ran 1.1 m into the E-301A shell; re-laid as a
+    vertical control-valve station onto a radial shell nozzle (same components and lengths);
+    channels flush with the shell; E-301A/B nozzles on the body surfaces; E-301B's LOD1 box is
+    E-301A's envelope.
+  - `compressor-train`: K-101 nozzles were inside its bounding box.
+  Conformance fixtures regenerated; PCF round-trip test updated (CW-202 start x 10200 → 8500).
+
 - **`compressor-train` equipment geometry**: V-101 shell `center` was the shell mid-point instead
   of the bottom face centre (spec 04), so the heads floated inside the shell; nozzles of V-101 and
   E-101 lay inside the bodies (outlet and vent both on the top centreline). Nozzles moved onto the
@@ -168,8 +182,8 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   outward (spec 02 §5.2), DISH heads on a cylinder end face (spec 04), connected line has a free
   end at the nozzle face; steel member length, `profileId` resolvable in `catalogs/`, nodes at
   member ends, connected members within (h1 + h2) / 2 (profile depths from the catalog).
-  Equipment findings are warnings until DS-01/DS-02 are corrected (docs/AUDIT.md P3.11),
-  `--strict` makes them errors. Golden negative fixture `tests/geometry/` (CI).
+  Equipment without parametric geometry: nozzle face not inside `geometry.boundingBox`.
+  Golden negative fixture `tests/geometry/` (CI).
 
 - **AutoCAD Plant 3D import direction and round trip via PCF** (spec 05 §8.2).
   `pmef convert MODEL --to pcf -o DIR` writes one PCF per line (identity in
