@@ -103,7 +103,7 @@ An implementation claiming PMEF-RoundTrip conformance **MUST** satisfy all Level
 |----|-------------|
 | CL3-01 | Support all entity types in all claimed domains. |
 | CL3-02 | Achieve ≥ 98% round-trip attribute fidelity on PMEF-DS-01. |
-| CL3-03 | Achieve ≥ 98% round-trip fidelity on at least one domain-specific benchmark (PMEF-DS-02, DS-03, DS-04, or DS-05). |
+| CL3-03 | Achieve ≥ 98% round-trip fidelity on at least one domain-specific benchmark (PMEF-DS-02, DS-03 or DS-04). |
 | CL3-04 | 100% fidelity on identity fields: `@id`, `tagNumber`, `lineNumber`, `weldNumber`. |
 | CL3-05 | Write `pmef:HasEquivalentIn` for **every** exported object without exception. |
 | CL3-06 | Support delta export: write `pmef:IsRevisionOf` for re-exported objects that have changed. |
@@ -258,7 +258,7 @@ and ParametricGeometry.
 **File:** `examples/heat-exchanger-station.ndjson`  
 **Objects:** ~40  
 **Disciplines:** Piping + Equipment  
-**Required for:** Level 3 conformance (alternative to DS-03, DS-04, DS-05).
+**Required for:** Level 3 conformance (alternative to DS-03, DS-04).
 
 Includes: Shell-and-tube heat exchangers (TEMA BEM), associated
 piping (shell-side and tube-side), isolation valves, control
@@ -286,17 +286,6 @@ Includes: HART flow transmitter-controller (SIL1), pneumatic
 control valve (SIL1, FC), Siemens S7-1500 CPU and AI module,
 instrumentation cable, instrument loop, and
 ControlledBy / IsDerivedFrom relationships.
-
-### 4.5 PMEF-DS-05 — EAF Cooling Circuit Segment
-
-**File:** `examples/eaf-segment.ndjson` (planned)  
-**Objects:** ~80  
-**Disciplines:** Piping + Equipment + E&I  
-**Required for:** Level 3 mixed-discipline conformance.
-
-Includes: Electric Arc Furnace (pmef:Reactor, EAF subtype),
-cooling water piping circuit, cooling water pumps,
-instrumentation, structural steel supports.
 
 ---
 

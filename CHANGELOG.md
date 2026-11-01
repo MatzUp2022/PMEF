@@ -20,6 +20,10 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Removed
 
+- **Benchmark PMEF-DS-05 "EAF Cooling Circuit Segment"** from spec 06 §4.5 and the ROADMAP — the
+  file `examples/eaf-segment.ndjson` never existed (docs/AUDIT.md P2.3). CL3-03 now lists DS-02,
+  DS-03 or DS-04.
+
 - **Seven entries that are not AISC designations** from `profiles-aisc` (`HSS1.5x0.125`,
   `HSS2.0x0.125`, `HSS4.5x0.25`, `HSS5.5x0.25`, `HSS8.0x0.25`, `HSS9.0x0.375`) and
   `profiles-aisc-extended` (`WT18x150`; nearest is WT18x151). Not referenced anywhere in the

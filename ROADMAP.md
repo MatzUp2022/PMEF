@@ -57,7 +57,6 @@ reference implementation. Dates are targets, not commitments.
 - 🗓️ `pmef-relationships.schema.json` — typed relationship objects
 - 🗓️ `pmef-catalog.schema.json` — piping spec + steel profile catalog format
 - 🗓️ PMEF-DS-02 example: heat exchanger station
-- 🗓️ PMEF-DS-05 example: EAF cooling circuit segment
 
 ### Reference implementation (`pmef-core` Rust crate)
 
@@ -195,7 +194,6 @@ Items previously listed as "planned" in CHANGELOG.md (moved here — a changelog
 released changes only):
 
 - 🗓️ Fix EQUIP-U-005 and PIPE-U-003 schema/test gaps
-- 🗓️ DS-05 benchmark (Mixed EAF + E&I + Steel, ~80 objects)
 - 🗓️ `pmef-stress`: CAESAR II .cii import/export adapter (Rust)
 - 🗓️ Full `pmef-geom` AABB computation (all 15 primitives)
 - ✅ `pmef-validate` jsonschema Rust integration (cross-file `$ref` resolution)

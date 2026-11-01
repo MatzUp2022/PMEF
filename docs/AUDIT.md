@@ -204,7 +204,9 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
   MUST) — added.
 - **P2.2** ~~Deterministic `pmef diff` + field-level diff~~ — done 2026-10-31 (spec 03 §9,
   `pmef_core::diff`, golden tests). 3-way merge done as well (spec 03 §10, `pmef merge`).
-- **P2.3** Either create DS-05 (`eaf-segment.ndjson`) or remove it from spec/README.
+- **P2.3** ~~DS-05 (`eaf-segment.ndjson`)~~ — removed from spec 06 and the ROADMAP on
+  2026-11-01 (maintainer decision; never existed, outside the active scope). Benchmarks are
+  DS-01 to DS-04.
 - **P2.4** CHANGELOG fixed (single `[Unreleased]`, `extract-changelog.py --version v0.9.0-rc`
   works); still open: drop or implement `build-spec-pdf.py`.
 - **P2.7** ~~Missing 82-test suite~~ — done: suite published in `tests/`; the 0.9.0-rc
