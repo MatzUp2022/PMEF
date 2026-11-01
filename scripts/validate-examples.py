@@ -11,6 +11,9 @@ Usage:
     python scripts/validate-examples.py
     python scripts/validate-examples.py --file examples/pump-skid-complete.ndjson
     python scripts/validate-examples.py --verbose
+    python scripts/validate-examples.py --lenient   # unknown @type: warn instead of fail (CL1-03)
+
+The repository's examples are checked strictly: an unknown @type is an error.
 """
 
 import json
@@ -70,16 +73,20 @@ def load_schemas() -> dict[str, dict]:
     return schemas, store
 
 
-def validate_object(obj: dict, schemas: dict, store: dict, type_map: dict) -> list[str]:
-    """Validate a single PMEF object. Returns list of error messages."""
+def validate_object(obj: dict, schemas: dict, store: dict, type_map: dict, strict: bool = False) -> list[str]:
+    """Validate a single PMEF object. Returns list of error messages.
+
+    An unknown @type is skipped (spec 06 CL1-03: skip + warn, do not fail) unless `strict`,
+    which reports it as an error (used for the repository's own examples to catch typos).
+    The JSON Schema `format` keyword is an annotation (Draft 2020-12 default), as in the
+    Rust validator (docs/AUDIT.md P3.8)."""
     type_ = obj.get("@type")
     if not type_:
         return ["Missing '@type' field"]
 
     schema_file = type_map.get(type_)
     if schema_file is None:
-        # Unknown types are errors, never silently skipped.
-        return [f"Unknown @type '{type_}': no schema defines it"]
+        return [f"Unknown @type '{type_}': no schema defines it"] if strict else []
 
     if schema_file not in schemas:
         return [f"Schema '{schema_file}' not found for type '{type_}'"]
@@ -98,7 +105,8 @@ def validate_object(obj: dict, schemas: dict, store: dict, type_map: dict) -> li
     return errors
 
 
-def validate_file(ndjson_path: Path, schemas: dict, store: dict, type_map: dict, verbose: bool) -> int:
+def validate_file(ndjson_path: Path, schemas: dict, store: dict, type_map: dict, verbose: bool,
+                  strict: bool = True) -> int:
     """Validate all objects in an NDJSON file. Returns error count."""
     errors_total = 0
     obj_count = 0
@@ -120,7 +128,9 @@ def validate_file(ndjson_path: Path, schemas: dict, store: dict, type_map: dict,
         type_ = obj.get("@type", "?")
 
         # Validate against schema
-        errors = validate_object(obj, schemas, store, type_map)
+        if not strict and type_ not in type_map:
+            print(f"  ⚠  Line {line_no}: unknown @type '{type_}' skipped (spec 06 CL1-03)")
+        errors = validate_object(obj, schemas, store, type_map, strict)
         if errors:
             print(f"  ✗  Line {line_no} [{type_}]:")
             for e in errors:
@@ -139,6 +149,8 @@ def main():
     parser = argparse.ArgumentParser(description="Validate PMEF NDJSON examples")
     parser.add_argument("--file", type=Path, help="Validate a specific file only")
     parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("--lenient", action="store_true",
+                        help="skip unknown @type with a warning (spec 06 CL1-03) instead of failing")
     args = parser.parse_args()
 
     schemas, store = load_schemas()
@@ -153,7 +165,7 @@ def main():
     total_errors = 0
     for ndjson_path in files:
         print(f"Validating {ndjson_path.name} ...")
-        errors = validate_file(ndjson_path, schemas, store, type_map, args.verbose)
+        errors = validate_file(ndjson_path, schemas, store, type_map, args.verbose, not args.lenient)
         total_errors += errors
         print()
 

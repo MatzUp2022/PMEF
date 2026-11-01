@@ -49,6 +49,9 @@ enum Commands {
         /// Fail on first error (default: report all errors).
         #[arg(long)]
         fail_fast: bool,
+        /// Treat an unknown @type as an error. Default: skip with a warning (spec 06 CL1-03).
+        #[arg(long)]
+        strict: bool,
     },
 
     /// Compare two PMEF NDJSON files object by object (spec 03 §9).
@@ -210,8 +213,8 @@ async fn main() -> Result<()> {
         .init();
 
     match cli.command {
-        Commands::Validate { file, schemas, level, format, fail_fast } => {
-            cmd_validate(file, schemas, level, &format, fail_fast).await
+        Commands::Validate { file, schemas, level, format, fail_fast, strict } => {
+            cmd_validate(file, schemas, level, &format, fail_fast, strict).await
         }
         Commands::Diff { base, head, format, exact, mut ignore, ignore_recognition, match_objects, match_distance, emit_matches } => {
             if ignore_recognition {
@@ -247,8 +250,27 @@ async fn main() -> Result<()> {
 
 // ── Command implementations ───────────────────────────────────────────────
 
+/// Line number of a reader error (0 if unknown).
+fn read_error_line(e: &pmef_io::PmefIoError) -> usize {
+    use pmef_io::PmefIoError::*;
+    match e {
+        Io { line, .. } | Json { line, .. } | MissingType { line } | MissingId { line } => *line,
+        LineTooLong(line, _) => *line,
+        #[allow(unreachable_patterns)]
+        _ => 0,
+    }
+}
+
+/// Report lines that could not be read; returns their number.
+fn report_read_errors(errors: &[pmef_io::PmefIoError]) -> usize {
+    for e in errors {
+        eprintln!("✗ {e}");
+    }
+    errors.len()
+}
+
 async fn cmd_validate(
-    file: PathBuf, schemas: PathBuf, level: u8, format: &str, fail_fast: bool,
+    file: PathBuf, schemas: PathBuf, level: u8, format: &str, fail_fast: bool, strict: bool,
 ) -> Result<()> {
     use pmef_io::{NdjsonReader, ReaderConfig};
     use pmef_validate::PmefValidator;
@@ -261,19 +283,29 @@ async fn cmd_validate(
         .map_err(|e| anyhow::anyhow!("Failed to load schemas from {}: {}", schemas.display(), e))?;
 
     let f = File::open(&file).with_context(|| format!("Cannot open {}", file.display()))?;
-    let reader = NdjsonReader::new(BufReader::new(f), ReaderConfig::default());
+    let mut reader = NdjsonReader::new(BufReader::new(f), ReaderConfig::default());
 
     let mut ok = 0usize;
     let mut fail = 0usize;
     let mut skip = 0usize;
     let mut all_errors: Vec<String> = Vec::new();
 
-    for result in reader {
+    for result in reader.by_ref() {
         match result {
             Ok(obj) => {
                 if pmef_validate::schema_for_type(&obj.type_str).is_none() {
-                    skip += 1;
-                    warn!("No schema for type '{}' on line {}", obj.type_str, obj.line_number);
+                    if strict {
+                        fail += 1;
+                        let msg = format!("line {}: {} ({}): unknown @type",
+                            obj.line_number, obj.id_str, obj.type_str);
+                        error!("{}", msg);
+                        all_errors.push(msg);
+                        if fail_fast { break; }
+                    } else {
+                        // spec 06 CL1-03: skip + warn, do not fail
+                        skip += 1;
+                        warn!("No schema for type '{}' on line {}", obj.type_str, obj.line_number);
+                    }
                     continue;
                 }
 
@@ -305,6 +337,18 @@ async fn cmd_validate(
                 }
             }
         }
+    }
+
+    // Lines the reader could not turn into objects (invalid JSON, missing @type/@id) are
+    // errors, never dropped silently (AUDIT P3.8).
+    for e in reader.errors() {
+        fail += 1;
+        let n = read_error_line(e);
+        let text = e.to_string();
+        let text = text.strip_prefix(&format!("Line {n}: ")).unwrap_or(&text);
+        let msg = format!("line {n}: {text}");
+        error!("{}", msg);
+        all_errors.push(msg);
     }
 
     let total = ok + fail + skip;
@@ -462,7 +506,8 @@ async fn cmd_stats(file: PathBuf, by_type: bool, by_domain: bool) -> Result<()> 
     use std::collections::HashMap;
 
     let f = File::open(&file).with_context(|| format!("Cannot open {}", file.display()))?;
-    let reader = NdjsonReader::new(BufReader::new(f), ReaderConfig::default());
+    let config = ReaderConfig { fail_fast: true, ..ReaderConfig::default() };
+    let reader = NdjsonReader::new(BufReader::new(f), config);
 
     let mut type_counts: HashMap<String, usize> = HashMap::new();
     let mut total = 0usize;
@@ -548,7 +593,8 @@ async fn cmd_index(
     use std::collections::HashMap;
 
     let f = File::open(&file).with_context(|| format!("Cannot open {}", file.display()))?;
-    let reader = NdjsonReader::new(BufReader::new(f), ReaderConfig::default());
+    let config = ReaderConfig { fail_fast: true, ..ReaderConfig::default() };
+    let reader = NdjsonReader::new(BufReader::new(f), config);
 
     let mut index: HashMap<String, serde_json::Value> = HashMap::new();
 
@@ -594,8 +640,16 @@ async fn cmd_conformance(
     use std::collections::HashSet;
 
     let f = File::open(&file).with_context(|| format!("Cannot open {}", file.display()))?;
-    let reader = NdjsonReader::new(BufReader::new(f), ReaderConfig::default());
-    let objects: Vec<_> = reader.collect::<Result<_, _>>()?;
+    let mut reader = NdjsonReader::new(BufReader::new(f), ReaderConfig::default());
+    let objects: Vec<_> = reader.by_ref().collect::<Result<_, _>>()?;
+    // Lines the reader rejected (no string @type / @id, invalid JSON) feed checks 3–4 and 4b.
+    let read_errors = reader.errors();
+    let missing_type_lines = read_errors.iter()
+        .filter(|e| matches!(e, pmef_io::PmefIoError::MissingType { .. })).count();
+    let missing_id_lines = read_errors.iter()
+        .filter(|e| matches!(e, pmef_io::PmefIoError::MissingId { .. })).count();
+    let unparsable_lines = read_errors.len() - missing_type_lines - missing_id_lines;
+    report_read_errors(read_errors);
 
     // Track ordering: FileHeader must be first object
     let first_type_owned = objects.first().map(|o| o.type_str.clone());
@@ -638,9 +692,7 @@ async fn cmd_conformance(
     );
 
     // Check 3: All objects have @type
-    let missing_type_count = idx.objects.values()
-        .filter(|o| o.value.get("@type").and_then(|v| v.as_str()).is_none())
-        .count();
+    let missing_type_count = missing_type_lines;
     record(
         "allObjectsHaveType",
         missing_type_count == 0,
@@ -648,9 +700,12 @@ async fn cmd_conformance(
     );
 
     // Check 4: All objects have @id
-    let missing_id_count = idx.objects.values()
-        .filter(|o| o.value.get("@id").and_then(|v| v.as_str()).is_none())
-        .count();
+    let missing_id_count = missing_id_lines;
+    record(
+        "allLinesParse",
+        unparsable_lines == 0,
+        &format!("{} line(s) are not valid JSON", unparsable_lines),
+    );
     record(
         "allObjectsHaveId",
         missing_id_count == 0,
@@ -741,7 +796,8 @@ async fn cmd_check_refs(file: PathBuf, strict: bool) -> Result<()> {
     use std::fs::File;
 
     let f = File::open(&file).with_context(|| format!("Cannot open {}", file.display()))?;
-    let reader = NdjsonReader::new(BufReader::new(f), ReaderConfig::default());
+    let config = ReaderConfig { fail_fast: true, ..ReaderConfig::default() };
+    let reader = NdjsonReader::new(BufReader::new(f), config);
     let objects: Vec<_> = reader.collect::<Result<_, _>>()?;
     let idx = PmefPackageIndex::from_iter(objects.into_iter());
 
