@@ -11,6 +11,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Deprecated
+
+- **`CompressorSpec.polytropic_efficiency`** — use `polytropicEfficiency`
+  ([RFC-0004](spec/rfc/0004-polytropic-efficiency-camelcase.md)). Both spellings are valid in
+  0.10.x, but not together in one object; the old one is removed in 1.0.0. The Rust model reads
+  both and writes camelCase; `examples/compressor-train.ndjson` uses the new spelling.
+
 ### Removed
 
 - **Seven entries that are not AISC designations** from `profiles-aisc` (`HSS1.5x0.125`,
@@ -220,6 +227,10 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   `RDL_MAPPING` to match its actual content.
 
 ### Added
+
+- **`CompressorSpec.polytropicEfficiency`** (optional, [%]) — camelCase replacement for the
+  deprecated `polytropic_efficiency` (RFC-0004). Tests: `pmef-validate/tests/rfc0004.rs`,
+  `pmef-core/tests/rfc0004_roundtrip.rs`.
 
 - **Differential validator test** `tests/validators/differential.py` (CI): the Rust validator and
   the Python reference must reach the same verdict on all reference instances and systematic

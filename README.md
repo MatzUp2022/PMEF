@@ -198,6 +198,7 @@ The `.docx` files are **non-normative legacy artefacts**. Where they differ from
 | Recognition provenance / review / as-built ([RFC-0001](spec/rfc/0001-provenance-asbuilt.md)) | in schemas, spec 02 §2.9 and `pmef-core` (0.10.0, draft for review) |
 | Catalog snapping `pmef-snap/1` ([RFC-0002](spec/rfc/0002-catalog-snapping.md)) | pipes and I-sections; Python reference + Rust, shared test vectors (draft for review) |
 | As-built ↔ design correspondence ([RFC-0003](spec/rfc/0003-as-built-correspondence.md)) | `IsRevisionOf` + `correspondence`; reused by `pmef diff --match` (draft for review) |
+| `polytropicEfficiency` naming ([RFC-0004](spec/rfc/0004-polytropic-efficiency-camelcase.md)) | camelCase in 0.10.0, `polytropic_efficiency` deprecated, removed in 1.0.0 (accepted) |
 | `pmef-core`, `pmef-io`, `pmef-validate`, `pmef-geom` | builds and tests green in CI |
 | `pmef` CLI | `validate`, `diff` (deterministic, field-level, `--match` for differing ids; spec 03 §9), `merge` (three-way, spec 03 §10), `stats`, `index`, `check-refs`, `topology` work; `convert` (PMEF ⇄ PCF for Plant 3D); `conformance` is a basic structural check (full suite: `tests/`) |
 | Adapters (Rust) | all 10 compile and pass their unit tests; Plant 3D also has the import direction via PCF (`pmef convert`, lossless bridge round trip, conformance level 3 as converter); other adapters export only; no round trip verified inside a real tool yet |

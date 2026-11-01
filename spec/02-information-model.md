@@ -734,8 +734,12 @@ fouling factors.
 
 Carries centrifugal and reciprocating compressor data per
 API 617/618/619: inlet flow [m³/h], pressure ratio, polytropic
-efficiency [%], shaft power [kW], driver type, number of stages,
+efficiency [%] (`polytropicEfficiency`), shaft power [kW], driver type, number of stages,
 seal type.
+
+The earlier spelling `polytropic_efficiency` is **deprecated** (RFC-0004): readers **MUST**
+accept it in 0.10.x, writers **MUST** use `polytropicEfficiency`, and an object **MUST NOT**
+carry both. It is removed in 1.0.0.
 
 ### 9.11 SupportSpec
 

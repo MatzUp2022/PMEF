@@ -445,9 +445,9 @@ pub struct CompressorSpec {
     pub number_of_stages: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rated_speed: Option<u32>,
-    /// Schema spells this property in snake_case (`polytropic_efficiency`); the camelCase
-    /// form is accepted on input (docs/AUDIT.md P3.9).
-    #[serde(rename = "polytropic_efficiency", alias = "polytropicEfficiency", skip_serializing_if = "Option::is_none")]
+    /// Polytropic efficiency [%] (`polytropicEfficiency`). The deprecated spelling
+    /// `polytropic_efficiency` (RFC-0004) is accepted on input; output uses camelCase.
+    #[serde(alias = "polytropic_efficiency", skip_serializing_if = "Option::is_none")]
     pub polytropic_efficiency: Option<f64>,
     /// Schema property `gasMedium`.
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -287,9 +287,10 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
      instruments; NPS ½ flange raised-face/hole values only from the inch table.
   3. `boltDiameter_mm` in the piping classes is not checked (meaning differs per class).
 
-- **P3.10** Schema naming defect: `CompressorSpec.polytropic_efficiency` is the only snake_case
-  property (all others camelCase). Renaming it is a breaking schema change → needs an RFC /
-  maintainer decision. Rust reads both spellings and writes the schema spelling.
+- **P3.10** ~~Schema naming defect `CompressorSpec.polytropic_efficiency`~~ — decided and done
+  2026-11-01 ([RFC-0004](../spec/rfc/0004-polytropic-efficiency-camelcase.md)): new
+  `polytropicEfficiency`, old spelling deprecated in 0.10.0 (still valid, not both in one
+  object), removed in 1.0.0. Example, spec 02 §9.10 and Rust model updated.
 
 ## 8. Maintainer decisions (2026-10-31)
 

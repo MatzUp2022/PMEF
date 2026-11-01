@@ -849,6 +849,7 @@
     },
     "CompressorSpec": {
       "title": "Compressor Specification",
+      "not": { "required": ["polytropicEfficiency", "polytropic_efficiency"] },
       "type": "object",
       "properties": {
         "compressorType": {
@@ -883,9 +884,14 @@
           "type": "number",
           "description": "Overall compression ratio"
         },
+        "polytropicEfficiency": {
+          "type": "number",
+          "description": "Polytropic efficiency [%]"
+        },
         "polytropic_efficiency": {
           "type": "number",
-          "description": "[%]"
+          "deprecated": true,
+          "description": "Deprecated spelling of polytropicEfficiency (RFC-0004); accepted in 0.10, removed in 1.0.0. MUST NOT be combined with polytropicEfficiency."
         },
         "numberOfStages": {
           "type": "integer"
