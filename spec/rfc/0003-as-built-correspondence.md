@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | **Status** | `REVIEW` — implemented and verified 2026-11-01; awaiting WG review and TSC sign-off |
+| **Discussion** | [#8](https://github.com/MatzUp2022/PMEF/issues/8) — opened 2026-11-01, 30-day period until 2026-12-01 |
 | **Target version** | 0.10.0 (one new optional property; no breaking change) |
 | **Depends on** | [RFC-0001](0001-provenance-asbuilt.md) (`review` block), spec 03 §9.5 (matching) |
 | **Working groups** | WG-Piping, WG-Steel, WG-Equipment, TSC |

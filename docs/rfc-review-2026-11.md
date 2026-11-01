@@ -1,5 +1,9 @@
 # RFC Review Package — November 2026
 
+Filed on 2026-11-01 as [#6](https://github.com/MatzUp2022/PMEF/issues/6) (RFC-0001),
+[#7](https://github.com/MatzUp2022/PMEF/issues/7) (RFC-0002) and
+[#8](https://github.com/MatzUp2022/PMEF/issues/8) (RFC-0003); discussion period until 2026-12-01.
+
 Issue texts for opening the review of RFC-0001 to RFC-0003 with the
 [RFC template](../.github/ISSUE_TEMPLATE/rfc.md) (labels `RFC`, `needs-triage`). Each issue starts
 the 30-day discussion period (GOVERNANCE.md). The RFC documents in `spec/rfc/` are the full text;

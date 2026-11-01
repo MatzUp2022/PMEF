@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | **Status** | `REVIEW` — reference implementations and test vectors verified 2026-11-01; awaiting WG review and TSC sign-off |
+| **Discussion** | [#7](https://github.com/MatzUp2022/PMEF/issues/7) — opened 2026-11-01, 30-day period until 2026-12-01 |
 | **Target version** | 0.10.0 (new optional `catalogSnap` fields; no breaking change) |
 | **Depends on** | [RFC-0001](0001-provenance-asbuilt.md) (`asBuilt.catalogSnap`) |
 | **Working groups** | WG-Catalogs, WG-Piping, WG-Steel, WG-Geometry |

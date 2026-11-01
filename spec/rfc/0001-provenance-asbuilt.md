@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | **Status** | `REVIEW` — implemented and verified 2026-11-01; awaiting WG review and TSC sign-off |
+| **Discussion** | [#6](https://github.com/MatzUp2022/PMEF/issues/6) — opened 2026-11-01, 30-day period until 2026-12-01 |
 | **Target version** | 0.10.0 (minor: new optional fields only) |
 | **Working groups** | WG-Piping, WG-Steel, WG-Equipment, WG-Geometry, WG-Catalogs |
 | **Author** | PMEF maintainers |
