@@ -279,7 +279,8 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
   `flange-dimensions-en` 2024.2 against the EN 1092-1 type 11 tables (PN40 DN200–600 held PN25
   values, raised faces were ASME values). Field meaning written into both catalogs
   (`fieldDefinitions`): `boltDiameter_mm` = bolt, new `boltHoleDiameter_mm` = hole (previously
-  hole in the ASME and mostly bolt in the EN catalog). Piping classes follow.
+  hole in the ASME and mostly bolt in the EN catalog). Piping classes follow. These fields and
+  `fieldDefinitions` are defined in the catalog schema since 2026-11-01.
 
   Still open:
   1. T-section Iy/Iz (`profiles-en-extended`) are unverified (tapered legs, no reference at hand).

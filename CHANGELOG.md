@@ -228,6 +228,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **Catalog schema: flange entry fields and `fieldDefinitions`** — `flangeDimensionEntry` now
+  defines the optional fields `NPS`, `DN`, `flangeThickness_mm`, `boltCircle_mm`, `boltHoles`
+  (multiple of 4), `boltDiameter_mm`, `boltHoleDiameter_mm`, `raisedFace_mm` and `facingType`
+  (RF/FF/RTJ); catalogs may document their field meanings in `fieldDefinitions`. Negative cases
+  in `tests/catalogs/run.py`. Catalogs are read as JSON values in `pmef-rs`; no Rust types change.
+
 - **`CompressorSpec.polytropicEfficiency`** (optional, [%]) — camelCase replacement for the
   deprecated `polytropic_efficiency` (RFC-0004). Tests: `pmef-validate/tests/rfc0004.rs`,
   `pmef-core/tests/rfc0004_roundtrip.rs`.

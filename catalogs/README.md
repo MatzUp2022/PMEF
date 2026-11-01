@@ -38,6 +38,7 @@ Each catalog file follows a common JSON structure:
   "version": "<version string>",
   "description": "<human-readable description>",
   "units": { "<quantity>": "<unit>" },
+  "fieldDefinitions": { "<entry field>": "<meaning>" },   // optional, e.g. flange conventions
   "entries": [ { ... } ]
 }
 ```
