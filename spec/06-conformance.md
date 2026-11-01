@@ -324,6 +324,18 @@ The **normative definition** of every test ID (name, level, requirement, fixture
 result) is `tests/conformance/manifest.json`. A pure validator receives a validator verdict, not
 a conformance level, because every level requires reading and writing (CL1-09).
 
+**Schema validation semantics.** A validator **MUST** reach the same verdict as the reference
+validator (`scripts/validate-examples.py`, JSON Schema Draft 2020-12):
+
+- The JSON Schema `format` keyword is an annotation, not an assertion (Draft 2020-12 default).
+- A line that is not a JSON object with a string `@type` and a string `@id` is invalid; it
+  **MUST NOT** be skipped silently.
+- An unknown `@type` is skipped with a warning (CL1-03). A strict mode **MAY** report it as an
+  error; the repository's own examples are validated strictly.
+
+`tests/validators/differential.py` compares the Rust validator with the reference on the
+reference instances and systematic mutations of them.
+
 ### 5.2 Test Categories
 
 | Category | Description | Test IDs |

@@ -65,7 +65,7 @@ cd pmef-rs
 cargo build --workspace --all-targets
 cargo test --workspace --no-fail-fast
 cargo clippy --workspace --all-targets    # informational in CI (doc-comment warnings)
-cargo run -p pmef-cli -- validate ../examples/pump-skid-complete.ndjson --schemas ../schemas
+cargo run -p pmef-cli -- validate ../examples/pump-skid-complete.ndjson --schemas ../schemas --strict   # unknown @type = error
 cargo run -p pmef-cli -- diff ../tests/diff/design.ndjson ../tests/diff/asbuilt.ndjson --ignore revision --ignore-recognition
 cargo run -p pmef-cli -- diff ../tests/diff/design.ndjson ../tests/diff/asbuilt-scan.ndjson --ignore revision --ignore-recognition --match
 cargo run -p pmef-cli -- diff ../tests/diff/design.ndjson ../tests/diff/asbuilt-scan.ndjson --match --emit-matches /tmp/proposals.ndjson   # RFC-0003 proposals
@@ -84,6 +84,7 @@ python tests/run_tests.py --kind converter --domains piping --sut "sh tests/conf
 python tests/snapping/reference_snap.py                   # pmef-snap/1 test vectors (RFC-0002)
 python tests/geometry/run.py                              # check-geometry rules fire on the negative fixture
 python tests/catalogs/run.py                              # check-catalogs rules fire on the broken catalogs
+python tests/validators/differential.py --pmef pmef-rs/target/debug/pmef   # Rust and Python validators agree
 python scripts/generate-asbuilt-example.py examples/asbuilt-recognition.ndjson   # after catalog/algorithm changes
 ```
 

@@ -25,6 +25,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **Validators agree (docs/AUDIT.md P3.8).** `pmef validate`, `stats`, `index`, `check-refs`,
+  `conformance` and `topology` silently dropped lines without a string `@id`/`@type` or with
+  invalid JSON, so an invalid file could pass; these lines are now errors. The Rust validator no
+  longer asserts `format` (annotation, as in Draft 2020-12 and the Python reference). Unknown
+  `@type` is skipped with a warning in both validators (spec 06 CL1-03); `pmef validate --strict`
+  and `scripts/validate-examples.py` (default; `--lenient` to relax) report it as an error.
+
 - **Flange catalogs corrected** (docs/AUDIT.md P3.12): `flange-dimensions` 2024.2 against the
   ASME B16.5 inch tables — Class 900/1500/2500 rows held values of other classes (e.g. Class 900
   NPS 1–2 had Class 600 drilling), flange thickness is tf without the raised face (Class 150/300
@@ -202,6 +209,11 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   `RDL_MAPPING` to match its actual content.
 
 ### Added
+
+- **Differential validator test** `tests/validators/differential.py` (CI): the Rust validator and
+  the Python reference must reach the same verdict on all reference instances and systematic
+  mutations of them. Spec 06 §5.1 states the validation semantics (format = annotation,
+  unreadable lines invalid, unknown `@type` per CL1-03).
 
 - **Catalog consistency check** `scripts/check-catalogs.py` (CI): section areas and masses from
   the dimensions, I/H section properties, lb/ft ↔ kg/m and AISC designation weights,

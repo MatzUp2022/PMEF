@@ -197,8 +197,9 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 
 - **P2.1** ~~Real conformance runner~~ — done: `tests/run_tests.py` (82 tests, levels, kinds,
   §7.1 report, self-test). Still open: the Rust `pmef conformance` subcommand is a separate,
-  shallow structural check (ignores `--level`; duplicate-`@id` check cannot fire) — make it
-  delegate to the suite's rules or rename it.
+  shallow structural check (ignores `--level` and `--json`; duplicate-`@id` check cannot fire —
+  the missing-@type/@id checks work since P3.8) — make it delegate to the suite's rules or
+  rename it.
 - **P2.2** ~~Deterministic `pmef diff` + field-level diff~~ — done 2026-10-31 (spec 03 §9,
   `pmef_core::diff`, golden tests). 3-way merge done as well (spec 03 §10, `pmef merge`).
 - **P2.3** Either create DS-05 (`eaf-segment.ndjson`) or remove it from spec/README.
@@ -219,9 +220,18 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 - **P3.6** Make clippy gating: add doc comments, fix the remaining logic lints (e.g. unreachable
   `"GL"` arm in the Plant 3D valve SKEY mapping — `GL` always maps to globe, never control).
 - **P3.7** Commit `pmef-rs/Cargo.lock` (workspace ships a binary) for reproducible CI builds.
-- **P3.8** Rust validator ignored `dependentRequired` (found in Phase 3; RFC-0001 schema uses
-  `if/then` instead). Check other Draft 2020-12 keywords for Rust/Python divergence, or upgrade
-  the `jsonschema` crate (currently 0.18).
+- **P3.8** ~~Rust/Python validator divergence~~ — done 2026-11-01. New differential test
+  `tests/validators/differential.py` (CI) runs both validators on every reference instance plus
+  systematic mutations (2955 cases). Found and fixed:
+  - `pmef validate` (and `stats`, `index`, `check-refs`, `conformance`, `topology`) dropped lines
+    without a string `@id`/`@type` or with invalid JSON **silently** — an invalid file passed.
+    Now they are errors. This also makes the `conformance` checks "all objects have @type/@id"
+    able to fire.
+  - Rust asserted `format` (uri, date-time), Python treated it as an annotation (Draft 2020-12
+    default). Both annotate now; asserting it in Python would depend on optional packages.
+  - Unknown `@type`: Python failed, Rust skipped. Both follow spec 06 CL1-03 (skip + warn);
+    `--strict` / the examples check treat it as an error. Spec 06 §5.1 states these semantics.
+  The `jsonschema` crate stays at 0.18; the differential test guards future keyword use.
 - **P3.9** ~~Rust model vs. schema drift~~ — done 2026-10-31 for the active scope. New test
   `pmef-rs/pmef-cli/tests/schema_drift.rs` checks every reference instance per `@type`: the Rust
   type accepts it, re-serialises schema-valid, accepts the object reduced to its schema-required

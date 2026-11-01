@@ -56,7 +56,7 @@ jobs:
         run: |
           for f in ../examples/*.ndjson; do
             echo "== $f"
-            cargo run -q -p pmef-cli -- validate "$f" --schemas ../schemas
+            cargo run -q -p pmef-cli -- validate "$f" --schemas ../schemas --strict
           done
 
       - uses: actions/setup-python@v5
@@ -70,6 +70,11 @@ jobs:
           cd ..
           python tests/run_tests.py --kind validator --name pmef-cli \
             --validator "pmef-rs/target/debug/pmef validate {file} --schemas schemas >/dev/null 2>&1"
+
+      - name: Rust and Python validators agree (differential test, AUDIT P3.8)
+        run: |
+          cd ..
+          python tests/validators/differential.py --pmef pmef-rs/target/debug/pmef
 
       - name: Conformance suite — Plant 3D PCF bridge as round-trip converter
         run: |
