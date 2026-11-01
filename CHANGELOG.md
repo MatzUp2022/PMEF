@@ -25,6 +25,16 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **Flange catalogs corrected** (docs/AUDIT.md P3.12): `flange-dimensions` 2024.2 against the
+  ASME B16.5 inch tables — Class 900/1500/2500 rows held values of other classes (e.g. Class 900
+  NPS 1–2 had Class 600 drilling), flange thickness is tf without the raised face (Class 150/300
+  values included 1/16 in); `flange-dimensions-en` 2024.2 against the EN 1092-1 type 11 tables —
+  PN40 DN200–600 held PN25 values, raised-face diameters were ASME values, thicknesses C1.
+  `boltDiameter_mm` now means the bolt diameter in both catalogs; the hole is in the new optional
+  field `boltHoleDiameter_mm` (field meanings in each catalog's `fieldDefinitions`). Piping classes
+  A1A2/B3C1/C5D1/EN-P1A take the corrected flange dimensions; snapping vectors and
+  `asbuilt-recognition` re-recorded (catalog version only).
+
 - **Catalog data corrected** (docs/AUDIT.md P3.12; versions bumped, notes in each catalog):
   `profiles-aisc` 2023.2 and `profiles-aisc-extended` 2024.2 against the AISC Shapes Database
   v16.0 (angle masses ≈ 38 % low, W36x150/W40x167/W44x230 flanges and weak-axis properties,

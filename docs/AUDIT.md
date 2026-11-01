@@ -262,10 +262,18 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
      `outsideDiameter_mm` = flange OD; C5D1/EN-P1A `outsideDiameter_mm` = pipe OD plus
      `flangeOD_mm`). Consumers must handle both; `check-catalogs.py` does.
 
+  Flange catalogs (2026-11-01): `flange-dimensions` 2024.2 against the ASME B16.5 inch tables
+  (Class 900/1500/2500 rows carried other classes' values, tf now excludes the raised face) and
+  `flange-dimensions-en` 2024.2 against the EN 1092-1 type 11 tables (PN40 DN200–600 held PN25
+  values, raised faces were ASME values). Field meaning written into both catalogs
+  (`fieldDefinitions`): `boltDiameter_mm` = bolt, new `boltHoleDiameter_mm` = hole (previously
+  hole in the ASME and mostly bolt in the EN catalog). Piping classes follow.
+
   Still open:
   1. T-section Iy/Iz (`profiles-en-extended`) are unverified (tapered legs, no reference at hand).
-  2. Not covered by references: flange dimension catalogs (checked for geometry and monotony
-     only), EN pipe walls (EN 10220 preferred series), materials, instruments.
+  2. Not covered by references: EN pipe walls (EN 10220 preferred series), materials,
+     instruments; NPS ½ flange raised-face/hole values only from the inch table.
+  3. `boltDiameter_mm` in the piping classes is not checked (meaning differs per class).
 
 - **P3.10** Schema naming defect: `CompressorSpec.polytropic_efficiency` is the only snake_case
   property (all others camelCase). Renaming it is a breaking schema change → needs an RFC /

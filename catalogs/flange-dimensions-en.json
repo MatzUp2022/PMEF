@@ -3,16 +3,27 @@
   "catalogId": "flange-dimensions-en",
   "catalogType": "FLANGE_DIMENSIONS",
   "standard": "EN 1092-1:2018 (Flanges and their joints — Circular flanges for pipes, valves, fittings and accessories, PN designated)",
-  "version": "2024.1",
+  "version": "2024.2",
   "description": "European flange dimensions per EN 1092-1. Pressure classes PN10, PN16, PN25, PN40 for DN15–DN600. Type 11 (weld neck) dimensions.",
   "units": {
     "flangeOD": "mm",
     "boltCircle": "mm",
     "boltDiameter": "mm",
+    "boltHoleDiameter": "mm",
     "flangeThickness": "mm",
     "raisedFace": "mm"
   },
+  "fieldDefinitions": {
+    "flangeOD_mm": "Flange outside diameter (D).",
+    "boltCircle_mm": "Bolt circle diameter (K).",
+    "boltHoles": "Number of bolt holes.",
+    "boltDiameter_mm": "Nominal bolt diameter (M12 → 12).",
+    "boltHoleDiameter_mm": "Bolt hole diameter (L).",
+    "flangeThickness_mm": "Flange thickness of type 11 (C1).",
+    "raisedFace_mm": "Raised face diameter (d1)."
+  },
   "notes": [
+    "Version 2024.2 aligns all entries with the EN 1092-1 type 11 tables: PN40 DN200–600 held PN25 values, raised face diameters were ASME values, thicknesses C1, boltDiameter_mm is the bolt size (M) and the new boltHoleDiameter_mm the hole. Checked with scripts/check-catalogs.py.",
     "Dimensions for Type 11 (weld neck) flanges with raised face (Form B).",
     "This catalog is not a substitute for the official EN 1092-1 standard."
   ],
@@ -23,11 +34,12 @@
       "DN": 15,
       "pressureClass": "PN10",
       "flangeOD_mm": 95,
-      "flangeThickness_mm": 12,
+      "flangeThickness_mm": 16,
       "boltCircle_mm": 65,
       "boltHoles": 4,
       "boltDiameter_mm": 12,
-      "raisedFace_mm": 35,
+      "boltHoleDiameter_mm": 14,
+      "raisedFace_mm": 45,
       "facingType": "RF"
     },
     {
@@ -36,11 +48,12 @@
       "DN": 20,
       "pressureClass": "PN10",
       "flangeOD_mm": 105,
-      "flangeThickness_mm": 14,
+      "flangeThickness_mm": 18,
       "boltCircle_mm": 75,
       "boltHoles": 4,
       "boltDiameter_mm": 12,
-      "raisedFace_mm": 43,
+      "boltHoleDiameter_mm": 14,
+      "raisedFace_mm": 58,
       "facingType": "RF"
     },
     {
@@ -49,11 +62,12 @@
       "DN": 25,
       "pressureClass": "PN10",
       "flangeOD_mm": 115,
-      "flangeThickness_mm": 14,
+      "flangeThickness_mm": 18,
       "boltCircle_mm": 85,
       "boltHoles": 4,
       "boltDiameter_mm": 12,
-      "raisedFace_mm": 51,
+      "boltHoleDiameter_mm": 14,
+      "raisedFace_mm": 68,
       "facingType": "RF"
     },
     {
@@ -62,11 +76,12 @@
       "DN": 32,
       "pressureClass": "PN10",
       "flangeOD_mm": 140,
-      "flangeThickness_mm": 14,
+      "flangeThickness_mm": 18,
       "boltCircle_mm": 100,
       "boltHoles": 4,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 59,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 78,
       "facingType": "RF"
     },
     {
@@ -75,11 +90,12 @@
       "DN": 40,
       "pressureClass": "PN10",
       "flangeOD_mm": 150,
-      "flangeThickness_mm": 14,
+      "flangeThickness_mm": 18,
       "boltCircle_mm": 110,
       "boltHoles": 4,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 66,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 88,
       "facingType": "RF"
     },
     {
@@ -88,11 +104,12 @@
       "DN": 50,
       "pressureClass": "PN10",
       "flangeOD_mm": 165,
-      "flangeThickness_mm": 14,
+      "flangeThickness_mm": 18,
       "boltCircle_mm": 125,
       "boltHoles": 4,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 77,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 102,
       "facingType": "RF"
     },
     {
@@ -101,11 +118,12 @@
       "DN": 65,
       "pressureClass": "PN10",
       "flangeOD_mm": 185,
-      "flangeThickness_mm": 14,
+      "flangeThickness_mm": 18,
       "boltCircle_mm": 145,
-      "boltHoles": 4,
+      "boltHoles": 8,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 90,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 122,
       "facingType": "RF"
     },
     {
@@ -114,11 +132,12 @@
       "DN": 80,
       "pressureClass": "PN10",
       "flangeOD_mm": 200,
-      "flangeThickness_mm": 16,
+      "flangeThickness_mm": 20,
       "boltCircle_mm": 160,
       "boltHoles": 8,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 108,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 138,
       "facingType": "RF"
     },
     {
@@ -127,11 +146,12 @@
       "DN": 100,
       "pressureClass": "PN10",
       "flangeOD_mm": 220,
-      "flangeThickness_mm": 16,
+      "flangeThickness_mm": 20,
       "boltCircle_mm": 180,
       "boltHoles": 8,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 130,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 158,
       "facingType": "RF"
     },
     {
@@ -140,11 +160,12 @@
       "DN": 125,
       "pressureClass": "PN10",
       "flangeOD_mm": 250,
-      "flangeThickness_mm": 18,
+      "flangeThickness_mm": 22,
       "boltCircle_mm": 210,
       "boltHoles": 8,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 162,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 188,
       "facingType": "RF"
     },
     {
@@ -153,11 +174,12 @@
       "DN": 150,
       "pressureClass": "PN10",
       "flangeOD_mm": 285,
-      "flangeThickness_mm": 18,
+      "flangeThickness_mm": 22,
       "boltCircle_mm": 240,
       "boltHoles": 8,
       "boltDiameter_mm": 20,
-      "raisedFace_mm": 188,
+      "boltHoleDiameter_mm": 22,
+      "raisedFace_mm": 212,
       "facingType": "RF"
     },
     {
@@ -166,11 +188,12 @@
       "DN": 200,
       "pressureClass": "PN10",
       "flangeOD_mm": 340,
-      "flangeThickness_mm": 20,
+      "flangeThickness_mm": 24,
       "boltCircle_mm": 295,
       "boltHoles": 8,
       "boltDiameter_mm": 20,
-      "raisedFace_mm": 240,
+      "boltHoleDiameter_mm": 22,
+      "raisedFace_mm": 268,
       "facingType": "RF"
     },
     {
@@ -179,11 +202,12 @@
       "DN": 250,
       "pressureClass": "PN10",
       "flangeOD_mm": 395,
-      "flangeThickness_mm": 22,
+      "flangeThickness_mm": 26,
       "boltCircle_mm": 350,
       "boltHoles": 12,
       "boltDiameter_mm": 20,
-      "raisedFace_mm": 292,
+      "boltHoleDiameter_mm": 22,
+      "raisedFace_mm": 320,
       "facingType": "RF"
     },
     {
@@ -192,11 +216,12 @@
       "DN": 300,
       "pressureClass": "PN10",
       "flangeOD_mm": 445,
-      "flangeThickness_mm": 22,
+      "flangeThickness_mm": 26,
       "boltCircle_mm": 400,
       "boltHoles": 12,
       "boltDiameter_mm": 20,
-      "raisedFace_mm": 342,
+      "boltHoleDiameter_mm": 22,
+      "raisedFace_mm": 370,
       "facingType": "RF"
     },
     {
@@ -205,11 +230,12 @@
       "DN": 350,
       "pressureClass": "PN10",
       "flangeOD_mm": 505,
-      "flangeThickness_mm": 24,
+      "flangeThickness_mm": 26,
       "boltCircle_mm": 460,
-      "boltHoles": 12,
+      "boltHoles": 16,
       "boltDiameter_mm": 20,
-      "raisedFace_mm": 390,
+      "boltHoleDiameter_mm": 22,
+      "raisedFace_mm": 430,
       "facingType": "RF"
     },
     {
@@ -218,11 +244,12 @@
       "DN": 400,
       "pressureClass": "PN10",
       "flangeOD_mm": 565,
-      "flangeThickness_mm": 24,
+      "flangeThickness_mm": 26,
       "boltCircle_mm": 515,
       "boltHoles": 16,
-      "boltDiameter_mm": 22,
-      "raisedFace_mm": 442,
+      "boltDiameter_mm": 24,
+      "boltHoleDiameter_mm": 26,
+      "raisedFace_mm": 482,
       "facingType": "RF"
     },
     {
@@ -231,11 +258,12 @@
       "DN": 450,
       "pressureClass": "PN10",
       "flangeOD_mm": 615,
-      "flangeThickness_mm": 24,
+      "flangeThickness_mm": 28,
       "boltCircle_mm": 565,
-      "boltHoles": 16,
-      "boltDiameter_mm": 22,
-      "raisedFace_mm": 490,
+      "boltHoles": 20,
+      "boltDiameter_mm": 24,
+      "boltHoleDiameter_mm": 26,
+      "raisedFace_mm": 532,
       "facingType": "RF"
     },
     {
@@ -244,11 +272,12 @@
       "DN": 500,
       "pressureClass": "PN10",
       "flangeOD_mm": 670,
-      "flangeThickness_mm": 26,
+      "flangeThickness_mm": 28,
       "boltCircle_mm": 620,
       "boltHoles": 20,
-      "boltDiameter_mm": 22,
-      "raisedFace_mm": 540,
+      "boltDiameter_mm": 24,
+      "boltHoleDiameter_mm": 26,
+      "raisedFace_mm": 585,
       "facingType": "RF"
     },
     {
@@ -257,11 +286,12 @@
       "DN": 600,
       "pressureClass": "PN10",
       "flangeOD_mm": 780,
-      "flangeThickness_mm": 28,
+      "flangeThickness_mm": 30,
       "boltCircle_mm": 725,
       "boltHoles": 20,
       "boltDiameter_mm": 27,
-      "raisedFace_mm": 640,
+      "boltHoleDiameter_mm": 30,
+      "raisedFace_mm": 685,
       "facingType": "RF"
     },
     {
@@ -270,11 +300,12 @@
       "DN": 15,
       "pressureClass": "PN16",
       "flangeOD_mm": 95,
-      "flangeThickness_mm": 14,
+      "flangeThickness_mm": 16,
       "boltCircle_mm": 65,
       "boltHoles": 4,
       "boltDiameter_mm": 12,
-      "raisedFace_mm": 35,
+      "boltHoleDiameter_mm": 14,
+      "raisedFace_mm": 45,
       "facingType": "RF"
     },
     {
@@ -283,11 +314,12 @@
       "DN": 20,
       "pressureClass": "PN16",
       "flangeOD_mm": 105,
-      "flangeThickness_mm": 16,
+      "flangeThickness_mm": 18,
       "boltCircle_mm": 75,
       "boltHoles": 4,
       "boltDiameter_mm": 12,
-      "raisedFace_mm": 43,
+      "boltHoleDiameter_mm": 14,
+      "raisedFace_mm": 58,
       "facingType": "RF"
     },
     {
@@ -296,11 +328,12 @@
       "DN": 25,
       "pressureClass": "PN16",
       "flangeOD_mm": 115,
-      "flangeThickness_mm": 16,
+      "flangeThickness_mm": 18,
       "boltCircle_mm": 85,
       "boltHoles": 4,
       "boltDiameter_mm": 12,
-      "raisedFace_mm": 51,
+      "boltHoleDiameter_mm": 14,
+      "raisedFace_mm": 68,
       "facingType": "RF"
     },
     {
@@ -309,11 +342,12 @@
       "DN": 32,
       "pressureClass": "PN16",
       "flangeOD_mm": 140,
-      "flangeThickness_mm": 16,
+      "flangeThickness_mm": 18,
       "boltCircle_mm": 100,
       "boltHoles": 4,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 59,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 78,
       "facingType": "RF"
     },
     {
@@ -322,11 +356,12 @@
       "DN": 40,
       "pressureClass": "PN16",
       "flangeOD_mm": 150,
-      "flangeThickness_mm": 16,
+      "flangeThickness_mm": 18,
       "boltCircle_mm": 110,
       "boltHoles": 4,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 66,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 88,
       "facingType": "RF"
     },
     {
@@ -339,7 +374,8 @@
       "boltCircle_mm": 125,
       "boltHoles": 4,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 77,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 102,
       "facingType": "RF"
     },
     {
@@ -352,7 +388,8 @@
       "boltCircle_mm": 145,
       "boltHoles": 8,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 90,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 122,
       "facingType": "RF"
     },
     {
@@ -365,7 +402,8 @@
       "boltCircle_mm": 160,
       "boltHoles": 8,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 108,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 138,
       "facingType": "RF"
     },
     {
@@ -373,12 +411,13 @@
       "nominalDiameter": 100,
       "DN": 100,
       "pressureClass": "PN16",
-      "flangeOD_mm": 235,
-      "flangeThickness_mm": 22,
-      "boltCircle_mm": 190,
+      "flangeOD_mm": 220,
+      "flangeThickness_mm": 20,
+      "boltCircle_mm": 180,
       "boltHoles": 8,
-      "boltDiameter_mm": 20,
-      "raisedFace_mm": 130,
+      "boltDiameter_mm": 16,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 158,
       "facingType": "RF"
     },
     {
@@ -386,12 +425,13 @@
       "nominalDiameter": 125,
       "DN": 125,
       "pressureClass": "PN16",
-      "flangeOD_mm": 270,
+      "flangeOD_mm": 250,
       "flangeThickness_mm": 22,
-      "boltCircle_mm": 220,
+      "boltCircle_mm": 210,
       "boltHoles": 8,
-      "boltDiameter_mm": 22,
-      "raisedFace_mm": 162,
+      "boltDiameter_mm": 16,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 188,
       "facingType": "RF"
     },
     {
@@ -399,12 +439,13 @@
       "nominalDiameter": 150,
       "DN": 150,
       "pressureClass": "PN16",
-      "flangeOD_mm": 300,
-      "flangeThickness_mm": 24,
-      "boltCircle_mm": 250,
+      "flangeOD_mm": 285,
+      "flangeThickness_mm": 22,
+      "boltCircle_mm": 240,
       "boltHoles": 8,
-      "boltDiameter_mm": 22,
-      "raisedFace_mm": 188,
+      "boltDiameter_mm": 20,
+      "boltHoleDiameter_mm": 22,
+      "raisedFace_mm": 212,
       "facingType": "RF"
     },
     {
@@ -412,12 +453,13 @@
       "nominalDiameter": 200,
       "DN": 200,
       "pressureClass": "PN16",
-      "flangeOD_mm": 360,
-      "flangeThickness_mm": 26,
-      "boltCircle_mm": 310,
+      "flangeOD_mm": 340,
+      "flangeThickness_mm": 24,
+      "boltCircle_mm": 295,
       "boltHoles": 12,
-      "boltDiameter_mm": 22,
-      "raisedFace_mm": 240,
+      "boltDiameter_mm": 20,
+      "boltHoleDiameter_mm": 22,
+      "raisedFace_mm": 268,
       "facingType": "RF"
     },
     {
@@ -425,12 +467,13 @@
       "nominalDiameter": 250,
       "DN": 250,
       "pressureClass": "PN16",
-      "flangeOD_mm": 425,
-      "flangeThickness_mm": 28,
-      "boltCircle_mm": 370,
+      "flangeOD_mm": 405,
+      "flangeThickness_mm": 26,
+      "boltCircle_mm": 355,
       "boltHoles": 12,
-      "boltDiameter_mm": 27,
-      "raisedFace_mm": 292,
+      "boltDiameter_mm": 24,
+      "boltHoleDiameter_mm": 26,
+      "raisedFace_mm": 320,
       "facingType": "RF"
     },
     {
@@ -438,12 +481,13 @@
       "nominalDiameter": 300,
       "DN": 300,
       "pressureClass": "PN16",
-      "flangeOD_mm": 485,
+      "flangeOD_mm": 460,
       "flangeThickness_mm": 28,
-      "boltCircle_mm": 430,
+      "boltCircle_mm": 410,
       "boltHoles": 12,
-      "boltDiameter_mm": 27,
-      "raisedFace_mm": 342,
+      "boltDiameter_mm": 24,
+      "boltHoleDiameter_mm": 26,
+      "raisedFace_mm": 378,
       "facingType": "RF"
     },
     {
@@ -451,12 +495,13 @@
       "nominalDiameter": 350,
       "DN": 350,
       "pressureClass": "PN16",
-      "flangeOD_mm": 555,
+      "flangeOD_mm": 520,
       "flangeThickness_mm": 30,
-      "boltCircle_mm": 490,
+      "boltCircle_mm": 470,
       "boltHoles": 16,
-      "boltDiameter_mm": 30,
-      "raisedFace_mm": 390,
+      "boltDiameter_mm": 24,
+      "boltHoleDiameter_mm": 26,
+      "raisedFace_mm": 438,
       "facingType": "RF"
     },
     {
@@ -464,12 +509,13 @@
       "nominalDiameter": 400,
       "DN": 400,
       "pressureClass": "PN16",
-      "flangeOD_mm": 620,
+      "flangeOD_mm": 580,
       "flangeThickness_mm": 32,
-      "boltCircle_mm": 550,
+      "boltCircle_mm": 525,
       "boltHoles": 16,
-      "boltDiameter_mm": 30,
-      "raisedFace_mm": 442,
+      "boltDiameter_mm": 27,
+      "boltHoleDiameter_mm": 30,
+      "raisedFace_mm": 490,
       "facingType": "RF"
     },
     {
@@ -477,12 +523,13 @@
       "nominalDiameter": 450,
       "DN": 450,
       "pressureClass": "PN16",
-      "flangeOD_mm": 670,
-      "flangeThickness_mm": 32,
-      "boltCircle_mm": 600,
+      "flangeOD_mm": 640,
+      "flangeThickness_mm": 34,
+      "boltCircle_mm": 585,
       "boltHoles": 20,
-      "boltDiameter_mm": 30,
-      "raisedFace_mm": 490,
+      "boltDiameter_mm": 27,
+      "boltHoleDiameter_mm": 30,
+      "raisedFace_mm": 550,
       "facingType": "RF"
     },
     {
@@ -490,12 +537,13 @@
       "nominalDiameter": 500,
       "DN": 500,
       "pressureClass": "PN16",
-      "flangeOD_mm": 730,
-      "flangeThickness_mm": 34,
-      "boltCircle_mm": 660,
+      "flangeOD_mm": 715,
+      "flangeThickness_mm": 36,
+      "boltCircle_mm": 650,
       "boltHoles": 20,
       "boltDiameter_mm": 30,
-      "raisedFace_mm": 540,
+      "boltHoleDiameter_mm": 33,
+      "raisedFace_mm": 610,
       "facingType": "RF"
     },
     {
@@ -504,11 +552,12 @@
       "DN": 600,
       "pressureClass": "PN16",
       "flangeOD_mm": 840,
-      "flangeThickness_mm": 36,
+      "flangeThickness_mm": 40,
       "boltCircle_mm": 770,
       "boltHoles": 20,
       "boltDiameter_mm": 33,
-      "raisedFace_mm": 640,
+      "boltHoleDiameter_mm": 36,
+      "raisedFace_mm": 725,
       "facingType": "RF"
     },
     {
@@ -517,11 +566,12 @@
       "DN": 15,
       "pressureClass": "PN25",
       "flangeOD_mm": 95,
-      "flangeThickness_mm": 14,
+      "flangeThickness_mm": 16,
       "boltCircle_mm": 65,
       "boltHoles": 4,
       "boltDiameter_mm": 12,
-      "raisedFace_mm": 35,
+      "boltHoleDiameter_mm": 14,
+      "raisedFace_mm": 45,
       "facingType": "RF"
     },
     {
@@ -530,11 +580,12 @@
       "DN": 20,
       "pressureClass": "PN25",
       "flangeOD_mm": 105,
-      "flangeThickness_mm": 16,
+      "flangeThickness_mm": 18,
       "boltCircle_mm": 75,
       "boltHoles": 4,
       "boltDiameter_mm": 12,
-      "raisedFace_mm": 43,
+      "boltHoleDiameter_mm": 14,
+      "raisedFace_mm": 58,
       "facingType": "RF"
     },
     {
@@ -543,11 +594,12 @@
       "DN": 25,
       "pressureClass": "PN25",
       "flangeOD_mm": 115,
-      "flangeThickness_mm": 16,
+      "flangeThickness_mm": 18,
       "boltCircle_mm": 85,
       "boltHoles": 4,
-      "boltDiameter_mm": 14,
-      "raisedFace_mm": 51,
+      "boltDiameter_mm": 12,
+      "boltHoleDiameter_mm": 14,
+      "raisedFace_mm": 68,
       "facingType": "RF"
     },
     {
@@ -560,7 +612,8 @@
       "boltCircle_mm": 100,
       "boltHoles": 4,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 59,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 78,
       "facingType": "RF"
     },
     {
@@ -573,7 +626,8 @@
       "boltCircle_mm": 110,
       "boltHoles": 4,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 66,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 88,
       "facingType": "RF"
     },
     {
@@ -586,7 +640,8 @@
       "boltCircle_mm": 125,
       "boltHoles": 4,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 77,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 102,
       "facingType": "RF"
     },
     {
@@ -599,7 +654,8 @@
       "boltCircle_mm": 145,
       "boltHoles": 8,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 90,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 122,
       "facingType": "RF"
     },
     {
@@ -612,7 +668,8 @@
       "boltCircle_mm": 160,
       "boltHoles": 8,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 108,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 138,
       "facingType": "RF"
     },
     {
@@ -625,7 +682,8 @@
       "boltCircle_mm": 190,
       "boltHoles": 8,
       "boltDiameter_mm": 20,
-      "raisedFace_mm": 130,
+      "boltHoleDiameter_mm": 22,
+      "raisedFace_mm": 162,
       "facingType": "RF"
     },
     {
@@ -637,8 +695,9 @@
       "flangeThickness_mm": 26,
       "boltCircle_mm": 220,
       "boltHoles": 8,
-      "boltDiameter_mm": 22,
-      "raisedFace_mm": 162,
+      "boltDiameter_mm": 24,
+      "boltHoleDiameter_mm": 26,
+      "raisedFace_mm": 188,
       "facingType": "RF"
     },
     {
@@ -647,11 +706,12 @@
       "DN": 150,
       "pressureClass": "PN25",
       "flangeOD_mm": 300,
-      "flangeThickness_mm": 26,
+      "flangeThickness_mm": 28,
       "boltCircle_mm": 250,
       "boltHoles": 8,
-      "boltDiameter_mm": 22,
-      "raisedFace_mm": 188,
+      "boltDiameter_mm": 24,
+      "boltHoleDiameter_mm": 26,
+      "raisedFace_mm": 218,
       "facingType": "RF"
     },
     {
@@ -660,11 +720,12 @@
       "DN": 200,
       "pressureClass": "PN25",
       "flangeOD_mm": 360,
-      "flangeThickness_mm": 28,
+      "flangeThickness_mm": 30,
       "boltCircle_mm": 310,
       "boltHoles": 12,
-      "boltDiameter_mm": 22,
-      "raisedFace_mm": 240,
+      "boltDiameter_mm": 24,
+      "boltHoleDiameter_mm": 26,
+      "raisedFace_mm": 278,
       "facingType": "RF"
     },
     {
@@ -673,11 +734,12 @@
       "DN": 250,
       "pressureClass": "PN25",
       "flangeOD_mm": 425,
-      "flangeThickness_mm": 30,
+      "flangeThickness_mm": 32,
       "boltCircle_mm": 370,
       "boltHoles": 12,
       "boltDiameter_mm": 27,
-      "raisedFace_mm": 292,
+      "boltHoleDiameter_mm": 30,
+      "raisedFace_mm": 335,
       "facingType": "RF"
     },
     {
@@ -686,11 +748,12 @@
       "DN": 300,
       "pressureClass": "PN25",
       "flangeOD_mm": 485,
-      "flangeThickness_mm": 32,
+      "flangeThickness_mm": 34,
       "boltCircle_mm": 430,
       "boltHoles": 16,
       "boltDiameter_mm": 27,
-      "raisedFace_mm": 342,
+      "boltHoleDiameter_mm": 30,
+      "raisedFace_mm": 395,
       "facingType": "RF"
     },
     {
@@ -699,11 +762,12 @@
       "DN": 350,
       "pressureClass": "PN25",
       "flangeOD_mm": 555,
-      "flangeThickness_mm": 34,
+      "flangeThickness_mm": 38,
       "boltCircle_mm": 490,
       "boltHoles": 16,
       "boltDiameter_mm": 30,
-      "raisedFace_mm": 390,
+      "boltHoleDiameter_mm": 33,
+      "raisedFace_mm": 450,
       "facingType": "RF"
     },
     {
@@ -712,11 +776,12 @@
       "DN": 400,
       "pressureClass": "PN25",
       "flangeOD_mm": 620,
-      "flangeThickness_mm": 36,
+      "flangeThickness_mm": 40,
       "boltCircle_mm": 550,
       "boltHoles": 16,
       "boltDiameter_mm": 33,
-      "raisedFace_mm": 442,
+      "boltHoleDiameter_mm": 36,
+      "raisedFace_mm": 505,
       "facingType": "RF"
     },
     {
@@ -725,11 +790,12 @@
       "DN": 450,
       "pressureClass": "PN25",
       "flangeOD_mm": 670,
-      "flangeThickness_mm": 40,
+      "flangeThickness_mm": 46,
       "boltCircle_mm": 600,
       "boltHoles": 20,
       "boltDiameter_mm": 33,
-      "raisedFace_mm": 490,
+      "boltHoleDiameter_mm": 36,
+      "raisedFace_mm": 555,
       "facingType": "RF"
     },
     {
@@ -738,11 +804,12 @@
       "DN": 500,
       "pressureClass": "PN25",
       "flangeOD_mm": 730,
-      "flangeThickness_mm": 42,
+      "flangeThickness_mm": 48,
       "boltCircle_mm": 660,
       "boltHoles": 20,
       "boltDiameter_mm": 33,
-      "raisedFace_mm": 540,
+      "boltHoleDiameter_mm": 36,
+      "raisedFace_mm": 615,
       "facingType": "RF"
     },
     {
@@ -750,12 +817,13 @@
       "nominalDiameter": 600,
       "DN": 600,
       "pressureClass": "PN25",
-      "flangeOD_mm": 840,
-      "flangeThickness_mm": 46,
+      "flangeOD_mm": 845,
+      "flangeThickness_mm": 48,
       "boltCircle_mm": 770,
       "boltHoles": 20,
       "boltDiameter_mm": 36,
-      "raisedFace_mm": 640,
+      "boltHoleDiameter_mm": 39,
+      "raisedFace_mm": 720,
       "facingType": "RF"
     },
     {
@@ -764,11 +832,12 @@
       "DN": 15,
       "pressureClass": "PN40",
       "flangeOD_mm": 95,
-      "flangeThickness_mm": 14,
+      "flangeThickness_mm": 16,
       "boltCircle_mm": 65,
       "boltHoles": 4,
       "boltDiameter_mm": 12,
-      "raisedFace_mm": 35,
+      "boltHoleDiameter_mm": 14,
+      "raisedFace_mm": 45,
       "facingType": "RF"
     },
     {
@@ -777,11 +846,12 @@
       "DN": 20,
       "pressureClass": "PN40",
       "flangeOD_mm": 105,
-      "flangeThickness_mm": 16,
+      "flangeThickness_mm": 18,
       "boltCircle_mm": 75,
       "boltHoles": 4,
       "boltDiameter_mm": 12,
-      "raisedFace_mm": 43,
+      "boltHoleDiameter_mm": 14,
+      "raisedFace_mm": 58,
       "facingType": "RF"
     },
     {
@@ -790,11 +860,12 @@
       "DN": 25,
       "pressureClass": "PN40",
       "flangeOD_mm": 115,
-      "flangeThickness_mm": 16,
+      "flangeThickness_mm": 18,
       "boltCircle_mm": 85,
       "boltHoles": 4,
-      "boltDiameter_mm": 14,
-      "raisedFace_mm": 51,
+      "boltDiameter_mm": 12,
+      "boltHoleDiameter_mm": 14,
+      "raisedFace_mm": 68,
       "facingType": "RF"
     },
     {
@@ -807,7 +878,8 @@
       "boltCircle_mm": 100,
       "boltHoles": 4,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 59,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 78,
       "facingType": "RF"
     },
     {
@@ -820,7 +892,8 @@
       "boltCircle_mm": 110,
       "boltHoles": 4,
       "boltDiameter_mm": 16,
-      "raisedFace_mm": 66,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 88,
       "facingType": "RF"
     },
     {
@@ -832,8 +905,9 @@
       "flangeThickness_mm": 20,
       "boltCircle_mm": 125,
       "boltHoles": 4,
-      "boltDiameter_mm": 18,
-      "raisedFace_mm": 77,
+      "boltDiameter_mm": 16,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 102,
       "facingType": "RF"
     },
     {
@@ -845,8 +919,9 @@
       "flangeThickness_mm": 22,
       "boltCircle_mm": 145,
       "boltHoles": 8,
-      "boltDiameter_mm": 18,
-      "raisedFace_mm": 90,
+      "boltDiameter_mm": 16,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 122,
       "facingType": "RF"
     },
     {
@@ -855,11 +930,12 @@
       "DN": 80,
       "pressureClass": "PN40",
       "flangeOD_mm": 200,
-      "flangeThickness_mm": 22,
+      "flangeThickness_mm": 24,
       "boltCircle_mm": 160,
       "boltHoles": 8,
-      "boltDiameter_mm": 18,
-      "raisedFace_mm": 108,
+      "boltDiameter_mm": 16,
+      "boltHoleDiameter_mm": 18,
+      "raisedFace_mm": 138,
       "facingType": "RF"
     },
     {
@@ -871,8 +947,9 @@
       "flangeThickness_mm": 24,
       "boltCircle_mm": 190,
       "boltHoles": 8,
-      "boltDiameter_mm": 18,
-      "raisedFace_mm": 130,
+      "boltDiameter_mm": 20,
+      "boltHoleDiameter_mm": 22,
+      "raisedFace_mm": 162,
       "facingType": "RF"
     },
     {
@@ -884,8 +961,9 @@
       "flangeThickness_mm": 26,
       "boltCircle_mm": 220,
       "boltHoles": 8,
-      "boltDiameter_mm": 22,
-      "raisedFace_mm": 162,
+      "boltDiameter_mm": 24,
+      "boltHoleDiameter_mm": 26,
+      "raisedFace_mm": 188,
       "facingType": "RF"
     },
     {
@@ -897,8 +975,9 @@
       "flangeThickness_mm": 28,
       "boltCircle_mm": 250,
       "boltHoles": 8,
-      "boltDiameter_mm": 22,
-      "raisedFace_mm": 188,
+      "boltDiameter_mm": 24,
+      "boltHoleDiameter_mm": 26,
+      "raisedFace_mm": 218,
       "facingType": "RF"
     },
     {
@@ -906,12 +985,13 @@
       "nominalDiameter": 200,
       "DN": 200,
       "pressureClass": "PN40",
-      "flangeOD_mm": 360,
-      "flangeThickness_mm": 30,
-      "boltCircle_mm": 310,
+      "flangeOD_mm": 375,
+      "flangeThickness_mm": 34,
+      "boltCircle_mm": 320,
       "boltHoles": 12,
-      "boltDiameter_mm": 22,
-      "raisedFace_mm": 240,
+      "boltDiameter_mm": 27,
+      "boltHoleDiameter_mm": 30,
+      "raisedFace_mm": 285,
       "facingType": "RF"
     },
     {
@@ -919,12 +999,13 @@
       "nominalDiameter": 250,
       "DN": 250,
       "pressureClass": "PN40",
-      "flangeOD_mm": 425,
-      "flangeThickness_mm": 32,
-      "boltCircle_mm": 370,
+      "flangeOD_mm": 450,
+      "flangeThickness_mm": 38,
+      "boltCircle_mm": 385,
       "boltHoles": 12,
-      "boltDiameter_mm": 27,
-      "raisedFace_mm": 292,
+      "boltDiameter_mm": 30,
+      "boltHoleDiameter_mm": 33,
+      "raisedFace_mm": 345,
       "facingType": "RF"
     },
     {
@@ -932,12 +1013,13 @@
       "nominalDiameter": 300,
       "DN": 300,
       "pressureClass": "PN40",
-      "flangeOD_mm": 485,
-      "flangeThickness_mm": 36,
-      "boltCircle_mm": 430,
-      "boltHoles": 12,
-      "boltDiameter_mm": 27,
-      "raisedFace_mm": 342,
+      "flangeOD_mm": 515,
+      "flangeThickness_mm": 42,
+      "boltCircle_mm": 450,
+      "boltHoles": 16,
+      "boltDiameter_mm": 30,
+      "boltHoleDiameter_mm": 33,
+      "raisedFace_mm": 410,
       "facingType": "RF"
     },
     {
@@ -945,12 +1027,13 @@
       "nominalDiameter": 350,
       "DN": 350,
       "pressureClass": "PN40",
-      "flangeOD_mm": 555,
-      "flangeThickness_mm": 38,
-      "boltCircle_mm": 490,
+      "flangeOD_mm": 580,
+      "flangeThickness_mm": 46,
+      "boltCircle_mm": 510,
       "boltHoles": 16,
-      "boltDiameter_mm": 30,
-      "raisedFace_mm": 390,
+      "boltDiameter_mm": 33,
+      "boltHoleDiameter_mm": 36,
+      "raisedFace_mm": 465,
       "facingType": "RF"
     },
     {
@@ -958,12 +1041,13 @@
       "nominalDiameter": 400,
       "DN": 400,
       "pressureClass": "PN40",
-      "flangeOD_mm": 620,
-      "flangeThickness_mm": 40,
-      "boltCircle_mm": 550,
+      "flangeOD_mm": 660,
+      "flangeThickness_mm": 50,
+      "boltCircle_mm": 585,
       "boltHoles": 16,
-      "boltDiameter_mm": 33,
-      "raisedFace_mm": 442,
+      "boltDiameter_mm": 36,
+      "boltHoleDiameter_mm": 39,
+      "raisedFace_mm": 535,
       "facingType": "RF"
     },
     {
@@ -971,12 +1055,13 @@
       "nominalDiameter": 450,
       "DN": 450,
       "pressureClass": "PN40",
-      "flangeOD_mm": 670,
-      "flangeThickness_mm": 44,
-      "boltCircle_mm": 600,
+      "flangeOD_mm": 685,
+      "flangeThickness_mm": 57,
+      "boltCircle_mm": 610,
       "boltHoles": 20,
-      "boltDiameter_mm": 33,
-      "raisedFace_mm": 490,
+      "boltDiameter_mm": 36,
+      "boltHoleDiameter_mm": 39,
+      "raisedFace_mm": 560,
       "facingType": "RF"
     },
     {
@@ -984,12 +1069,13 @@
       "nominalDiameter": 500,
       "DN": 500,
       "pressureClass": "PN40",
-      "flangeOD_mm": 730,
-      "flangeThickness_mm": 46,
-      "boltCircle_mm": 660,
+      "flangeOD_mm": 755,
+      "flangeThickness_mm": 57,
+      "boltCircle_mm": 670,
       "boltHoles": 20,
-      "boltDiameter_mm": 33,
-      "raisedFace_mm": 540,
+      "boltDiameter_mm": 39,
+      "boltHoleDiameter_mm": 42,
+      "raisedFace_mm": 615,
       "facingType": "RF"
     },
     {
@@ -997,12 +1083,13 @@
       "nominalDiameter": 600,
       "DN": 600,
       "pressureClass": "PN40",
-      "flangeOD_mm": 840,
-      "flangeThickness_mm": 52,
-      "boltCircle_mm": 770,
+      "flangeOD_mm": 890,
+      "flangeThickness_mm": 72,
+      "boltCircle_mm": 795,
       "boltHoles": 20,
-      "boltDiameter_mm": 36,
-      "raisedFace_mm": 640,
+      "boltDiameter_mm": 45,
+      "boltHoleDiameter_mm": 48,
+      "raisedFace_mm": 735,
       "facingType": "RF"
     }
   ]
