@@ -196,10 +196,12 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 ### P2 — make claims true
 
 - **P2.1** ~~Real conformance runner~~ — done: `tests/run_tests.py` (82 tests, levels, kinds,
-  §7.1 report, self-test). Still open: the Rust `pmef conformance` subcommand is a separate,
-  shallow structural check (ignores `--level` and `--json`; duplicate-`@id` check cannot fire —
-  the missing-@type/@id checks work since P3.8) — make it delegate to the suite's rules or
-  rename it.
+  §7.1 report, self-test). The Rust `pmef conformance` subcommand (a shallow package check that
+  ignored `--level`/`--json`/`--dataset` and could not detect duplicate `@id`s) was replaced on
+  2026-11-01 by `pmef check` (package structure, same reference rules as
+  `scripts/check-topology.py`); `pmef conformance` remains as a deprecated alias. Spec 06 §7.1
+  names the suite as the source of the conformance report. DS-04 lacked its FileHeader (spec 03
+  MUST) — added.
 - **P2.2** ~~Deterministic `pmef diff` + field-level diff~~ — done 2026-10-31 (spec 03 §9,
   `pmef_core::diff`, golden tests). 3-way merge done as well (spec 03 §10, `pmef merge`).
 - **P2.3** Either create DS-05 (`eaf-segment.ndjson`) or remove it from spec/README.

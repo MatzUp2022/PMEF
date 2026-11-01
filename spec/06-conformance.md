@@ -278,7 +278,7 @@ pressure safety valves, lube oil system outline.
 ### 4.4 PMEF-DS-04 — Instrument Loop FIC-10101
 
 **File:** `examples/ei-loop-fic-10101.ndjson`  
-**Objects:** 9  
+**Objects:** 10 (including the FileHeader)  
 **Disciplines:** E&I  
 **Required for:** Level 3 E&I conformance.
 
@@ -445,9 +445,10 @@ The following attribute types are exempt from round-trip fidelity measurement:
 
 ### 7.1 Machine-Readable Report
 
-A conformance report **MUST** be generated in JSON format when
-`pmef-cli conformance` is run or when the test suite is executed
-with `--report json`.
+A conformance report **MUST** be generated in JSON format when the test suite is executed with
+`--report json` (`python tests/run_tests.py --report json`). The CLI command `pmef check` is a
+structural check of a data package (FileHeader, unique `@id`, resolvable `connectedTo`); it does
+not test an implementation and does not produce this report.
 
 Mandatory report fields:
 

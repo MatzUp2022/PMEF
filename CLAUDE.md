@@ -72,7 +72,7 @@ cargo run -p pmef-cli -- diff ../tests/diff/design.ndjson ../tests/diff/asbuilt-
 cargo run -p pmef-cli -- merge ../tests/diff/design.ndjson ../tests/merge/ours-design-change.ndjson ../tests/merge/theirs-asbuilt-update.ndjson -o /tmp/merged.ndjson
 cargo run -p pmef-cli -- convert ../examples/pump-skid-complete.ndjson --to pcf -o /tmp/pcf   # PMEF -> Plant 3D (PCF)
 cargo run -p pmef-cli -- convert /tmp/pcf --to pmef --base ../examples/pump-skid-complete.ndjson -o /tmp/back.ndjson
-cargo run -p pmef-cli -- conformance ../examples/pump-skid-complete.ndjson   # shallow structural check only
+cargo run -p pmef-cli -- check ../examples/pump-skid-complete.ndjson   # package structure: header, unique @id, connectedTo
 cd ..
 
 # Conformance suite (spec 06; details in tests/README.md)

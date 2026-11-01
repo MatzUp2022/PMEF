@@ -25,6 +25,9 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **PMEF-DS-04 (`ei-loop-fic-10101`) had no FileHeader** although spec 03 requires one as the
+  first object; added (10 objects).
+
 - **Validators agree (docs/AUDIT.md P3.8).** `pmef validate`, `stats`, `index`, `check-refs`,
   `conformance` and `topology` silently dropped lines without a string `@id`/`@type` or with
   invalid JSON, so an invalid file could pass; these lines are now errors. The Rust validator no
@@ -168,6 +171,14 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   and Conformance L1 PASS.
 
 ### Changed
+
+- **`pmef check` replaces `pmef conformance`** (docs/AUDIT.md P2.1). The old command claimed to
+  run the conformance suite but was a shallow package check that ignored `--level`, `--json` and
+  `--dataset` and could not detect duplicate `@id`s. `pmef check` checks a package's structure
+  (one FileHeader first, every line readable, `@type`/`@id` present, unique `@id`, `connectedTo`
+  resolves unless `urn:pmef:external:`; layer references such as `isPartOf` → unit are reported
+  only) as text or `--json`; `pmef conformance` remains as a deprecated alias with JSON output.
+  Spec 06 §7.1: the conformance report comes from the suite (`tests/run_tests.py --report json`).
 
 - **`pmef-core` API (Rust):** helper methods on fields that are optional in the schema now return
   `Option<f64>`: `PipingDesignConditions::design_temperature_celsius`/`design_pressure_barg`,

@@ -6,7 +6,7 @@
 //!   pmef stats <file.ndjson>
 //!   pmef convert <input.pcf> --to pmef --output <output.ndjson>
 //!   pmef index <file.ndjson> [--key tag-number|line-number]
-//!   pmef conformance <file.ndjson> [--dataset ds01]
+//!   pmef check <file.ndjson> [--json]
 //!   pmef topology <file.ndjson> [--allow-external]
 
 use anyhow::{Context, Result};
@@ -156,20 +156,30 @@ enum Commands {
         output: Option<PathBuf>,
     },
 
-    /// Run the PMEF conformance test suite against a package.
-    Conformance {
-        /// PMEF package to test.
+    /// Structural check of a PMEF package: one FileHeader first, every line readable,
+    /// unique @id, all references resolve. This checks *data*; implementation conformance
+    /// (spec 06) is tested with the suite: `python tests/run_tests.py`.
+    Check {
+        /// PMEF package to check.
         file: PathBuf,
-        /// Benchmark dataset (ds01, ds02, ds03).
-        #[arg(long, default_value = "ds01")]
-        dataset: String,
-        /// Conformance level to test.
-        #[arg(long, default_value_t = 2)]
-        level: u8,
-        /// Output report as JSON.
+        /// Output the report as JSON.
         #[arg(long)]
         json: bool,
-        /// Output report file (default: stdout).
+        /// Report file (default: stdout).
+        #[arg(long, short)]
+        output: Option<PathBuf>,
+    },
+
+    /// Deprecated alias of `check --json` (kept for existing scripts).
+    #[command(hide = true)]
+    Conformance {
+        file: PathBuf,
+        #[arg(long)]
+        dataset: Option<String>,
+        #[arg(long)]
+        level: Option<u8>,
+        #[arg(long)]
+        json: bool,
         #[arg(long, short)]
         output: Option<PathBuf>,
     },
@@ -236,8 +246,11 @@ async fn main() -> Result<()> {
         Commands::Index { file, key, filter_type, output } => {
             cmd_index(file, &key, filter_type, output).await
         }
-        Commands::Conformance { file, dataset, level, json, output } => {
-            cmd_conformance(file, &dataset, level, json, output).await
+        Commands::Check { file, json, output } => cmd_check(file, json, output),
+        Commands::Conformance { file, output, .. } => {
+            eprintln!("note: `pmef conformance` is deprecated; use `pmef check` (package check) or \
+                       `python tests/run_tests.py` (implementation conformance, spec 06)");
+            cmd_check(file, true, output)
         }
         Commands::CheckRefs { file, strict } => {
             cmd_check_refs(file, strict).await
@@ -630,163 +643,108 @@ async fn cmd_index(
     Ok(())
 }
 
-async fn cmd_conformance(
-    file: PathBuf, dataset: &str, level: u8, json_output: bool,
-    output: Option<PathBuf>,
-) -> Result<()> {
-    use pmef_io::{NdjsonReader, PmefPackageIndex, ReaderConfig};
-    use std::io::BufReader;
+/// Structural package check (`pmef check`): data, not implementation conformance.
+fn cmd_check(file: PathBuf, json_output: bool, output: Option<PathBuf>) -> Result<()> {
+    use pmef_io::{NdjsonReader, PmefIoError, ReaderConfig};
+    use std::collections::{HashMap, HashSet};
     use std::fs::File;
-    use std::collections::HashSet;
+    use std::io::BufReader;
 
     let f = File::open(&file).with_context(|| format!("Cannot open {}", file.display()))?;
     let mut reader = NdjsonReader::new(BufReader::new(f), ReaderConfig::default());
     let objects: Vec<_> = reader.by_ref().collect::<Result<_, _>>()?;
-    // Lines the reader rejected (no string @type / @id, invalid JSON) feed checks 3–4 and 4b.
     let read_errors = reader.errors();
-    let missing_type_lines = read_errors.iter()
-        .filter(|e| matches!(e, pmef_io::PmefIoError::MissingType { .. })).count();
-    let missing_id_lines = read_errors.iter()
-        .filter(|e| matches!(e, pmef_io::PmefIoError::MissingId { .. })).count();
-    let unparsable_lines = read_errors.len() - missing_type_lines - missing_id_lines;
-    report_read_errors(read_errors);
+    let count = |pred: fn(&PmefIoError) -> bool| read_errors.iter().filter(|e| pred(e)).count();
+    let missing_type = count(|e| matches!(e, PmefIoError::MissingType { .. }));
+    let missing_id = count(|e| matches!(e, PmefIoError::MissingId { .. }));
+    let unparsable = read_errors.len() - missing_type - missing_id;
 
-    // Track ordering: FileHeader must be first object
-    let first_type_owned = objects.first().map(|o| o.type_str.clone());
-    let first_type = first_type_owned.as_deref();
+    let mut checks: Vec<(&str, bool, String)> = Vec::new();
 
-    let idx = PmefPackageIndex::from_iter(objects.into_iter());
+    let headers: Vec<_> = objects.iter().filter(|o| o.type_str == "pmef:FileHeader").collect();
+    checks.push(("fileHeaderPresent", headers.len() == 1, format!("{} FileHeader object(s)", headers.len())));
+    let first = objects.first().map(|o| o.type_str.as_str()).unwrap_or("<empty file>");
+    checks.push(("fileHeaderFirst", first == "pmef:FileHeader", format!("first object: {first}")));
+    checks.push(("allLinesParse", unparsable == 0, format!("{unparsable} line(s) are not valid JSON")));
+    checks.push(("allObjectsHaveType", missing_type == 0, format!("{missing_type} object(s) without a string @type")));
+    checks.push(("allObjectsHaveId", missing_id == 0, format!("{missing_id} object(s) without a string @id")));
 
-    let mut pass_count = 0usize;
-    let mut fail_count = 0usize;
-    let mut check_results: Vec<serde_json::Value> = Vec::new();
+    let mut seen: HashMap<&str, usize> = HashMap::new();
+    for o in &objects {
+        *seen.entry(o.id_str.as_str()).or_insert(0) += 1;
+    }
+    let mut dups: Vec<&str> = seen.iter().filter(|(_, n)| **n > 1).map(|(id, _)| *id).collect();
+    dups.sort_unstable();
+    checks.push(("idsUnique", dups.is_empty(), if dups.is_empty() { "all @id unique".into() } else {
+        format!("{} duplicate @id: {}", dups.len(), dups.iter().take(10).copied().collect::<Vec<_>>().join(", "))
+    }));
 
-    // Helper to record a check result
-    let mut record = |name: &str, passed: bool, detail: &str| {
-        if passed { pass_count += 1; } else { fail_count += 1; }
-        check_results.push(serde_json::json!({
-            "check": name,
-            "status": if passed { "PASS" } else { "FAIL" },
-            "detail": detail,
-        }));
+    // connectedTo must resolve inside the package (spec 02 §2.6) unless it carries the
+    // urn:pmef:external: prefix; isPartOf / isDerivedFrom / sourceId / targetId may point to
+    // other layers (unit, functional model) outside the file and are reported, not failed —
+    // the same rules as scripts/check-topology.py.
+    let known: HashSet<&str> = seen.keys().copied().collect();
+    let resolves = |t: &str| {
+        let base = t.split('#').next().unwrap_or(t);
+        base.is_empty() || base.starts_with("urn:pmef:external:") || known.contains(base)
     };
-
-    // Check 1: FileHeader present
-    let headers = idx.by_type("pmef:FileHeader");
-    let has_header = headers.len() == 1;
-    record(
-        "fileHeaderPresent",
-        has_header,
-        &format!("Found {} FileHeader object(s)", headers.len()),
-    );
-
-    // Check 2: FileHeader is first object
-    let header_first = first_type == Some("pmef:FileHeader");
-    record(
-        "fileHeaderFirst",
-        header_first,
-        &format!(
-            "First object @type: {}",
-            first_type.unwrap_or("<empty file>")
-        ),
-    );
-
-    // Check 3: All objects have @type
-    let missing_type_count = missing_type_lines;
-    record(
-        "allObjectsHaveType",
-        missing_type_count == 0,
-        &format!("{} object(s) missing @type", missing_type_count),
-    );
-
-    // Check 4: All objects have @id
-    let missing_id_count = missing_id_lines;
-    record(
-        "allLinesParse",
-        unparsable_lines == 0,
-        &format!("{} line(s) are not valid JSON", unparsable_lines),
-    );
-    record(
-        "allObjectsHaveId",
-        missing_id_count == 0,
-        &format!("{} object(s) missing @id", missing_id_count),
-    );
-
-    // Check 5: All @id references resolve
-    let ref_fields = ["isPartOf", "isDerivedFrom", "sourceId", "targetId",
-                      "connectedTo", "flowsTo", "references"];
-    let known_ids: HashSet<&str> = idx.objects.keys().map(|s| s.as_str()).collect();
-    let mut broken_refs = 0usize;
-    let mut broken_ref_details: Vec<String> = Vec::new();
-    for obj in idx.objects.values() {
-        for field in &ref_fields {
-            if let Some(ref_val) = obj.value.get(*field) {
-                let refs: Vec<&str> = if let Some(s) = ref_val.as_str() {
-                    vec![s]
-                } else if let Some(arr) = ref_val.as_array() {
-                    arr.iter().filter_map(|v| v.as_str()).collect()
-                } else {
-                    vec![]
-                };
-                for ref_str in refs {
-                    let base_id = ref_str.split('#').next().unwrap_or(ref_str);
-                    if !base_id.is_empty() && !known_ids.contains(base_id) {
-                        broken_refs += 1;
-                        if broken_ref_details.len() < 10 {
-                            broken_ref_details.push(format!(
-                                "{}.{} -> {}", obj.id_str, field, ref_str
-                            ));
-                        }
-                    }
-                }
+    let mut broken: Vec<String> = Vec::new();
+    let mut outside: Vec<String> = Vec::new();
+    for o in &objects {
+        let mut conns: Vec<&str> = o.value.get("connectedTo").and_then(|v| v.as_str()).into_iter().collect();
+        for p in o.value.get("ports").and_then(|v| v.as_array()).into_iter().flatten() {
+            conns.extend(p.get("connectedTo").and_then(|v| v.as_str()));
+        }
+        for t in conns.into_iter().filter(|t| !resolves(t)) {
+            broken.push(format!("{} -> {t}", o.id_str));
+        }
+        for field in ["isPartOf", "isDerivedFrom", "sourceId", "targetId"] {
+            if let Some(t) = o.value.get(field).and_then(|v| v.as_str()).filter(|t| !resolves(t)) {
+                outside.push(format!("{}.{field} -> {t}", o.id_str));
             }
         }
     }
-    record(
-        "allReferencesResolve",
-        broken_refs == 0,
-        &format!("{} broken reference(s){}", broken_refs,
-            if broken_ref_details.is_empty() { String::new() }
-            else { format!(": {}", broken_ref_details.join(", ")) }),
-    );
+    let list = |v: &[String]| v.iter().take(10).cloned().collect::<Vec<_>>().join(", ");
+    checks.push(("connectionsResolve", broken.is_empty(), if broken.is_empty() {
+        "all connectedTo targets resolve".into() } else { format!("{} unresolved connectedTo: {}", broken.len(), list(&broken)) }));
+    let info = if outside.is_empty() { "none".to_owned() } else { format!("{}: {}", outside.len(), list(&outside)) };
 
-    // Check 6: All @id values are unique (guaranteed by HashMap, but check for duplicates
-    // that may have been silently overwritten)
-    // Since PmefPackageIndex deduplicates by @id via HashMap, we re-count from file
-    // We already loaded into idx, so just note the object count
-    let pump_count = idx.by_type("pmef:Pump").len();
-    let vessel_count = idx.by_type("pmef:Vessel").len();
-    let line_count = idx.by_type("pmef:PipingNetworkSystem").len();
+    let failed = checks.iter().filter(|c| !c.1).count();
+    let version = headers.first().and_then(|h| h.value.get("pmefVersion")).and_then(|v| v.as_str()).unwrap_or("?");
+    let mut by_type: Vec<(String, usize)> = objects.iter().fold(HashMap::new(), |mut m, o| {
+        *m.entry(o.type_str.clone()).or_insert(0) += 1;
+        m
+    }).into_iter().collect();
+    by_type.sort();
 
-    let total_checks = pass_count + fail_count;
-    let overall_status = if fail_count == 0 { "PASS" } else { "FAIL" };
-
-    let report = serde_json::json!({
-        "pmefVersion": "0.9.0",
-        "file": file.display().to_string(),
-        "dataset": dataset,
-        "conformanceLevel": level,
-        "objectCount": idx.len(),
-        "summary": {
-            "totalChecks": total_checks,
-            "pass": pass_count,
-            "fail": fail_count,
-            "status": overall_status,
-        },
-        "checks": check_results,
-        "typeCounts": {
-            "pumps": pump_count,
-            "vessels": vessel_count,
-            "pipingLines": line_count,
-        },
-    });
-
-    let out = serde_json::to_string_pretty(&report)?;
+    let out = if json_output {
+        serde_json::to_string_pretty(&serde_json::json!({
+            "file": file.display().to_string(),
+            "pmefVersion": version,
+            "objectCount": objects.len(),
+            "summary": { "totalChecks": checks.len(), "pass": checks.len() - failed, "fail": failed,
+                         "status": if failed == 0 { "PASS" } else { "FAIL" } },
+            "checks": checks.iter().map(|(n, ok, d)| serde_json::json!({
+                "check": n, "status": if *ok { "PASS" } else { "FAIL" }, "detail": d })).collect::<Vec<_>>(),
+            "referencesOutsidePackage": outside,
+            "typeCounts": by_type.iter().map(|(t, n)| (t.clone(), serde_json::json!(n))).collect::<serde_json::Map<String, serde_json::Value>>(),
+        }))?
+    } else {
+        let mut t = format!("PMEF package check — {} (pmefVersion {version}, {} objects)\n", file.display(), objects.len());
+        for (n, ok, d) in &checks {
+            t += &format!("  {} {n}: {d}\n", if *ok { "✓" } else { "✗" });
+        }
+        t += &format!("  i references outside the package (unit, functional model; not checked): {info}\n");
+        t += &format!("{} — {} of {} checks passed\n", if failed == 0 { "PASS" } else { "FAIL" }, checks.len() - failed, checks.len());
+        t
+    };
     match output {
-        Some(path) => std::fs::write(&path, &out)?,
-        None => println!("{out}"),
+        Some(path) => std::fs::write(&path, &out).with_context(|| format!("Cannot write {}", path.display()))?,
+        None => print!("{out}{}", if json_output { "\n" } else { "" }),
     }
-    if fail_count > 0 { std::process::exit(1); }
+    if failed > 0 {
+        std::process::exit(1);
+    }
     Ok(())
 }
 

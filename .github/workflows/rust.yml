@@ -52,11 +52,12 @@ jobs:
       - name: Test workspace (unit, integration, doc tests)
         run: cargo test --workspace --no-fail-fast
 
-      - name: CLI validates every example against the schemas
+      - name: CLI validates and checks every example (schemas, package structure)
         run: |
           for f in ../examples/*.ndjson; do
             echo "== $f"
             cargo run -q -p pmef-cli -- validate "$f" --schemas ../schemas --strict
+            cargo run -q -p pmef-cli -- check "$f"
           done
 
       - uses: actions/setup-python@v5

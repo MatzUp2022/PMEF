@@ -1,4 +1,5 @@
-//! `pmef validate` / `pmef conformance`: unreadable lines and unknown @type (AUDIT P3.8).
+//! `pmef validate` / `pmef check`: unreadable lines, unknown @type (AUDIT P3.8) and the package
+//! check that replaced `pmef conformance` (AUDIT P2.1).
 //! Lines without a string @type/@id or with invalid JSON used to be dropped silently.
 
 use std::path::PathBuf;
@@ -58,13 +59,45 @@ fn format_is_an_annotation() {
     assert_eq!(code, 0, "{r}");
 }
 
+const HEADER: &str = r#"{"@type":"pmef:FileHeader","@id":"urn:pmef:pkg:t:p","pmefVersion":"0.9.0","plantId":"urn:pmef:plant:t:P","projectCode":"T","coordinateSystem":"Z-up","units":"mm","changeState":"WIP"}"#;
+
+fn check(args: &[&str]) -> (i32, serde_json::Value) {
+    let (code, out, _) = pmef(args);
+    (code, serde_json::from_str(&out).unwrap())
+}
+
+fn status(r: &serde_json::Value, name: &str) -> String {
+    r["checks"].as_array().unwrap().iter().find(|c| c["check"] == name).unwrap()["status"].as_str().unwrap().to_owned()
+}
+
 #[test]
-fn conformance_reports_lines_without_id() {
-    let f = file("conformance.ndjson", &[PLANT, r#"{"@type":"pmef:Plant","pmefVersion":"0.9.0"}"#]);
-    let (_, out, _) = pmef(&["conformance", &f, "--json"]);
-    let v: serde_json::Value = serde_json::from_str(&out).unwrap_or_else(|_| serde_json::json!(out));
-    let s = v.to_string();
-    assert!(s.contains("allObjectsHaveId") && s.contains("1 object(s) missing @id"), "{s}");
+fn check_passes_reference_package() {
+    let (code, r) = check(&["check", "examples/pump-skid-complete.ndjson", "--json"]);
+    assert_eq!(code, 0, "{r}");
+    assert_eq!(r["pmefVersion"], "0.9.0");
+}
+
+#[test]
+fn check_finds_missing_id_duplicates_and_dangling_connections() {
+    let pipe = |id: &str, to: &str| format!(
+        r#"{{"@type":"pmef:Pipe","@id":"{id}","ports":[{{"portId":"P1","connectedTo":"{to}"}}]}}"#);
+    let a = pipe("urn:pmef:obj:t:A", "urn:pmef:obj:t:MISSING");
+    let b = pipe("urn:pmef:obj:t:A", "urn:pmef:external:t:BOUNDARY");
+    let f = file("check.ndjson", &[HEADER, PLANT, r#"{"@type":"pmef:Plant","pmefVersion":"0.9.0"}"#, &a, &b]);
+    let (code, r) = check(&["check", &f, "--json"]);
+    assert_eq!(code, 1);
+    assert_eq!(status(&r, "allObjectsHaveId"), "FAIL", "{r}");
+    assert_eq!(status(&r, "idsUnique"), "FAIL", "{r}");
+    assert_eq!(status(&r, "connectionsResolve"), "FAIL", "{r}");
+    assert!(r.to_string().contains("t:MISSING") && !r.to_string().contains("BOUNDARY"), "external prefix is allowed: {r}");
+}
+
+#[test]
+fn conformance_is_a_deprecated_alias_of_check() {
+    let (code, out, err) = pmef(&["conformance", "examples/pump-skid-complete.ndjson", "--dataset", "ds01"]);
+    assert_eq!(code, 0, "{err}");
+    assert!(err.contains("deprecated"), "{err}");
+    assert!(serde_json::from_str::<serde_json::Value>(&out).is_ok(), "alias keeps JSON output");
 }
 
 #[test]
