@@ -1,0 +1,17 @@
+✗ profiles-broken.json:EN:HEB220: mass_kg_m 80.0 vs 71.47 derived (+11.9 %, tolerance ±3 %)
+✗ profiles-broken.json:EN:HEB240: Iy_cm4 7000 vs 1.126e+04 derived (-37.8 %, tolerance ±2 %)
+✗ profiles-broken.json:EN:CHS60.3x5: t_mm 4.0 does not match the designation (5)
+✗ profiles-broken.json:AISC:L2x2x0.25: mass_kg_m 2.9 vs 4.795 derived (-39.5 %, tolerance ±5 %)
+✗ profiles-broken.json:AISC:L2x2x0.25: mass_kg_m (lb/ft) 2.9 vs 2.947 derived (-1.6 %, tolerance ±1 %)
+✗ profiles-broken.json:AISC:W14x90: mass_kg_m (lb/ft) 133.9 vs 141.4 derived (-5.3 %, tolerance ±1 %)
+✗ profiles-broken.json:AISC:W14x90: lbft (designation) 95 vs 90 derived (+5.6 %, tolerance ±1 %)
+✗ profiles-broken.json:EN:HEB240: Iy_cm4 7000 not larger than EN:HEB220 (8091)
+✗ pipe-dimensions.json:ASME-NPS2 SCH40: bore 52.0 vs OD − 2t = 52.48
+✗ pipe-dimensions.json:ASME-NPS2: SCH80 wall 3.5 thinner than SCH40 (3.91)
+✗ flange-dimensions.json:B165-150-DN50: bolt circle not inside the flange OD
+✗ flange-dimensions.json:B165-150-DN50: 6 bolt holes (multiple of 4 expected)
+✗ piping-class-x.json:X-PIPE-50: mass_kg_per_m 7.0 vs 5.44 in the pipe dimension catalog
+✗ piping-class-x.json:X-PIPE-80: DN80 SCH40 not in the pipe dimension catalog
+✗ piping-class-x.json:X-FLWN-50: boltCircleDiameter_mm 120.7 vs 160.0 in the flange dimension catalog
+✗ piping-class-x.json:X-FLWN-50: numberOfBolts 4 vs 6 in the flange dimension catalog
+✗ catalogs: 16 inconsistencies

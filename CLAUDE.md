@@ -58,6 +58,7 @@ python scripts/check-ndjson-format.py     # one object per line
 python scripts/check-topology.py          # connectivity integrity
 python scripts/check-geometry.py          # piping bends/ports/lengths, equipment nozzles/heads, steel
 python scripts/validate-catalogs.py       # catalogs/*.json against pmef-catalog schema
+python scripts/check-catalogs.py          # catalog consistency (derived values, designations, schedules, classes)
 
 # Rust reference implementation (exactly what .github/workflows/rust.yml runs)
 cd pmef-rs
@@ -82,6 +83,7 @@ python tests/conformance/tools/selftest.py                # broken implementatio
 python tests/run_tests.py --kind converter --domains piping --sut "sh tests/conformance/suts/plant3d-pcf.sh {input} {output}"   # Plant 3D PCF bridge
 python tests/snapping/reference_snap.py                   # pmef-snap/1 test vectors (RFC-0002)
 python tests/geometry/run.py                              # check-geometry rules fire on the negative fixture
+python tests/catalogs/run.py                              # check-catalogs rules fire on the broken catalogs
 python scripts/generate-asbuilt-example.py examples/asbuilt-recognition.ndjson   # after catalog/algorithm changes
 ```
 

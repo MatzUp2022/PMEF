@@ -1,0 +1,27 @@
+{
+  "catalogId": "pipe-dimensions",
+  "catalogType": "PIPE_DIMENSIONS",
+  "version": "0",
+  "entries": [
+    {
+      "catalogId": "ASME-NPS2",
+      "DN": 50,
+      "NPS": 2,
+      "OD_mm": 60.3,
+      "schedules": [
+        {
+          "schedule": "SCH40",
+          "wall_mm": 3.91,
+          "bore_mm": 52.0,
+          "mass_kg_m": 5.44
+        },
+        {
+          "schedule": "SCH80",
+          "wall_mm": 3.5,
+          "bore_mm": 53.3,
+          "mass_kg_m": 4.9
+        }
+      ]
+    }
+  ]
+}

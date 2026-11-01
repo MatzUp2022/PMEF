@@ -190,8 +190,8 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 
 - **P1.8** ~~`catalogs/profiles-en.json` HEA data defects~~ — done 2026-10-31: version 2024.2
   (h, tf of HEA 900/1000, `EN:HEA96` → `EN:HEA100`, Iy/Iz/Wel recomputed and checked against
-  published values; CI guard `scripts/i-section-properties.py`). Not yet checked: AISC catalogs
-  (no root radius given), hollow sections, channels, angles, piping-class dimensions.
+  published values; CI guard `scripts/i-section-properties.py`). The remaining catalogs were
+  checked on 2026-11-01, see P3.12.
 
 ### P2 — make claims true
 
@@ -238,6 +238,33 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
   CW-201 is unchanged (shared with `stress-model-cw201`), CW-202 + beam C02 shifted by −1700 mm,
   CW-301 re-laid as a vertical control-valve station onto a radial shell nozzle. `@id`s and object
   counts unchanged. Equipment checks are now blocking.
+- **P3.12** Catalog consistency — done 2026-11-01 except the open points below. New CI check
+  `scripts/check-catalogs.py` (derived values vs. dimensions, designations, lb/ft ↔ kg/m, series
+  monotony, pipe bore/mass/schedules, flange geometry, piping classes vs. the dimension catalogs;
+  golden negative fixture `tests/catalogs/`). Corrected against references:
+  - `profiles-aisc` 2023.2 / `profiles-aisc-extended` 2024.2 — AISC Shapes Database v16.0: all 14
+    L masses ≈ 38 % low, W36x150/W40x167/W44x230 flange widths and Iy/Sy, W10x22/W10x33/W21x68,
+    HSS weights, WT Ix/Sx ≈ half, MC6x12 bf.
+  - `profiles-en` 2024.3 — UPE 80–400 dimensions and properties (Stad data sheet, EN 10279
+    sections), RHS 100x60 area/mass (EN 10210-2 corner radii); `profiles-en-extended` 2024.2 —
+    T sections to EN 10055 (web = flange thickness, masses 10–20 % high).
+  - `pipe-dimensions` 2024.2 — ASME B36.10M: SCH10 held SCH5 values (NPS ½–4), NPS 14–24 shifted
+    by one schedule, SCH120/SCH160/XXS swapped (NPS 3–6), NPS 12 SCH40/SCH60, NPS 10/12 XXS;
+    undefined schedules removed, NPS 3½/5/22 filled.
+  - Piping classes A1A2/B3C1/C5D1 2024.2 — pipe walls and flange dimensions taken from the
+    dimension catalogs (bolt circles, bolt counts, flange thicknesses, DN ≥ 300 walls).
+
+  Open — needs a maintainer decision:
+  1. Seven AISC entries are not AISC designations: `HSS1.5x0.125`, `HSS2.0x0.125`,
+     `HSS4.5x0.25`, `HSS5.5x0.25`, `HSS8.0x0.25`, `HSS9.0x0.375`, `WT18x150` (nearest real:
+     HSS1.660x0.140, HSS1.900x0.145, HSS4.500x0.237, HSS5.500x0.258, —, —, WT18x151). Rename or
+     remove changes `catalogId`s; listed as `KNOWN` in `check-catalogs.py` meanwhile.
+  2. T-section Iy/Iz (`profiles-en-extended`) are unverified (tapered legs, no reference at hand).
+  3. Piping classes use two field layouts for flanges: A1A2/B3C1 `outsideDiameter_mm` = flange
+     OD, C5D1/EN-P1A `outsideDiameter_mm` = pipe OD plus `flangeOD_mm`. Unify in the catalog
+     schema (breaking for consumers of one layout).
+  4. Not covered by references: flange dimension catalogs (checked for geometry and monotony
+     only), EN pipe walls (EN 10220 preferred series), materials, instruments.
 - **P3.10** Schema naming defect: `CompressorSpec.polytropic_efficiency` is the only snake_case
   property (all others camelCase). Renaming it is a breaking schema change → needs an RFC /
   maintainer decision. Rust reads both spellings and writes the schema spelling.

@@ -20,6 +20,17 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **Catalog data corrected** (docs/AUDIT.md P3.12; versions bumped, notes in each catalog):
+  `profiles-aisc` 2023.2 and `profiles-aisc-extended` 2024.2 against the AISC Shapes Database
+  v16.0 (angle masses ≈ 38 % low, W36x150/W40x167/W44x230 flanges and weak-axis properties,
+  HSS weights, WT Ix/Sx); `profiles-en` 2024.3 (UPE series, RHS 100x60); `profiles-en-extended`
+  2024.2 (T sections to EN 10055); `pipe-dimensions` 2024.2 (schedules to ASME B36.10M: SCH10,
+  NPS 14–24 shifted by one schedule, SCH120/SCH160/XXS swapped for NPS 3–6, NPS 12 SCH40);
+  piping classes A1A2/B3C1/C5D1 2024.2 take pipe walls and flange dimensions from the dimension
+  catalogs. Snapping vectors re-recorded (catalog versions); SNAP-010/011 use h = 252 mm so the
+  W10 ambiguity case stays ambiguous with the corrected W10x33 depth. Conformance fixture and
+  `asbuilt-recognition` example regenerated (catalog version only).
+
 - **Benchmark equipment consistent with the piping (docs/AUDIT.md P3.11)** — `@id`s and object
   counts unchanged:
   - PMEF-DS-01 (`pump-skid-complete`): P-201A moved so its suction meets the free end of CW-201
@@ -176,6 +187,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   `RDL_MAPPING` to match its actual content.
 
 ### Added
+
+- **Catalog consistency check** `scripts/check-catalogs.py` (CI): section areas and masses from
+  the dimensions, I/H section properties, lb/ft ↔ kg/m and AISC designation weights,
+  designation/catalogId ↔ dimensions, monotony along a series, pipe bore/mass/schedule order,
+  flange geometry, and piping classes against the pipe and flange dimension catalogs. Golden
+  negative fixture `tests/catalogs/` (CI).
 
 - **Geometry checks for equipment and structural steel** in `scripts/check-geometry.py`:
   nozzle face not inside / not detached from the owner's parametric body, nozzle direction

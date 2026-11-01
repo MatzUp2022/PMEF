@@ -114,6 +114,12 @@ jobs:
       - name: I/H-section properties consistent with their dimensions (±1 %)
         run: python scripts/i-section-properties.py --check catalogs/profiles-en.json --tolerance 0.01
 
+      - name: Catalog consistency (derived values, designations, schedules, classes vs. dimension catalogs)
+        run: python scripts/check-catalogs.py
+
+      - name: Catalog checks detect broken catalogs (golden negative fixture)
+        run: python tests/catalogs/run.py
+
   # ──────────────────────────────────────────────────────────
   # 3b. Conformance test suite (spec 06 §5)
   # ──────────────────────────────────────────────────────────
