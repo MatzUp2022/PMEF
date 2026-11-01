@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | `ACCEPTED` — maintainer decision 2026-11-01 (docs/AUDIT.md P3.10) |
+| **Status** | `APPROVED` — maintainer decision 2026-11-01 (docs/AUDIT.md P3.10) |
 | **Target version** | 0.10.0 (deprecation, non-breaking); 1.0.0 (removal of the old spelling, breaking) |
 | **Depends on** | — |
 | **Working groups** | WG-Equipment, TSC |

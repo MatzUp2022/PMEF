@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | `DRAFT` — implemented on a feature branch for review |
+| **Status** | `REVIEW` — implemented and verified 2026-11-01; awaiting WG review and TSC sign-off |
 | **Target version** | 0.10.0 (one new optional property; no breaking change) |
 | **Depends on** | [RFC-0001](0001-provenance-asbuilt.md) (`review` block), spec 03 §9.5 (matching) |
 | **Working groups** | WG-Piping, WG-Steel, WG-Equipment, TSC |
@@ -102,10 +102,24 @@ their meaning anyway.
 
 ## Open Questions
 
-1. Delta packages (spec 03 §8.4) also use `IsRevisionOf`; should a delta writer distinguish
-   `AS_BUILT` correspondences from content revisions in its own processing? (Proposed: yes — only
-   `changeType` values other than `AS_BUILT` mark content replacement.)
-2. Should `pmef merge` (future) apply confirmed correspondences to rename as-built ids to design ids?
+1. **Delta packages** (spec 03 §8.4) also use `IsRevisionOf`. *Proposed resolution:* yes — an
+   `IsRevisionOf` with `changeType = AS_BUILT` records a correspondence and never marks content
+   replacement in a delta package. On approval, spec 03 §8.4 gains the sentence: "An
+   `IsRevisionOf` with `changeType` `AS_BUILT` is an as-built correspondence (RFC-0003), not a
+   content revision." *Decision: TSC.*
+2. ~~Should `pmef merge` rename as-built ids to design ids?~~ — resolved: no. `pmef merge`
+   (spec 03 §10) exists and keeps every `@id` (stable identifiers, spec 02 §2.1); a confirmed
+   correspondence stays a link between the two ids.
+
+## Review Status (2026-11-01)
+
+Verified against the repository state: schema `IsRevisionOf.correspondence` and the `AS_BUILT`
+rule (`pmef-validate/tests/correspondence.rs`), Rust `AsBuiltCorrespondence` with serde round trip,
+matching passes and proposals (`pmef_core::matching` unit tests), CLI workflow propose → approve /
+reject → rerun (`pmef-cli/tests/diff_cli.rs`), example `examples/asbuilt-recognition.ndjson`.
+
+Approval needed from: WG-Piping, WG-Steel, WG-Equipment; TSC sign-off after the 30-day
+discussion period. Decision needed: open question 1 (adds one sentence to spec 03 §8.4).
 
 ## Implementation Notes
 

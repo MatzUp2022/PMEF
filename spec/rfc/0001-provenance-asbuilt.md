@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | `DRAFT` — implemented on a feature branch for review |
+| **Status** | `REVIEW` — implemented and verified 2026-11-01; awaiting WG review and TSC sign-off |
 | **Target version** | 0.10.0 (minor: new optional fields only) |
 | **Working groups** | WG-Piping, WG-Steel, WG-Equipment, WG-Geometry, WG-Catalogs |
 | **Author** | PMEF maintainers |
@@ -202,9 +202,15 @@ rename and needs maintainer approval).
 
 ## Open Questions
 
-1. Should `$id` paths move to `/0.10/` (schema rename — maintainer decision)?
-2. Should `review` also record `comment` and a link to a markup/BCF issue?
-3. Snapping algorithm and residual definitions per catalog type (follow-up RFC).
+1. **`$id` paths** — should they move to `/0.10/`? *Proposed resolution:* no. Keep `/0.9/` for
+   all 0.x releases and move to a major-version namespace (`/1/`) with 1.0.0, together with the
+   decision on the project's home (organisation, `pmef.net`). A path per minor version would force
+   every consumer to re-resolve references on each additive release. *Decision: TSC.*
+2. **`review.comment` and a link to a markup/BCF issue?** *Proposed resolution:* out of scope for
+   this RFC; a follow-up RFC can add optional `comment` and `issueRef` (URI) — additive, no
+   impact on the blocks defined here. *Decision: WG-Piping/WG-Steel.*
+3. ~~Snapping algorithm and residual definitions per catalog type~~ — resolved by
+   [RFC-0002](0002-catalog-snapping.md) (`pmef-snap/1`).
 
 ## Implementation Notes
 
@@ -213,6 +219,22 @@ rename and needs maintainer approval).
   flattened `RecognitionMetadata` on every object struct; serde round-trip tests.
 - Validation: example `examples/asbuilt-recognition.ndjson`, negative tests in
   `pmef-validate/tests/provenance.rs`.
+
+## Review Status (2026-11-01)
+
+Verified against the repository state:
+
+- Schemas: `Provenance`, `ReviewStatus`, `AsBuilt`, `CatalogSnap` in `pmef-base`, referenced from
+  every object definition; the ISO 19650 rule (detected ⇒ WIP, rejected ⇒ not PUBLISHED) as
+  `if/then` (spec 02 §2.9).
+- Rust: `pmef-core::provenance`, flattened `RecognitionMetadata`; serde round trip
+  (`pmef-core/tests/provenance_roundtrip.rs`).
+- Validation: `examples/asbuilt-recognition.ndjson` valid; negative cases in
+  `pmef-validate/tests/provenance.rs`; Rust and Python validators agree
+  (`tests/validators/differential.py`).
+
+Approval needed from: WG-Piping, WG-Steel, WG-Equipment, WG-Geometry, WG-Catalogs; TSC sign-off
+after the 30-day discussion period (GOVERNANCE.md). Decisions needed: open questions 1 and 2.
 
 ## References
 

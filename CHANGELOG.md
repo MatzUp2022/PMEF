@@ -183,6 +183,11 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Changed
 
+- **RFC-0001 to RFC-0003 moved to `REVIEW`** — verified against the implementation; open questions
+  answered or given a proposed resolution; each RFC has a *Review Status* section. New RFC index
+  `spec/rfc/README.md` and ready-to-file issue texts `docs/rfc-review-2026-11.md`. RFC-0004 status
+  spelled `APPROVED` (template vocabulary).
+
 - **`pmef check` replaces `pmef conformance`** (docs/AUDIT.md P2.1). The old command claimed to
   run the conformance suite but was a shallow package check that ignored `--level`, `--json` and
   `--dataset` and could not detect duplicate `@id`s. `pmef check` checks a package's structure
