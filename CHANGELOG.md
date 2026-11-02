@@ -46,6 +46,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   `@type` is skipped with a warning in both validators (spec 06 CL1-03); `pmef validate --strict`
   and `scripts/validate-examples.py` (default; `--lenient` to relax) report it as an error.
 
+- **EN pipe catalog checked against EN 10220** (docs/AUDIT.md P3.12): `pipe-dimensions-en`
+  2024.2. All outside diameters are EN 10220 series 1 and all walls are from the preferred
+  wall-thickness series; masses and bores were already consistent. Nine diameters lacked the
+  normal wall of the former DIN 2448 (seamless) or DIN 2458 (welded) tables, e.g. 60.3 × 2.9 and
+  60.3 × 2.3; added (wall lists only, no `@id` affected). `scripts/check-catalogs.py` now checks
+  the series-1 OD per DN, the preferred-series walls and the presence of the normal walls.
+
 - **T-section Iy/Iz corrected** (docs/AUDIT.md P3.12): `profiles-en-extended` 2024.3. The
   moments of inertia of all nine EN 10055 T sections were 3–35 % too low (T140: Iy 449 → 669 cm⁴).
   T30–T50 now follow the published EN 10055 / DIN 1024 tables, T60–T140 the exact EN 10055

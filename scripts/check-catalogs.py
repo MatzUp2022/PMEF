@@ -14,7 +14,8 @@ Steel profiles (profiles-*.json)
   - section properties increase along a series (A, mass, Iy)
 Pipe dimensions (pipe-dimensions*.json)
   - bore = OD − 2t, mass from OD and t, OD and DN strictly increasing, wall increasing with
-    the schedule (XXS excluded: thinner than SCH160 from NPS 8 per ASME B36.10M)
+    the schedule (XXS excluded: thinner than SCH160 from NPS 8 per ASME B36.10M); EN: series-1
+    OD per DN, walls from the EN 10220 preferred series, DIN 2448/2458 normal walls present
 Flange dimensions (flange-dimensions*.json)
   - bolt circle < flange OD; bolt hole > bolt; raised face inside the bolt holes; OD and bolt
     circle increasing with DN per class
@@ -304,6 +305,36 @@ def check_pipe_wall(where, od, s):
         close(where, "mass_kg_m", s["mass_kg_m"], pipe_mass(od, t), 0.015)
 
 
+# EN 10220 / ISO 4200: outside diameters of series 1 (by DN), preferred wall thicknesses, and the
+# normal wall thicknesses of the former DIN 2448 (seamless) / DIN 2458 (welded) tables, which a
+# catalog for recognition must offer (most drawn and scanned pipes have them).
+EN_OD = {15: 21.3, 20: 26.9, 25: 33.7, 32: 42.4, 40: 48.3, 50: 60.3, 65: 76.1, 80: 88.9,
+         100: 114.3, 125: 139.7, 150: 168.3, 200: 219.1, 250: 273.0, 300: 323.9, 350: 355.6,
+         400: 406.4, 450: 457.0, 500: 508.0, 600: 610.0}
+EN_WALLS = {1.6, 1.8, 2.0, 2.3, 2.6, 2.9, 3.2, 3.6, 4.0, 4.5, 5.0, 5.4, 5.6, 5.9, 6.3, 7.1, 8.0,
+            8.8, 10.0, 11.0, 12.5, 14.2, 16.0, 17.5, 20.0}
+EN_NORMAL_WALL = {21.3: (2.0, 2.0), 26.9: (2.3, 2.0), 33.7: (2.6, 2.0), 42.4: (2.6, 2.3),
+                  48.3: (2.6, 2.3), 60.3: (2.9, 2.3), 76.1: (2.9, 2.6), 88.9: (3.2, 2.9),
+                  114.3: (3.6, 3.2), 139.7: (4.0, 3.6), 168.3: (4.5, 4.0), 219.1: (5.9, 4.5),
+                  273.0: (6.3, 5.0), 323.9: (7.1, 5.6), 355.6: (8.0, 5.6), 406.4: (8.8, 6.3),
+                  457.0: (10.0, 6.3), 508.0: (11.0, 6.3), 610.0: (12.5, 6.3)}
+
+
+def check_en_pipe(w, e):
+    od = EN_OD.get(e["DN"])
+    if od is None or abs(e["OD_mm"] - od) > 0.01:
+        bad(w, f"DN{e['DN']} OD {e['OD_mm']} is not the EN 10220 series-1 diameter ({od})")
+    walls = [s["wall_mm"] for s in e["wallThicknesses"]]
+    for t in walls:
+        if t not in EN_WALLS:
+            bad(w, f"wall {t} not in the EN 10220 preferred wall-thickness series")
+    if walls != sorted(set(walls)):
+        bad(w, "wall thicknesses not strictly increasing")
+    for t, kind in zip(EN_NORMAL_WALL.get(od, ()), ("seamless", "welded")):
+        if t not in walls:
+            bad(w, f"normal {kind} wall {t} (DIN 2448/2458) missing")
+
+
 def check_pipes():
     for f, key in (("pipe-dimensions.json", "schedules"), ("pipe-dimensions-en.json", "wallThicknesses")):
         prev = None
@@ -312,6 +343,8 @@ def check_pipes():
             if prev and (e["DN"] <= prev["DN"] or e["OD_mm"] <= prev["OD_mm"]):
                 bad(w, "DN / OD not increasing")
             prev = e
+            if key == "wallThicknesses":
+                check_en_pipe(w, e)
             walls = []
             for s in e[key]:
                 check_pipe_wall(f"{w} {s.get('schedule', s['wall_mm'])}", e["OD_mm"], s)

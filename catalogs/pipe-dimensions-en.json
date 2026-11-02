@@ -3,7 +3,7 @@
   "catalogId": "pipe-dimensions-en",
   "catalogType": "PIPE_DIMENSIONS",
   "standard": "EN 10220:2002 (Seamless and welded steel tubes — Dimensions and masses per unit length)",
-  "version": "2024.1",
+  "version": "2024.2",
   "description": "European pipe outside diameters and wall thicknesses per EN 10220. DN15–DN600. All dimensions in mm. Mass per metre calculated for steel density 7850 kg/m³.",
   "units": {
     "OD": "mm",
@@ -12,9 +12,10 @@
     "mass_per_length": "kg/m"
   },
   "notes": [
-    "Wall thickness series based on EN 10220 preferred values.",
+    "Wall thicknesses from the EN 10220 / ISO 4200 preferred wall-thickness series.",
+    "Version 2024.2: every outside diameter also carries the normal wall thickness of the former DIN 2448 (seamless) and DIN 2458 (welded) tables (e.g. 60.3 × 2.9 / 60.3 × 2.3), which were missing for nine diameters. Checked with scripts/check-catalogs.py.",
     "Mass per metre is theoretical for plain-end pipe at 7850 kg/m³.",
-    "This catalog is not a substitute for the official EN 10220 standard."
+    "This catalog is a selection; it does not list every wall thickness EN 10220 permits and is not a substitute for the official EN 10220 standard."
   ],
   "entries": [
     {
@@ -114,6 +115,11 @@
           "mass_kg_m": 1.99
         },
         {
+          "wall_mm": 2.3,
+          "bore_mm": 37.8,
+          "mass_kg_m": 2.27
+        },
+        {
           "wall_mm": 2.6,
           "bore_mm": 37.2,
           "mass_kg_m": 2.55
@@ -139,6 +145,11 @@
           "wall_mm": 2.0,
           "bore_mm": 44.3,
           "mass_kg_m": 2.28
+        },
+        {
+          "wall_mm": 2.3,
+          "bore_mm": 43.7,
+          "mass_kg_m": 2.61
         },
         {
           "wall_mm": 2.6,
@@ -173,9 +184,19 @@
           "mass_kg_m": 2.88
         },
         {
+          "wall_mm": 2.3,
+          "bore_mm": 55.7,
+          "mass_kg_m": 3.29
+        },
+        {
           "wall_mm": 2.6,
           "bore_mm": 55.1,
           "mass_kg_m": 3.7
+        },
+        {
+          "wall_mm": 2.9,
+          "bore_mm": 54.5,
+          "mass_kg_m": 4.11
         },
         {
           "wall_mm": 3.2,
@@ -215,6 +236,11 @@
           "mass_kg_m": 4.71
         },
         {
+          "wall_mm": 2.9,
+          "bore_mm": 70.3,
+          "mass_kg_m": 5.24
+        },
+        {
           "wall_mm": 3.2,
           "bore_mm": 69.7,
           "mass_kg_m": 5.75
@@ -240,6 +266,11 @@
           "wall_mm": 2.3,
           "bore_mm": 84.3,
           "mass_kg_m": 4.91
+        },
+        {
+          "wall_mm": 2.9,
+          "bore_mm": 83.1,
+          "mass_kg_m": 6.15
         },
         {
           "wall_mm": 3.2,
@@ -279,6 +310,11 @@
           "mass_kg_m": 8.77
         },
         {
+          "wall_mm": 3.6,
+          "bore_mm": 107.1,
+          "mass_kg_m": 9.83
+        },
+        {
           "wall_mm": 4.0,
           "bore_mm": 106.3,
           "mass_kg_m": 10.88
@@ -309,6 +345,11 @@
           "wall_mm": 3.2,
           "bore_mm": 133.3,
           "mass_kg_m": 10.77
+        },
+        {
+          "wall_mm": 3.6,
+          "bore_mm": 132.5,
+          "mass_kg_m": 12.08
         },
         {
           "wall_mm": 4.0,
@@ -393,6 +434,11 @@
           "wall_mm": 4.0,
           "bore_mm": 211.1,
           "mass_kg_m": 21.22
+        },
+        {
+          "wall_mm": 4.5,
+          "bore_mm": 210.1,
+          "mass_kg_m": 23.82
         },
         {
           "wall_mm": 5.0,
@@ -601,6 +647,11 @@
           "wall_mm": 8.0,
           "bore_mm": 390.4,
           "mass_kg_m": 78.6
+        },
+        {
+          "wall_mm": 8.8,
+          "bore_mm": 388.8,
+          "mass_kg_m": 86.29
         },
         {
           "wall_mm": 10.0,

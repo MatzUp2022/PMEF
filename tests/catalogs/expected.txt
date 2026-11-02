@@ -9,6 +9,9 @@
 ✗ profiles-broken.json:EN:HEB240: Iy_cm4 7000 not larger than EN:HEB220 (8091)
 ✗ pipe-dimensions.json:ASME-NPS2 SCH40: bore 52.0 vs OD − 2t = 52.48
 ✗ pipe-dimensions.json:ASME-NPS2: SCH80 wall 3.5 thinner than SCH40 (3.91)
+✗ pipe-dimensions-en.json:EN10220-DN50: DN50 OD 60.0 is not the EN 10220 series-1 diameter (60.3)
+✗ pipe-dimensions-en.json:EN10220-DN50: wall 3.0 not in the EN 10220 preferred wall-thickness series
+✗ pipe-dimensions-en.json:EN10220-DN50: normal seamless wall 2.9 (DIN 2448/2458) missing
 ✗ flange-dimensions.json:B165-150-DN50: bolt circle not inside the flange OD
 ✗ flange-dimensions.json:B165-150-DN50: 6 bolt holes (multiple of 4 expected)
 ✗ flange-dimensions.json:B165-150-DN80: bolt hole not larger than the bolt
@@ -18,4 +21,4 @@
 ✗ piping-class-x.json:X-PIPE-80: DN80 SCH40 not in the pipe dimension catalog
 ✗ piping-class-x.json:X-FLWN-50: boltCircleDiameter_mm 120.7 vs 160.0 in the flange dimension catalog
 ✗ piping-class-x.json:X-FLWN-50: numberOfBolts 4 vs 6 in the flange dimension catalog
-✗ catalogs: 20 inconsistencies
+✗ catalogs: 23 inconsistencies

@@ -1,0 +1,16 @@
+{
+  "catalogId": "pipe-dimensions-en-broken",
+  "catalogType": "PIPE_DIMENSIONS",
+  "version": "0",
+  "entries": [
+    {
+      "catalogId": "EN10220-DN50",
+      "DN": 50,
+      "OD_mm": 60.0,
+      "wallThicknesses": [
+        {"wall_mm": 2.3, "bore_mm": 55.4, "mass_kg_m": 3.27},
+        {"wall_mm": 3.0, "bore_mm": 54.0, "mass_kg_m": 4.22}
+      ]
+    }
+  ]
+}
