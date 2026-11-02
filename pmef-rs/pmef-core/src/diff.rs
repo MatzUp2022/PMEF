@@ -215,8 +215,12 @@ pub fn diff_matched(
     opts: &DiffOptions,
     mopts: &crate::matching::MatchOptions,
 ) -> Result<DiffReport, DiffError> {
-    use crate::matching::{match_objects, rewrite_ids, MatchMethod};
+    use crate::matching::{is_as_built_correspondence, match_objects, rewrite_ids, MatchMethod};
     let matches = match_objects(base, head, mopts)?;
+    // Correspondence relationships (RFC-0003) are matching evidence, not compared.
+    let keep = |objs: &[Value]| -> Vec<Value> { objs.iter().filter(|o| !is_as_built_correspondence(o)).cloned().collect() };
+    let (base, head) = (keep(base), keep(head));
+    let (base, head) = (&base[..], &head[..]);
     let h2b: BTreeMap<&str, &str> =
         matches.iter().filter(|m| m.base_id != m.head_id).map(|m| (m.head_id.as_str(), m.base_id.as_str())).collect();
     let rewritten: Vec<Value> = head.iter().map(|o| rewrite_ids(o, &h2b)).collect();
@@ -265,17 +269,22 @@ pub fn canonical(v: &Value) -> Value {
 
 /// Key field shared by all elements of both arrays, if any.
 fn array_key(a: &[Value], b: &[Value]) -> Option<&'static str> {
+    array_key_n(&[a, b])
+}
+
+/// Key field shared by all elements of all arrays (each with unique values), if any (spec 03 §9.2).
+pub(crate) fn array_key_n(arrays: &[&[Value]]) -> Option<&'static str> {
     KEY_FIELDS.into_iter().find(|k| {
         let ok = |v: &Value| v.get(*k).is_some_and(|x| x.is_string() || x.is_number());
         let unique = |arr: &[Value]| {
             let keys: BTreeSet<String> = arr.iter().filter_map(|v| v.get(*k)).map(key_text).collect();
             keys.len() == arr.len()
         };
-        !(a.is_empty() && b.is_empty()) && a.iter().chain(b).all(ok) && unique(a) && unique(b)
+        arrays.iter().any(|a| !a.is_empty()) && arrays.iter().all(|a| a.iter().all(ok) && unique(a))
     })
 }
 
-fn key_text(v: &Value) -> String {
+pub(crate) fn key_text(v: &Value) -> String {
     v.as_str().map_or_else(|| v.to_string(), str::to_owned)
 }
 

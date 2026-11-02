@@ -11,7 +11,23 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Deprecated
+
+- **`CompressorSpec.polytropic_efficiency`** — use `polytropicEfficiency`
+  ([RFC-0004](spec/rfc/0004-polytropic-efficiency-camelcase.md)). Both spellings are valid in
+  0.10.x, but not together in one object; the old one is removed in 1.0.0. The Rust model reads
+  both and writes camelCase; `examples/compressor-train.ndjson` uses the new spelling.
+
 ### Removed
+
+- **Benchmark PMEF-DS-05 "EAF Cooling Circuit Segment"** from spec 06 §4.5 and the ROADMAP — the
+  file `examples/eaf-segment.ndjson` never existed (docs/AUDIT.md P2.3). CL3-03 now lists DS-02,
+  DS-03 or DS-04.
+
+- **Seven entries that are not AISC designations** from `profiles-aisc` (`HSS1.5x0.125`,
+  `HSS2.0x0.125`, `HSS4.5x0.25`, `HSS5.5x0.25`, `HSS8.0x0.25`, `HSS9.0x0.375`) and
+  `profiles-aisc-extended` (`WT18x150`; nearest is WT18x151). Not referenced anywhere in the
+  repository (docs/AUDIT.md P3.12).
 
 - **RVM parser removed from `pmef-adapter-e3d`** (`src/rvm.rs`, `E3DConfig::rvm_export_path`,
   `byteorder` dependency). AVEVA's RVM format is not publicly specified; the reference
@@ -20,6 +36,83 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **PMEF-DS-04 (`ei-loop-fic-10101`) had no FileHeader** although spec 03 requires one as the
+  first object; added (10 objects).
+
+- **Validators agree (docs/AUDIT.md P3.8).** `pmef validate`, `stats`, `index`, `check-refs`,
+  `conformance` and `topology` silently dropped lines without a string `@id`/`@type` or with
+  invalid JSON, so an invalid file could pass; these lines are now errors. The Rust validator no
+  longer asserts `format` (annotation, as in Draft 2020-12 and the Python reference). Unknown
+  `@type` is skipped with a warning in both validators (spec 06 CL1-03); `pmef validate --strict`
+  and `scripts/validate-examples.py` (default; `--lenient` to relax) report it as an error.
+
+- **Flange catalogs corrected** (docs/AUDIT.md P3.12): `flange-dimensions` 2024.2 against the
+  ASME B16.5 inch tables — Class 900/1500/2500 rows held values of other classes (e.g. Class 900
+  NPS 1–2 had Class 600 drilling), flange thickness is tf without the raised face (Class 150/300
+  values included 1/16 in); `flange-dimensions-en` 2024.2 against the EN 1092-1 type 11 tables —
+  PN40 DN200–600 held PN25 values, raised-face diameters were ASME values, thicknesses C1.
+  `boltDiameter_mm` now means the bolt diameter in both catalogs; the hole is in the new optional
+  field `boltHoleDiameter_mm` (field meanings in each catalog's `fieldDefinitions`). Piping classes
+  A1A2/B3C1/C5D1/EN-P1A take the corrected flange dimensions; snapping vectors and
+  `asbuilt-recognition` re-recorded (catalog version only).
+
+- **Catalog data corrected** (docs/AUDIT.md P3.12; versions bumped, notes in each catalog):
+  `profiles-aisc` 2023.2 and `profiles-aisc-extended` 2024.2 against the AISC Shapes Database
+  v16.0 (angle masses ≈ 38 % low, W36x150/W40x167/W44x230 flanges and weak-axis properties,
+  HSS weights, WT Ix/Sx); `profiles-en` 2024.3 (UPE series, RHS 100x60); `profiles-en-extended`
+  2024.2 (T sections to EN 10055); `pipe-dimensions` 2024.2 (schedules to ASME B36.10M: SCH10,
+  NPS 14–24 shifted by one schedule, SCH120/SCH160/XXS swapped for NPS 3–6, NPS 12 SCH40);
+  piping classes A1A2/B3C1/C5D1 2024.2 take pipe walls and flange dimensions from the dimension
+  catalogs. Snapping vectors re-recorded (catalog versions); SNAP-010/011 use h = 252 mm so the
+  W10 ambiguity case stays ambiguous with the corrected W10x33 depth. Conformance fixture and
+  `asbuilt-recognition` example regenerated (catalog version only).
+
+- **Benchmark equipment consistent with the piping (docs/AUDIT.md P3.11)** — `@id`s and object
+  counts unchanged:
+  - PMEF-DS-01 (`pump-skid-complete`): P-201A moved so its suction meets the free end of CW-201
+    (CW-201 unchanged, it is shared with `stress-model-cw201`); discharge line CW-202, its support
+    beam STEEL-BM-C02 and V-201 shifted by −1700 mm in x; V-201 now sits above the pump with its
+    bottom inlet on CW-202's flange end, top head on the shell end (spec 04).
+    `connectedPortId` now names real port IDs (`P1`/`P2`) instead of `P-first`/`P-last`.
+  - PMEF-DS-02 (`heat-exchanger-station`): CW-301 ran 1.1 m into the E-301A shell; re-laid as a
+    vertical control-valve station onto a radial shell nozzle (same components and lengths);
+    channels flush with the shell; E-301A/B nozzles on the body surfaces; E-301B's LOD1 box is
+    E-301A's envelope.
+  - `compressor-train`: K-101 nozzles were inside its bounding box.
+  Conformance fixtures regenerated; PCF round-trip test updated (CW-202 start x 10200 → 8500).
+
+- **`compressor-train` equipment geometry**: V-101 shell `center` was the shell mid-point instead
+  of the bottom face centre (spec 04), so the heads floated inside the shell; nozzles of V-101 and
+  E-101 lay inside the bodies (outlet and vent both on the top centreline). Nozzles moved onto the
+  surfaces, E-101 shell nozzles made radial, channels flush with the shell. Conformance fixtures
+  regenerated.
+
+- **Rust model matches the schemas (docs/AUDIT.md P3.9).** `pmef-core` types for the active scope
+  (hierarchy, piping, equipment, steel, relationships) now accept every schema-valid object and
+  round-trip it without loss: fields required in Rust but optional in the schema became `Option`
+  (e.g. `PipeSupport.supportsMark`, `Pipe.pipeLength`, the `PumpSpec`/`VesselDesign`/`hxSpec`
+  members), missing schema properties were added, and wrong JSON names were fixed —
+  `Iec81346Designation` (`functionalAspect` etc. were silently dropped), `GeometryReference.ref`,
+  `SteelMember.teklaGUID`, `CatalogReference.eclassIRDI`, `CompressorSpec.polytropic_efficiency`.
+  New test `pmef-cli/tests/schema_drift.rs` guards this against every reference instance.
+
+- **E3D adapter output is schema-valid (docs/AUDIT.md P1.7).** `pmef-adapter-e3d` no longer
+  writes `null` for absent PML attributes, puts equipment design data into the required
+  type-specific blocks (`vesselDesign`, `pumpSpec`, `compressorSpec`, `hxSpec`, tank fields)
+  and always sets `nozzleMark`. In-line piping components (flanges, valves, supports, tees,
+  reducers, …) were all exported as `pmef:Pipe` (enum name passed instead of the PML keyword);
+  they now get their proper `@type`. New integration test `tests/output_validates.rs` validates
+  every exported object against `schemas/`.
+
+- **Benchmark geometry made consistent** (new CI check `scripts/check-geometry.py`: bend centre
+  points, port directions per spec 02 §2.6, pipe lengths). PMEF-DS-01 / stress model: elbow
+  CW-201-ELB-001 had both ports on the same vertical with no intersecting axes — it is now a real
+  90° LR DN200 bend (centre-to-end 304.8 mm around the original corner at x = 11500, z = 850):
+  CW-201-PIPE-001 ends at x = 11195.2 (length 2195.2 mm, weight 75.0 kg), CW-201-PIPE-002 starts at
+  z = 1154.8 (795.2 mm, 27.8 kg), welds W01/W02 moved accordingly, elbow torus geometry, spool
+  length/weight updated. Inward-pointing port directions fixed on CW-201-PIPE-002, -FL-001,
+  -GK-001, -FL-002 and on PMEF-DS-02 CW-301-FV-001, -PIPE-002; weld directions `[0,0,0]` replaced
+  by the pipe axis. No `@id` changed. Spec 06 §4.1 object count of DS-01 corrected (35, not 16).
 - **`catalogs/profiles-en.json` HEA series corrected (catalog version 2024.1 → 2024.2).** All 24
   HEA entries listed the nominal size as height (HEA 300: 300 instead of 290 mm), HEA 900/1000
   had wrong flange thicknesses (28 instead of 30/31 mm), HEA 100 was listed as `EN:HEA96`, and
@@ -90,6 +183,28 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Changed
 
+- **RFC-0001 to RFC-0003 moved to `REVIEW`** — verified against the implementation; open questions
+  answered or given a proposed resolution; each RFC has a *Review Status* section. New RFC index
+  `spec/rfc/README.md` and ready-to-file issue texts `docs/rfc-review-2026-11.md`. RFC-0004 status
+  spelled `APPROVED` (template vocabulary).
+
+- **`pmef check` replaces `pmef conformance`** (docs/AUDIT.md P2.1). The old command claimed to
+  run the conformance suite but was a shallow package check that ignored `--level`, `--json` and
+  `--dataset` and could not detect duplicate `@id`s. `pmef check` checks a package's structure
+  (one FileHeader first, every line readable, `@type`/`@id` present, unique `@id`, `connectedTo`
+  resolves unless `urn:pmef:external:`; layer references such as `isPartOf` → unit are reported
+  only) as text or `--json`; `pmef conformance` remains as a deprecated alias with JSON output.
+  Spec 06 §7.1: the conformance report comes from the suite (`tests/run_tests.py --report json`).
+
+- **`pmef-core` API (Rust):** helper methods on fields that are optional in the schema now return
+  `Option<f64>`: `PipingDesignConditions::design_temperature_celsius`/`design_pressure_barg`,
+  `PipingSpecification::bore_mm`/`effective_wall_mm`, `HeatExchangerSpec::lmtd_counter_current`.
+  The corresponding struct fields are `Option<_>`. No workspace caller was affected.
+
+- **`pmef convert` implemented** (was a stub): `--to pcf|pmef`, `--base`, `-o`; the unused
+  `--from` and `--schemas` options were removed.
+- **Conformance suite: INTG-006 checks only objects of the claimed `--domains`** (spec 06 CL3-05:
+  "every *exported* object"); before, an adapter exporting only piping failed for equipment and steel.
 - **`pmef diff` CLI options changed:** `--changed-only` removed (unchanged objects are never
   listed); new `--exact`, `--ignore`, `--ignore-recognition`. The command now exits with 1 when
   the files differ and 2 on errors.
@@ -122,6 +237,58 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **Catalog schema: flange entry fields and `fieldDefinitions`** — `flangeDimensionEntry` now
+  defines the optional fields `NPS`, `DN`, `flangeThickness_mm`, `boltCircle_mm`, `boltHoles`
+  (multiple of 4), `boltDiameter_mm`, `boltHoleDiameter_mm`, `raisedFace_mm` and `facingType`
+  (RF/FF/RTJ); catalogs may document their field meanings in `fieldDefinitions`. Negative cases
+  in `tests/catalogs/run.py`. Catalogs are read as JSON values in `pmef-rs`; no Rust types change.
+
+- **`CompressorSpec.polytropicEfficiency`** (optional, [%]) — camelCase replacement for the
+  deprecated `polytropic_efficiency` (RFC-0004). Tests: `pmef-validate/tests/rfc0004.rs`,
+  `pmef-core/tests/rfc0004_roundtrip.rs`.
+
+- **Differential validator test** `tests/validators/differential.py` (CI): the Rust validator and
+  the Python reference must reach the same verdict on all reference instances and systematic
+  mutations of them. Spec 06 §5.1 states the validation semantics (format = annotation,
+  unreadable lines invalid, unknown `@type` per CL1-03).
+
+- **Catalog consistency check** `scripts/check-catalogs.py` (CI): section areas and masses from
+  the dimensions, I/H section properties, lb/ft ↔ kg/m and AISC designation weights,
+  designation/catalogId ↔ dimensions, monotony along a series, pipe bore/mass/schedule order,
+  flange geometry, and piping classes against the pipe and flange dimension catalogs. Golden
+  negative fixture `tests/catalogs/` (CI).
+
+- **Geometry checks for equipment and structural steel** in `scripts/check-geometry.py`:
+  nozzle face not inside / not detached from the owner's parametric body, nozzle direction
+  outward (spec 02 §5.2), DISH heads on a cylinder end face (spec 04), connected line has a free
+  end at the nozzle face; steel member length, `profileId` resolvable in `catalogs/`, nodes at
+  member ends, connected members within (h1 + h2) / 2 (profile depths from the catalog).
+  Equipment without parametric geometry: nozzle face not inside `geometry.boundingBox`.
+  Golden negative fixture `tests/geometry/` (CI).
+
+- **AutoCAD Plant 3D import direction and round trip via PCF** (spec 05 §8.2).
+  `pmef convert MODEL --to pcf -o DIR` writes one PCF per line (identity in
+  `UNIQUE-COMPONENT-IDENTIFIER`); `pmef convert DIR --to pmef --base MODEL -o OUT` updates the
+  model from the PCF exported by Plant 3D (re-identification, create, delete; fields PCF does not
+  carry are kept). Library: `pmef_adapter_plant3d::pcf_bridge`. The PCF reader now also reads
+  `CO-ORDS` (supports). Round trip of PMEF-DS-01 is lossless; 15 % of its attributes travel
+  through PCF. Conformance: level 3 as converter
+  (`tests/conformance/suts/plant3d-pcf.sh`, run in CI), not yet as adapter (INTG-006: no native
+  Plant 3D id in PCF). Not yet verified with a Plant 3D installation.
+- **Three-way `pmef merge`** (spec 03 §10). Merges two edits of a common base object by object and
+  field by field with the diff rules (keyed arrays, numeric tolerances); one-sided changes are
+  taken, differing changes on both sides are conflicts (`modify-modify`, `modify-delete`,
+  `add-add`) reported with base/ours/theirs values; `--prefer ours|theirs` decides the written
+  value. Deterministic output (FileHeader first, `@id` order, sorted keys); exit 0/1/2.
+  Library `pmef_core::merge`; golden test: design change merged with confirmed as-built deviations.
+- **RFC-0003 — persisted as-built ↔ design correspondence** ([RFC](spec/rfc/0003-as-built-correspondence.md)).
+  `pmef:IsRevisionOf` with `changeType = AS_BUILT` gains an optional `correspondence` block
+  (`method`, `distance_mm`, `ambiguous`; schema requires `AS_BUILT` when present); confirmation via
+  the RFC-0001 `review` block. `pmef diff --match` uses confirmed correspondences as a new pass 1b
+  (`declared`), never re-proposes rejected pairs, and treats correspondences as evidence rather
+  than compared objects. `--emit-matches FILE` writes proposals (`review.status = detected`) for
+  review. Rust: `relationships::AsBuiltCorrespondence`. Example and tests (schema rules, matching
+  units, CLI propose → approve/reject → rerun workflow) added.
 - **`pmef diff --match`: comparison when `@id`s differ** (spec 03 §9.5) — typical for as-built
   models with recogniser ids. Objects are matched one-to-one in fixed passes: same `@id`, same
   engineering identifier (tag, line number, mark — only if unique), same native tool object

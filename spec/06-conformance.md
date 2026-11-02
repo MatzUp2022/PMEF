@@ -103,7 +103,7 @@ An implementation claiming PMEF-RoundTrip conformance **MUST** satisfy all Level
 |----|-------------|
 | CL3-01 | Support all entity types in all claimed domains. |
 | CL3-02 | Achieve ≥ 98% round-trip attribute fidelity on PMEF-DS-01. |
-| CL3-03 | Achieve ≥ 98% round-trip fidelity on at least one domain-specific benchmark (PMEF-DS-02, DS-03, DS-04, or DS-05). |
+| CL3-03 | Achieve ≥ 98% round-trip fidelity on at least one domain-specific benchmark (PMEF-DS-02, DS-03 or DS-04). |
 | CL3-04 | 100% fidelity on identity fields: `@id`, `tagNumber`, `lineNumber`, `weldNumber`. |
 | CL3-05 | Write `pmef:HasEquivalentIn` for **every** exported object without exception. |
 | CL3-06 | Support delta export: write `pmef:IsRevisionOf` for re-exported objects that have changed. |
@@ -240,7 +240,7 @@ The matrix below lists all normatively defined PMEF entity types and their requi
 ### 4.1 PMEF-DS-01 — Cooling Water Pump Skid
 
 **File:** `examples/pump-skid-complete.ndjson`  
-**Objects:** 16  
+**Objects:** 35  
 **Disciplines:** Piping + Equipment  
 **Required for:** Level 2 and Level 3 conformance.
 
@@ -258,7 +258,7 @@ and ParametricGeometry.
 **File:** `examples/heat-exchanger-station.ndjson`  
 **Objects:** ~40  
 **Disciplines:** Piping + Equipment  
-**Required for:** Level 3 conformance (alternative to DS-03, DS-04, DS-05).
+**Required for:** Level 3 conformance (alternative to DS-03, DS-04).
 
 Includes: Shell-and-tube heat exchangers (TEMA BEM), associated
 piping (shell-side and tube-side), isolation valves, control
@@ -278,7 +278,7 @@ pressure safety valves, lube oil system outline.
 ### 4.4 PMEF-DS-04 — Instrument Loop FIC-10101
 
 **File:** `examples/ei-loop-fic-10101.ndjson`  
-**Objects:** 9  
+**Objects:** 10 (including the FileHeader)  
 **Disciplines:** E&I  
 **Required for:** Level 3 E&I conformance.
 
@@ -286,17 +286,6 @@ Includes: HART flow transmitter-controller (SIL1), pneumatic
 control valve (SIL1, FC), Siemens S7-1500 CPU and AI module,
 instrumentation cable, instrument loop, and
 ControlledBy / IsDerivedFrom relationships.
-
-### 4.5 PMEF-DS-05 — EAF Cooling Circuit Segment
-
-**File:** `examples/eaf-segment.ndjson` (planned)  
-**Objects:** ~80  
-**Disciplines:** Piping + Equipment + E&I  
-**Required for:** Level 3 mixed-discipline conformance.
-
-Includes: Electric Arc Furnace (pmef:Reactor, EAF subtype),
-cooling water piping circuit, cooling water pumps,
-instrumentation, structural steel supports.
 
 ---
 
@@ -323,6 +312,18 @@ tests that do not apply to that kind are reported as skipped. Usage details: `te
 The **normative definition** of every test ID (name, level, requirement, fixture, expected
 result) is `tests/conformance/manifest.json`. A pure validator receives a validator verdict, not
 a conformance level, because every level requires reading and writing (CL1-09).
+
+**Schema validation semantics.** A validator **MUST** reach the same verdict as the reference
+validator (`scripts/validate-examples.py`, JSON Schema Draft 2020-12):
+
+- The JSON Schema `format` keyword is an annotation, not an assertion (Draft 2020-12 default).
+- A line that is not a JSON object with a string `@type` and a string `@id` is invalid; it
+  **MUST NOT** be skipped silently.
+- An unknown `@type` is skipped with a warning (CL1-03). A strict mode **MAY** report it as an
+  error; the repository's own examples are validated strictly.
+
+`tests/validators/differential.py` compares the Rust validator with the reference on the
+reference instances and systematic mutations of them.
 
 ### 5.2 Test Categories
 
@@ -433,9 +434,10 @@ The following attribute types are exempt from round-trip fidelity measurement:
 
 ### 7.1 Machine-Readable Report
 
-A conformance report **MUST** be generated in JSON format when
-`pmef-cli conformance` is run or when the test suite is executed
-with `--report json`.
+A conformance report **MUST** be generated in JSON format when the test suite is executed with
+`--report json` (`python tests/run_tests.py --report json`). The CLI command `pmef check` is a
+structural check of a data package (FileHeader, unique `@id`, resolvable `connectedTo`); it does
+not test an implementation and does not produce this report.
 
 Mandatory report fields:
 

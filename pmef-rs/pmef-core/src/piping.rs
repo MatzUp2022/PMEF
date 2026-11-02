@@ -17,9 +17,11 @@ use std::collections::HashMap;
 #[serde(rename_all = "camelCase")]
 pub struct PipingDesignConditions {
     /// Design pressure [Pa, absolute].
-    pub design_pressure: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design_pressure: Option<f64>,
     /// Maximum design temperature [K].
-    pub design_temperature: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design_temperature: Option<f64>,
     /// Normal operating pressure [Pa, absolute].
     #[serde(skip_serializing_if = "Option::is_none")]
     pub operating_pressure: Option<f64>,
@@ -41,17 +43,20 @@ pub struct PipingDesignConditions {
     /// PED pressure equipment category (I–IV).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ped_category: Option<String>,
+    /// Minimum operating temperature (for MDMT) [K]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min_operating_temp: Option<f64>,
 }
 
 impl PipingDesignConditions {
-    /// Design temperature converted to Celsius.
-    pub fn design_temperature_celsius(&self) -> f64 {
-        self.design_temperature - 273.15
+    /// Design temperature converted to Celsius (`None` if not given).
+    pub fn design_temperature_celsius(&self) -> Option<f64> {
+        self.design_temperature.map(|t| t - 273.15)
     }
 
-    /// Design pressure converted to bar (gauge).
-    pub fn design_pressure_barg(&self) -> f64 {
-        (self.design_pressure - 101_325.0) / 100_000.0
+    /// Design pressure converted to bar (gauge) (`None` if not given).
+    pub fn design_pressure_barg(&self) -> Option<f64> {
+        self.design_pressure.map(|p| (p - 101_325.0) / 100_000.0)
     }
 }
 
@@ -60,29 +65,52 @@ impl PipingDesignConditions {
 #[serde(rename_all = "camelCase")]
 pub struct PipingSpecification {
     pub nominal_diameter: f64,
-    pub outside_diameter: f64,
-    pub wall_thickness: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub outside_diameter: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wall_thickness: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub schedule: Option<String>,
     pub pipe_class: String,
-    pub material: String,
-    pub pressure_rating: String,
-    pub corrosion_allowance: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub material: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_rating: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub corrosion_allowance: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub insulation_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub heat_tracing_type: Option<String>,
+    /// NPS (nominal pipe size) in inches — informational
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nominal_diameter_inch: Option<f64>,
+    /// Material group per EN 13480 / ASME B31.3
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub material_group: Option<String>,
+    /// Full line number tag, e.g. '8"-CW-101-A1A2'
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub line_number: Option<String>,
+    /// Service medium code, e.g. 'CW' (cooling water), 'SS' (steam)'
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub medium_code: Option<String>,
+    /// Schema property `paintingSystem`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub painting_system: Option<String>,
+    /// [mm]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub insulation_thickness: Option<f64>,
 }
 
 impl PipingSpecification {
-    /// Calculated bore (inside diameter) [mm].
-    pub fn bore_mm(&self) -> f64 {
-        self.outside_diameter - 2.0 * self.wall_thickness
+    /// Calculated bore (inside diameter) [mm]; needs outside diameter and wall thickness.
+    pub fn bore_mm(&self) -> Option<f64> {
+        Some(self.outside_diameter? - 2.0 * self.wall_thickness?)
     }
 
-    /// Effective wall thickness after corrosion allowance.
-    pub fn effective_wall_mm(&self) -> f64 {
-        self.wall_thickness - self.corrosion_allowance
+    /// Effective wall thickness after corrosion allowance (none given = 0 mm).
+    pub fn effective_wall_mm(&self) -> Option<f64> {
+        Some(self.wall_thickness? - self.corrosion_allowance.unwrap_or(0.0))
     }
 }
 
@@ -101,6 +129,18 @@ pub struct PipingComponentSpec {
     pub face_to_face: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub weight: Option<f64>,
+    /// Flange facing type
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub facing_type: Option<String>,
+    /// Centre-to-face dimension [mm]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub centre_to_face: Option<f64>,
+    /// Spool/isometric item number
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub item_number: Option<String>,
+    /// Fabrication spool reference
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spool_id: Option<String>,
 }
 
 // ── PipingNetworkSystem ───────────────────────────────────────────────────
@@ -151,6 +191,12 @@ pub struct PipingNetworkSystem {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// Reference to a piping spec catalog entry, standard profile or equipment datasheet.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub catalog_ref: Option<crate::catalog::CatalogReference>,
+    /// Schema property `documents`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub documents: Option<Vec<crate::catalog::DocumentLink>>,
 }
 
 /// Fluid phase enumeration.
@@ -176,7 +222,8 @@ pub struct PipingSegment {
     #[serde(rename = "@id")]
     pub id: PmefId,
     pub is_part_of: PmefId,
-    pub segment_number: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub segment_number: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub specification: Option<PipingSpecification>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -223,6 +270,15 @@ macro_rules! piping_component_base {
             pub recognition: crate::provenance::RecognitionMetadata,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+            /// Material traceability heat/cast number.
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            pub heat_number: Option<String>,
+            /// IEC 81346 reference designation.
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            pub iec81346: Option<crate::types::Iec81346Designation>,
+            /// Reference data library class URI.
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            pub rdl_type: Option<crate::types::RdlUri>,
             $( $(#[$field_meta])* pub $field: $ty ),*
         }
     };
@@ -232,7 +288,8 @@ macro_rules! piping_component_base {
 
 piping_component_base!(Pipe {
     /// Straight pipe length [mm].
-    pipe_length: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pipe_length: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     spool_mark: Option<String>,
 });
@@ -249,22 +306,30 @@ pub enum ElbowRadius {
 }
 
 piping_component_base!(Elbow {
-    angle: f64,
-    radius: ElbowRadius,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    angle: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    radius: Option<ElbowRadius>,
     #[serde(skip_serializing_if = "Option::is_none")]
     radius_mm: Option<f64>,
 });
 
 piping_component_base!(Tee {
-    tee_type: String,
-    branch_diameter: f64,
-    branch_angle: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    tee_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    branch_diameter: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    branch_angle: Option<f64>,
 });
 
 piping_component_base!(Reducer {
-    reducer_type: ReducerType,
-    large_diameter: f64,
-    small_diameter: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    reducer_type: Option<ReducerType>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    large_diameter: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    small_diameter: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     eccentric_flat: Option<String>,
 });
@@ -274,9 +339,12 @@ piping_component_base!(Reducer {
 pub enum ReducerType { Concentric, Eccentric }
 
 piping_component_base!(Flange {
-    flange_type: String,
-    rating: String,
-    facing: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    flange_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    rating: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    facing: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     bore_diameter: Option<f64>,
 });
@@ -285,8 +353,10 @@ piping_component_base!(Flange {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ValveSpec {
-    pub actuator_type: String,
-    pub fail_position: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub actuator_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fail_position: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub leakage_class: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -299,6 +369,9 @@ pub struct ValveSpec {
     pub position_feedback: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub handwheel_override: Option<bool>,
+    /// Schema property `lockable`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lockable: Option<bool>,
 }
 
 piping_component_base!(Valve {
@@ -311,13 +384,20 @@ piping_component_base!(Valve {
 });
 
 piping_component_base!(Olet {
-    olet_type: String,
-    branch_diameter: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    olet_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    branch_diameter: Option<f64>,
+    /// Schema property `branchSchedule`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    branch_schedule: Option<String>,
 });
 
 piping_component_base!(Gasket {
-    gasket_type: String,
-    gasket_material: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    gasket_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    gasket_material: Option<String>,
 });
 
 /// Weld inspection specification.
@@ -325,15 +405,25 @@ piping_component_base!(Gasket {
 #[serde(rename_all = "camelCase")]
 pub struct WeldSpec {
     pub weld_number: String,
-    pub weld_type: String,
-    pub welding_process: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub weld_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub welding_process: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub wps_number: Option<String>,
-    pub pwht: bool,
-    pub nde_method: String,
-    pub nde_percentage: u8,
-    pub inspection_level: String,
-    pub inspection_status: WeldInspectionStatus,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pwht: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nde_method: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nde_percentage: Option<u8>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inspection_level: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inspection_status: Option<WeldInspectionStatus>,
+    /// Schema property `weldorId`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub weldor_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -352,7 +442,8 @@ piping_component_base!(Weld {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SupportSpec {
-    pub support_type: SupportType,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub support_type: Option<SupportType>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub design_load_fx: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -377,13 +468,17 @@ pub struct SupportSpec {
     /// Travel range [mm].
     #[serde(skip_serializing_if = "Option::is_none")]
     pub travel_range: Option<f64>,
-    pub attachment_type: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub attachment_type: Option<String>,
+    /// Reference to the SteelObject or CivilObject this support is attached to
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structural_ref: Option<String>,
 }
 
 impl SupportSpec {
     /// Returns true if this is a spring support (variable or constant hanger).
     pub fn is_spring(&self) -> bool {
-        matches!(self.support_type, SupportType::SpringVariable | SupportType::SpringConstant)
+        matches!(self.support_type, Some(SupportType::SpringVariable | SupportType::SpringConstant))
     }
 }
 
@@ -395,8 +490,10 @@ pub enum SupportType {
 }
 
 piping_component_base!(PipeSupport {
-    supports_mark: String,
-    support_spec: SupportSpec,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    supports_mark: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    support_spec: Option<SupportSpec>,
     #[serde(skip_serializing_if = "Option::is_none")]
     structural_attachment_id: Option<PmefId>,
 });

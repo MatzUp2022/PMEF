@@ -46,6 +46,11 @@ fn asbuilt_example_round_trips_through_core_types() {
                 assert_eq!(m.recognition.review.as_ref().unwrap().status, ReviewState::Approved);
                 back
             }
+            "pmef:IsRevisionOf" => {
+                let (r, back) = round_trip::<pmef_core::relationships::IsRevisionOf>(&v);
+                assert!(r.correspondence.is_some(), "RFC-0003 correspondence must survive");
+                back
+            }
             "pmef:FileHeader" => continue,
             other => panic!("unexpected type {other}"),
         };
@@ -55,7 +60,7 @@ fn asbuilt_example_round_trips_through_core_types() {
         assert_eq!(normalise(&back), normalise(&v), "{} not lossless", v["@id"]);
         checked += 1;
     }
-    assert_eq!(checked, 9);
+    assert_eq!(checked, 11);
 }
 
 #[test]

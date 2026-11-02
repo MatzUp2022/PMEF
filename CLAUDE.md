@@ -56,17 +56,23 @@ python scripts/check-schema-ids.py        # $id matches file path
 python scripts/validate-examples.py       # examples/*.ndjson against schemas
 python scripts/check-ndjson-format.py     # one object per line
 python scripts/check-topology.py          # connectivity integrity
+python scripts/check-geometry.py          # piping bends/ports/lengths, equipment nozzles/heads, steel
 python scripts/validate-catalogs.py       # catalogs/*.json against pmef-catalog schema
+python scripts/check-catalogs.py          # catalog consistency (derived values, designations, schedules, classes)
 
 # Rust reference implementation (exactly what .github/workflows/rust.yml runs)
 cd pmef-rs
 cargo build --workspace --all-targets
 cargo test --workspace --no-fail-fast
 cargo clippy --workspace --all-targets    # informational in CI (doc-comment warnings)
-cargo run -p pmef-cli -- validate ../examples/pump-skid-complete.ndjson --schemas ../schemas
+cargo run -p pmef-cli -- validate ../examples/pump-skid-complete.ndjson --schemas ../schemas --strict   # unknown @type = error
 cargo run -p pmef-cli -- diff ../tests/diff/design.ndjson ../tests/diff/asbuilt.ndjson --ignore revision --ignore-recognition
 cargo run -p pmef-cli -- diff ../tests/diff/design.ndjson ../tests/diff/asbuilt-scan.ndjson --ignore revision --ignore-recognition --match
-cargo run -p pmef-cli -- conformance ../examples/pump-skid-complete.ndjson   # shallow structural check only
+cargo run -p pmef-cli -- diff ../tests/diff/design.ndjson ../tests/diff/asbuilt-scan.ndjson --match --emit-matches /tmp/proposals.ndjson   # RFC-0003 proposals
+cargo run -p pmef-cli -- merge ../tests/diff/design.ndjson ../tests/merge/ours-design-change.ndjson ../tests/merge/theirs-asbuilt-update.ndjson -o /tmp/merged.ndjson
+cargo run -p pmef-cli -- convert ../examples/pump-skid-complete.ndjson --to pcf -o /tmp/pcf   # PMEF -> Plant 3D (PCF)
+cargo run -p pmef-cli -- convert /tmp/pcf --to pmef --base ../examples/pump-skid-complete.ndjson -o /tmp/back.ndjson
+cargo run -p pmef-cli -- check ../examples/pump-skid-complete.ndjson   # package structure: header, unique @id, connectedTo
 cd ..
 
 # Conformance suite (spec 06; details in tests/README.md)
@@ -74,7 +80,11 @@ python tests/run_tests.py --level 3                       # reference self-run, 
 python tests/conformance/tools/generate_fixtures.py       # regenerate fixtures after schema changes
 python tests/conformance/tools/generate_fixtures.py --check
 python tests/conformance/tools/selftest.py                # broken implementations must be detected
+python tests/run_tests.py --kind converter --domains piping --sut "sh tests/conformance/suts/plant3d-pcf.sh {input} {output}"   # Plant 3D PCF bridge
 python tests/snapping/reference_snap.py                   # pmef-snap/1 test vectors (RFC-0002)
+python tests/geometry/run.py                              # check-geometry rules fire on the negative fixture
+python tests/catalogs/run.py                              # check-catalogs rules fire on the broken catalogs
+python tests/validators/differential.py --pmef pmef-rs/target/debug/pmef   # Rust and Python validators agree
 python scripts/generate-asbuilt-example.py examples/asbuilt-recognition.ndjson   # after catalog/algorithm changes
 ```
 

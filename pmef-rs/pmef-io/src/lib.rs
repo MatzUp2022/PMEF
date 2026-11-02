@@ -16,10 +16,10 @@ pub enum PmefIoError {
     #[error("JSON parse error on line {line}: {source}")]
     Json { line: usize, #[source] source: serde_json::Error },
 
-    #[error("Line {line}: object missing '@type' field")]
+    #[error("Line {line}: object has no string '@type'")]
     MissingType { line: usize },
 
-    #[error("Line {line}: object missing '@id' field")]
+    #[error("Line {line}: object has no string '@id'")]
     MissingId { line: usize },
 
     #[error("Line {0} exceeds maximum length of {1} bytes")]
@@ -177,12 +177,15 @@ impl<R: BufRead> Iterator for NdjsonReader<R> {
 }
 
 /// Convenience: open and read a PMEF NDJSON file, collecting all raw objects.
+///
+/// Fails on the first line that cannot be read (invalid JSON, missing `@type` or `@id`);
+/// such lines are never dropped silently.
 pub fn read_ndjson_file(path: &std::path::Path) -> Result<Vec<RawPmefObject>, PmefIoError> {
     let file = std::fs::File::open(path)
         .map_err(|e| PmefIoError::Io { line: 0, source: e })?;
     let reader = BufReader::new(file);
-    let ndjson = NdjsonReader::new(reader, ReaderConfig::default());
-    ndjson.collect()
+    let config = ReaderConfig { fail_fast: true, ..ReaderConfig::default() };
+    NdjsonReader::new(reader, config).collect()
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -331,6 +334,15 @@ impl PmefPackageIndex {
 mod tests {
     use super::*;
     use std::io::Cursor;
+
+    #[test]
+    fn read_ndjson_file_rejects_unreadable_lines() {
+        let p = std::env::temp_dir().join(format!("pmef-io-read-{}.ndjson", std::process::id()));
+        std::fs::write(&p, "{\"@type\":\"pmef:Plant\",\"@id\":\"urn:pmef:plant:t:P\"}\n{\"@type\":\"pmef:Plant\"}\n").unwrap();
+        let err = read_ndjson_file(&p).unwrap_err();
+        assert!(matches!(err, PmefIoError::MissingId { line: 2 }), "{err}");
+        std::fs::remove_file(p).ok();
+    }
 
     #[test]
     fn test_reader_minimal() {

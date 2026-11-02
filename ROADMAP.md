@@ -57,7 +57,6 @@ reference implementation. Dates are targets, not commitments.
 - 🗓️ `pmef-relationships.schema.json` — typed relationship objects
 - 🗓️ `pmef-catalog.schema.json` — piping spec + steel profile catalog format
 - 🗓️ PMEF-DS-02 example: heat exchanger station
-- 🗓️ PMEF-DS-05 example: EAF cooling circuit segment
 
 ### Reference implementation (`pmef-core` Rust crate)
 
@@ -195,7 +194,6 @@ Items previously listed as "planned" in CHANGELOG.md (moved here — a changelog
 released changes only):
 
 - 🗓️ Fix EQUIP-U-005 and PIPE-U-003 schema/test gaps
-- 🗓️ DS-05 benchmark (Mixed EAF + E&I + Steel, ~80 objects)
 - 🗓️ `pmef-stress`: CAESAR II .cii import/export adapter (Rust)
 - 🗓️ Full `pmef-geom` AABB computation (all 15 primitives)
 - ✅ `pmef-validate` jsonschema Rust integration (cross-file `$ref` resolution)
@@ -205,12 +203,14 @@ released changes only):
 - 🗓️ Published schemas under a project-owned domain (namespace decision open, see docs/AUDIT.md §8)
 - 🗓️ Project website with full documentation
 - 🗓️ First vendor Level 2 certification
-- 🔄 RFC-0001 provenance / review / as-built — implemented as 0.10.0 draft, awaiting review
-- 🔄 RFC-0002 catalog snapping `pmef-snap/1` (pipes, I-sections) — implemented as draft, awaiting review
+- 🔄 RFC-0001 provenance / review / as-built — implemented for 0.10.0, status REVIEW (decisions listed in `spec/rfc/README.md`)
+- 🔄 RFC-0002 catalog snapping `pmef-snap/1` (pipes, I-sections) — implemented, status REVIEW
 - 🗓️ `pmef-snap/2`: fittings, flanges, hollow sections, angles
 - ✅ `catalogs/profiles-en.json` HEA data corrected (2024.2)
 - 🗓️ Same consistency check for AISC, hollow-section and piping-class catalogs
 - ✅ Deterministic object-level `pmef diff` (spec 03 §9)
-- 🗓️ 3-way merge (`pmef merge`) with a conflict model on top of the diff rules
+- ✅ 3-way merge (`pmef merge`, spec 03 §10)
 - ✅ `pmef diff --match` for differing `@id`s (spec 03 §9.5)
-- 🗓️ Persist matches as data (needs an RFC for an as-built ↔ design correspondence relationship)
+- 🔄 RFC-0003 persisted as-built ↔ design correspondence (`--emit-matches`, pass 1b) — implemented, status REVIEW
+- 🔄 Plant 3D import via PCF (`pmef convert`) — bridge done; open: confirm with a Plant 3D
+  installation; native object id for `HasEquivalentIn`

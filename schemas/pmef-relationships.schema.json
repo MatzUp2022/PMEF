@@ -145,10 +145,29 @@
             "@type":        { "const": "pmef:IsRevisionOf" },
             "relationType": { "const": "IS_REVISION_OF" },
             "changeReason": { "type": "string", "description": "Why this revision was created" },
-            "changeType":   { "type": "string", "enum": ["MINOR","MAJOR","CORRECTION","AS_BUILT","ISSUED_FOR_CONSTRUCTION"] }
+            "changeType":   { "type": "string", "enum": ["MINOR","MAJOR","CORRECTION","AS_BUILT","ISSUED_FOR_CONSTRUCTION"] },
+            "correspondence": { "$ref": "#/$defs/AsBuiltCorrespondence" }
           }
+        },
+        {
+          "if":   { "required": ["correspondence"] },
+          "then": { "required": ["changeType"], "properties": { "changeType": { "const": "AS_BUILT" } } }
         }
       ]
+    },
+
+    "AsBuiltCorrespondence": {
+      "title": "As-Built Correspondence",
+      "description": "How an as-built object (sourceId) was matched to its design object (targetId), RFC-0003 / spec 03 §9.6. Confirmation is recorded in the relationship's review block.",
+      "type": "object",
+      "required": ["method"],
+      "properties": {
+        "method":      { "type": "string", "enum": ["tag","equivalent","geometry","reference","manual"],
+                         "description": "Evidence used (spec 03 §9.5 passes, or manual assignment)" },
+        "distance_mm": { "type": "number", "minimum": 0, "description": "Mean anchor distance for geometry matches [mm]" },
+        "ambiguous":   { "type": "boolean", "description": "A competing candidate was nearly as close" }
+      },
+      "additionalProperties": false
     },
 
     "HasEquivalentIn": {

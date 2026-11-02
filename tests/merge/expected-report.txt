@@ -1,0 +1,3 @@
+! urn:pmef:obj:demo-asb:CW-301-PIPE-002 pipeLength [modify-modify]: base 2283.4 | ours 2290.0 | theirs 2271.4
+! urn:pmef:obj:demo-asb:CW-301-PIPE-002 ports[portId=P2].coordinate[2] [modify-modify]: base 988.0 | ours 981.0 | theirs 1000.0
+Merged 10 objects into ../tests/merge/expected-merged.ndjson, 2 conflict(s)

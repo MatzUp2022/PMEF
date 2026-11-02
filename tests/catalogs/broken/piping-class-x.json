@@ -1,0 +1,38 @@
+{
+  "catalogId": "piping-class-x",
+  "catalogType": "PIPING_CLASS",
+  "version": "0",
+  "rating": "ANSI-150",
+  "entries": [
+    {
+      "catalogId": "X-PIPE-50",
+      "componentClass": "PIPE",
+      "nominalDiameter_mm": 50,
+      "outsideDiameter_mm": 60.3,
+      "wallThickness_mm": 3.91,
+      "bore_mm": 52.48,
+      "schedule": "SCH40",
+      "mass_kg_per_m": 7.0
+    },
+    {
+      "catalogId": "X-PIPE-80",
+      "componentClass": "PIPE",
+      "nominalDiameter_mm": 80,
+      "outsideDiameter_mm": 88.9,
+      "wallThickness_mm": 5.49,
+      "bore_mm": 77.92,
+      "schedule": "SCH40",
+      "mass_kg_per_m": 11.29
+    },
+    {
+      "catalogId": "X-FLWN-50",
+      "componentClass": "FLANGE",
+      "nominalDiameter_mm": 50,
+      "rating": "ANSI-150",
+      "outsideDiameter_mm": 152.4,
+      "boltCircleDiameter_mm": 120.7,
+      "numberOfBolts": 4,
+      "flangeThickness_mm": 19.1
+    }
+  ]
+}

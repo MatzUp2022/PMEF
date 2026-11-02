@@ -55,6 +55,13 @@
         "type": "string"
       }
     },
+    "fieldDefinitions": {
+      "type": "object",
+      "description": "Meaning of the entry fields of this catalog (field name -> definition), e.g. which thickness convention a flange catalog uses.",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
     "families": {
       "type": "object",
       "description": "Map of family code to human-readable family name.",
@@ -277,7 +284,16 @@
           "exclusiveMinimum": 0,
           "title": "Flange Outside Diameter",
           "description": "Flange outside diameter in millimetres."
-        }
+        },
+        "NPS": { "type": "number", "exclusiveMinimum": 0, "description": "Nominal pipe size [in] (ASME)." },
+        "DN": { "type": "integer", "exclusiveMinimum": 0, "description": "Nominal diameter DN (EN)." },
+        "flangeThickness_mm": { "type": "number", "exclusiveMinimum": 0, "description": "Flange thickness [mm]; convention per the catalog's fieldDefinitions (ASME B16.5: tf without raised face; EN 1092-1: C1)." },
+        "boltCircle_mm": { "type": "number", "exclusiveMinimum": 0, "description": "Bolt circle diameter [mm]." },
+        "boltHoles": { "type": "integer", "minimum": 4, "multipleOf": 4, "description": "Number of bolt holes." },
+        "boltDiameter_mm": { "type": "number", "exclusiveMinimum": 0, "description": "Nominal bolt (stud) diameter [mm] (M12 -> 12; 1/2 in -> 12.7)." },
+        "boltHoleDiameter_mm": { "type": "number", "exclusiveMinimum": 0, "description": "Bolt hole diameter [mm]." },
+        "raisedFace_mm": { "type": "number", "exclusiveMinimum": 0, "description": "Raised face diameter [mm]." },
+        "facingType": { "type": "string", "enum": ["RF", "FF", "RTJ"], "description": "Facing: raised face, flat face, ring-type joint." }
       }
     },
     "instrumentEntry": {

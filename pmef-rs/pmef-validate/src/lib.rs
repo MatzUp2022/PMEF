@@ -168,7 +168,10 @@ impl PmefValidator {
                 "$ref": ref_target,
             });
 
+            // `format` is an annotation (Draft 2020-12 default), as in the Python reference
+            // validator; asserting it there would depend on optional packages (AUDIT P3.8).
             let mut options = jsonschema::JSONSchema::options();
+            options.should_validate_formats(false);
             for (id, doc) in &self.by_id {
                 options.with_document(id.clone(), doc.clone());
             }

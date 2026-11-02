@@ -1,0 +1,80 @@
+{
+  "catalogId": "profiles-broken",
+  "catalogType": "STEEL_PROFILES",
+  "version": "0",
+  "entries": [
+    {
+      "family": "HEB",
+      "h_mm": 200,
+      "b_mm": 200,
+      "tw_mm": 9.0,
+      "tf_mm": 15.0,
+      "r_mm": 18,
+      "A_cm2": 78.1,
+      "Iy_cm4": 5696,
+      "Iz_cm4": 2003,
+      "Wel_y_cm3": 570,
+      "Wel_z_cm3": 200,
+      "mass_kg_m": 61.3,
+      "catalogId": "EN:HEB200"
+    },
+    {
+      "family": "HEB",
+      "h_mm": 220,
+      "b_mm": 220,
+      "tw_mm": 9.5,
+      "tf_mm": 16.0,
+      "r_mm": 18,
+      "A_cm2": 91.0,
+      "Iy_cm4": 8091,
+      "Iz_cm4": 2843,
+      "Wel_y_cm3": 736,
+      "Wel_z_cm3": 258,
+      "mass_kg_m": 80.0,
+      "catalogId": "EN:HEB220"
+    },
+    {
+      "family": "HEB",
+      "h_mm": 240,
+      "b_mm": 240,
+      "tw_mm": 10.0,
+      "tf_mm": 17.0,
+      "r_mm": 21,
+      "A_cm2": 106.0,
+      "Iy_cm4": 7000,
+      "Iz_cm4": 3923,
+      "Wel_y_cm3": 938,
+      "Wel_z_cm3": 327,
+      "mass_kg_m": 83.2,
+      "catalogId": "EN:HEB240"
+    },
+    {
+      "family": "CHS",
+      "OD_mm": 60.3,
+      "t_mm": 4.0,
+      "mass_kg_m": 5.55,
+      "catalogId": "EN:CHS60.3x5"
+    },
+    {
+      "family": "L",
+      "designation": "L2x2x0.25",
+      "b1_mm": 50.8,
+      "b2_mm": 50.8,
+      "t_mm": 6.35,
+      "mass_kg_m": 2.9,
+      "lbft": 1.98,
+      "catalogId": "AISC:L2x2x0.25"
+    },
+    {
+      "family": "W",
+      "designation": "W14x90",
+      "d_mm": 356.1,
+      "bf_mm": 368.8,
+      "tf_mm": 18.0,
+      "tw_mm": 11.2,
+      "mass_kg_m": 133.9,
+      "lbft": 95,
+      "catalogId": "AISC:W14x90"
+    }
+  ]
+}

@@ -7,12 +7,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CatalogReference {
-    pub catalog_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub catalog_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub standard: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rdl_type_uri: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "eclassIRDI", skip_serializing_if = "Option::is_none")]
     pub eclass_irdi: Option<String>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub vendor_mappings: Vec<VendorMapping>,
@@ -38,6 +39,9 @@ pub struct DocumentLink {
     pub revision: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
+    /// Schema property `mimeType`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mime_type: Option<String>,
 }
 
 /// Physical connection point on a piping component.

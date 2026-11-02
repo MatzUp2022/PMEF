@@ -52,6 +52,7 @@
 #![warn(missing_docs, clippy::all)]
 
 pub mod equipment;
+pub mod pcf_bridge;
 pub mod idf;
 
 pub use equipment::{p3d_class_to_pmef, P3dEquipment, P3dNozzle};
@@ -291,7 +292,8 @@ pub fn parse_pcf(content: &str) -> (PcfUnits, String, Vec<PcfComponent>) {
             pipeline_ref = rest.to_owned();
             continue;
         }
-        if kw_upper == "END-POINT" {
+        // SUPPORT components carry their single point as CO-ORDS
+        if kw_upper == "END-POINT" || kw_upper == "CO-ORDS" {
             let pts: Vec<f64> = rest.split_whitespace()
                 .filter_map(|p| p.parse().ok()).collect();
             if pts.len() >= 4 {

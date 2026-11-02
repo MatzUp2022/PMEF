@@ -616,7 +616,7 @@ All relationship types extend a base structure:
 | `pmef:Supports` | structure → load | SteelMember | PipeSupport/PipingLine | `loadTransferred` (6 DOF) |
 | `pmef:ControlledBy` | equipment → instrument | valve/motor | instrument/loop | `controlMode`, `signalPath` |
 | `pmef:IsDocumentedBy` | object → document | any object | document | `documentType`, `documentId`, `documentUri` |
-| `pmef:IsRevisionOf` | new → old | new revision | old revision | `changeReason`, `changeType` |
+| `pmef:IsRevisionOf` | new → old | new revision | old revision | `changeReason`, `changeType`, `correspondence` ([RFC-0003](rfc/0003-as-built-correspondence.md): as-built ↔ design, `changeType = AS_BUILT`) |
 | `pmef:HasEquivalentIn` | PMEF → native | any PMEF object | (itself) | `targetSystem`, `targetSystemId`, `mappingType` |
 | `pmef:IsCollocatedWith` | bidirectional | any object | any object | — |
 | `pmef:ReplacedBy` | old → new | old equipment | new equipment | `replacementDate`, `workOrderRef` |
@@ -734,8 +734,12 @@ fouling factors.
 
 Carries centrifugal and reciprocating compressor data per
 API 617/618/619: inlet flow [m³/h], pressure ratio, polytropic
-efficiency [%], shaft power [kW], driver type, number of stages,
+efficiency [%] (`polytropicEfficiency`), shaft power [kW], driver type, number of stages,
 seal type.
+
+The earlier spelling `polytropic_efficiency` is **deprecated** (RFC-0004): readers **MUST**
+accept it in 0.10.x, writers **MUST** use `polytropicEfficiency`, and an object **MUST NOT**
+carry both. It is removed in 1.0.0.
 
 ### 9.11 SupportSpec
 

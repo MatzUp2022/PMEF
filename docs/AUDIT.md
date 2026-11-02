@@ -131,8 +131,8 @@ usable end-to-end) · **working** (builds, tested, usable). Active scope per CLA
 
 | Tool | Rust crate | Host-side plug-in | Maturity | Notes |
 |---|---|---|---|---|
-| ★ AVEVA E3D | `pmef-adapter-e3d` (31 unit + 1 integration test) | none (PML scripts referenced, not in repo) | **partial — compiles since 2026-10-31** | `rvm.rs` removed (DD-011); equipment geometry from PML primitives. Equipment objects are not yet schema-valid (`null` optional fields, missing `vesselDesign`) |
-| ★ AutoCAD Plant 3D | `pmef-adapter-plant3d` (~1.6 k LOC, 22 tests: PCF/IDF parsing) | `pmef-plant3d-dotnet` (C#, 442 LOC, Plant SDK) | **partial, does not compile** | PCF is a public text format; the .NET part could not be built here (no .NET SDK / AutoCAD SDK) |
+| ★ AVEVA E3D | `pmef-adapter-e3d` (31 unit + 2 integration tests) | none (PML scripts referenced, not in repo) | **partial — compiles since 2026-10-31** | `rvm.rs` removed (DD-011); equipment geometry from PML primitives. All exported objects schema-valid (P1.7) |
+| ★ AutoCAD Plant 3D | `pmef-adapter-plant3d` | `pmef-plant3d-dotnet` (C#, not built in CI) | **partial — export + import via PCF (2026-10-31)** | PCF bridge round trip lossless, conformance L3 as converter; L1 as adapter (no native id → INTG-006); not verified inside Plant 3D |
 | CADMATIC | `pmef-adapter-cadmatic` (~2.0 k) | — | partial, does not compile | frozen |
 | COMOS | `pmef-adapter-comos` (~1.8 k) | `pmef-comos-dotnet` (640 LOC) | partial, does not compile | frozen |
 | Creo | `pmef-adapter-creo` (~1.7 k) | `pmef-creo-toolkit` (C, 624 LOC, no build files) | partial, does not compile | frozen |
@@ -181,23 +181,32 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
   moved from CHANGELOG to ROADMAP; docx renamed + marked legacy; docx review in
   `docs/legacy-docx-review.md` (nothing normative to move).
 - **P1.6** ~~Decide on `rvm.rs`~~ — done, removed (§6 item 1).
-- **P1.7** Make E3D equipment objects schema-valid (drop `null` optional fields, map
-  type-specific required blocks such as `vesselDesign`) — found by the new integration test.
+- **P1.7** ~~Make E3D equipment objects schema-valid~~ — done 2026-10-31: absent PML attributes
+  are omitted instead of written as `null`; design data goes into the required type blocks
+  (`vesselDesign`, `pumpSpec`, `compressorSpec`, `hxSpec`, tank fields); nozzles always carry
+  `nozzleMark`. Also fixed: in-line components (FLAN, VALV, PSUP, TEE, REDU, …) were all
+  exported as `pmef:Pipe` because the mapper received the Rust enum name instead of the PML
+  keyword. `tests/output_validates.rs` validates every exported object.
 
 - **P1.8** ~~`catalogs/profiles-en.json` HEA data defects~~ — done 2026-10-31: version 2024.2
   (h, tf of HEA 900/1000, `EN:HEA96` → `EN:HEA100`, Iy/Iz/Wel recomputed and checked against
-  published values; CI guard `scripts/i-section-properties.py`). Not yet checked: AISC catalogs
-  (no root radius given), hollow sections, channels, angles, piping-class dimensions.
+  published values; CI guard `scripts/i-section-properties.py`). The remaining catalogs were
+  checked on 2026-11-01, see P3.12.
 
 ### P2 — make claims true
 
 - **P2.1** ~~Real conformance runner~~ — done: `tests/run_tests.py` (82 tests, levels, kinds,
-  §7.1 report, self-test). Still open: the Rust `pmef conformance` subcommand is a separate,
-  shallow structural check (ignores `--level`; duplicate-`@id` check cannot fire) — make it
-  delegate to the suite's rules or rename it.
+  §7.1 report, self-test). The Rust `pmef conformance` subcommand (a shallow package check that
+  ignored `--level`/`--json`/`--dataset` and could not detect duplicate `@id`s) was replaced on
+  2026-11-01 by `pmef check` (package structure, same reference rules as
+  `scripts/check-topology.py`); `pmef conformance` remains as a deprecated alias. Spec 06 §7.1
+  names the suite as the source of the conformance report. DS-04 lacked its FileHeader (spec 03
+  MUST) — added.
 - **P2.2** ~~Deterministic `pmef diff` + field-level diff~~ — done 2026-10-31 (spec 03 §9,
-  `pmef_core::diff`, golden tests). Next: 3-way merge with a conflict model.
-- **P2.3** Either create DS-05 (`eaf-segment.ndjson`) or remove it from spec/README.
+  `pmef_core::diff`, golden tests). 3-way merge done as well (spec 03 §10, `pmef merge`).
+- **P2.3** ~~DS-05 (`eaf-segment.ndjson`)~~ — removed from spec 06 and the ROADMAP on
+  2026-11-01 (maintainer decision; never existed, outside the active scope). Benchmarks are
+  DS-01 to DS-04.
 - **P2.4** CHANGELOG fixed (single `[Unreleased]`, `extract-changelog.py --version v0.9.0-rc`
   works); still open: drop or implement `build-spec-pdf.py`.
 - **P2.7** ~~Missing 82-test suite~~ — done: suite published in `tests/`; the 0.9.0-rc
@@ -215,11 +224,76 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 - **P3.6** Make clippy gating: add doc comments, fix the remaining logic lints (e.g. unreachable
   `"GL"` arm in the Plant 3D valve SKEY mapping — `GL` always maps to globe, never control).
 - **P3.7** Commit `pmef-rs/Cargo.lock` (workspace ships a binary) for reproducible CI builds.
-- **P3.8** Rust validator ignored `dependentRequired` (found in Phase 3; RFC-0001 schema uses
-  `if/then` instead). Check other Draft 2020-12 keywords for Rust/Python divergence, or upgrade
-  the `jsonschema` crate (currently 0.18).
-- **P3.9** Rust model vs. schema drift: `PipeSupport.supportsMark`/`supportSpec` are required in
-  `pmef-core` but optional in the schema. Generate or test Rust types against the schemas.
+- **P3.8** ~~Rust/Python validator divergence~~ — done 2026-11-01. New differential test
+  `tests/validators/differential.py` (CI) runs both validators on every reference instance plus
+  systematic mutations (2955 cases). Found and fixed:
+  - `pmef validate` (and `stats`, `index`, `check-refs`, `conformance`, `topology`) dropped lines
+    without a string `@id`/`@type` or with invalid JSON **silently** — an invalid file passed.
+    Now they are errors. This also makes the `conformance` checks "all objects have @type/@id"
+    able to fire.
+  - Rust asserted `format` (uri, date-time), Python treated it as an annotation (Draft 2020-12
+    default). Both annotate now; asserting it in Python would depend on optional packages.
+  - Unknown `@type`: Python failed, Rust skipped. Both follow spec 06 CL1-03 (skip + warn);
+    `--strict` / the examples check treat it as an error. Spec 06 §5.1 states these semantics.
+  The `jsonschema` crate stays at 0.18; the differential test guards future keyword use.
+- **P3.9** ~~Rust model vs. schema drift~~ — done 2026-10-31 for the active scope. New test
+  `pmef-rs/pmef-cli/tests/schema_drift.rs` checks every reference instance per `@type`: the Rust
+  type accepts it, re-serialises schema-valid, accepts the object reduced to its schema-required
+  properties, and drops no property. Fixed: 74 fields required in Rust but optional in the schema
+  (`supportsMark`, `pipeLength`, `PumpSpec.designFlow`, …), 122 schema properties missing from the
+  Rust types, and wrong JSON names (`Iec81346Designation` read `functional_aspect` instead of
+  `functionalAspect`, so every IEC 81346 designation was lost; `GeometryReference.ref`,
+  `teklaGUID`, `eclassIRDI`). A schema-valid `SteelMember` without `memberMark` could not be read at
+  all. Frozen E&I types keep their drift (55 findings, listed by the test, not failing).
+- **P3.11** ~~Equipment layouts of DS-01/DS-02 geometrically inconsistent~~ — done 2026-11-01.
+  `scripts/check-geometry.py` found 12 equipment findings (line CW-201 through vessel V-201, V-201
+  top head mid-shell, E-301B nozzles 500 mm inside the body, E-301A shell inlet between a pipe and
+  a valve, …) plus K-101 nozzles inside its bounding box. Fixed by moving equipment to the piping:
+  CW-201 is unchanged (shared with `stress-model-cw201`), CW-202 + beam C02 shifted by −1700 mm,
+  CW-301 re-laid as a vertical control-valve station onto a radial shell nozzle. `@id`s and object
+  counts unchanged. Equipment checks are now blocking.
+- **P3.12** Catalog consistency — done 2026-11-01 except the open points below. New CI check
+  `scripts/check-catalogs.py` (derived values vs. dimensions, designations, lb/ft ↔ kg/m, series
+  monotony, pipe bore/mass/schedules, flange geometry, piping classes vs. the dimension catalogs;
+  golden negative fixture `tests/catalogs/`). Corrected against references:
+  - `profiles-aisc` 2023.2 / `profiles-aisc-extended` 2024.2 — AISC Shapes Database v16.0: all 14
+    L masses ≈ 38 % low, W36x150/W40x167/W44x230 flange widths and Iy/Sy, W10x22/W10x33/W21x68,
+    HSS weights, WT Ix/Sx ≈ half, MC6x12 bf.
+  - `profiles-en` 2024.3 — UPE 80–400 dimensions and properties (Stad data sheet, EN 10279
+    sections), RHS 100x60 area/mass (EN 10210-2 corner radii); `profiles-en-extended` 2024.2 —
+    T sections to EN 10055 (web = flange thickness, masses 10–20 % high).
+  - `pipe-dimensions` 2024.2 — ASME B36.10M: SCH10 held SCH5 values (NPS ½–4), NPS 14–24 shifted
+    by one schedule, SCH120/SCH160/XXS swapped (NPS 3–6), NPS 12 SCH40/SCH60, NPS 10/12 XXS;
+    undefined schedules removed, NPS 3½/5/22 filled.
+  - Piping classes A1A2/B3C1/C5D1 2024.2 — pipe walls and flange dimensions taken from the
+    dimension catalogs (bolt circles, bolt counts, flange thicknesses, DN ≥ 300 walls).
+
+  Maintainer decisions (2026-11-01):
+  1. The seven entries that are not AISC designations were removed: `HSS1.5x0.125`,
+     `HSS2.0x0.125`, `HSS4.5x0.25`, `HSS5.5x0.25`, `HSS8.0x0.25`, `HSS9.0x0.375`, `WT18x150`
+     (no references in the repository).
+  2. The two flange field layouts in the piping classes stay as they are (A1A2/B3C1
+     `outsideDiameter_mm` = flange OD; C5D1/EN-P1A `outsideDiameter_mm` = pipe OD plus
+     `flangeOD_mm`). Consumers must handle both; `check-catalogs.py` does.
+
+  Flange catalogs (2026-11-01): `flange-dimensions` 2024.2 against the ASME B16.5 inch tables
+  (Class 900/1500/2500 rows carried other classes' values, tf now excludes the raised face) and
+  `flange-dimensions-en` 2024.2 against the EN 1092-1 type 11 tables (PN40 DN200–600 held PN25
+  values, raised faces were ASME values). Field meaning written into both catalogs
+  (`fieldDefinitions`): `boltDiameter_mm` = bolt, new `boltHoleDiameter_mm` = hole (previously
+  hole in the ASME and mostly bolt in the EN catalog). Piping classes follow. These fields and
+  `fieldDefinitions` are defined in the catalog schema since 2026-11-01.
+
+  Still open:
+  1. T-section Iy/Iz (`profiles-en-extended`) are unverified (tapered legs, no reference at hand).
+  2. Not covered by references: EN pipe walls (EN 10220 preferred series), materials,
+     instruments; NPS ½ flange raised-face/hole values only from the inch table.
+  3. `boltDiameter_mm` in the piping classes is not checked (meaning differs per class).
+
+- **P3.10** ~~Schema naming defect `CompressorSpec.polytropic_efficiency`~~ — decided and done
+  2026-11-01 ([RFC-0004](../spec/rfc/0004-polytropic-efficiency-camelcase.md)): new
+  `polytropicEfficiency`, old spelling deprecated in 0.10.0 (still valid, not both in one
+  object), removed in 1.0.0. Example, spec 02 §9.10 and Rust model updated.
 
 ## 8. Maintainer decisions (2026-10-31)
 
