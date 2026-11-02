@@ -6,7 +6,8 @@ must agree with the primary data it is derived from. Checks (tolerances per chec
 
 Steel profiles (profiles-*.json)
   - section area from the dimensions (I/H, channel, T, angle, CHS, RHS/SHS, flat, HSS);
-    I/H sections also Iy, Iz, Wel (scripts/i-section-properties.py)
+    I/H sections also Iy, Iz, Wel (scripts/i-section-properties.py); EN 10055 T sections
+    also Iy, Iz from the exact tapered polygon (±4 %)
   - mass per length = area × 7850 kg/m³
   - kg/m ↔ lb/ft (AISC), weight in the AISC designation (W14x90 → 90 lb/ft)
   - designation / catalogId ↔ dimensions (RHS100x60x4, L50x5, HSS12x8x0.375, …)
@@ -76,8 +77,58 @@ def channel_area(h, b, tw, tf, r):
     return 2 * b * tf + (h - 2 * tf) * tw + 2 * (1 - math.pi / 4) * r * r
 
 
-def tee_area(h, b, tw, tf, r):
-    return b * tf + (h - tf) * tw + 2 * (1 - math.pi / 4) * r * r
+def _round_corners(pts, radii, seg=16):
+    """Replace each polygon vertex with radius r > 0 by a tangent arc (convex or concave)."""
+    out = []
+    for i, p in enumerate(pts):
+        r = radii[i]
+        if not r:
+            out.append(p)
+            continue
+        a, c = pts[i - 1], pts[(i + 1) % len(pts)]
+        u = (a[0] - p[0], a[1] - p[1])
+        v = (c[0] - p[0], c[1] - p[1])
+        lu, lv = math.hypot(*u), math.hypot(*v)
+        u, v = (u[0] / lu, u[1] / lu), (v[0] / lv, v[1] / lv)
+        ang = math.acos(max(-1.0, min(1.0, u[0] * v[0] + u[1] * v[1])))
+        dist = r / math.tan(ang / 2)
+        bis = (u[0] + v[0], u[1] + v[1])
+        lb = math.hypot(*bis)
+        ctr = (p[0] + bis[0] / lb * r / math.sin(ang / 2), p[1] + bis[1] / lb * r / math.sin(ang / 2))
+        a1 = math.atan2(p[1] + u[1] * dist - ctr[1], p[0] + u[0] * dist - ctr[0])
+        a2 = math.atan2(p[1] + v[1] * dist - ctr[1], p[0] + v[0] * dist - ctr[0])
+        da = (a2 - a1 + math.pi) % (2 * math.pi) - math.pi
+        out += [(ctr[0] + r * math.cos(a1 + da * k / seg), ctr[1] + r * math.sin(a1 + da * k / seg))
+                for k in range(seg + 1)]
+    return out
+
+
+def tee_properties(h, b, s, t, r1, taper=0.02):
+    """EN 10055 T section as an exact polygon: flange inner face and web faces with 2 % taper,
+    flange thickness t at b/4, web thickness s at h/2, root radius r1, toe radii r2 = t/2
+    (flange) and r3 = t/4 (web). Returns A [mm²], Iy (horizontal axis), Iz [mm⁴].
+    Reproduces the EN 10055 / DIN 1024 tables (T30–T50) within 3 %."""
+    def web(y):
+        return s / 2 + taper * (y - h / 2)
+
+    def underside(x):
+        return h - t - taper * (b / 4 - x)
+
+    y = h - t
+    for _ in range(50):
+        y = underside(web(y))
+    half = [(0.0, 0.0), (web(0), 0.0), (web(y), y), (b / 2, underside(b / 2)), (b / 2, h), (0.0, h)]
+    right = _round_corners(half, [0, t / 4, r1, t / 2, 0, 0])
+    poly = right[:-1] + [(-x, yy) for x, yy in reversed(right[1:-1])]
+    a = sx = ixx = iyy = 0.0
+    for (x0, y0), (x1, y1) in zip(poly, poly[1:] + poly[:1]):
+        c = x0 * y1 - x1 * y0
+        a += c / 2
+        sx += (y0 + y1) * c / 6
+        ixx += (y0 * y0 + y0 * y1 + y1 * y1) * c / 12
+        iyy += (x0 * x0 + x0 * x1 + x1 * x1) * c / 12
+    a, yc = abs(a), abs(sx) / abs(a)
+    return a, abs(ixx) - a * yc * yc, abs(iyy)
 
 
 def angle_area(b1, b2, t, r1=0.0, r2=0.0):
@@ -161,7 +212,10 @@ def check_profile(e, src):
     elif fam == "UPE":
         area = channel_area(e["h_mm"], e["b_mm"], e["tw_mm"], e["tf_mm"], e.get("r_mm", 0))
     elif fam == "T":
-        area = tee_area(e["h_mm"], e["b_mm"], e["tw_mm"], e["tf_mm"], e.get("r_mm", 0))
+        area, iy, iz = tee_properties(e["h_mm"], e["b_mm"], e["tw_mm"], e["tf_mm"], e.get("r_mm", 0))
+        for k, ref in (("Iy_cm4", iy / 1e4), ("Iz_cm4", iz / 1e4)):
+            if k in e:
+                close(w, k, e[k], ref, 0.04)
     elif fam == "EQUAL_ANGLE":
         r = e.get("r_mm", 0)
         area = angle_area(e["b1_mm"], e["b2_mm"], e["t_mm"], r, r / 2)

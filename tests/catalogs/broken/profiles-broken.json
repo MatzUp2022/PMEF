@@ -4,6 +4,19 @@
   "version": "0",
   "entries": [
     {
+      "family": "T",
+      "h_mm": 100,
+      "b_mm": 100,
+      "tw_mm": 11.0,
+      "tf_mm": 11.0,
+      "r_mm": 11,
+      "A_cm2": 20.89,
+      "Iy_cm4": 135,
+      "Iz_cm4": 87.9,
+      "mass_kg_m": 16.4,
+      "catalogId": "EN:T100"
+    },
+    {
       "family": "HEB",
       "h_mm": 200,
       "b_mm": 200,

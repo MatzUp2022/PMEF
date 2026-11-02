@@ -3,7 +3,7 @@
   "catalogId": "profiles-en-extended",
   "catalogType": "STEEL_PROFILES",
   "standard": "EN 10055:1995, EN 10056-2:1993",
-  "version": "2024.2",
+  "version": "2024.3",
   "description": "Extended European structural steel profiles: T-sections per EN 10055 and unequal-leg angles per EN 10056-2. Complements the main profiles-en.json catalog.",
   "families": {
     "T": "T-section (EN 10055)",
@@ -17,7 +17,7 @@
     "mass_per_length": "kg/m"
   },
   "notes": [
-    "Version 2024.2 corrects the T sections to EN 10055 (web = flange thickness = root radius; area and mass per the PN-EN 10055 tables). Iy/Iz of the T sections are not verified. Checked with scripts/check-catalogs.py.",
+    "Version 2024.2 corrects the T sections to EN 10055 (web = flange thickness = root radius; area and mass per the PN-EN 10055 tables). Version 2024.3 corrects Iy/Iz of the T sections (previously up to 35 % too low): T30–T50 per the published EN 10055 / DIN 1024 tables, T60–T140 computed from the exact EN 10055 geometry (2 % tapers, r1 = t, r2 = t/2, r3 = t/4), which reproduces the published T30–T50 values within 3 %. Iy is about the horizontal axis. Checked with scripts/check-catalogs.py.",
     "T-section dimensions per EN 10055:1995.",
     "Unequal angle dimensions per EN 10056-2:1993.",
     "Section properties are approximate values for reference.",
@@ -31,9 +31,9 @@
       "tw_mm": 4.0,
       "tf_mm": 4.0,
       "r_mm": 4,
-      "A_cm2": 2.25,
-      "Iy_cm4": 1.58,
-      "Iz_cm4": 0.89,
+      "A_cm2": 2.26,
+      "Iy_cm4": 1.72,
+      "Iz_cm4": 0.87,
       "mass_kg_m": 1.77,
       "catalogId": "EN:T30"
     },
@@ -45,8 +45,8 @@
       "tf_mm": 5.0,
       "r_mm": 5,
       "A_cm2": 3.77,
-      "Iy_cm4": 4.43,
-      "Iz_cm4": 2.35,
+      "Iy_cm4": 5.28,
+      "Iz_cm4": 2.58,
       "mass_kg_m": 2.96,
       "catalogId": "EN:T40"
     },
@@ -58,8 +58,8 @@
       "tf_mm": 6.0,
       "r_mm": 6,
       "A_cm2": 5.66,
-      "Iy_cm4": 11.2,
-      "Iz_cm4": 5.85,
+      "Iy_cm4": 12.1,
+      "Iz_cm4": 6.06,
       "mass_kg_m": 4.44,
       "catalogId": "EN:T50"
     },
@@ -71,8 +71,8 @@
       "tf_mm": 7.0,
       "r_mm": 7,
       "A_cm2": 7.94,
-      "Iy_cm4": 22.2,
-      "Iz_cm4": 11.5,
+      "Iy_cm4": 24.4,
+      "Iz_cm4": 12.1,
       "mass_kg_m": 6.23,
       "catalogId": "EN:T60"
     },
@@ -84,8 +84,8 @@
       "tf_mm": 8.0,
       "r_mm": 8,
       "A_cm2": 10.6,
-      "Iy_cm4": 39.0,
-      "Iz_cm4": 20.3,
+      "Iy_cm4": 44.4,
+      "Iz_cm4": 22.0,
       "mass_kg_m": 8.32,
       "catalogId": "EN:T70"
     },
@@ -97,8 +97,8 @@
       "tf_mm": 9.0,
       "r_mm": 9,
       "A_cm2": 13.63,
-      "Iy_cm4": 62.8,
-      "Iz_cm4": 33.0,
+      "Iy_cm4": 74.6,
+      "Iz_cm4": 36.9,
       "mass_kg_m": 10.7,
       "catalogId": "EN:T80"
     },
@@ -110,8 +110,8 @@
       "tf_mm": 11.0,
       "r_mm": 11,
       "A_cm2": 20.89,
-      "Iy_cm4": 135,
-      "Iz_cm4": 67.0,
+      "Iy_cm4": 178,
+      "Iz_cm4": 87.9,
       "mass_kg_m": 16.4,
       "catalogId": "EN:T100"
     },
@@ -123,8 +123,8 @@
       "tf_mm": 13.0,
       "r_mm": 13,
       "A_cm2": 29.55,
-      "Iy_cm4": 262,
-      "Iz_cm4": 128,
+      "Iy_cm4": 365,
+      "Iz_cm4": 180,
       "mass_kg_m": 23.2,
       "catalogId": "EN:T120"
     },
@@ -136,8 +136,8 @@
       "tf_mm": 15.0,
       "r_mm": 15,
       "A_cm2": 39.87,
-      "Iy_cm4": 449,
-      "Iz_cm4": 215,
+      "Iy_cm4": 669,
+      "Iz_cm4": 329,
       "mass_kg_m": 31.3,
       "catalogId": "EN:T140"
     },

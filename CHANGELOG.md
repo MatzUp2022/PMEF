@@ -46,6 +46,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   `@type` is skipped with a warning in both validators (spec 06 CL1-03); `pmef validate --strict`
   and `scripts/validate-examples.py` (default; `--lenient` to relax) report it as an error.
 
+- **T-section Iy/Iz corrected** (docs/AUDIT.md P3.12): `profiles-en-extended` 2024.3. The
+  moments of inertia of all nine EN 10055 T sections were 3–35 % too low (T140: Iy 449 → 669 cm⁴).
+  T30–T50 now follow the published EN 10055 / DIN 1024 tables, T60–T140 the exact EN 10055
+  geometry (2 % tapers, root and toe radii), which reproduces the published rows within 3 %.
+  `scripts/check-catalogs.py` checks T-section Iy/Iz against that geometry (±4 %); the broken
+  catalog fixture covers the rule.
+
 - **Flange catalogs corrected** (docs/AUDIT.md P3.12): `flange-dimensions` 2024.2 against the
   ASME B16.5 inch tables — Class 900/1500/2500 rows held values of other classes (e.g. Class 900
   NPS 1–2 had Class 600 drilling), flange thickness is tf without the raised face (Class 150/300

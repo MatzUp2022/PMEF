@@ -285,7 +285,8 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
   `fieldDefinitions` are defined in the catalog schema since 2026-11-01.
 
   Still open:
-  1. T-section Iy/Iz (`profiles-en-extended`) are unverified (tapered legs, no reference at hand).
+  1. ~~T-section Iy/Iz (`profiles-en-extended`) unverified~~ — done 2026-11-02: values were 3–35 %
+     too low; corrected (2024.3) and checked against the exact EN 10055 geometry.
   2. Not covered by references: EN pipe walls (EN 10220 preferred series), materials,
      instruments; NPS ½ flange raised-face/hole values only from the inch table.
   3. `boltDiameter_mm` in the piping classes is not checked (meaning differs per class).
