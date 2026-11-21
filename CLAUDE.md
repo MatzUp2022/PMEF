@@ -102,3 +102,23 @@ needs regenerated fixtures (`generate_fixtures.py`) — CI fails otherwise.
   code Apache 2.0, examples CC0.
 - Work on a feature branch per task; small, reviewable commits; never push to `main` directly.
 - Stop and ask before deleting files, renaming schemas, or changing `@id` patterns.
+
+## Ecosystem scope (binding, see `docs/ECOSYSTEM.md`)
+
+PMEF is the **core layer** of the MatzUp2022 ecosystem: the single information model for 3D plant
+objects and the single home of engineering catalogs. Other repos depend on PMEF, never the reverse.
+
+PMEF owns: schemas, information model (Piping, Equipment, Structural Steel), catalogs (piping classes,
+flanges, pipe dimensions, profiles, materials), NDJSON I/O, diff/merge, snapping, adapters to
+AVEVA E3D and AutoCAD Plant 3D.
+
+Not in scope here — build it in the owning repo instead:
+
+- Viewer, rendering, file-format conversion for viewing → PlantView / cad-engine
+- P&ID/PFD topology, DEXPI parsing → DEXPI-Manager (map to PMEF via stable `@id`s)
+- Exact B-rep/NURBS geometry → cad-kernel (PMEF only defines geometry references and primitives)
+- Document management, revisions, workflows, lifecycle data → ProDocAimAi
+- Recognition from 2D drawings/scans → EngineeringAI (it *produces* PMEF with provenance)
+
+Catalog data needed by other repos (e.g. DEXPI-Manager `pipe-class-engine`) is added here, not
+duplicated there.
