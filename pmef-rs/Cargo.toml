@@ -5,6 +5,7 @@ members = [
     "pmef-io",
     "pmef-validate",
     "pmef-geom",
+    "pmef-catalogs",
     "pmef-cli",
     "pmef-adapter-plant3d",
     "pmef-adapter-cadmatic",
