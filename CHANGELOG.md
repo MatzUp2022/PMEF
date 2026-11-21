@@ -11,14 +11,6 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
-### Added
-
-- **`pmef-catalogs` crate** (`pmef-rs/pmef-catalogs`) — embeds every catalog in `catalogs/` so
-  other repositories read PMEF catalogs instead of keeping their own tables (ecosystem roadmap
-  stage 2, `docs/ECOSYSTEM.md`). Raw/parsed access by `catalogId`, plus typed pipe sizes
-  (`pipe_sizes`, `nps_to_dn`, `dn_to_nps`, `parse_nps`). The JSON files stay normative; a test
-  fails when a catalog file is added without being embedded. No schema change.
-
 ### Deprecated
 
 - **`CompressorSpec.polytropic_efficiency`** — use `polytropicEfficiency`
@@ -244,6 +236,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   `RDL_MAPPING` to match its actual content.
 
 ### Added
+
+- **`pmef-catalogs` crate** (`pmef-rs/pmef-catalogs`) — embeds every catalog in `catalogs/` so
+  other repositories read PMEF catalogs instead of keeping their own tables (ecosystem roadmap
+  stage 2, `docs/ECOSYSTEM.md`). Raw/parsed access by `catalogId`, plus typed pipe sizes
+  (`pipe_sizes`, `nps_to_dn`, `dn_to_nps`, `parse_nps`). The JSON files stay normative; a test
+  fails when a catalog file is added without being embedded. No schema change.
 
 - **Catalog schema: flange entry fields and `fieldDefinitions`** — `flangeDimensionEntry` now
   defines the optional fields `NPS`, `DN`, `flangeThickness_mm`, `boltCircle_mm`, `boltHoles`
