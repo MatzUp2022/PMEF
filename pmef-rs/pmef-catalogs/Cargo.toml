@@ -1,0 +1,12 @@
+[package]
+name = "pmef-catalogs"
+description = "PMEF engineering catalogs (pipe and flange dimensions, piping classes, materials, profiles) embedded for consumers"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
