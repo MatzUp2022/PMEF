@@ -36,6 +36,10 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **`pmef-catalogs` no longer enables serde_json `preserve_order`** — the crate took serde_json
+  from the workspace, so Cargo feature unification switched every consumer (e.g. DEXPI-Manager)
+  to order-preserving JSON maps. It now depends on plain `serde_json`. No API change.
+
 - **PMEF-DS-04 (`ei-loop-fic-10101`) had no FileHeader** although spec 03 requires one as the
   first object; added (10 objects).
 
