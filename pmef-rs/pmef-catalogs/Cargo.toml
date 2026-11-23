@@ -9,4 +9,6 @@ rust-version.workspace = true
 
 [dependencies]
 serde.workspace = true
-serde_json.workspace = true
+# Not the workspace entry: that enables `preserve_order`, and Cargo feature unification would
+# switch every consumer's serde_json (e.g. DEXPI-Manager) to IndexMap-backed maps.
+serde_json = "1"
