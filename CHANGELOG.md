@@ -36,6 +36,11 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **`pmef-core` no longer enables serde_json `preserve_order`** — same fix as for `pmef-catalogs`:
+  consumers outside this workspace (DEXPI-Manager's DEXPI→PMEF mapping) keep plain JSON maps.
+  Inside the workspace `pmef-io`/`pmef-cli` still enable it, so output order is unchanged.
+  No API change.
+
 - **`pmef-catalogs` no longer enables serde_json `preserve_order`** — the crate took serde_json
   from the workspace, so Cargo feature unification switched every consumer (e.g. DEXPI-Manager)
   to order-preserving JSON maps. It now depends on plain `serde_json`. No API change.
