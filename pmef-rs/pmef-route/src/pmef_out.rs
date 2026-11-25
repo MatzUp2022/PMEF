@@ -166,6 +166,16 @@ fn line_objects(problem: &RouteProblem, r: &RoutedLine) -> Vec<Value> {
 
     // Polylines: 0 = run from–to, k = branch k-1 (starting at its tee centre).
     let branches: Vec<_> = r.branches.iter().filter(|b| b.ok).collect();
+    // `RoutedBranch::on` of each polyline: 0 = run, i + 1 = branch i of the route.
+    let poly_on: Vec<usize> = std::iter::once(0)
+        .chain(
+            r.branches
+                .iter()
+                .enumerate()
+                .filter(|(_, b)| b.ok)
+                .map(|(i, _)| i + 1),
+        )
+        .collect();
     let mut polys: Vec<(&Vec<P3>, f64, Option<String>)> =
         vec![(&r.points, 0.0, spec.to.connected_to.clone())];
     for b in &branches {
@@ -179,7 +189,7 @@ fn line_objects(problem: &RouteProblem, r: &RoutedLine) -> Vec<Value> {
             let tees: Vec<TeeAt> = branches
                 .iter()
                 .enumerate()
-                .filter(|(_, b)| b.on == k)
+                .filter(|(_, b)| b.on == poly_on[k])
                 .map(|(bi, b)| (b.points[0], unit(b.points[0], b.points[1]), bi))
                 .collect();
             layout(pts, c2f, *off, &tees, run_c2e, branch_c2e)

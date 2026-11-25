@@ -64,7 +64,7 @@ pub struct RoutedBranch {
     pub error: Option<String>,
     /// Centreline polyline: tee centre, bend points, consumer [mm].
     pub points: Vec<P3>,
-    /// Tree polyline the tee sits on: 0 = the run `from`–`to`, k = branch k-1.
+    /// Tree polyline the tee sits on: 0 = the run `from`–`to`, k = branch k-1 of the spec.
     pub on: usize,
     pub length_mm: f64,
     pub bends: usize,
@@ -824,7 +824,15 @@ fn attempt_branch(
     }
     let mut g = Grid::with_ticks(region, step, pins);
     let stub = g.stub(p, dir, c.first_need.max(c.d + step));
-    rasterise(c, &mut g, region, None, std::slice::from_ref(&stub), &[owner], &[]);
+    rasterise(
+        c,
+        &mut g,
+        region,
+        None,
+        std::slice::from_ref(&stub),
+        &[owner],
+        &[],
+    );
     for poly in &tree {
         for w in poly.windows(2) {
             g.add_own_box(&Aabb::from_points(w[0], w[1]).inflate(outer), c.d);
@@ -847,6 +855,17 @@ fn attempt_branch(
         .iter()
         .filter(|b| b.ok)
         .map(|b| b.points[0])
+        .collect();
+    // Stable id of each tree polyline (0 = run, i + 1 = branch i of the spec), independent of
+    // the order in which the branches were routed.
+    let tree_ids: Vec<usize> = std::iter::once(0)
+        .chain(
+            line.branches
+                .iter()
+                .enumerate()
+                .filter(|(_, b)| b.ok)
+                .map(|(i, _)| i + 1),
+        )
         .collect();
     let mut nodes: HashMap<usize, u8> = HashMap::new();
     let mut on_poly: HashMap<usize, usize> = HashMap::new();
@@ -888,7 +907,7 @@ fn attempt_branch(
                 }
                 if let Some(node) = g.node_at(q) {
                     *nodes.entry(node).or_insert(0) |= mask;
-                    on_poly.entry(node).or_insert(k);
+                    on_poly.entry(node).or_insert(tree_ids[k]);
                 }
             }
         }

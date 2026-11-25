@@ -478,3 +478,40 @@ fn tees_keep_their_distance_and_failures_fail_the_line() {
     );
     assert!(!r.branches[0].ok);
 }
+
+#[test]
+fn branch_routed_out_of_order_keeps_its_tee() {
+    // B2 is nearer to the header and is routed first; B1 tees into B2.
+    let p = problem(json!({
+        "routes": [{
+            "id": "H1", "pipeClass": "A1A2", "dn": 100,
+            "from": {"point": [0, 0, 0], "direction": [1, 0, 0]},
+            "to": {"point": [10000, 0, 0], "direction": [-1, 0, 0]},
+            "branches": [
+                {"id": "B1", "to": {"point": [3000, 1500, 1500], "direction": [0, 0, -1]}},
+                {"id": "B2", "to": {"point": [3000, 2000, 0], "direction": [0, -1, 0]}}
+            ]
+        }]
+    }));
+    let r = route_all(&p, &scene(&p));
+    assert!(r[0].ok, "{:?} {:?}", r[0].error, r[0].branches);
+    let objs = pmef_out::to_pmef(&p, &r);
+    let tees = objs.iter().filter(|o| o["@type"] == "pmef:Tee").count();
+    assert_eq!(
+        tees,
+        2,
+        "on: {:?}",
+        r[0].branches.iter().map(|b| b.on).collect::<Vec<_>>()
+    );
+    // Every branch segment starts at a tee: its first component connects to an existing object.
+    let ids: Vec<&serde_json::Value> = objs.iter().map(|o| &o["@id"]).collect();
+    for o in &objs {
+        if let Some(ports) = o["ports"].as_array() {
+            for pt in ports {
+                if let Some(c) = pt.get("connectedTo") {
+                    assert!(ids.contains(&c), "dangling {c} on {}", o["@id"]);
+                }
+            }
+        }
+    }
+}
