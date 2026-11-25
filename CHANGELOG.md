@@ -246,6 +246,10 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **`pmef route` stage 3 (branches)**: `routes[].branches` route further consumers of a line
+  onto its tree with equal tees from the class catalog (ASME B16.9 centre-to-end if the catalog
+  has none), nearest consumer first; output adds one `PipingSegment` per branch and
+  `pmef:Tee` components. Example problem `tests/route/header-branches-route.json`.
 - **`pmef route` stage 2 (multi-line negotiation)**: rip-up and reroute after the sequential
   pass (`settings.ripUpRounds`, default 5). A line blocked by earlier lines is routed first and
   the blocking lines are re-routed around it; the report notes the re-routed lines.

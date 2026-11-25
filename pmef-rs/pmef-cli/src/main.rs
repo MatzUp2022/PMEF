@@ -753,6 +753,12 @@ fn cmd_route(problem: PathBuf, output: PathBuf, report: Option<PathBuf>, plant: 
             ),
             Some(e) => println!("{}: FAILED: {e}", r.id),
         }
+        for b in &r.branches {
+            match &b.error {
+                None => println!("  branch {}: tee at {:?}, {:.0} mm, {} bends", b.id, b.points[0], b.length_mm, b.bends),
+                Some(e) => println!("  branch {}: FAILED: {e}", b.id),
+            }
+        }
     }
     if let Some(rep) = report {
         std::fs::write(rep, serde_json::to_string_pretty(&routed)?)?;

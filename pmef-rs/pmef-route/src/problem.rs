@@ -267,4 +267,17 @@ pub struct RouteSpec {
     /// Design temperature [K] checked against the class.
     #[serde(default)]
     pub design_temperature: Option<f64>,
+    /// Further consumers of the same line, each connected by an equal tee to the line's tree
+    /// (the run from `from` to `to` and the branches routed before it).
+    #[serde(default)]
+    pub branches: Vec<BranchSpec>,
+}
+
+/// A branch of a line: an equal tee on the line's tree and a run to `to`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct BranchSpec {
+    /// Short branch id, used in generated `@id`s.
+    pub id: String,
+    pub to: Terminal,
 }

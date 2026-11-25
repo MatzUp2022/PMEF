@@ -23,6 +23,9 @@ pub struct Grid {
     /// Nodes that `mark` leaves untouched (terminal stubs while their own equipment is
     /// rasterised).
     mask: Vec<usize>,
+    /// Clearance zone of the line's own tree (branch routing): entered only straight, and
+    /// left only through the tee.
+    own: Vec<u64>,
 }
 
 fn ticks(lo: f64, hi: f64, step: f64, pins: &[f64]) -> Vec<f64> {
@@ -94,6 +97,7 @@ impl Grid {
             hard: vec![0; total.div_ceil(64)],
             soft: Vec::new(),
             mask: Vec::new(),
+            own: Vec::new(),
         }
     }
 
@@ -150,6 +154,22 @@ impl Grid {
             self.hard[idx / 64] |= 1 << (idx % 64);
         } else {
             self.hard[idx / 64] &= !(1 << (idx % 64));
+        }
+    }
+
+    /// Whether the node lies in the clearance zone of the line's own tree.
+    #[inline]
+    pub fn is_own(&self, idx: usize) -> bool {
+        !self.own.is_empty() && self.own[idx / 64] >> (idx % 64) & 1 == 1
+    }
+
+    /// Mark the nodes whose cell, grown by `d`, touches the box as the own tree's zone.
+    pub fn add_own_box(&mut self, b: &Aabb, d: f64) {
+        if self.own.is_empty() {
+            self.own = vec![0; self.len().div_ceil(64)];
+        }
+        for idx in self.nodes_in(&b.inflate(d)) {
+            self.own[idx / 64] |= 1 << (idx % 64);
         }
     }
 

@@ -1,0 +1,22 @@
+{
+  "project": "demo",
+  "revisionId": "r2026-11-25-001",
+  "parent": "urn:pmef:unit:demo:U-100",
+  "grid": { "step": 100, "margin": 2000 },
+  "settings": { "bendPenalty": 1000, "clearance": 50 },
+  "obstacles": [
+    { "id": "E-301", "aabb": { "min": [4000, 1000, -500], "max": [5500, 2500, 1500] } }
+  ],
+  "routes": [
+    {
+      "id": "CW-301", "lineNumber": "4\"-CW-301-A1A2", "pipeClass": "A1A2", "dn": 100,
+      "from": { "point": [0, 0, 0], "direction": [1, 0, 0] },
+      "to": { "point": [10000, 0, 0], "direction": [-1, 0, 0] },
+      "branches": [
+        { "id": "B1", "to": { "point": [3000, 2000, 0], "direction": [0, -1, 0] } },
+        { "id": "B2", "to": { "point": [6000, -1500, 1000], "direction": [0, 0, -1] } },
+        { "id": "B3", "to": { "point": [4750, 3500, 500], "direction": [0, -1, 0], "owner": "E-301" } }
+      ]
+    }
+  ]
+}

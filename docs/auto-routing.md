@@ -81,6 +81,19 @@ the coarse or the corridor search fails (e.g. a gap narrower than a coarse cell)
 graph is used, and the report notes which graph found the route. The corridor result is optimal
 within the corridor, not necessarily over the whole region.
 
+**Branches** (`routes[].branches`: `id`, `to`). A line with several consumers is a tree: the
+run `from`–`to` first, then each branch from its consumer to an equal tee of the class
+(centre-to-end from the catalog, else ASME B16.9 with a note). The consumer nearest to the tree
+goes next (greedy Steiner heuristic), and a branch may end on an earlier branch. The search
+starts at the consumer; its goal is any node of the tree's straight runs that leaves room for
+the tee (run centre-to-end + elbow centre-to-face from an elbow, + terminal straight from a
+terminal, + branch centre-to-end from the tee a branch starts at, twice the centre-to-end from
+another tee), reached perpendicular to the run. The tree's own clearance zone is entered only
+straight and left only through the tee, so a branch never crosses its own line. Each branch
+becomes its own `PipingSegment`; the `pmef:Tee` (`teeType: EQUAL`) connects its branch port
+`P3` to the branch's first component. If a branch fails, the whole line fails (rip-up then
+treats it like any other failed line). Example: `tests/route/header-branches-route.json`.
+
 Lines are routed one after another; each routed line is an obstacle for the next. Then **rip-up
 and reroute** (`settings.ripUpRounds`, default 5) repairs failures of the order: a failed line is
 routed against the scene alone, the lines its route collides with are ripped up, the failed line
@@ -111,6 +124,7 @@ The problem format is documented in `pmef-rs/pmef-route/src/problem.rs` (camelCa
 | Clinic with `coarseStep` 600 (stage 1) | as above | 4 | all routed, 14.0 s → 0.7 s in total; length −1 % to +3 % per line |
 | `pmef-route` stage 1 tests | synthetic rack, wall with 400 mm gap | 3 | line climbs onto the rack level and runs 20 m along it; coarse-to-fine gives the fine optimum; fallback to the full graph for the narrow gap |
 | `pmef-route` stage 2 test | plan-only scene, block with two corridors | 2 | sequentially L1 cuts L2 off; rip-up routes L2 first and L1 through the other corridor |
+| `pmef-route` stage 3 tests, `tests/route/header-branches-route.json` | header DN 100 with 2–3 consumers, one box | 1 line, 3 branches | straight and bent branches end in tees on the header; the third consumer tees into the first branch; tee spacing kept; output passes schema, geometry and topology checks |
 
 ## Later increments
 
@@ -122,7 +136,9 @@ The problem format is documented in `pmef-rs/pmef-route/src/problem.rs` (camelCa
    PathFinder-style congestion costs over all lines at once (also to improve solutions without
    failures), packing of parallel lines into rack lanes with spacing tables (today the spacing
    follows from outer radii and clearance, quantised to the grid).
-3. **Branches.** Tees and Steiner-tree routing for headers with several consumers.
+3. **Branches.** Done in stage 3: equal tees, greedy Steiner tree (nearest consumer first,
+   branches may tee into branches). Open: reducing tees (branch DN below the run DN), optimal
+   Steiner trees (Hanan grid, iterated 1-Steiner), headers routed through rack levels.
 4. **More rules.** Slope for gravity lines (drains), 45° elbows, skewed nozzles, minimum straight
    lengths before instruments and pumps, valve accessibility and operating heights, insulation
    and heat-tracing allowances, flange/valve insertion from the class, support spacing and

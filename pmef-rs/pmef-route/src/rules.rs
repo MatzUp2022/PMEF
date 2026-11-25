@@ -33,6 +33,19 @@ pub struct PipeRules {
     pub notes: Vec<String>,
 }
 
+/// Equal tee of a class for branch routing.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TeeRule {
+    /// Catalog entry of the tee.
+    pub entry: String,
+    /// Centre-to-end of the run [mm].
+    pub run_c2e: f64,
+    /// Centre-to-end of the branch [mm].
+    pub branch_c2e: f64,
+    /// Notes on derived values.
+    pub notes: Vec<String>,
+}
+
 /// Rule violations and lookup errors.
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum RuleError {
@@ -82,6 +95,80 @@ fn class_limits(doc: &Value) -> (Option<f64>, Option<f64>, Option<f64>) {
     let tmin =
         f("designTemperature_min_K").or_else(|| f("designTemperature_min_C").map(|c| c + 273.15));
     (p, tmax, tmin)
+}
+
+/// ASME B16.9 straight (equal) tee centre-to-end C = M [mm] by NPS [in].
+const B169_TEE: [(f64, f64); 20] = [
+    (0.5, 25.4),
+    (0.75, 28.6),
+    (1.0, 38.1),
+    (1.25, 47.6),
+    (1.5, 57.2),
+    (2.0, 63.5),
+    (2.5, 76.2),
+    (3.0, 85.7),
+    (3.5, 95.3),
+    (4.0, 104.8),
+    (5.0, 123.8),
+    (6.0, 142.9),
+    (8.0, 177.8),
+    (10.0, 215.9),
+    (12.0, 254.0),
+    (14.0, 279.4),
+    (16.0, 304.8),
+    (18.0, 342.9),
+    (20.0, 381.0),
+    (24.0, 431.8),
+];
+
+/// Equal tee of `pipe_class` for `dn`. Centre-to-end from the catalog (`centreToEnd_run_mm` /
+/// `centreToEnd_branch_mm` or `centreToEnd_mm`), else from ASME B16.9 (reported as a note).
+pub fn tee(pipe_class: &str, dn: u32) -> Result<TeeRule, RuleError> {
+    let doc =
+        class_catalog(pipe_class).ok_or_else(|| RuleError::UnknownClass(pipe_class.into()))?;
+    let class = doc["pipeClass"].as_str().unwrap_or(pipe_class).to_string();
+    let entries = doc["entries"].as_array().cloned().unwrap_or_default();
+    let missing = || RuleError::MissingEntry {
+        class: class.clone(),
+        what: "equal TEE",
+        dn,
+    };
+    let t = entries
+        .iter()
+        .filter(|e| e["componentClass"] == "TEE" && dn_of(e) == Some(dn))
+        .find(|e| {
+            let b = e
+                .get("branchDiameter_mm")
+                .and_then(Value::as_f64)
+                .map(|b| b.round() as u32);
+            e["teeType"] == "EQUAL" || b == Some(dn)
+        })
+        .ok_or_else(missing)?;
+    let f = |k: &str| t.get(k).and_then(Value::as_f64);
+    let entry = t["catalogId"].as_str().unwrap_or_default().to_string();
+    let mut notes = Vec::new();
+    let run = match f("centreToEnd_run_mm").or_else(|| f("centreToEnd_mm")) {
+        Some(v) => v,
+        None => {
+            let nps = pmef_catalogs::dn_to_nps(dn).ok_or_else(missing)?;
+            let v = B169_TEE
+                .iter()
+                .find(|(n, _)| (n - nps).abs() < 1e-6)
+                .map(|(_, c)| *c)
+                .ok_or_else(missing)?;
+            notes.push(format!(
+                "{entry} has no centre-to-end; ASME B16.9 value {v} mm used"
+            ));
+            v
+        }
+    };
+    let branch = f("centreToEnd_branch_mm").unwrap_or(run);
+    Ok(TeeRule {
+        entry,
+        run_c2e: run,
+        branch_c2e: branch,
+        notes,
+    })
 }
 
 /// Centre-to-face of a 90° elbow derived from its radius designation (B16.9 / EN 10253:
@@ -240,6 +327,18 @@ mod tests {
         assert_eq!(derived_c2f("1.5D", 50).0, 76.2);
         assert_eq!(derived_c2f("LONG_RADIUS", 100).0, 152.4);
         assert_eq!(derived_c2f("3D", 50).0, 152.4);
+    }
+
+    #[test]
+    fn equal_tees() {
+        let t = tee("A1A2", 25).unwrap();
+        assert_eq!((t.run_c2e, t.branch_c2e), (38.0, 38.0));
+        assert!(t.notes.is_empty());
+        // C5D1 tees carry no centre-to-end: ASME B16.9.
+        let t = tee("C5D1", 100).unwrap();
+        assert_eq!((t.entry.as_str(), t.run_c2e), ("C5D1-TEE-100", 104.8));
+        assert_eq!(t.notes.len(), 1);
+        assert!(tee("C5D1", 25).is_err());
     }
 
     #[test]

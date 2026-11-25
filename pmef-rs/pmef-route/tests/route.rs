@@ -371,3 +371,147 @@ fn rip_up_finds_blockers_by_grid_cells() {
     let r = route_all(&p, &scene(&p));
     assert!(r[0].ok && r[1].ok, "{:?} {:?}", r[0].error, r[1].error);
 }
+
+fn header_problem() -> RouteProblem {
+    problem(json!({
+        "routes": [{
+            "id": "H1", "pipeClass": "A1A2", "dn": 100,
+            "from": {"point": [0, 0, 0], "direction": [1, 0, 0]},
+            "to": {"point": [10000, 0, 0], "direction": [-1, 0, 0]},
+            "branches": [
+                {"id": "B1", "to": {"point": [3000, 2000, 0], "direction": [0, -1, 0]}},
+                {"id": "B2", "to": {"point": [6000, -1500, 1000], "direction": [0, 0, -1]}}
+            ]
+        }]
+    }))
+}
+
+#[test]
+fn branches_end_in_tees_on_the_header() {
+    let p = header_problem();
+    let r = &route_all(&p, &scene(&p))[0];
+    assert!(r.ok, "{:?} {:?}", r.error, r.branches);
+    assert_eq!(r.bends, 0);
+    assert_eq!(r.tee_entry.as_deref(), Some("A1A2-TEE-100"));
+    let b1 = &r.branches[0];
+    assert_eq!(b1.points, vec![[3000.0, 0.0, 0.0], [3000.0, 2000.0, 0.0]]);
+    let b2 = &r.branches[1];
+    assert_eq!(b2.points[0], [6000.0, 0.0, 0.0]);
+    assert_eq!(b2.bends, 1);
+    assert_eq!(*b2.points.last().unwrap(), [6000.0, -1500.0, 1000.0]);
+}
+
+#[test]
+fn branch_output_has_connected_tees() {
+    let p = header_problem();
+    let r = route_all(&p, &scene(&p));
+    let objs = pmef_out::to_pmef(&p, &r);
+    let by_id = |id: &serde_json::Value| objs.iter().find(|o| &o["@id"] == id).unwrap();
+    let tees: Vec<_> = objs.iter().filter(|o| o["@type"] == "pmef:Tee").collect();
+    assert_eq!(tees.len(), 2);
+    let segs: Vec<_> = objs
+        .iter()
+        .filter(|o| o["@type"] == "pmef:PipingSegment")
+        .collect();
+    assert_eq!(segs.len(), 3);
+    assert_eq!(objs[0]["segments"].as_array().unwrap().len(), 3);
+    // A1A2-TEE-100: centre-to-end 114 mm (catalog).
+    let t = tees[0];
+    assert_eq!(t["catalogRef"]["catalogId"], "A1A2-TEE-100");
+    assert_eq!(t["ports"][0]["coordinate"], json!([2886.0, 0.0, 0.0]));
+    assert_eq!(t["ports"][1]["coordinate"], json!([3114.0, 0.0, 0.0]));
+    assert_eq!(t["ports"][2]["coordinate"], json!([3000.0, 114.0, 0.0]));
+    assert_eq!(t["ports"][2]["direction"], json!([0.0, 1.0, 0.0]));
+    // Every connectedTo points back (both sides of each joint agree on the coordinate).
+    for o in objs.iter().filter(|o| o.get("ports").is_some()) {
+        for port in o["ports"].as_array().unwrap() {
+            if let Some(c) = port.get("connectedTo") {
+                let other = by_id(c);
+                let back = other["ports"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .find(|q| q["connectedTo"] == o["@id"])
+                    .unwrap_or_else(|| panic!("{} -> {c} has no way back", o["@id"]));
+                assert_eq!(back["coordinate"], port["coordinate"]);
+            }
+        }
+    }
+}
+
+#[test]
+fn tees_keep_their_distance_and_failures_fail_the_line() {
+    let p = problem(json!({
+        "routes": [{
+            "id": "H1", "pipeClass": "A1A2", "dn": 100,
+            "from": {"point": [0, 0, 0], "direction": [1, 0, 0]},
+            "to": {"point": [10000, 0, 0], "direction": [-1, 0, 0]},
+            "branches": [
+                {"id": "B1", "to": {"point": [3000, 2000, 0], "direction": [0, -1, 0]}},
+                {"id": "B2", "to": {"point": [3100, -2000, 0], "direction": [0, 1, 0]}}
+            ]
+        }]
+    }));
+    let r = &route_all(&p, &scene(&p))[0];
+    assert!(r.ok, "{:?}", r.error);
+    let (t1, t2) = (r.branches[0].points[0], r.branches[1].points[0]);
+    assert_eq!(t1, [3000.0, 0.0, 0.0]);
+    // Two A1A2-TEE-100 (centre-to-end 114 mm) need 228 mm between their centres.
+    assert!((t2[0] - t1[0]).abs() >= 228.0, "{t2:?}");
+    assert_eq!(t2[1], 0.0);
+
+    let p = problem(json!({
+        "obstacles": [{"id": "BOX", "aabb": {"min": [2500, 1500, -500], "max": [3500, 2500, 500]}}],
+        "routes": [{
+            "id": "H1", "pipeClass": "A1A2", "dn": 100,
+            "from": {"point": [0, 0, 0], "direction": [1, 0, 0]},
+            "to": {"point": [10000, 0, 0], "direction": [-1, 0, 0]},
+            "branches": [{"id": "B1", "to": {"point": [3000, 2000, 0], "direction": [0, -1, 0]}}]
+        }]
+    }));
+    let r = &route_all(&p, &scene(&p))[0];
+    assert!(!r.ok);
+    assert!(
+        r.error.as_deref().unwrap().starts_with("branch B1: "),
+        "{:?}",
+        r.error
+    );
+    assert!(!r.branches[0].ok);
+}
+
+#[test]
+fn branch_routed_out_of_order_keeps_its_tee() {
+    // B2 is nearer to the header and is routed first; B1 tees into B2.
+    let p = problem(json!({
+        "routes": [{
+            "id": "H1", "pipeClass": "A1A2", "dn": 100,
+            "from": {"point": [0, 0, 0], "direction": [1, 0, 0]},
+            "to": {"point": [10000, 0, 0], "direction": [-1, 0, 0]},
+            "branches": [
+                {"id": "B1", "to": {"point": [3000, 1500, 1500], "direction": [0, 0, -1]}},
+                {"id": "B2", "to": {"point": [3000, 2000, 0], "direction": [0, -1, 0]}}
+            ]
+        }]
+    }));
+    let r = route_all(&p, &scene(&p));
+    assert!(r[0].ok, "{:?} {:?}", r[0].error, r[0].branches);
+    let objs = pmef_out::to_pmef(&p, &r);
+    let tees = objs.iter().filter(|o| o["@type"] == "pmef:Tee").count();
+    assert_eq!(
+        tees,
+        2,
+        "on: {:?}",
+        r[0].branches.iter().map(|b| b.on).collect::<Vec<_>>()
+    );
+    // Every branch segment starts at a tee: its first component connects to an existing object.
+    let ids: Vec<&serde_json::Value> = objs.iter().map(|o| &o["@id"]).collect();
+    for o in &objs {
+        if let Some(ports) = o["ports"].as_array() {
+            for pt in ports {
+                if let Some(c) = pt.get("connectedTo") {
+                    assert!(ids.contains(&c), "dangling {c} on {}", o["@id"]);
+                }
+            }
+        }
+    }
+}
