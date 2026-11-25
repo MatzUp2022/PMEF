@@ -334,6 +334,26 @@ fn node_matrix(node: &serde_json::Value) -> Mat4 {
     ]
 }
 
+/// Determinant of the linear part of a column-major 4×4 matrix.
+fn det3(m: &Mat4) -> f64 {
+    let c = cofactor3(m);
+    m[0] * c[0][0] + m[4] * c[0][1] + m[8] * c[0][2]
+}
+
+/// Cofactor matrix (row-major `[row][col]`) of the linear part: `det · (M⁻¹)ᵀ`.
+fn cofactor3(m: &Mat4) -> [[f64; 3]; 3] {
+    let a = |r: usize, c: usize| m[c * 4 + r];
+    let mut out = [[0.0; 3]; 3];
+    for (r, row) in out.iter_mut().enumerate() {
+        for (c, v) in row.iter_mut().enumerate() {
+            let (r1, r2) = ((r + 1) % 3, (r + 2) % 3);
+            let (c1, c2) = ((c + 1) % 3, (c + 2) % 3);
+            *v = a(r1, c1) * a(r2, c2) - a(r1, c2) * a(r2, c1);
+        }
+    }
+    out
+}
+
 struct Glb<'a> {
     doc: serde_json::Value,
     bin: &'a [u8],
@@ -364,18 +384,26 @@ impl Glb<'_> {
                 "accessor {a}: external buffers are not supported in .glb LODs"
             ));
         }
-        let base = view["byteOffset"].as_u64().unwrap_or(0) as usize
-            + acc["byteOffset"].as_u64().unwrap_or(0) as usize;
-        let stride = view["byteStride"]
-            .as_u64()
-            .map(|s| s as usize)
-            .unwrap_or(size * n);
-        let need = if count == 0 {
-            0
-        } else {
-            base + stride * (count - 1) + size * n
+        let overflow = || format!("accessor {a}: offsets overflow");
+        let off = |v: &serde_json::Value| {
+            usize::try_from(v.as_u64().unwrap_or(0)).map_err(|_| overflow())
         };
-        if need > self.bin.len() {
+        let base = off(&view["byteOffset"])?
+            .checked_add(off(&acc["byteOffset"])?)
+            .ok_or_else(overflow)?;
+        let stride = match view["byteStride"].as_u64() {
+            Some(s) => usize::try_from(s).map_err(|_| overflow())?,
+            None => size * n,
+        };
+        let need = if count == 0 {
+            Some(0)
+        } else {
+            stride
+                .checked_mul(count - 1)
+                .and_then(|v| v.checked_add(base))
+                .and_then(|v| v.checked_add(size * n))
+        };
+        if !matches!(need, Some(need) if need <= self.bin.len()) {
             return Err(format!("accessor {a}: reads past the BIN chunk"));
         }
         let b = self.bin;
@@ -459,6 +487,10 @@ pub fn read_mesh_glb(bytes: &[u8], origin: Point3) -> Result<GlbMesh, String> {
             };
             let pos = g.accessor(pa as usize, 3)?;
             let base = out.positions.len() as u32;
+            // Normals transform with the inverse transpose of the linear part; its direction is the
+            // cofactor matrix times sign(det). A reflection (det < 0) also reverses the winding.
+            let det = det3(&m);
+            let cof = cofactor3(&m);
             for p in &pos {
                 let t = [
                     m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12],
@@ -469,14 +501,12 @@ pub fn read_mesh_glb(bytes: &[u8], origin: Point3) -> Result<GlbMesh, String> {
                     .push(from_gltf([t[0] as f32, t[1] as f32, t[2] as f32], origin));
             }
             match prim["attributes"]["NORMAL"].as_u64() {
-                Some(na) if out.normals.len() == base as usize => {
+                Some(na) if out.normals.len() == base as usize && det.abs() > 1e-12 => {
+                    let sign = det.signum();
                     for v in g.accessor(na as usize, 3)? {
-                        // normals: linear part only (rigid placements); renormalised
-                        let t = [
-                            m[0] * v[0] + m[4] * v[1] + m[8] * v[2],
-                            m[1] * v[0] + m[5] * v[1] + m[9] * v[2],
-                            m[2] * v[0] + m[6] * v[1] + m[10] * v[2],
-                        ];
+                        let t = [0, 1, 2].map(|r| {
+                            sign * (cof[r][0] * v[0] + cof[r][1] * v[1] + cof[r][2] * v[2])
+                        });
                         let l = (t[0] * t[0] + t[1] * t[1] + t[2] * t[2]).sqrt().max(1e-12);
                         out.normals.push(dir_from_gltf([
                             (t[0] / l) as f32,
@@ -500,7 +530,14 @@ pub fn read_mesh_glb(bytes: &[u8], origin: Point3) -> Result<GlbMesh, String> {
                 return Err("index out of range".into());
             }
             let whole = idx.len() - idx.len() % 3; // drop a trailing partial triangle
-            out.indices.extend(idx[..whole].iter().map(|i| i + base));
+            if det < 0.0 {
+                for k in (0..whole).step_by(3) {
+                    out.indices
+                        .extend([idx[k] + base, idx[k + 2] + base, idx[k + 1] + base]);
+                }
+            } else {
+                out.indices.extend(idx[..whole].iter().map(|i| i + base));
+            }
             if out.color.is_none() {
                 if let Some(mat) = prim["material"].as_u64() {
                     let f = &g.doc["materials"][mat as usize]["pbrMetallicRoughness"]

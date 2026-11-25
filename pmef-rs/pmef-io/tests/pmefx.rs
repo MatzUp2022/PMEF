@@ -478,3 +478,70 @@ fn glb_reader_applies_node_transforms_and_rejects_garbage() {
     truncated[8..12].copy_from_slice(&n.to_le_bytes());
     assert!(glb::read_mesh_glb(&truncated, Point3::default()).is_err());
 }
+
+/// Re-wrap a glb with an edited JSON chunk (same BIN chunk).
+fn rewrap(bytes: &[u8], edit: impl FnOnce(&mut serde_json::Value)) -> Vec<u8> {
+    let json_len = u32::from_le_bytes(bytes[12..16].try_into().unwrap()) as usize;
+    let mut doc = glb::parse_glb_json(bytes).unwrap();
+    edit(&mut doc);
+    let mut js = serde_json::to_vec(&doc).unwrap();
+    while js.len() & 3 != 0 {
+        js.push(b' ');
+    }
+    let bin = &bytes[20 + json_len..];
+    let mut out = b"glTF".to_vec();
+    out.extend_from_slice(&2u32.to_le_bytes());
+    out.extend_from_slice(&((20 + js.len() + bin.len()) as u32).to_le_bytes());
+    out.extend_from_slice(&(js.len() as u32).to_le_bytes());
+    out.extend_from_slice(b"JSON");
+    out.extend_from_slice(&js);
+    out.extend_from_slice(bin);
+    out
+}
+
+#[test]
+fn glb_reader_keeps_normals_and_winding_under_mirrored_nonuniform_scale() {
+    // Tilted triangle with its face normal as vertex normals.
+    let p = [[0.0, 0.0, 0.0], [1000.0, 0.0, 0.0], [0.0, 1000.0, 1000.0]];
+    let face = |p: &[[f64; 3]], i: &[u32]| {
+        let v = |k: usize| p[i[k] as usize];
+        let (a, b, c) = (v(0), v(1), v(2));
+        let (e, f) = ([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [c[0] - a[0], c[1] - a[1], c[2] - a[2]]);
+        let n = [e[1] * f[2] - e[2] * f[1], e[2] * f[0] - e[0] * f[2], e[0] * f[1] - e[1] * f[0]];
+        let l = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
+        n.map(|x| x / l)
+    };
+    let n = face(&p, &[0, 1, 2]).map(|x| x as f32);
+    let mesh = glb::GlbMesh { positions: p.to_vec(), normals: vec![n; 3], indices: vec![0, 1, 2], color: None };
+    let bytes = glb::mesh_glb("urn:pmef:obj:p:t", &mesh, Point3::default());
+    for scale in [[-2.0, 1.0, 0.5], [3.0, 1.0, 1.0], [1.0, -1.0, 1.0]] {
+        let out = rewrap(&bytes, |doc| {
+            doc["nodes"] = json!([{"mesh": 0}, {"children": [0], "scale": scale}]);
+            doc["scenes"] = json!([{"nodes": [1]}]);
+        });
+        let m = glb::read_mesh_glb(&out, Point3::default()).unwrap();
+        let f = face(&m.positions, &m.indices);
+        for vn in &m.normals {
+            let d = f[0] * vn[0] as f64 + f[1] * vn[1] as f64 + f[2] * vn[2] as f64;
+            assert!(d > 0.999, "scale {scale:?}: face {f:?} vs normal {vn:?}");
+        }
+    }
+}
+
+#[test]
+fn glb_reader_rejects_overflowing_offsets() {
+    let mesh = glb::GlbMesh {
+        positions: vec![[0.0, 0.0, 0.0], [1000.0, 0.0, 0.0], [0.0, 1000.0, 0.0]],
+        indices: vec![0, 1, 2],
+        ..Default::default()
+    };
+    let bytes = glb::mesh_glb("urn:pmef:obj:p:t", &mesh, Point3::default());
+    for (key, value) in [("byteOffset", json!(u64::MAX)), ("byteStride", json!(u64::MAX / 2))] {
+        let out = rewrap(&bytes, |doc| {
+            for v in doc["bufferViews"].as_array_mut().unwrap() {
+                v[key] = value.clone();
+            }
+        });
+        assert!(glb::read_mesh_glb(&out, Point3::default()).is_err(), "{key}");
+    }
+}

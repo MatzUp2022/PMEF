@@ -272,6 +272,8 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   `pmefx::glb::read_mesh_glb` reads any LOD glb back into project coordinates (node transforms
   applied), so producers (PlantView) and viewers (cad-engine) share one implementation of the
   spec 03 §3.6 mapping.
+  `read_mesh_glb` transforms normals with the inverse transpose, reverses the winding under
+  mirroring transforms and rejects overflowing accessor offsets instead of panicking.
 
 - **`pmef-catalogs` crate** (`pmef-rs/pmef-catalogs`) — embeds every catalog in `catalogs/` so
   other repositories read PMEF catalogs instead of keeping their own tables (ecosystem roadmap
