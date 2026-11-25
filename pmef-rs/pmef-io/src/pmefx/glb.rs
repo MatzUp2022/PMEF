@@ -1,4 +1,5 @@
-//! Minimal glTF 2.0 binary (`.glb`) writer for `BBOX_ONLY` levels of detail.
+//! Minimal glTF 2.0 binary (`.glb`) writer and reader for PMEFX levels of detail: box meshes for
+//! `BBOX_ONLY`, triangle meshes ([`mesh_glb`]) for the finer levels, and [`read_mesh_glb`] for viewers.
 //!
 //! Coordinate mapping (spec 03 §3.6): PMEF project coordinates are Z-up millimetres, glTF is
 //! Y-up metres. A project point `p` becomes `((p.x-o.x)/1000, (p.z-o.z)/1000, -(p.y-o.y)/1000)`
@@ -141,4 +142,375 @@ pub fn parse_glb_json(bytes: &[u8]) -> Result<serde_json::Value, String> {
         return Err("first glb chunk is not a valid JSON chunk".into());
     }
     serde_json::from_slice(&bytes[20..20 + json_len]).map_err(|e| format!("glb JSON chunk: {e}"))
+}
+
+/// A triangle mesh in PMEF project coordinates (Z-up, mm) — what [`mesh_glb`] writes and
+/// [`read_mesh_glb`] returns.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct GlbMesh {
+    /// Vertex positions [mm, Z-up, project coordinates].
+    pub positions: Vec<[f64; 3]>,
+    /// Unit vertex normals (Z-up); empty if the glb carries none.
+    pub normals: Vec<[f32; 3]>,
+    /// Triangle list.
+    pub indices: Vec<u32>,
+    /// `baseColorFactor` of the first material, if any (linear RGBA).
+    pub color: Option<[f32; 4]>,
+}
+
+impl GlbMesh {
+    pub fn triangle_count(&self) -> usize {
+        self.indices.len() / 3
+    }
+}
+
+/// Maps a glTF point [m, Y-up] relative to `origin` back to project coordinates [mm, Z-up].
+pub fn from_gltf(g: [f32; 3], origin: Point3) -> [f64; 3] {
+    [
+        g[0] as f64 * 1000.0 + origin.x,
+        -(g[2] as f64) * 1000.0 + origin.y,
+        g[1] as f64 * 1000.0 + origin.z,
+    ]
+}
+
+fn dir_to_gltf(n: [f32; 3]) -> [f32; 3] {
+    [n[0], n[2], -n[1]]
+}
+
+fn dir_from_gltf(n: [f32; 3]) -> [f32; 3] {
+    [n[0], -n[2], n[1]]
+}
+
+/// A mesh level of detail as `.glb` bytes (spec 03 §3.6 coordinate mapping): positions are
+/// written relative to `origin` in metres, Y-up; 32-bit indices. Like [`box_glb`] the single
+/// node is named after the PMEF `@id` and carries it in `extras.pmefId`.
+///
+/// Panics if a normal array of the wrong length is passed or an index is out of range.
+pub fn mesh_glb(id: &str, mesh: &GlbMesh, origin: Point3) -> Vec<u8> {
+    assert!(
+        mesh.normals.is_empty() || mesh.normals.len() == mesh.positions.len(),
+        "one normal per vertex"
+    );
+    assert!(
+        mesh.indices
+            .iter()
+            .all(|&i| (i as usize) < mesh.positions.len()),
+        "index out of range"
+    );
+    let mut bin: Vec<u8> = Vec::new();
+    let mut min = [f32::INFINITY; 3];
+    let mut max = [f32::NEG_INFINITY; 3];
+    for p in &mesh.positions {
+        let g = to_gltf(*p, origin);
+        for k in 0..3 {
+            min[k] = min[k].min(g[k]);
+            max[k] = max[k].max(g[k]);
+            bin.extend_from_slice(&g[k].to_le_bytes());
+        }
+    }
+    let normals_offset = bin.len();
+    for n in &mesh.normals {
+        for v in dir_to_gltf(*n) {
+            bin.extend_from_slice(&v.to_le_bytes());
+        }
+    }
+    let indices_offset = bin.len();
+    for i in &mesh.indices {
+        bin.extend_from_slice(&i.to_le_bytes());
+    }
+    let indices_len = bin.len() - indices_offset;
+
+    let mut attributes = json!({"POSITION": 0});
+    let mut views =
+        vec![json!({"buffer": 0, "byteOffset": 0, "byteLength": normals_offset, "target": 34962})];
+    let (min, max) = if mesh.positions.is_empty() {
+        ([0.0f32; 3], [0.0f32; 3])
+    } else {
+        (min, max)
+    };
+    let mut accessors = vec![
+        json!({"bufferView": 0, "componentType": 5126, "count": mesh.positions.len(), "type": "VEC3", "min": min, "max": max}),
+    ];
+    if !mesh.normals.is_empty() {
+        attributes["NORMAL"] = json!(accessors.len());
+        views.push(json!({"buffer": 0, "byteOffset": normals_offset, "byteLength": indices_offset - normals_offset, "target": 34962}));
+        accessors.push(json!({"bufferView": views.len() - 1, "componentType": 5126, "count": mesh.normals.len(), "type": "VEC3"}));
+    }
+    views.push(json!({"buffer": 0, "byteOffset": indices_offset, "byteLength": indices_len, "target": 34963}));
+    accessors.push(json!({"bufferView": views.len() - 1, "componentType": 5125, "count": mesh.indices.len(), "type": "SCALAR"}));
+    let color = mesh.color.unwrap_or([0.6, 0.6, 0.6, 1.0]);
+    let doc = json!({
+        "asset": {"version": "2.0", "generator": "pmef-io pmefx"},
+        "scene": 0,
+        "scenes": [{"nodes": [0]}],
+        "nodes": [{"name": id, "mesh": 0, "extras": {"pmefId": id}}],
+        "meshes": [{"name": id, "primitives": [{
+            "attributes": attributes,
+            "indices": accessors.len() - 1,
+            "material": 0
+        }]}],
+        "materials": [{"pbrMetallicRoughness": {
+            "baseColorFactor": color, "metallicFactor": 0.0, "roughnessFactor": 1.0
+        }}],
+        "buffers": [{"byteLength": bin.len()}],
+        "bufferViews": views,
+        "accessors": accessors
+    });
+    assemble(doc, bin)
+}
+
+#[allow(clippy::manual_is_multiple_of)] // MSRV 1.75
+fn assemble(doc: serde_json::Value, mut bin: Vec<u8>) -> Vec<u8> {
+    while bin.len() % 4 != 0 {
+        bin.push(0);
+    }
+    let mut json_bytes = serde_json::to_vec(&doc).expect("glTF JSON serialises");
+    while json_bytes.len() % 4 != 0 {
+        json_bytes.push(b' ');
+    }
+    let total = 12 + 8 + json_bytes.len() + 8 + bin.len();
+    let mut out = Vec::with_capacity(total);
+    out.extend_from_slice(b"glTF");
+    out.extend_from_slice(&2u32.to_le_bytes());
+    out.extend_from_slice(&(total as u32).to_le_bytes());
+    out.extend_from_slice(&(json_bytes.len() as u32).to_le_bytes());
+    out.extend_from_slice(b"JSON");
+    out.extend_from_slice(&json_bytes);
+    out.extend_from_slice(&(bin.len() as u32).to_le_bytes());
+    out.extend_from_slice(b"BIN\0");
+    out.extend_from_slice(&bin);
+    out
+}
+
+/// Column-major 4×4 matrix as glTF stores it.
+type Mat4 = [f64; 16];
+
+const IDENTITY: Mat4 = [
+    1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+];
+
+fn mat_mul(a: &Mat4, b: &Mat4) -> Mat4 {
+    let mut r = [0.0; 16];
+    for c in 0..4 {
+        for row in 0..4 {
+            r[c * 4 + row] = (0..4).map(|k| a[k * 4 + row] * b[c * 4 + k]).sum();
+        }
+    }
+    r
+}
+
+fn node_matrix(node: &serde_json::Value) -> Mat4 {
+    let nums = |key: &str, n: usize| -> Option<Vec<f64>> {
+        let a = node.get(key)?.as_array()?;
+        (a.len() == n).then(|| a.iter().map(|v| v.as_f64().unwrap_or(0.0)).collect())
+    };
+    if let Some(m) = nums("matrix", 16) {
+        let mut r = [0.0; 16];
+        r.copy_from_slice(&m);
+        return r;
+    }
+    let t = nums("translation", 3).unwrap_or(vec![0.0; 3]);
+    let q = nums("rotation", 4).unwrap_or(vec![0.0, 0.0, 0.0, 1.0]);
+    let s = nums("scale", 3).unwrap_or(vec![1.0; 3]);
+    let (x, y, z, w) = (q[0], q[1], q[2], q[3]);
+    // R · S, column-major
+    [
+        (1.0 - 2.0 * (y * y + z * z)) * s[0],
+        (2.0 * (x * y + z * w)) * s[0],
+        (2.0 * (x * z - y * w)) * s[0],
+        0.0,
+        (2.0 * (x * y - z * w)) * s[1],
+        (1.0 - 2.0 * (x * x + z * z)) * s[1],
+        (2.0 * (y * z + x * w)) * s[1],
+        0.0,
+        (2.0 * (x * z + y * w)) * s[2],
+        (2.0 * (y * z - x * w)) * s[2],
+        (1.0 - 2.0 * (x * x + y * y)) * s[2],
+        0.0,
+        t[0],
+        t[1],
+        t[2],
+        1.0,
+    ]
+}
+
+struct Glb<'a> {
+    doc: serde_json::Value,
+    bin: &'a [u8],
+}
+
+impl Glb<'_> {
+    /// Accessor `a` as rows of `n` components (float, or unsigned integer types as f64).
+    fn accessor(&self, a: usize, n: usize) -> Result<Vec<Vec<f64>>, String> {
+        let acc = &self.doc["accessors"][a];
+        let count = acc["count"]
+            .as_u64()
+            .ok_or(format!("accessor {a}: count"))? as usize;
+        let ctype = acc["componentType"]
+            .as_u64()
+            .ok_or(format!("accessor {a}: componentType"))?;
+        let size = match ctype {
+            5126 | 5125 => 4,
+            5123 => 2,
+            5121 => 1,
+            other => return Err(format!("accessor {a}: unsupported componentType {other}")),
+        };
+        let Some(view_idx) = acc["bufferView"].as_u64() else {
+            return Ok(vec![vec![0.0; n]; count]); // sparse/zero-initialised: not used by PMEFX writers
+        };
+        let view = &self.doc["bufferViews"][view_idx as usize];
+        if view["buffer"].as_u64().unwrap_or(0) != 0 {
+            return Err(format!(
+                "accessor {a}: external buffers are not supported in .glb LODs"
+            ));
+        }
+        let base = view["byteOffset"].as_u64().unwrap_or(0) as usize
+            + acc["byteOffset"].as_u64().unwrap_or(0) as usize;
+        let stride = view["byteStride"]
+            .as_u64()
+            .map(|s| s as usize)
+            .unwrap_or(size * n);
+        let need = if count == 0 {
+            0
+        } else {
+            base + stride * (count - 1) + size * n
+        };
+        if need > self.bin.len() {
+            return Err(format!("accessor {a}: reads past the BIN chunk"));
+        }
+        let b = self.bin;
+        let read = |o: usize| -> f64 {
+            match ctype {
+                5126 => f32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) as f64,
+                5125 => u32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) as f64,
+                5123 => u16::from_le_bytes([b[o], b[o + 1]]) as f64,
+                _ => b[o] as f64,
+            }
+        };
+        Ok((0..count)
+            .map(|i| (0..n).map(|k| read(base + i * stride + k * size)).collect())
+            .collect())
+    }
+}
+
+/// Reads all triangle primitives of a `.glb` (default scene, node transforms applied) back
+/// into project coordinates (spec 03 §3.6), relative to `origin` = `manifest.meshOrigin`.
+/// Only what PMEFX writers emit is supported: embedded BIN chunk, `TRIANGLES` mode, float
+/// positions/normals, unsigned integer indices.
+pub fn read_mesh_glb(bytes: &[u8], origin: Point3) -> Result<GlbMesh, String> {
+    let doc = parse_glb_json(bytes)?;
+    let json_len = u32::from_le_bytes([bytes[12], bytes[13], bytes[14], bytes[15]]) as usize;
+    let bin_start = 20 + json_len;
+    let bin: &[u8] =
+        if bin_start + 8 <= bytes.len() && &bytes[bin_start + 4..bin_start + 8] == b"BIN\0" {
+            let len = u32::from_le_bytes([
+                bytes[bin_start],
+                bytes[bin_start + 1],
+                bytes[bin_start + 2],
+                bytes[bin_start + 3],
+            ]) as usize;
+            bytes
+                .get(bin_start + 8..bin_start + 8 + len)
+                .ok_or("BIN chunk truncated")?
+        } else {
+            &[]
+        };
+    let g = Glb { doc, bin };
+    let mut out = GlbMesh::default();
+    let scene = g.doc["scene"].as_u64().unwrap_or(0) as usize;
+    let mut stack: Vec<(usize, Mat4)> = g.doc["scenes"][scene]["nodes"]
+        .as_array()
+        .map(|a| {
+            a.iter()
+                .filter_map(|n| n.as_u64())
+                .map(|n| (n as usize, IDENTITY))
+                .collect()
+        })
+        .unwrap_or_default();
+    let mut depth_guard = 0usize;
+    while let Some((n, parent)) = stack.pop() {
+        depth_guard += 1;
+        if depth_guard > 100_000 {
+            return Err("node graph too large or cyclic".into());
+        }
+        let node = &g.doc["nodes"][n];
+        let m = mat_mul(&parent, &node_matrix(node));
+        if let Some(children) = node["children"].as_array() {
+            stack.extend(
+                children
+                    .iter()
+                    .filter_map(|c| c.as_u64())
+                    .map(|c| (c as usize, m)),
+            );
+        }
+        let Some(mesh) = node["mesh"].as_u64() else {
+            continue;
+        };
+        for prim in g.doc["meshes"][mesh as usize]["primitives"]
+            .as_array()
+            .into_iter()
+            .flatten()
+        {
+            if prim["mode"].as_u64().unwrap_or(4) != 4 {
+                continue;
+            }
+            let Some(pa) = prim["attributes"]["POSITION"].as_u64() else {
+                continue;
+            };
+            let pos = g.accessor(pa as usize, 3)?;
+            let base = out.positions.len() as u32;
+            for p in &pos {
+                let t = [
+                    m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12],
+                    m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13],
+                    m[2] * p[0] + m[6] * p[1] + m[10] * p[2] + m[14],
+                ];
+                out.positions
+                    .push(from_gltf([t[0] as f32, t[1] as f32, t[2] as f32], origin));
+            }
+            match prim["attributes"]["NORMAL"].as_u64() {
+                Some(na) if out.normals.len() == base as usize => {
+                    for v in g.accessor(na as usize, 3)? {
+                        // normals: linear part only (rigid placements); renormalised
+                        let t = [
+                            m[0] * v[0] + m[4] * v[1] + m[8] * v[2],
+                            m[1] * v[0] + m[5] * v[1] + m[9] * v[2],
+                            m[2] * v[0] + m[6] * v[1] + m[10] * v[2],
+                        ];
+                        let l = (t[0] * t[0] + t[1] * t[1] + t[2] * t[2]).sqrt().max(1e-12);
+                        out.normals.push(dir_from_gltf([
+                            (t[0] / l) as f32,
+                            (t[1] / l) as f32,
+                            (t[2] / l) as f32,
+                        ]));
+                    }
+                }
+                _ => out.normals.clear(), // mixed: drop normals, consumers recompute
+            }
+            let count = pos.len() as u32;
+            let idx: Vec<u32> = match prim["indices"].as_u64() {
+                Some(ia) => g
+                    .accessor(ia as usize, 1)?
+                    .into_iter()
+                    .map(|v| v[0] as u32)
+                    .collect(),
+                None => (0..count).collect(),
+            };
+            if idx.iter().any(|&i| i >= count) {
+                return Err("index out of range".into());
+            }
+            let whole = idx.len() - idx.len() % 3; // drop a trailing partial triangle
+            out.indices.extend(idx[..whole].iter().map(|i| i + base));
+            if out.color.is_none() {
+                if let Some(mat) = prim["material"].as_u64() {
+                    let f = &g.doc["materials"][mat as usize]["pbrMetallicRoughness"]
+                        ["baseColorFactor"];
+                    if let Some(a) = f.as_array().filter(|a| a.len() == 4) {
+                        out.color = Some([0, 1, 2, 3].map(|k| a[k].as_f64().unwrap_or(1.0) as f32));
+                    }
+                }
+            }
+        }
+    }
+    Ok(out)
 }

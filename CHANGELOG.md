@@ -263,6 +263,11 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   Reference implementation `pmef_io::pmefx` (feature `pmefx`) and CLI `pmef pack`,
   `pmef unpack`, `pmef verify` (closes docs/AUDIT.md P3.2). New Rust dependencies `zip`
   (MIT) and `sha2` (MIT/Apache-2.0).
+  Mesh levels of detail: `pmefx::glb::mesh_glb` writes a triangle mesh (project mm, Z-up →
+  glTF m, Y-up relative to `meshOrigin`, 32-bit indices, `extras.pmefId`) and
+  `pmefx::glb::read_mesh_glb` reads any LOD glb back into project coordinates (node transforms
+  applied), so producers (PlantView) and viewers (cad-engine) share one implementation of the
+  spec 03 §3.6 mapping.
 
 - **`pmef-catalogs` crate** (`pmef-rs/pmef-catalogs`) — embeds every catalog in `catalogs/` so
   other repositories read PMEF catalogs instead of keeping their own tables (ecosystem roadmap
