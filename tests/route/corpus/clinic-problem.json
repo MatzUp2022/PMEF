@@ -58,7 +58,7 @@
   },
   {
    "id": "DHW-202",
-   "pipeClass": "A1A2",
+   "pipeClass": "C5D1",
    "dn": 40,
    "from": {
     "point": [
@@ -120,7 +120,7 @@
   },
   {
    "id": "DHW-203",
-   "pipeClass": "A1A2",
+   "pipeClass": "C5D1",
    "dn": 25,
    "from": {
     "point": [
