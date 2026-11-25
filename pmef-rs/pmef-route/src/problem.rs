@@ -39,7 +39,16 @@ pub struct RouteProblem {
     /// Place pipe supports on the routed lines (off when absent).
     #[serde(default)]
     pub supports: Option<SupportSettings>,
+    #[serde(default)]
     pub routes: Vec<RouteSpec>,
+    /// Cable-tray network for cable routing.
+    #[serde(default)]
+    pub trays: Vec<crate::cable::TraySpec>,
+    /// Cables to route over the trays.
+    #[serde(default)]
+    pub cables: Vec<crate::cable::CableSpec>,
+    #[serde(default)]
+    pub cable_settings: Option<crate::cable::CableSettings>,
 }
 
 /// Graph resolution.

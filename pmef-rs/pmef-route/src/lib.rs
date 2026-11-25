@@ -17,6 +17,7 @@
 //! Lines are routed in order; each routed line is an obstacle for the next. Design and later
 //! increments: `docs/auto-routing.md`.
 
+pub mod cable;
 pub mod geom;
 pub mod grid;
 pub mod pmef_out;

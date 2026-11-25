@@ -4,7 +4,7 @@ Status: first increment, 2026-11-25. Owner: PMEF (`docs/ECOSYSTEM.md`, decision 
 
 ## Goal
 
-Route pipes (later cables) automatically: first in an abstract graph, then as PMEF geometry.
+Route pipes and cables automatically: first in an abstract graph, then as PMEF geometry.
 The kernel is decoupled from any viewer or CAD tool. It reads PMEF data and catalogs and writes
 PMEF objects, so every consumer (PlantView, cad-engine, ProDocAimAi, EngineeringAI) uses the same
 routing results without its own router.
@@ -113,6 +113,21 @@ is routed first and the ripped-up lines are routed again around it. The new solu
 it routes more lines, or as many at lower total cost; the report notes which lines were
 re-routed. A line that fails without any other line (rules, terminals, scene) is not retried.
 
+**Cables** (stage 5, `cable.rs`). Cables do not need the voxel graph: they run on the tray
+network. `trays` are tray (or conduit) runs as centreline polylines with usable width and
+height, the cable classes they carry (`power`, `signal`, …; empty = any), the bend radius of
+their bends and junctions and an existing fill; trays sharing a point are connected there. Each
+cable (`cables[]`: class, outside diameter, minimum bend radius, `from`/`to` with point and
+optional `@id`/terminal) drops from its end to the nearest point of an allowed tray (at most
+`cableSettings.maxDrop`, cost × `dropFactor`), runs along trays (Dijkstra over node and
+predecessor, so that the bend rule sees each direction change: the cable's bend radius must not
+exceed the smallest tray radius involved) and drops to its other end. Cables are routed largest
+first; each reserves its cross-section on every tray it uses, and no tray may exceed `maxFill`
+(default 40 % of width × height). Output: `pmef:CableObject` (`routeLength` in m, `cableType`,
+`fromId`/`toId`, terminals, `cableTrayId` of the tray carrying the longest part when it is a
+PMEF `@id`), provenance `generated`; the report lists path, trays and the fill per tray.
+Example: `tests/route/cable-trays-route.json`.
+
 ## Usage
 
 ```bash
@@ -138,6 +153,7 @@ The problem format is documented in `pmef-rs/pmef-route/src/problem.rs` (camelCa
 | `pmef-route` stage 2 test | plan-only scene, block with two corridors | 2 | sequentially L1 cuts L2 off; rip-up routes L2 first and L1 through the other corridor |
 | `pmef-route` stage 3 tests, `tests/route/header-branches-route.json` | header DN 100 with 2–3 consumers, one box | 1 line, 3 branches | straight and bent branches end in tees on the header; the third consumer tees into the first branch; tee spacing kept; output passes schema, geometry and topology checks |
 | `pmef-route` stage 4 tests | 20 m line over two beams; pump suction | 2 | supports on both beams plus fillers, no gap above 4.3 m (NPS 4); 1 000 mm straight before the suction is kept; header example with supports passes schema, geometry and topology checks |
+| `pmef-route` stage 5 tests, `tests/route/cable-trays-route.json` | power and signal trays, cross tray, L-shaped tray | 2–3 cables | each cable uses only its segregated tray; a full tray and a too small tray bend radius are refused; example output (2 `CableObject`s) passes `pmef validate --strict` |
 
 ## Later increments
 
@@ -157,8 +173,10 @@ The problem format is documented in `pmef-rs/pmef-route/src/problem.rs` (camelCa
    45° elbows, skewed nozzles, valve accessibility and operating heights, flange/valve
    insertion from the class (the catalogs lack the weld-neck length through hub), guides and
    supports on vertical runs.
-5. **Cables.** Same graph kernel with cable-tray networks and cable classes (bend radius, fill
-   ratio, segregation of power and signal) instead of piping classes; output as PMEF E&I objects.
+5. **Cables.** Done in stage 5: routing on tray networks with segregation, bend radius and fill
+   limit; output as `pmef:CableObject`. Open: reading trays from PMEF `CableTrayRun` geometry
+   (today the problem lists them), drops routed through the voxel graph instead of L1 distances,
+   tray sizing proposals when the fill limit is hit, cable lengths with tray-bend arcs.
 6. **Integration.** WASM build for ProDocAimAi and PlantView, interactive re-routing in the
    viewers, DEXPI line lists as input (DEXPI-Manager `dexpi-pmef` gives line, class, DN and
    connected nozzles via stable `@id`s).
