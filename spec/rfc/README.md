@@ -13,6 +13,7 @@ Status values (issue template): `DRAFT` → `REVIEW` → `APPROVED` / `REJECTED`
 | [0002](0002-catalog-snapping.md) | Deterministic catalog snapping `pmef-snap/1` | 0.10.0 | `REVIEW` | [#7](https://github.com/MatzUp2022/PMEF/issues/7) | `pmef-snap/2` as follow-up; fixed ambiguity margin (WG-Catalogs) |
 | [0003](0003-as-built-correspondence.md) | Persisted as-built ↔ design correspondence | 0.10.0 | `REVIEW` | [#8](https://github.com/MatzUp2022/PMEF/issues/8) | `AS_BUILT` is not a content revision in delta packages (TSC) |
 | [0004](0004-polytropic-efficiency-camelcase.md) | `polytropicEfficiency` camelCase spelling | 0.10.0 / 1.0.0 | `APPROVED` | — | — |
+| [0005](0005-pmefx-object-index.md) | PMEFX 1.0: object index, mesh LODs, exact B-rep, octree | 0.10.0 | `DRAFT` | — | RFC issue to open; ZIP vs. HDF5 criteria (WG-Serialisation) |
 
 RFCs 0001–0003 are fully implemented in this repository (schemas, spec text, Rust reference
 implementation, examples, tests in CI); each RFC's *Review Status* section lists the evidence.

@@ -1,0 +1,143 @@
+{
+  "pmefxVersion": "1.0",
+  "pmefVersion": "0.9.0",
+  "packageId": "urn:pmef:pkg:eaf-2026:pump-skid-ds01",
+  "mainFile": "model/pump-skid-complete.ndjson",
+  "coordinateSystem": "Z-up",
+  "createdAt": "2026-11-25T00:00:00Z",
+  "files": [
+    {
+      "path": "model/pump-skid-complete.ndjson",
+      "type": "ndjson",
+      "sizeBytes": 28210,
+      "sha256": "4a776b59a3e82c0acef5cfc0fce6102f7fbdc506e72e00dc96f925fe7e1522a8",
+      "objects": 35
+    },
+    {
+      "path": "meshes/geom_eaf-2026_V-201-prim.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1684,
+      "sha256": "60aae7ac531f73b4a2091a9b37a1d4809229cb1e41ed4abb3438c79f5f81ea82"
+    },
+    {
+      "path": "meshes/obj_eaf-2026_CW-201-ELB-001.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1692,
+      "sha256": "e088dccf6fffa96045f48ad27edd1e9f6262b13d77bb2e3314b8b66bb608c6da"
+    },
+    {
+      "path": "meshes/obj_eaf-2026_CW-201-FL-001.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1704,
+      "sha256": "edbb39f5b64770c291f55c6e137d6e2f1a3818a8e00a69de4d5fe865eeef4111"
+    },
+    {
+      "path": "meshes/obj_eaf-2026_CW-201-FL-002.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1704,
+      "sha256": "f98740a41e5df58b857d77312a424ba6029e33802d4aa17f3130406a1e46b203"
+    },
+    {
+      "path": "meshes/obj_eaf-2026_CW-201-GK-001.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1704,
+      "sha256": "7fe035b1825939b9c0f10430a56320f4b49b2fa4799eb3730e2bf7d064e9ff97"
+    },
+    {
+      "path": "meshes/obj_eaf-2026_CW-201-PIPE-001.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1696,
+      "sha256": "53b837d34e04d0755954e86c0e0723e3899d3cf09e21a2ce07ee337bdccb83f7"
+    },
+    {
+      "path": "meshes/obj_eaf-2026_CW-201-PIPE-002.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1708,
+      "sha256": "3496c60654f2a3392e26c4c0168c9d89b928fdf8adaf9e66e9ea227541fd5112"
+    },
+    {
+      "path": "meshes/obj_eaf-2026_CW-201-SUP-001.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1696,
+      "sha256": "d3c2e30c6ebb7cdd8fcd63071265aae645f36b68b15058f6a3091c8b07405c64"
+    },
+    {
+      "path": "meshes/obj_eaf-2026_CW-202-FL-001.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1708,
+      "sha256": "465d363a019997202b0f9f9bc86a9e2d1ded280cd322e7d77b1fce51e7b87abe"
+    },
+    {
+      "path": "meshes/obj_eaf-2026_CW-202-FL-002.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1724,
+      "sha256": "d9676bdedbf027281dd351ba4d540a36e2aad0a08581e6bfce5af86c7570e8fb"
+    },
+    {
+      "path": "meshes/obj_eaf-2026_CW-202-GK-001.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1724,
+      "sha256": "a1708c23ce0d6441701792fb6bf68f4dc7c810ae608f695150b1c0e89a3e8175"
+    },
+    {
+      "path": "meshes/obj_eaf-2026_CW-202-PIPE-001.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1728,
+      "sha256": "439e2497a2c084488305f753b5e005b9ab41d85601b8db88ed20250db0f3347d"
+    },
+    {
+      "path": "meshes/obj_eaf-2026_CW-202-SUP-001.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1724,
+      "sha256": "e7120bcfe5ff12085bce9cc36809c64abe6176c03ac079c20b26282e9e3b56fa"
+    },
+    {
+      "path": "meshes/obj_eaf-2026_P-201A.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1696,
+      "sha256": "a8efd7374f8bf0f7be7b084dfc1b6191ba35c328ae3ad7f03fbe583fa7730221"
+    },
+    {
+      "path": "meshes/obj_eaf-2026_STEEL-BM-C01.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1684,
+      "sha256": "764894da812fe1c67a4de8081dcd805ba45c213ef9f7537d9af55ce7a3ec96d1"
+    },
+    {
+      "path": "meshes/obj_eaf-2026_STEEL-BM-C02.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1716,
+      "sha256": "d5c5114f55e72ebec816795c01454b6028db5f8db3addf7132224b3e6b9ccb5a"
+    },
+    {
+      "path": "meshes/obj_eaf-2026_V-201.bbox.glb",
+      "type": "gltf",
+      "sizeBytes": 1680,
+      "sha256": "740c2993255af43b3f1f158aa62ece3433fdfbb971b59159147ea951f73d664c"
+    },
+    {
+      "path": "index/objects.ndjson",
+      "type": "index",
+      "sizeBytes": 8362,
+      "sha256": "5eb1f1109df4c2e0cd1eb25444facf191673c4f27798279eedd69084c022b7ee"
+    },
+    {
+      "path": "index/octree.json",
+      "type": "index",
+      "sizeBytes": 787,
+      "sha256": "15d1b14e682db2e2d3e23f7e5cd5bfaa23488aa4d3bbdae5b0f32e1b7e143a71"
+    }
+  ],
+  "meshOrigin": {
+    "x": 10000.0,
+    "y": 5000.0,
+    "z": 3000.0
+  },
+  "objectIndex": "index/objects.ndjson",
+  "spatialIndex": "index/octree.json",
+  "objectCount": 35,
+  "generator": {
+    "name": "pmef-io",
+    "version": "0.9.0"
+  }
+}

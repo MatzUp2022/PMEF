@@ -73,6 +73,8 @@ cargo run -p pmef-cli -- merge ../tests/diff/design.ndjson ../tests/merge/ours-d
 cargo run -p pmef-cli -- convert ../examples/pump-skid-complete.ndjson --to pcf -o /tmp/pcf   # PMEF -> Plant 3D (PCF)
 cargo run -p pmef-cli -- convert /tmp/pcf --to pmef --base ../examples/pump-skid-complete.ndjson -o /tmp/back.ndjson
 cargo run -p pmef-cli -- check ../examples/pump-skid-complete.ndjson   # package structure: header, unique @id, connectedTo
+cargo run -p pmef-cli -- pack ../examples/pump-skid-complete.ndjson -o /tmp/skid.pmefx --bbox-lods   # PMEFX container (RFC-0005)
+cargo run -p pmef-cli -- verify /tmp/skid.pmefx
 cd ..
 
 # Conformance suite (spec 06; details in tests/README.md)

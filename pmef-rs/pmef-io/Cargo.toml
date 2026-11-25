@@ -11,3 +11,14 @@ serde.workspace=true
 serde_json.workspace=true
 thiserror.workspace=true
 pmef-core.workspace=true
+zip = { workspace = true, optional = true }
+sha2 = { workspace = true, optional = true }
+
+[features]
+default = ["pmefx"]
+# PMEFX ZIP container reader/writer (spec 03 §3, RFC-0005).
+pmefx = ["dep:zip", "dep:sha2"]
+
+[dev-dependencies]
+jsonschema = { workspace = true, features = ["draft202012"] }
+zip.workspace = true

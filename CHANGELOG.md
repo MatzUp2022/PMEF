@@ -246,6 +246,16 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **PMEFX 1.0 container** ([RFC-0005](spec/rfc/0005-pmefx-object-index.md), spec 03 §3): object
+  index `index/objects.ndjson` linking each `@id` to its NDJSON record, bounding box, glTF mesh
+  levels of detail (coarse → fine, `triangles`, `vertexCount`, `errorMm`) and STEP AP242
+  B-rep; loose octree `index/octree.json`; manifest `pmefxVersion`, `meshOrigin`, per-file
+  `sha256`; archive rules (safe paths, stored geometry entries for range reads). New schema
+  `schemas/pmefx-manifest.schema.json`, example `examples/pmefx/pump-skid-complete/`.
+  Reference implementation `pmef_io::pmefx` (feature `pmefx`) and CLI `pmef pack`,
+  `pmef unpack`, `pmef verify` (closes docs/AUDIT.md P3.2). New Rust dependencies `zip`
+  (MIT) and `sha2` (MIT/Apache-2.0).
+
 - **`pmef-catalogs` crate** (`pmef-rs/pmef-catalogs`) — embeds every catalog in `catalogs/` so
   other repositories read PMEF catalogs instead of keeping their own tables (ecosystem roadmap
   stage 2, `docs/ECOSYSTEM.md`). Raw/parsed access by `catalogId`, plus typed pipe sizes

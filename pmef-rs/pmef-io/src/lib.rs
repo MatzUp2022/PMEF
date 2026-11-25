@@ -3,6 +3,9 @@
 //! Streaming NDJSON reader and writer for PMEF packages.
 //! Processes one object per line without loading the full file into memory.
 
+#[cfg(feature = "pmefx")]
+pub mod pmefx;
+
 use serde_json::Value;
 use std::io::{BufRead, BufReader, Write};
 use thiserror::Error;
