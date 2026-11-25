@@ -2,7 +2,8 @@
 //!
 //! Per route: optionally a `PipingNetworkSystem`, one `PipingSegment` for the run and one per
 //! branch, and `Pipe` / `Elbow` / `Tee` components whose ports are chained with `connectedTo`
-//! (a tee's branch port `P3` connects to the first component of its branch segment). Elbows sit on the bend points
+//! (a tee's branch port `P3` connects to the first component of its branch segment), plus
+//! `PipeSupport`s (one port at the bearing point, pointing down) when supports are placed. Elbows sit on the bend points
 //! with their faces at the catalog centre-to-face; pipes fill the gaps (omitted when two elbows
 //! are welded face to face). Every object carries `provenance.sourceType = "generated"` and
 //! `review.status = "detected"` in a `WIP` revision: auto-routed lines are proposals until a
@@ -310,6 +311,30 @@ fn line_objects(problem: &RouteProblem, r: &RoutedLine) -> Vec<Value> {
             o["ports"] = json!(ports);
             comps.push(meta(o));
         }
+    }
+
+    for (i, sp) in r.supports.iter().enumerate() {
+        let mut o = json!({
+            "@type": "pmef:PipeSupport",
+            "@id": format!("urn:pmef:obj:{proj}:{}-SUP-{:03}", r.id, i + 1),
+            "pmefVersion": PMEF_VERSION, "isPartOf": seg_ids[sp.on],
+            "itemNumber": format!("S{:02}", i + 1),
+            "componentSpec": {"componentClass": "PIPE_SUPPORT"},
+            "supportsMark": format!("{}-S{:02}", r.id, i + 1),
+            "supportSpec": {"supportType": "RESTING"},
+            "ports": [{
+                "portId": "P1", "portType": "BIDIRECTIONAL", "coordinate": r3(sp.bearing),
+                "direction": [0.0, 0.0, -1.0], "nominalDiameter": spec.dn, "endType": "BW",
+            }],
+        });
+        if let Some(st) = &sp.steel {
+            o["supportSpec"]["attachmentType"] = json!("WELDED");
+            if st.starts_with("urn:pmef:") {
+                o["structuralAttachmentId"] = json!(st);
+                o["supportSpec"]["structuralRef"] = json!(st);
+            }
+        }
+        comps.push(meta(o));
     }
 
     let specification = json!({

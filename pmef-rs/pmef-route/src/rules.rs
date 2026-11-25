@@ -121,6 +121,36 @@ const B169_TEE: [(f64, f64); 20] = [
     (24.0, 431.8),
 ];
 
+/// ASME B31.1 Table 121.5 suggested maximum span between supports, water service [mm] by
+/// NPS [in].
+const B311_SPAN: [(f64, f64); 10] = [
+    (1.0, 2100.0),
+    (2.0, 3000.0),
+    (3.0, 3700.0),
+    (4.0, 4300.0),
+    (6.0, 5200.0),
+    (8.0, 5800.0),
+    (12.0, 7000.0),
+    (16.0, 8200.0),
+    (20.0, 9100.0),
+    (24.0, 9800.0),
+];
+
+/// Suggested maximum support span for `dn` [mm]: the value of the largest tabulated size not
+/// above the line's size (conservative). Below NPS 1 the NPS 1 value is used, with a note.
+pub fn max_span(dn: u32) -> (f64, Option<String>) {
+    let nps = pmef_catalogs::dn_to_nps(dn).unwrap_or(dn as f64 / 25.0);
+    match B311_SPAN.iter().rev().find(|(n, _)| *n <= nps + 1e-9) {
+        Some((_, s)) => (*s, None),
+        None => (
+            B311_SPAN[0].1,
+            Some(format!(
+                "DN {dn} is below ASME B31.1 Table 121.5; the NPS 1 span is used (set supports.maxSpan)"
+            )),
+        ),
+    }
+}
+
 /// Equal tee of `pipe_class` for `dn`. Centre-to-end from the catalog (`centreToEnd_run_mm` /
 /// `centreToEnd_branch_mm` or `centreToEnd_mm`), else from ASME B16.9 (reported as a note).
 pub fn tee(pipe_class: &str, dn: u32) -> Result<TeeRule, RuleError> {

@@ -81,6 +81,18 @@ the coarse or the corridor search fails (e.g. a gap narrower than a coarse cell)
 graph is used, and the report notes which graph found the route. The corridor result is optimal
 within the corridor, not necessarily over the whole region.
 
+**Line rules** (stage 4). `straight` on a terminal (route end or branch consumer) sets the
+straight length in front of it, e.g. pump suction or flow meter inlet, instead of
+`settings.terminalStraight`. `tracing` on a route adds a radial heat-tracing allowance to
+insulation. With `supports` (`maxSpan`, `reach`), pipe supports are placed on horizontal runs:
+first where structural steel (PMEF steel members, or problem obstacles with `structural: true`)
+lies within `reach` below the pipe, then in between so that no gap exceeds the maximum span and
+no run end is more than half a span from a support; supports stay off elbows and tees, and gaps
+opened by moving a support off a tee are filled again. The default span is the ASME B31.1 Table 121.5
+suggestion (water service) for the largest tabulated size not above the line's size. Output:
+`pmef:PipeSupport` (`RESTING`, `structuralAttachmentId` when the steel is a PMEF object) with
+one port at the bearing point (pipe bottom), pointing down.
+
 **Branches** (`routes[].branches`: `id`, `to`). A line with several consumers is a tree: the
 run `from`–`to` first, then each branch from its consumer to an equal tee of the class
 (centre-to-end from the catalog, else ASME B16.9 with a note). The consumer nearest to the tree
@@ -125,6 +137,7 @@ The problem format is documented in `pmef-rs/pmef-route/src/problem.rs` (camelCa
 | `pmef-route` stage 1 tests | synthetic rack, wall with 400 mm gap | 3 | line climbs onto the rack level and runs 20 m along it; coarse-to-fine gives the fine optimum; fallback to the full graph for the narrow gap |
 | `pmef-route` stage 2 test | plan-only scene, block with two corridors | 2 | sequentially L1 cuts L2 off; rip-up routes L2 first and L1 through the other corridor |
 | `pmef-route` stage 3 tests, `tests/route/header-branches-route.json` | header DN 100 with 2–3 consumers, one box | 1 line, 3 branches | straight and bent branches end in tees on the header; the third consumer tees into the first branch; tee spacing kept; output passes schema, geometry and topology checks |
+| `pmef-route` stage 4 tests | 20 m line over two beams; pump suction | 2 | supports on both beams plus fillers, no gap above 4.3 m (NPS 4); 1 000 mm straight before the suction is kept; header example with supports passes schema, geometry and topology checks |
 
 ## Later increments
 
@@ -139,10 +152,11 @@ The problem format is documented in `pmef-rs/pmef-route/src/problem.rs` (camelCa
 3. **Branches.** Done in stage 3: equal tees, greedy Steiner tree (nearest consumer first,
    branches may tee into branches). Open: reducing tees (branch DN below the run DN), optimal
    Steiner trees (Hanan grid, iterated 1-Steiner), headers routed through rack levels.
-4. **More rules.** Slope for gravity lines (drains), 45° elbows, skewed nozzles, minimum straight
-   lengths before instruments and pumps, valve accessibility and operating heights, insulation
-   and heat-tracing allowances, flange/valve insertion from the class, support spacing and
-   placement on steel.
+4. **More rules.** Done in stage 4: minimum straight lengths per terminal, heat-tracing
+   allowance, support spacing and placement on steel. Open: slope for gravity lines (drains),
+   45° elbows, skewed nozzles, valve accessibility and operating heights, flange/valve
+   insertion from the class (the catalogs lack the weld-neck length through hub), guides and
+   supports on vertical runs.
 5. **Cables.** Same graph kernel with cable-tray networks and cable classes (bend radius, fill
    ratio, segregation of power and signal) instead of piping classes; output as PMEF E&I objects.
 6. **Integration.** WASM build for ProDocAimAi and PlantView, interactive re-routing in the
