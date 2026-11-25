@@ -273,7 +273,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   applied), so producers (PlantView) and viewers (cad-engine) share one implementation of the
   spec 03 §3.6 mapping.
   `read_mesh_glb` transforms normals with the inverse transpose, reverses the winding under
-  mirroring transforms and rejects overflowing accessor offsets instead of panicking.
+  mirroring transforms and rejects overflowing accessor offsets instead of panicking; its
+  singularity test is scale-independent. `pmefx::glb::mesh_glb_quantized` writes compact LODs
+  with the glTF extension `KHR_mesh_quantization` (16-bit positions within a given error
+  bound, else 32-bit floats; 8-bit normals; welded vertices; 16-bit indices where they fit),
+  about half the size; `read_mesh_glb` reads them and rejects other required extensions.
+  Spec 03 §3.6 allows `KHR_mesh_quantization` (readers MUST support it).
 
 - **`pmef-catalogs` crate** (`pmef-rs/pmef-catalogs`) — embeds every catalog in `catalogs/` so
   other repositories read PMEF catalogs instead of keeping their own tables (ecosystem roadmap

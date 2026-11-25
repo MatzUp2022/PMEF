@@ -546,3 +546,86 @@ fn glb_reader_rejects_overflowing_offsets() {
         assert!(glb::read_mesh_glb(&out, Point3::default()).is_err(), "{key}");
     }
 }
+
+/// Cylinder-like strip with smooth normals and duplicated (unwelded) vertices.
+fn tube(center: [f64; 3], radius: f64, length: f64, n: u32) -> glb::GlbMesh {
+    let mut m = glb::GlbMesh { color: Some([0.2, 0.4, 0.6, 1.0]), ..Default::default() };
+    for k in 0..n {
+        let a = |k: u32| std::f64::consts::TAU * f64::from(k % n) / f64::from(n);
+        for (a0, a1) in [(a(k), a(k + 1))] {
+            let base = m.positions.len() as u32;
+            for (ang, x) in [(a0, 0.0), (a1, 0.0), (a1, length), (a0, length)] {
+                m.positions.push([center[0] + x, center[1] + radius * ang.cos(), center[2] + radius * ang.sin()]);
+                m.normals.push([0.0, ang.cos() as f32, ang.sin() as f32]);
+            }
+            m.indices.extend_from_slice(&[base, base + 1, base + 2, base, base + 2, base + 3]);
+        }
+    }
+    m
+}
+
+#[test]
+fn quantized_glb_round_trips_within_its_error_bound() {
+    let origin = Point3 { x: 10_000.0, y: -5_000.0, z: 2_000.0 };
+    let mesh = tube([12_000.0, -4_000.0, 2_500.0], 150.0, 6_000.0, 48);
+    let plain = glb::mesh_glb("urn:pmef:obj:p:t", &mesh, origin);
+    let q = glb::mesh_glb_quantized("urn:pmef:obj:p:t", &mesh, origin, 0.5);
+    assert!(q.bytes.len() * 2 < plain.len(), "{} vs {}", q.bytes.len(), plain.len());
+    assert_eq!(q.vertex_count, 96, "shared edges welded");
+    assert!(q.max_error_mm > 0.0 && q.max_error_mm <= 6_000.0 / 65535.0 / 2.0 + 1e-6);
+    let doc = glb::parse_glb_json(&q.bytes).unwrap();
+    assert_eq!(doc["extensionsRequired"], json!(["KHR_mesh_quantization"]));
+    assert_eq!(doc["accessors"][0]["componentType"], json!(5123));
+
+    let back = glb::read_mesh_glb(&q.bytes, origin).unwrap();
+    assert_eq!(back.triangle_count(), mesh.triangle_count());
+    assert_eq!(back.color, mesh.color);
+    for (t, src) in back.indices.chunks(3).zip(mesh.indices.chunks(3)) {
+        for (&a, &b) in t.iter().zip(src) {
+            let (p, s) = (back.positions[a as usize], mesh.positions[b as usize]);
+            let err = (0..3).map(|k| (p[k] - s[k]).abs()).fold(0.0, f64::max);
+            assert!(err <= q.max_error_mm + 1e-3, "{p:?} vs {s:?}"); // + f32 read-back
+            let (n, sn) = (back.normals[a as usize], mesh.normals[b as usize]);
+            let dot: f32 = (0..3).map(|k| n[k] * sn[k]).sum();
+            assert!(dot > 0.999, "{n:?} vs {sn:?}");
+        }
+    }
+    // Deterministic bytes.
+    assert_eq!(q.bytes, glb::mesh_glb_quantized("urn:pmef:obj:p:t", &mesh, origin, 0.5).bytes);
+}
+
+#[test]
+fn quantized_glb_keeps_float_positions_for_large_meshes() {
+    // 200 m long: a 16-bit step would exceed 0.5 mm, so positions stay f32.
+    let mesh = tube([0.0, 0.0, 0.0], 500.0, 200_000.0, 8);
+    let q = glb::mesh_glb_quantized("urn:pmef:obj:p:t", &mesh, Point3::default(), 0.5);
+    let doc = glb::parse_glb_json(&q.bytes).unwrap();
+    assert_eq!(doc["accessors"][0]["componentType"], json!(5126));
+    assert!(q.max_error_mm < 0.01);
+    let back = glb::read_mesh_glb(&q.bytes, Point3::default()).unwrap();
+    assert!((back.positions.iter().map(|p| p[0]).fold(0.0, f64::max) - 200_000.0).abs() < 0.01);
+}
+
+#[test]
+fn quantized_glb_uses_32bit_indices_beyond_65536_vertices() {
+    let mut mesh = glb::GlbMesh::default();
+    for i in 0..70_000u32 {
+        let x = f64::from(i);
+        mesh.positions.extend([[x, 0.0, 0.0], [x, 1.0, 0.0], [x, 0.0, 1.0]]);
+        mesh.indices.extend([3 * i, 3 * i + 1, 3 * i + 2]);
+    }
+    let q = glb::mesh_glb_quantized("urn:pmef:obj:p:t", &mesh, Point3::default(), 10.0);
+    let doc = glb::parse_glb_json(&q.bytes).unwrap();
+    assert_eq!(doc["accessors"][1]["componentType"], json!(5125));
+    let back = glb::read_mesh_glb(&q.bytes, Point3::default()).unwrap();
+    assert_eq!(back.triangle_count(), 70_000);
+    assert_eq!(back.indices.iter().max(), Some(&(q.vertex_count as u32 - 1)));
+}
+
+#[test]
+fn glb_reader_rejects_unknown_required_extensions() {
+    let mesh = tube([0.0, 0.0, 0.0], 10.0, 100.0, 4);
+    let bytes = glb::mesh_glb("urn:pmef:obj:p:t", &mesh, Point3::default());
+    let out = rewrap(&bytes, |doc| doc["extensionsRequired"] = json!(["KHR_draco_mesh_compression"]));
+    assert!(glb::read_mesh_glb(&out, Point3::default()).is_err());
+}

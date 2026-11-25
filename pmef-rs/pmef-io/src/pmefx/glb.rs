@@ -259,6 +259,208 @@ pub fn mesh_glb(id: &str, mesh: &GlbMesh, origin: Point3) -> Vec<u8> {
     assemble(doc, bin)
 }
 
+/// Result of [`mesh_glb_quantized`].
+#[derive(Debug, Clone)]
+pub struct QuantizedGlb {
+    /// The `.glb` bytes.
+    pub bytes: Vec<u8>,
+    /// Vertices after welding (equal quantised position and normal).
+    pub vertex_count: usize,
+    /// Largest position deviation from the input caused by quantisation [mm].
+    pub max_error_mm: f64,
+}
+
+/// Like [`mesh_glb`], but compact (glTF `KHR_mesh_quantization`, required extension):
+/// - positions as normalised 16-bit integers over the mesh bounds, dequantised by the node's
+///   uniform scale and translation, as long as the rounding error stays within
+///   `max_position_error_mm`; otherwise 32-bit floats;
+/// - normals as normalised 8-bit integers;
+/// - vertices with equal quantised position and normal welded, 16-bit indices where they fit.
+///
+/// [`read_mesh_glb`] reads the result back. Roughly halves the size of typical plant meshes.
+///
+/// Panics like [`mesh_glb`].
+#[allow(clippy::manual_is_multiple_of)] // MSRV 1.75
+pub fn mesh_glb_quantized(
+    id: &str,
+    mesh: &GlbMesh,
+    origin: Point3,
+    max_position_error_mm: f64,
+) -> QuantizedGlb {
+    assert!(
+        mesh.normals.is_empty() || mesh.normals.len() == mesh.positions.len(),
+        "one normal per vertex"
+    );
+    assert!(
+        mesh.indices
+            .iter()
+            .all(|&i| (i as usize) < mesh.positions.len()),
+        "index out of range"
+    );
+    // glTF space [m, Y-up] in f64, so quantisation is the only rounding.
+    let g: Vec<[f64; 3]> = mesh
+        .positions
+        .iter()
+        .map(|p| [(p[0] - origin.x) / 1000.0, (p[2] - origin.z) / 1000.0, -(p[1] - origin.y) / 1000.0])
+        .collect();
+    let mut lo = [0.0f64; 3];
+    let mut hi = [0.0f64; 3];
+    if let Some(first) = g.first() {
+        lo = *first;
+        hi = *first;
+    }
+    for p in &g {
+        for k in 0..3 {
+            lo[k] = lo[k].min(p[k]);
+            hi[k] = hi[k].max(p[k]);
+        }
+    }
+    // One uniform scale keeps normals independent of the node transform.
+    let extent = (0..3).map(|k| hi[k] - lo[k]).fold(0.0f64, f64::max).max(1e-9);
+    let half_step_mm = extent / 65535.0 / 2.0 * 1000.0;
+    let ints = half_step_mm <= max_position_error_mm;
+
+    let qn = |n: [f32; 3]| -> [i8; 3] {
+        let n = dir_to_gltf(n);
+        let l = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt().max(1e-12);
+        n.map(|v| ((v / l).clamp(-1.0, 1.0) * 127.0).round() as i8)
+    };
+    let qp = |p: [f64; 3]| -> [u16; 3] {
+        [0, 1, 2].map(|k| (((p[k] - lo[k]) / extent) * 65535.0).round().clamp(0.0, 65535.0) as u16)
+    };
+    // Weld on the quantised (or, for float positions, the exact f32) values; first use wins.
+    let mut slot: std::collections::HashMap<([u32; 3], [i8; 3]), u32> =
+        std::collections::HashMap::new();
+    let mut remap = vec![0u32; g.len()];
+    let mut kept: Vec<usize> = Vec::new();
+    for (i, p) in g.iter().enumerate() {
+        let pk = if ints {
+            qp(*p).map(u32::from)
+        } else {
+            p.map(|v| (v as f32).to_bits())
+        };
+        let nk = mesh.normals.get(i).map_or([0; 3], |n| qn(*n));
+        remap[i] = *slot.entry((pk, nk)).or_insert_with(|| {
+            kept.push(i);
+            (kept.len() - 1) as u32
+        });
+    }
+    let mut max_err = 0.0f64;
+    let mut bin: Vec<u8> = Vec::new();
+    let (pos_type, stride, pmin, pmax, node) = if ints {
+        let mut qmin = [u16::MAX; 3];
+        let mut qmax = [0u16; 3];
+        for &i in &kept {
+            let q = qp(g[i]);
+            for k in 0..3 {
+                qmin[k] = qmin[k].min(q[k]);
+                qmax[k] = qmax[k].max(q[k]);
+                bin.extend_from_slice(&q[k].to_le_bytes());
+            }
+            bin.extend_from_slice(&[0, 0]); // 4-byte aligned vertex stride
+        }
+        for p in &g {
+            let q = qp(*p);
+            for k in 0..3 {
+                let back = lo[k] + q[k] as f64 / 65535.0 * extent;
+                max_err = max_err.max((back - p[k]).abs() * 1000.0);
+            }
+        }
+        if kept.is_empty() {
+            qmin = [0; 3];
+        }
+        (
+            5123,
+            8,
+            json!(qmin),
+            json!(qmax),
+            json!({"name": id, "mesh": 0, "extras": {"pmefId": id},
+                   "translation": lo, "scale": [extent, extent, extent]}),
+        )
+    } else {
+        let mut fmin = [f32::INFINITY; 3];
+        let mut fmax = [f32::NEG_INFINITY; 3];
+        for &i in &kept {
+            for k in 0..3 {
+                let v = g[i][k] as f32;
+                fmin[k] = fmin[k].min(v);
+                fmax[k] = fmax[k].max(v);
+                bin.extend_from_slice(&v.to_le_bytes());
+            }
+        }
+        for v in g.iter().flatten() {
+            max_err = max_err.max((*v as f32 as f64 - v).abs() * 1000.0);
+        }
+        if kept.is_empty() {
+            fmin = [0.0; 3];
+            fmax = [0.0; 3];
+        }
+        (5126, 12, json!(fmin), json!(fmax), json!({"name": id, "mesh": 0, "extras": {"pmefId": id}}))
+    };
+    let normals_offset = bin.len();
+    if !mesh.normals.is_empty() {
+        for &i in &kept {
+            let n = qn(mesh.normals[i]);
+            bin.extend_from_slice(&[n[0] as u8, n[1] as u8, n[2] as u8, 0]);
+        }
+    }
+    let indices_offset = bin.len();
+    let short = kept.len() <= u16::MAX as usize + 1;
+    for &i in &mesh.indices {
+        let r = remap[i as usize];
+        if short {
+            bin.extend_from_slice(&(r as u16).to_le_bytes());
+        } else {
+            bin.extend_from_slice(&r.to_le_bytes());
+        }
+    }
+    let indices_len = bin.len() - indices_offset;
+
+    let mut attributes = json!({"POSITION": 0});
+    let mut views = vec![json!({"buffer": 0, "byteOffset": 0, "byteLength": normals_offset,
+                                "byteStride": stride, "target": 34962})];
+    let mut accessors = vec![json!({"bufferView": 0, "componentType": pos_type,
+        "count": kept.len(), "type": "VEC3", "min": pmin, "max": pmax})];
+    if ints {
+        accessors[0]["normalized"] = json!(true);
+    }
+    if !mesh.normals.is_empty() {
+        attributes["NORMAL"] = json!(accessors.len());
+        views.push(json!({"buffer": 0, "byteOffset": normals_offset,
+            "byteLength": indices_offset - normals_offset, "byteStride": 4, "target": 34962}));
+        accessors.push(json!({"bufferView": views.len() - 1, "componentType": 5120,
+            "normalized": true, "count": kept.len(), "type": "VEC3"}));
+    }
+    views.push(json!({"buffer": 0, "byteOffset": indices_offset, "byteLength": indices_len, "target": 34963}));
+    accessors.push(json!({"bufferView": views.len() - 1,
+        "componentType": if short { 5123 } else { 5125 }, "count": mesh.indices.len(), "type": "SCALAR"}));
+    let color = mesh.color.unwrap_or([0.6, 0.6, 0.6, 1.0]);
+    let doc = json!({
+        "asset": {"version": "2.0", "generator": "pmef-io pmefx"},
+        "extensionsUsed": ["KHR_mesh_quantization"],
+        "extensionsRequired": ["KHR_mesh_quantization"],
+        "scene": 0,
+        "scenes": [{"nodes": [0]}],
+        "nodes": [node],
+        "meshes": [{"name": id, "primitives": [{
+            "attributes": attributes,
+            "indices": accessors.len() - 1,
+            "material": 0
+        }]}],
+        "materials": [{"pbrMetallicRoughness": {
+            "baseColorFactor": color, "metallicFactor": 0.0, "roughnessFactor": 1.0
+        }}],
+        "buffers": [{"byteLength": bin.len()}],
+        "bufferViews": views,
+        "accessors": accessors
+    });
+    QuantizedGlb {
+        bytes: assemble(doc, bin),
+        vertex_count: kept.len(),
+        max_error_mm: max_err,
+    }
+}
+
 #[allow(clippy::manual_is_multiple_of)] // MSRV 1.75
 fn assemble(doc: serde_json::Value, mut bin: Vec<u8>) -> Vec<u8> {
     while bin.len() % 4 != 0 {
@@ -369,10 +571,11 @@ impl Glb<'_> {
         let ctype = acc["componentType"]
             .as_u64()
             .ok_or(format!("accessor {a}: componentType"))?;
+        let normalized = acc["normalized"].as_bool().unwrap_or(false);
         let size = match ctype {
             5126 | 5125 => 4,
-            5123 => 2,
-            5121 => 1,
+            5122 | 5123 => 2,
+            5120 | 5121 => 1,
             other => return Err(format!("accessor {a}: unsupported componentType {other}")),
         };
         let Some(view_idx) = acc["bufferView"].as_u64() else {
@@ -407,12 +610,20 @@ impl Glb<'_> {
             return Err(format!("accessor {a}: reads past the BIN chunk"));
         }
         let b = self.bin;
+        // Normalised integers (KHR_mesh_quantization) map to [0, 1] or [-1, 1].
         let read = |o: usize| -> f64 {
-            match ctype {
-                5126 => f32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) as f64,
-                5125 => u32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) as f64,
-                5123 => u16::from_le_bytes([b[o], b[o + 1]]) as f64,
-                _ => b[o] as f64,
+            let (v, max) = match ctype {
+                5126 => return f32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) as f64,
+                5125 => (u32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) as f64, u32::MAX as f64),
+                5123 => (u16::from_le_bytes([b[o], b[o + 1]]) as f64, 65535.0),
+                5122 => (i16::from_le_bytes([b[o], b[o + 1]]) as f64, 32767.0),
+                5121 => (b[o] as f64, 255.0),
+                _ => (b[o] as i8 as f64, 127.0),
+            };
+            if normalized {
+                (v / max).max(-1.0)
+            } else {
+                v
             }
         };
         Ok((0..count)
@@ -423,8 +634,9 @@ impl Glb<'_> {
 
 /// Reads all triangle primitives of a `.glb` (default scene, node transforms applied) back
 /// into project coordinates (spec 03 §3.6), relative to `origin` = `manifest.meshOrigin`.
-/// Only what PMEFX writers emit is supported: embedded BIN chunk, `TRIANGLES` mode, float
-/// positions/normals, unsigned integer indices.
+/// Only what PMEFX writers emit is supported: embedded BIN chunk, `TRIANGLES` mode, float or
+/// `KHR_mesh_quantization` integer positions/normals, unsigned integer indices. Other required
+/// extensions are rejected.
 pub fn read_mesh_glb(bytes: &[u8], origin: Point3) -> Result<GlbMesh, String> {
     let doc = parse_glb_json(bytes)?;
     let json_len = u32::from_le_bytes([bytes[12], bytes[13], bytes[14], bytes[15]]) as usize;
@@ -443,6 +655,11 @@ pub fn read_mesh_glb(bytes: &[u8], origin: Point3) -> Result<GlbMesh, String> {
         } else {
             &[]
         };
+    if let Some(req) = doc["extensionsRequired"].as_array() {
+        if let Some(e) = req.iter().find(|e| e.as_str() != Some("KHR_mesh_quantization")) {
+            return Err(format!("unsupported required glTF extension {e}"));
+        }
+    }
     let g = Glb { doc, bin };
     let mut out = GlbMesh::default();
     let scene = g.doc["scene"].as_u64().unwrap_or(0) as usize;
