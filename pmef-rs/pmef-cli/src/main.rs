@@ -8,6 +8,9 @@
 //!   pmef index <file.ndjson> [--key tag-number|line-number]
 //!   pmef check <file.ndjson> [--json]
 //!   pmef topology <file.ndjson> [--allow-external]
+//!   pmef pack <main.ndjson> [more.ndjson…] -o <out.pmefx> [--bbox-lods] [--lod ID=LEVEL=FILE.glb] [--brep ID=FILE.stp]
+//!   pmef unpack <file.pmefx> -o <dir>
+//!   pmef verify <file.pmefx> [--json]
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -156,6 +159,56 @@ enum Commands {
         output: Option<PathBuf>,
     },
 
+    /// Pack PMEF NDJSON plus geometry into a PMEFX container (spec 03 §3, RFC-0005).
+    ///
+    /// The first NDJSON file is the main file. Writes the object index (every @id with its
+    /// record, bounding box, mesh LODs and B-rep) and a loose octree for streaming.
+    Pack {
+        /// NDJSON files; stored as model/<file name>.
+        #[arg(required = true)]
+        files: Vec<PathBuf>,
+        /// Output .pmefx file.
+        #[arg(short, long)]
+        output: PathBuf,
+        /// Generate a BBOX_ONLY box mesh for every object with a bounding box.
+        #[arg(long)]
+        bbox_lods: bool,
+        /// Mesh level of detail: <@id>=<LEVEL>=<file.glb>, LEVEL e.g. LOD1_COARSE (repeatable).
+        #[arg(long = "lod", value_name = "ID=LEVEL=FILE")]
+        lods: Vec<String>,
+        /// Exact B-rep (STEP AP242): <@id>=<file.stp> (repeatable).
+        #[arg(long = "brep", value_name = "ID=FILE")]
+        breps: Vec<String>,
+        /// Additional file: <type>=<file>, type catalog|document|gltf|step|usd|other (repeatable).
+        #[arg(long = "file", value_name = "TYPE=FILE")]
+        extra: Vec<String>,
+        /// Mesh origin [mm]: auto (extent centre, rounded to 1 m), none, or x,y,z.
+        #[arg(long, default_value = "auto")]
+        mesh_origin: String,
+        /// manifest.createdAt (default: now; set it for reproducible archives).
+        #[arg(long)]
+        created_at: Option<String>,
+        /// Do not write index/octree.json.
+        #[arg(long)]
+        no_octree: bool,
+    },
+
+    /// Extract a PMEFX container into a directory.
+    Unpack {
+        file: PathBuf,
+        #[arg(short, long)]
+        output: PathBuf,
+    },
+
+    /// Verify a PMEFX container: file list, sizes, SHA-256, object index, octree (spec 03 §3).
+    /// Exit code: 0 = conformant, 1 = problems found, 2 = error.
+    Verify {
+        file: PathBuf,
+        /// Output the report as JSON.
+        #[arg(long)]
+        json: bool,
+    },
+
     /// Structural check of a PMEF package: one FileHeader first, every line readable,
     /// unique @id, all references resolve. This checks *data*; implementation conformance
     /// (spec 06) is tested with the suite: `python tests/run_tests.py`.
@@ -266,6 +319,11 @@ async fn main() -> Result<()> {
         }
         Commands::Check { file, json, output } => cmd_check(file, json, output),
         Commands::Route { problem, output, report, plant } => cmd_route(problem, output, report, plant),
+        Commands::Pack { files, output, bbox_lods, lods, breps, extra, mesh_origin, created_at, no_octree } => {
+            cmd_pack(files, output, bbox_lods, lods, breps, extra, &mesh_origin, created_at, no_octree)
+        }
+        Commands::Unpack { file, output } => cmd_unpack(file, output),
+        Commands::Verify { file, json } => cmd_verify(file, json),
         Commands::Conformance { file, output, .. } => {
             eprintln!("note: `pmef conformance` is deprecated; use `pmef check` (package check) or \
                        `python tests/run_tests.py` (implementation conformance, spec 06)");
@@ -873,5 +931,152 @@ async fn cmd_topology(file: PathBuf, allow_external: bool) -> Result<()> {
     }
 
     if !report.is_ok() { std::process::exit(1); }
+    Ok(())
+}
+
+
+// ── PMEFX (spec 03 §3, RFC-0005) ──────────────────────────────────────────────
+
+fn file_name(p: &std::path::Path) -> Result<String> {
+    Ok(p.file_name().and_then(|n| n.to_str()).context("file name is not UTF-8")?.to_string())
+}
+
+#[allow(clippy::too_many_arguments)]
+fn cmd_pack(
+    files: Vec<PathBuf>, output: PathBuf, bbox_lods: bool, lods: Vec<String>, breps: Vec<String>,
+    extra: Vec<String>, mesh_origin: &str, created_at: Option<String>, no_octree: bool,
+) -> Result<()> {
+    use pmef_io::pmefx::{FileKind, FinishOptions, Lod, LodStats, PmefxWriter, Point3};
+    let out = std::fs::File::create(&output).with_context(|| format!("creating {}", output.display()))?;
+    let mut w = PmefxWriter::new(std::io::BufWriter::new(out));
+    for f in &files {
+        let bytes = std::fs::read(f).with_context(|| format!("reading {}", f.display()))?;
+        let n = w.add_ndjson(&format!("model/{}", file_name(f)?), &bytes)?;
+        info!("{}: {} objects", f.display(), n);
+    }
+    let origin = match mesh_origin {
+        "none" => None,
+        "auto" => w.extent().map(|b| {
+            let c = b.center();
+            Point3 { x: (c.x / 1000.0).round() * 1000.0, y: (c.y / 1000.0).round() * 1000.0, z: (c.z / 1000.0).round() * 1000.0 }
+        }),
+        xyz => {
+            let v: Vec<f64> = xyz.split(',').map(|t| t.trim().parse::<f64>()).collect::<Result<_, _>>()
+                .context("--mesh-origin expects auto, none or x,y,z")?;
+            anyhow::ensure!(v.len() == 3, "--mesh-origin expects x,y,z");
+            Some(Point3 { x: v[0], y: v[1], z: v[2] })
+        }
+    };
+    if let Some(o) = origin {
+        w.set_mesh_origin(o)?;
+    }
+    for spec in &lods {
+        let mut it = spec.splitn(3, '=');
+        let (Some(id), Some(level), Some(path)) = (it.next(), it.next(), it.next()) else {
+            anyhow::bail!("--lod expects ID=LEVEL=FILE, got {spec}");
+        };
+        let lod: Lod = serde_json::from_value(serde_json::Value::String(level.to_string()))
+            .with_context(|| format!("unknown LOD level {level}"))?;
+        let p = PathBuf::from(path);
+        let bytes = std::fs::read(&p).with_context(|| format!("reading {path}"))?;
+        let stem = pmef_io::pmefx::file_stem_for_id(id);
+        w.add_lod(id, lod, &format!("meshes/{stem}.{}.glb", level.to_ascii_lowercase()), &bytes, LodStats::default())?;
+    }
+    for spec in &breps {
+        let (id, path) = spec.split_once('=').with_context(|| format!("--brep expects ID=FILE, got {spec}"))?;
+        let bytes = std::fs::read(path).with_context(|| format!("reading {path}"))?;
+        let stem = pmef_io::pmefx::file_stem_for_id(id);
+        w.set_brep(id, &format!("brep/{stem}.stp"), "step", &bytes)?;
+    }
+    for spec in &extra {
+        let (kind, path) = spec.split_once('=').with_context(|| format!("--file expects TYPE=FILE, got {spec}"))?;
+        let kind: FileKind = serde_json::from_value(serde_json::Value::String(kind.to_string()))
+            .with_context(|| format!("unknown file type {kind}"))?;
+        let dir = match kind {
+            FileKind::Catalog => "catalogs",
+            FileKind::Document => "documents",
+            FileKind::Gltf | FileKind::Step | FileKind::Usd => "geometry",
+            _ => "other",
+        };
+        let p = PathBuf::from(path);
+        w.add_file(&format!("{dir}/{}", file_name(&p)?), kind, &std::fs::read(&p).with_context(|| format!("reading {path}"))?)?;
+    }
+    let generated = if bbox_lods { w.generate_bbox_lods()? } else { 0 };
+    let objects = w.objects().count();
+    let defaults = FinishOptions::default();
+    w.finish(FinishOptions {
+        created_at: created_at.unwrap_or_else(chrono_now),
+        octree: if no_octree { None } else { defaults.octree },
+        ..defaults
+    })?;
+    println!("{}: {} objects, {} bbox meshes generated", output.display(), objects, generated);
+    Ok(())
+}
+
+/// Current UTC time as ISO 8601 (seconds precision) without a date crate.
+fn chrono_now() -> String {
+    let secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
+    let (days, rem) = (secs / 86_400, secs % 86_400);
+    // Civil-from-days (H. Hinnant).
+    let z = days as i64 + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z.rem_euclid(146_097);
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = yoe + era * 400 + i64::from(m <= 2);
+    format!("{y:04}-{m:02}-{d:02}T{:02}:{:02}:{:02}Z", rem / 3600, rem % 3600 / 60, rem % 60)
+}
+
+fn cmd_unpack(file: PathBuf, output: PathBuf) -> Result<()> {
+    let f = std::fs::File::open(&file).with_context(|| format!("opening {}", file.display()))?;
+    let mut r = pmef_io::pmefx::PmefxReader::open(std::io::BufReader::new(f))?;
+    let n = r.extract_to(&output)?;
+    println!("{} entries extracted to {}", n, output.display());
+    Ok(())
+}
+
+fn cmd_verify(file: PathBuf, json: bool) -> Result<()> {
+    let f = std::fs::File::open(&file).with_context(|| format!("opening {}", file.display()))?;
+    let mut r = match pmef_io::pmefx::PmefxReader::open(std::io::BufReader::new(f)) {
+        Ok(r) => r,
+        Err(e) => {
+            error!("{e}");
+            std::process::exit(2);
+        }
+    };
+    let issues = r.verify();
+    let m = r.manifest().clone();
+    let index = r.object_index().unwrap_or_default();
+    let lods: usize = index.iter().map(|o| o.lods.len()).sum();
+    let breps = index.iter().filter(|o| o.brep.is_some()).count();
+    if json {
+        let report = serde_json::json!({
+            "file": file.display().to_string(),
+            "pmefxVersion": m.pmefx_version,
+            "packageId": m.package_id,
+            "files": m.files.len(),
+            "objects": index.len(),
+            "lods": lods,
+            "breps": breps,
+            "spatialIndex": m.spatial_index.is_some(),
+            "conformant": issues.is_empty(),
+            "issues": issues,
+        });
+        println!("{}", serde_json::to_string_pretty(&report)?);
+    } else {
+        println!("{}  pmefx {}  {}", file.display(), m.pmefx_version.as_deref().unwrap_or("0.9 (legacy)"), m.package_id);
+        println!("  files {}  objects {}  mesh LODs {}  B-reps {}  octree {}", m.files.len(), index.len(), lods, breps,
+            if m.spatial_index.is_some() { "yes" } else { "no" });
+        for i in &issues {
+            println!("  ✗ {i}");
+        }
+        println!("{}", if issues.is_empty() { "conformant" } else { "NOT conformant" });
+    }
+    if !issues.is_empty() {
+        std::process::exit(1);
+    }
     Ok(())
 }

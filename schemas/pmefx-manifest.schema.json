@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pmef.net/schemas/0.9/pmefx-manifest.schema.json",
+  "title": "PMEFX container manifest, object index and spatial index",
+  "description": "Normative together with spec 03 §3 (RFC-0005). The root validates manifest.json; $defs/ObjectEntry validates each line of index/objects.ndjson; $defs/Octree validates index/octree.json.",
+  "$ref": "#/$defs/Manifest",
+  "$defs": {
+    "Manifest": {
+      "type": "object",
+      "required": ["pmefVersion", "packageId", "mainFile", "files", "createdAt", "coordinateSystem"],
+      "properties": {
+        "pmefxVersion": {
+          "type": "string",
+          "pattern": "^1\\.[0-9]+$",
+          "description": "Container version. Writers of this specification MUST write \"1.0\". Absent in 0.9 manifests, which have no object index."
+        },
+        "pmefVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "packageId": { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "mainFile": { "$ref": "#/$defs/ArchivePath" },
+        "coordinateSystem": { "enum": ["Z-up", "Y-up"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "files": { "type": "array", "items": { "$ref": "#/$defs/FileEntry" } },
+        "meshOrigin": {
+          "$ref": "#/$defs/Point3",
+          "description": "Origin of all glTF mesh assets in project coordinates [mm]. Default 0,0,0."
+        },
+        "objectIndex": { "$ref": "#/$defs/ArchivePath" },
+        "spatialIndex": { "$ref": "#/$defs/ArchivePath" },
+        "objectCount": { "type": "integer", "minimum": 0 },
+        "generator": {
+          "type": "object",
+          "required": ["name", "version"],
+          "properties": { "name": { "type": "string" }, "version": { "type": "string" } },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "ArchivePath": {
+      "type": "string",
+      "description": "Relative ZIP entry path with '/' separators, no '.', '..' or empty segments.",
+      "pattern": "^(?!/)(?!.*(^|/)\\.{1,2}(/|$))(?!.*//)[^\\\\:]+$"
+    },
+    "FileEntry": {
+      "type": "object",
+      "required": ["path", "type"],
+      "properties": {
+        "path": { "$ref": "#/$defs/ArchivePath" },
+        "type": { "enum": ["ndjson", "gltf", "step", "usd", "catalog", "document", "index", "other"] },
+        "sizeBytes": { "type": "integer", "minimum": 0 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "objects": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "Point3": {
+      "type": "object",
+      "required": ["x", "y", "z"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" } },
+      "additionalProperties": false
+    },
+    "BBox": {
+      "type": "object",
+      "required": ["xMin", "xMax", "yMin", "yMax", "zMin", "zMax"],
+      "properties": {
+        "xMin": { "type": "number" }, "xMax": { "type": "number" },
+        "yMin": { "type": "number" }, "yMax": { "type": "number" },
+        "zMin": { "type": "number" }, "zMax": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "Lod": { "enum": ["BBOX_ONLY", "LOD1_COARSE", "LOD2_MEDIUM", "LOD3_FINE", "LOD4_FABRICATION"] },
+    "ObjectEntry": {
+      "title": "Object index line (index/objects.ndjson)",
+      "type": "object",
+      "required": ["id", "type", "record"],
+      "properties": {
+        "id": { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "type": { "type": "string", "pattern": "^[a-zA-Z][a-zA-Z0-9]*:[A-Za-z][A-Za-z0-9]*$" },
+        "record": {
+          "type": "object",
+          "required": ["path", "line"],
+          "properties": {
+            "path": { "$ref": "#/$defs/ArchivePath" },
+            "line": { "type": "integer", "minimum": 1 }
+          },
+          "additionalProperties": false
+        },
+        "bbox": { "$ref": "#/$defs/BBox" },
+        "lods": {
+          "type": "array",
+          "description": "Mesh levels of detail, ordered coarse to fine, each level at most once.",
+          "items": {
+            "type": "object",
+            "required": ["lod", "path"],
+            "properties": {
+              "lod": { "$ref": "#/$defs/Lod" },
+              "path": { "$ref": "#/$defs/ArchivePath" },
+              "triangles": { "type": "integer", "minimum": 0 },
+              "vertexCount": { "type": "integer", "minimum": 0 },
+              "errorMm": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Largest geometric deviation from the finest representation [mm]."
+              },
+              "sizeBytes": { "type": "integer", "minimum": 0 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "brep": {
+          "type": "object",
+          "required": ["path", "format"],
+          "properties": {
+            "path": { "$ref": "#/$defs/ArchivePath" },
+            "format": { "type": "string", "pattern": "^(step|x-[a-z0-9-]+)$" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "Octree": {
+      "title": "Spatial index (index/octree.json)",
+      "type": "object",
+      "required": ["maxDepth", "maxObjectsPerNode", "root"],
+      "properties": {
+        "maxDepth": { "type": "integer", "minimum": 0 },
+        "maxObjectsPerNode": { "type": "integer", "minimum": 1 },
+        "root": { "$ref": "#/$defs/OctreeNode" }
+      },
+      "additionalProperties": false
+    },
+    "OctreeNode": {
+      "type": "object",
+      "required": ["bbox"],
+      "properties": {
+        "bbox": { "$ref": "#/$defs/BBox", "description": "Loose box: union of all object boxes in the subtree." },
+        "objects": { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" } },
+        "children": { "type": "array", "maxItems": 8, "items": { "$ref": "#/$defs/OctreeNode" } }
+      },
+      "additionalProperties": false
+    }
+  }
+}

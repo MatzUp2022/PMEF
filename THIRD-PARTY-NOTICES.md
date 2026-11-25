@@ -51,6 +51,19 @@ of the data contained in these files.
 
 ---
 
+## Rust Dependencies (selection)
+
+Dependencies added for the PMEFX container (`pmef-io`, feature `pmefx`):
+
+| Crate | Licence | Use |
+|---|---|---|
+| `zip` | MIT | ZIP/ZIP64 reading and writing |
+| `sha2` | MIT OR Apache-2.0 | SHA-256 file digests in `manifest.json` |
+
+The full dependency tree: `cargo tree` in `pmef-rs/` (SBOM: docs/AUDIT.md P3.4).
+
+---
+
 ## Trademarks
 
 The following names are trademarks or registered trademarks of their respective
