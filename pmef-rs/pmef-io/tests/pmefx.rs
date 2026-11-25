@@ -572,7 +572,7 @@ fn quantized_glb_round_trips_within_its_error_bound() {
     let q = glb::mesh_glb_quantized("urn:pmef:obj:p:t", &mesh, origin, 0.5);
     assert!(q.bytes.len() * 2 < plain.len(), "{} vs {}", q.bytes.len(), plain.len());
     assert_eq!(q.vertex_count, 96, "shared edges welded");
-    assert!(q.max_error_mm > 0.0 && q.max_error_mm <= 6_000.0 / 65535.0 / 2.0 + 1e-6);
+    assert!(q.max_error_mm > 0.0 && q.max_error_mm <= 6_000.0 / 65535.0 / 2.0 * 3f64.sqrt() + 1e-6);
     let doc = glb::parse_glb_json(&q.bytes).unwrap();
     assert_eq!(doc["extensionsRequired"], json!(["KHR_mesh_quantization"]));
     assert_eq!(doc["accessors"][0]["componentType"], json!(5123));
@@ -583,7 +583,7 @@ fn quantized_glb_round_trips_within_its_error_bound() {
     for (t, src) in back.indices.chunks(3).zip(mesh.indices.chunks(3)) {
         for (&a, &b) in t.iter().zip(src) {
             let (p, s) = (back.positions[a as usize], mesh.positions[b as usize]);
-            let err = (0..3).map(|k| (p[k] - s[k]).abs()).fold(0.0, f64::max);
+            let err = (0..3).map(|k| (p[k] - s[k]).powi(2)).sum::<f64>().sqrt();
             assert!(err <= q.max_error_mm + 1e-3, "{p:?} vs {s:?}"); // + f32 read-back
             let (n, sn) = (back.normals[a as usize], mesh.normals[b as usize]);
             let dot: f32 = (0..3).map(|k| n[k] * sn[k]).sum();
@@ -620,6 +620,24 @@ fn quantized_glb_uses_32bit_indices_beyond_65536_vertices() {
     let back = glb::read_mesh_glb(&q.bytes, Point3::default()).unwrap();
     assert_eq!(back.triangle_count(), 70_000);
     assert_eq!(back.indices.iter().max(), Some(&(q.vertex_count as u32 - 1)));
+}
+
+#[test]
+fn quantized_glb_never_emits_the_restart_index_65535() {
+    // Exactly 65 536 distinct vertices: index 65 535 is used, which glTF forbids
+    // as an unsigned-short index (primitive restart), so the indices are u32.
+    let mut mesh = glb::GlbMesh::default();
+    for i in 0..65_536u32 {
+        mesh.positions.push([f64::from(i), f64::from(i % 2), 0.0]);
+    }
+    for i in 0..65_534u32 {
+        mesh.indices.extend([i, i + 1, i + 2]);
+    }
+    let q = glb::mesh_glb_quantized("urn:pmef:obj:p:t", &mesh, Point3::default(), 10.0);
+    assert_eq!(q.vertex_count, 65_536);
+    let doc = glb::parse_glb_json(&q.bytes).unwrap();
+    assert_eq!(doc["accessors"][0]["componentType"], json!(5123));
+    assert_eq!(doc["accessors"][1]["componentType"], json!(5125));
 }
 
 #[test]

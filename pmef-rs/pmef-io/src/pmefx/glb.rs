@@ -317,7 +317,8 @@ pub fn mesh_glb_quantized(
     }
     // One uniform scale keeps normals independent of the node transform.
     let extent = (0..3).map(|k| hi[k] - lo[k]).fold(0.0f64, f64::max).max(1e-9);
-    let half_step_mm = extent / 65535.0 / 2.0 * 1000.0;
+    // Worst case: a vertex half a step off on all three axes (Euclidean).
+    let half_step_mm = extent / 65535.0 / 2.0 * 1000.0 * 3f64.sqrt();
     let ints = half_step_mm <= max_position_error_mm;
 
     let qn = |n: [f32; 3]| -> [i8; 3] {
@@ -361,10 +362,10 @@ pub fn mesh_glb_quantized(
         }
         for p in &g {
             let q = qp(*p);
-            for k in 0..3 {
-                let back = lo[k] + q[k] as f64 / 65535.0 * extent;
-                max_err = max_err.max((back - p[k]).abs() * 1000.0);
-            }
+            let d2: f64 = (0..3)
+                .map(|k| (lo[k] + q[k] as f64 / 65535.0 * extent - p[k]).powi(2))
+                .sum();
+            max_err = max_err.max(d2.sqrt() * 1000.0);
         }
         if kept.is_empty() {
             qmin = [0; 3];
@@ -388,8 +389,9 @@ pub fn mesh_glb_quantized(
                 bin.extend_from_slice(&v.to_le_bytes());
             }
         }
-        for v in g.iter().flatten() {
-            max_err = max_err.max((*v as f32 as f64 - v).abs() * 1000.0);
+        for p in &g {
+            let d2: f64 = p.iter().map(|v| (*v as f32 as f64 - v).powi(2)).sum();
+            max_err = max_err.max(d2.sqrt() * 1000.0);
         }
         if kept.is_empty() {
             fmin = [0.0; 3];
@@ -405,7 +407,8 @@ pub fn mesh_glb_quantized(
         }
     }
     let indices_offset = bin.len();
-    let short = kept.len() <= u16::MAX as usize + 1;
+    // glTF forbids the maximum index value (primitive restart), so u16 only up to 65 535.
+    let short = kept.len() <= u16::MAX as usize;
     for &i in &mesh.indices {
         let r = remap[i as usize];
         if short {
