@@ -10,9 +10,39 @@
 //!
 //! Cost = length x zone factor (x vertical factor) + bend penalty + penetration penalty.
 
+use crate::geom::P3;
 use crate::grid::Grid;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
+
+/// Where a search ends.
+#[derive(Debug, Clone)]
+pub enum Goal {
+    /// A terminal node, arrived at with travel direction `dir`.
+    Node { node: usize, dir: usize },
+    /// Any tee position of the line's own tree: node → bit mask of allowed arrival travel
+    /// directions (perpendicular to the run). `segs` are the tree's runs (heuristic).
+    Tree {
+        nodes: HashMap<usize, u8>,
+        segs: Vec<(P3, P3)>,
+    },
+}
+
+impl Goal {
+    fn accepts(&self, node: usize, dir: usize) -> bool {
+        match self {
+            Goal::Node { node: n, dir: d } => node == *n && dir == *d,
+            Goal::Tree { nodes, .. } => nodes.get(&node).is_some_and(|m| m >> dir & 1 == 1),
+        }
+    }
+
+    fn contains(&self, node: usize) -> bool {
+        match self {
+            Goal::Node { node: n, .. } => node == *n,
+            Goal::Tree { nodes, .. } => nodes.contains_key(&node),
+        }
+    }
+}
 
 /// Search parameters.
 #[derive(Debug, Clone)]
@@ -20,12 +50,12 @@ pub struct SearchParams {
     pub start: usize,
     /// Travel direction leaving the start terminal.
     pub start_dir: usize,
-    pub goal: usize,
-    /// Travel direction arriving at the end terminal.
-    pub goal_dir: usize,
+    pub goal: Goal,
     pub first_need: f64,
     pub between_need: f64,
     pub last_need: f64,
+    /// Minimum length of a route without any bend [mm] (tee branch leg).
+    pub straight_need: f64,
     /// Equivalent length of one elbow [mm].
     pub bend_penalty: f64,
     /// Cost factor for vertical runs.
@@ -92,10 +122,10 @@ pub fn search(
     p: &SearchParams,
     factor: &dyn Fn(usize, usize) -> f64,
 ) -> Result<Found, SearchError> {
-    if !connected(g, p.start, p.goal) {
+    if !connected(g, p.start, &p.goal) {
         return Err(SearchError::Unreachable);
     }
-    let goal_pt = g.point(p.goal);
+    let start_own = g.is_own(p.start);
     let need = |bent: bool| if bent { p.between_need } else { p.first_need };
     let key = |node: usize, dir: usize, bent: bool, run: f64| -> u64 {
         let n = need(bent);
@@ -106,28 +136,52 @@ pub fn search(
         };
         ((node as u64) << 8) | ((dir as u64) << 4) | ((bent as u64) << 3) | b.min(BUCKETS)
     };
+    let vf = p.vertical_factor.min(1.0);
     let h = |node: usize, dir: usize| -> f64 {
         let q = g.point(node);
-        let d = [0, 1, 2].map(|a| goal_pt[a] - q[a]);
-        let manhattan = d[0].abs() + d[1].abs() + d[2].abs() * p.vertical_factor.min(1.0);
-        // Lower bound on remaining bends.
-        let ahead = {
-            let a = dir / 2;
-            let s = if dir % 2 == 0 { 1.0 } else { -1.0 };
-            (0..3).all(|b| b == a || d[b].abs() < 1e-6) && d[a] * s >= -1e-6
-        };
-        let bends = if dir == p.goal_dir {
-            if ahead {
-                0.0
-            } else {
-                2.0
+        match &p.goal {
+            Goal::Node {
+                node: goal,
+                dir: goal_dir,
+            } => {
+                let goal_pt = g.point(*goal);
+                let d = [0, 1, 2].map(|a| goal_pt[a] - q[a]);
+                let manhattan = d[0].abs() + d[1].abs() + d[2].abs() * vf;
+                // Lower bound on remaining bends.
+                let ahead = {
+                    let a = dir / 2;
+                    let s = if dir % 2 == 0 { 1.0 } else { -1.0 };
+                    (0..3).all(|b| b == a || d[b].abs() < 1e-6) && d[a] * s >= -1e-6
+                };
+                let bends = if dir == *goal_dir {
+                    if ahead {
+                        0.0
+                    } else {
+                        2.0
+                    }
+                } else if dir == opposite(*goal_dir) {
+                    2.0
+                } else {
+                    1.0
+                };
+                manhattan * p.min_factor + bends * p.bend_penalty
             }
-        } else if dir == opposite(p.goal_dir) {
-            2.0
-        } else {
-            1.0
-        };
-        manhattan * p.min_factor + bends * p.bend_penalty
+            Goal::Tree { segs, .. } => {
+                // Manhattan distance to the nearest run (the bend bound is left out).
+                let dist = segs
+                    .iter()
+                    .map(|(a, b)| {
+                        (0..3)
+                            .map(|i| {
+                                let c = q[i].clamp(a[i].min(b[i]), a[i].max(b[i]));
+                                (q[i] - c).abs() * if i == 2 { vf } else { 1.0 }
+                            })
+                            .sum::<f64>()
+                    })
+                    .fold(f64::INFINITY, f64::min);
+                dist * p.min_factor
+            }
+        }
     };
 
     let mut recs: Vec<Rec> = Vec::new();
@@ -153,7 +207,12 @@ pub fn search(
         }
         recs[ri as usize].closed = true;
         let (node, dir) = (r.node as usize, r.dir as usize);
-        if node == p.goal && dir == p.goal_dir && (!r.bent || r.run >= p.last_need - 1e-6) {
+        let long_enough = if r.bent {
+            r.run >= p.last_need - 1e-6
+        } else {
+            r.run >= p.straight_need - 1e-6
+        };
+        if p.goal.accepts(node, dir) && long_enough {
             let mut nodes = Vec::new();
             let mut i = ri;
             while i != u32::MAX {
@@ -172,7 +231,10 @@ pub fn search(
         if expansions > p.max_expansions {
             return Err(SearchError::Limit(expansions));
         }
-        let can_turn = r.run >= need(r.bent) - 1e-6 && g.soft(node) == 0.0 && node != p.goal;
+        let can_turn = r.run >= need(r.bent) - 1e-6
+            && g.soft(node) == 0.0
+            && !g.is_own(node)
+            && !p.goal.contains(node);
         for nd in 0..6 {
             if nd == opposite(dir) || (nd != dir && !can_turn) {
                 continue;
@@ -181,6 +243,11 @@ pub fn search(
                 continue;
             };
             if g.is_hard(next) {
+                continue;
+            }
+            // The own tree's zone is left only on the start's first straight leg (a terminal
+            // that lies next to the tree), never after entering it towards the tee.
+            if g.is_own(node) && !g.is_own(next) && !(start_own && !r.bent) {
                 continue;
             }
             let (a, b) = (g.point(node), g.point(next));
@@ -225,12 +292,12 @@ pub fn search(
 }
 
 /// Flood fill over free nodes: cheap test before the (much larger) state search.
-fn connected(g: &Grid, a: usize, b: usize) -> bool {
+fn connected(g: &Grid, a: usize, goal: &Goal) -> bool {
     let mut seen = vec![0u64; g.len().div_ceil(64)];
     let mut stack = vec![a];
     seen[a / 64] |= 1 << (a % 64);
     while let Some(n) = stack.pop() {
-        if n == b {
+        if goal.contains(n) {
             return true;
         }
         for d in 0..6 {
