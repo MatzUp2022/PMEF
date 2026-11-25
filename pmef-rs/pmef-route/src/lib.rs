@@ -20,15 +20,18 @@
 pub mod cable;
 pub mod geom;
 pub mod grid;
+pub mod line_list;
 pub mod pmef_out;
 pub mod problem;
 pub mod route;
 pub mod rules;
+pub mod run;
 pub mod scene;
 pub mod search;
 
 pub use problem::RouteProblem;
 pub use route::{route_all, RoutedLine};
+pub use run::{run, RunOutput};
 pub use scene::Scene;
 
 /// Name and version written to generated objects.

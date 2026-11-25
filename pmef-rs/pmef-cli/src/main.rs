@@ -726,32 +726,9 @@ fn cmd_route(problem: PathBuf, output: PathBuf, report: Option<PathBuf>, plant: 
     let prob: pmef_route::RouteProblem = serde_json::from_str(&text)
         .map_err(|e| anyhow::anyhow!("{}: {e}", problem.display()))?;
     let base = problem.parent().map(PathBuf::from).unwrap_or_default();
-    let scene = pmef_route::Scene::load(&prob, &base)?;
-    let routed = pmef_route::route_all(&prob, &scene);
-    let mut lines = Vec::new();
-    if let Some(plant) = plant {
-        lines.push(serde_json::json!({
-            "@type": "pmef:FileHeader",
-            "@id": format!("urn:pmef:pkg:{}:auto-route", prob.project),
-            "pmefVersion": "0.9.0", "plantId": plant, "projectCode": prob.project,
-            "coordinateSystem": "Z-up", "units": "mm", "revisionId": prob.revision_id,
-            "changeState": "WIP", "authoringTool": pmef_route::GENERATOR,
-        }));
-    }
-    lines.extend(pmef_route::pmef_out::to_pmef(&prob, &routed));
-    let (cables, fill) = if prob.cables.is_empty() {
-        (Vec::new(), Vec::new())
-    } else {
-        pmef_route::cable::route_cables(&prob)
-    };
-    lines.extend(pmef_route::pmef_out::cables_to_pmef(&prob, &cables));
-    let mut out = String::new();
-    for l in &lines {
-        out.push_str(&serde_json::to_string(l)?);
-        out.push('\n');
-    }
-    std::fs::write(&output, out)?;
-    for r in &routed {
+    let run = pmef_route::run(prob, plant.as_deref(), &pmef_route::scene::fs_reader(&base))?;
+    std::fs::write(&output, run.ndjson())?;
+    for r in &run.routes {
         match &r.error {
             None => println!(
                 "{}: DN{} {}  {:.0} mm, {} bends, {} penetrations, {} states, {} ms",
@@ -766,7 +743,10 @@ fn cmd_route(problem: PathBuf, output: PathBuf, report: Option<PathBuf>, plant: 
             }
         }
     }
-    for c in &cables {
+    for s in &run.skipped_lines {
+        println!("line {}: not routed: {}", s.line_number, s.reason);
+    }
+    for c in &run.cables {
         match &c.error {
             None => println!(
                 "cable {}: {:.0} mm ({:.0} mm drops) on {}",
@@ -775,18 +755,13 @@ fn cmd_route(problem: PathBuf, output: PathBuf, report: Option<PathBuf>, plant: 
             Some(e) => println!("cable {}: FAILED: {e}", c.id),
         }
     }
-    for t in &fill {
+    for t in &run.tray_fill {
         println!("tray {}: {:.1} % fill, {} cable(s)", t.id, t.fill, t.cables.len());
     }
     if let Some(rep) = report {
-        let json = if prob.cables.is_empty() {
-            serde_json::to_string_pretty(&routed)?
-        } else {
-            serde_json::to_string_pretty(&serde_json::json!({"routes": routed, "cables": cables, "trayFill": fill}))?
-        };
-        std::fs::write(rep, json)?;
+        std::fs::write(rep, serde_json::to_string_pretty(&run.report())?)?;
     }
-    if routed.iter().any(|r| !r.ok) || cables.iter().any(|c| !c.ok) {
+    if !run.ok() {
         std::process::exit(1);
     }
     Ok(())

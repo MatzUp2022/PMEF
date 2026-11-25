@@ -32,17 +32,44 @@ pub struct Obstacle {
 pub struct Scene {
     pub obstacles: Vec<Obstacle>,
     pub nozzles: BTreeMap<String, (P3, P3)>,
+    /// Other names of objects with nozzles → their `@id`: `isDerivedFrom` (functional URI of
+    /// the P&ID object) and the tag number (`tagNumber`, `equipmentBasic.tagNumber`). Used to match P&ID line lists to the 3D scene.
+    pub aliases: BTreeMap<String, String>,
 }
 
 /// Scene loading errors.
 #[derive(Debug, thiserror::Error)]
 pub enum SceneError {
     #[error("{0}: {1}")]
-    Io(String, std::io::Error),
+    Io(String, String),
     #[error("{0}:{1}: {2}")]
     Parse(String, usize, String),
     #[error("obstacle {0}: give exactly one of aabb / obj")]
     Shape(String),
+}
+
+/// Reads a file named in the problem: name → content, or an error message.
+pub type Reader<'a> = dyn Fn(&str) -> Result<String, String> + 'a;
+
+/// Reader for files relative to `base`.
+pub fn fs_reader(base: &Path) -> impl Fn(&str) -> Result<String, String> + '_ {
+    move |f: &str| std::fs::read_to_string(base.join(f)).map_err(|e| e.to_string())
+}
+
+/// Read a PMEF NDJSON file through `read`.
+pub fn read_ndjson(f: &str, read: &Reader<'_>) -> Result<Vec<Value>, SceneError> {
+    let text = read(f).map_err(|e| SceneError::Io(f.to_string(), e))?;
+    let mut objs = Vec::new();
+    for (i, line) in text
+        .lines()
+        .enumerate()
+        .filter(|(_, l)| !l.trim().is_empty())
+    {
+        let v: Value = serde_json::from_str(line)
+            .map_err(|e| SceneError::Parse(f.to_string(), i + 1, e.to_string()))?;
+        objs.push(v);
+    }
+    Ok(objs)
 }
 
 impl Scene {
@@ -66,22 +93,15 @@ impl Scene {
 
     /// Build the scene of a problem; relative paths resolve against `base`.
     pub fn load(problem: &RouteProblem, base: &Path) -> Result<Scene, SceneError> {
+        Scene::load_with(problem, &fs_reader(base))
+    }
+
+    /// Build the scene of a problem, reading the files it names through `read` (file name as
+    /// written in the problem → content). Used where there is no file system (WASM).
+    pub fn load_with(problem: &RouteProblem, read: &Reader<'_>) -> Result<Scene, SceneError> {
         let mut s = Scene::default();
         for f in &problem.pmef_scene {
-            let p = base.join(f);
-            let text = std::fs::read_to_string(&p)
-                .map_err(|e| SceneError::Io(p.display().to_string(), e))?;
-            let mut objs = Vec::new();
-            for (i, line) in text
-                .lines()
-                .enumerate()
-                .filter(|(_, l)| !l.trim().is_empty())
-            {
-                let v: Value = serde_json::from_str(line).map_err(|e| {
-                    SceneError::Parse(p.display().to_string(), i + 1, e.to_string())
-                })?;
-                objs.push(v);
-            }
+            let objs = read_ndjson(f, read)?;
             s.add_pmef(&objs, &problem.pmef_ignore);
         }
         for o in &problem.obstacles {
@@ -89,11 +109,9 @@ impl Scene {
             match (&o.aabb, &o.obj) {
                 (Some(b), None) => s.push(o.id.clone(), o.kind, pen, Shape::Box(*b)),
                 (None, Some(f)) => {
-                    let p = base.join(f);
-                    let text = std::fs::read_to_string(&p)
-                        .map_err(|e| SceneError::Io(p.display().to_string(), e))?;
-                    let tris = parse_obj(&text)
-                        .map_err(|(l, m)| SceneError::Parse(p.display().to_string(), l, m))?;
+                    let text = read(f).map_err(|e| SceneError::Io(f.clone(), e))?;
+                    let tris =
+                        parse_obj(&text).map_err(|(l, m)| SceneError::Parse(f.clone(), l, m))?;
                     s.push(o.id.clone(), o.kind, pen, Shape::Mesh(Mesh::new(tris)));
                 }
                 _ => return Err(SceneError::Shape(o.id.clone())),
@@ -129,6 +147,18 @@ impl Scene {
             let Some(id) = o["@id"].as_str() else {
                 continue;
             };
+            if o["nozzles"].as_array().is_some_and(|a| !a.is_empty()) {
+                for a in [
+                    &o["isDerivedFrom"],
+                    &o["tagNumber"],
+                    &o["equipmentBasic"]["tagNumber"],
+                ]
+                .into_iter()
+                .filter_map(Value::as_str)
+                {
+                    self.aliases.entry(a.to_string()).or_insert(id.to_string());
+                }
+            }
             for n in o["nozzles"].as_array().into_iter().flatten() {
                 if let (Some(c), Some(d)) = (p3(&n["coordinate"]), p3(&n["direction"])) {
                     for key in ["nozzleMark", "nozzleId"] {

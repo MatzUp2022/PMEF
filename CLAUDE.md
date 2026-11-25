@@ -74,6 +74,8 @@ cargo run -p pmef-cli -- convert ../examples/pump-skid-complete.ndjson --to pcf 
 cargo run -p pmef-cli -- convert /tmp/pcf --to pmef --base ../examples/pump-skid-complete.ndjson -o /tmp/back.ndjson
 cargo run -p pmef-cli -- check ../examples/pump-skid-complete.ndjson   # package structure: header, unique @id, connectedTo
 cargo run -p pmef-cli -- route ../tests/route/pump-skid-route.json -o /tmp/routed.ndjson --report /tmp/route.json --plant urn:pmef:plant:eaf-2026:EAF-LINE-3   # auto-routing (docs/auto-routing.md)
+cargo run -p pmef-cli -- route ../tests/route/pump-skid-linelist-route.json -o /tmp/linelist.ndjson   # P&ID line list as input
+cargo build -p pmef-route-wasm --target wasm32-unknown-unknown --release   # routing kernel as WASM
 cargo run -p pmef-cli -- pack ../examples/pump-skid-complete.ndjson -o /tmp/skid.pmefx --bbox-lods   # PMEFX container (RFC-0005)
 cargo run -p pmef-cli -- verify /tmp/skid.pmefx
 cd ..

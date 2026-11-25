@@ -60,6 +60,12 @@ Dependencies added for the PMEFX container (`pmef-io`, feature `pmefx`):
 | `zip` | MIT | ZIP/ZIP64 reading and writing |
 | `sha2` | MIT OR Apache-2.0 | SHA-256 file digests in `manifest.json` |
 
+Dependency of the WASM binding of the routing kernel (`pmef-route-wasm`):
+
+| Crate | Licence | Use |
+|---|---|---|
+| `wasm-bindgen` | MIT OR Apache-2.0 | JavaScript bindings of `route()` / `version()` |
+
 The full dependency tree: `cargo tree` in `pmef-rs/` (SBOM: docs/AUDIT.md P3.4).
 
 ---

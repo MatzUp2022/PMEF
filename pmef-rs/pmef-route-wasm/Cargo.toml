@@ -1,0 +1,19 @@
+[package]
+name = "pmef-route-wasm"
+description = "WASM binding of the PMEF auto-routing kernel (pmef-route) for web viewers"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pmef-route = { path = "../pmef-route" }
+# preserve_order: same key order in the NDJSON as `pmef route` (a leaf crate, so enabling it
+# here does not leak into library consumers, unlike pmef-catalogs/pmef-route).
+serde_json = { version = "1", features = ["preserve_order"] }
+wasm-bindgen = "0.2"
