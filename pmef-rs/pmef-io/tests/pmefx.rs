@@ -359,3 +359,122 @@ fn extraction_does_not_follow_symlinks() {
     assert_eq!(std::fs::read_dir(&elsewhere).unwrap().count(), 0, "nothing written through the link");
     std::fs::remove_dir_all(&base).unwrap();
 }
+
+#[test]
+fn mesh_lods_round_trip_through_glb_and_package() {
+    let id = "urn:pmef:obj:eaf-2026:CW-201-PIPE-001";
+    let origin = Point3 {
+        x: 12_000.0,
+        y: -3_000.0,
+        z: 500.0,
+    };
+    // Tetrahedron in project coordinates (mm, Z-up), coloured.
+    let mesh = glb::GlbMesh {
+        positions: vec![
+            [12_000.0, -3_000.0, 500.0],
+            [13_000.0, -3_000.0, 500.0],
+            [12_000.0, -2_000.0, 500.0],
+            [12_000.0, -3_000.0, 1_500.0],
+        ],
+        normals: vec![
+            [0.0, 0.0, -1.0],
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
+        ],
+        indices: vec![0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3],
+        color: Some([0.8, 0.1, 0.1, 1.0]),
+    };
+    let bytes = glb::mesh_glb(id, &mesh, origin);
+    let doc = glb::parse_glb_json(&bytes).unwrap();
+    assert_eq!(doc["nodes"][0]["extras"]["pmefId"], json!(id));
+    // glTF space: Y-up metres relative to the origin → project z 1500 mm is glTF y 1.0 m.
+    assert_eq!(doc["accessors"][0]["max"][1], json!(1.0));
+
+    let back = glb::read_mesh_glb(&bytes, origin).unwrap();
+    assert_eq!(back.indices, mesh.indices);
+    assert_eq!(back.color, mesh.color);
+    for (a, b) in back.positions.iter().zip(&mesh.positions) {
+        assert!((0..3).all(|k| (a[k] - b[k]).abs() < 1e-3), "{a:?} vs {b:?}");
+    }
+    for (a, b) in back.normals.iter().zip(&mesh.normals) {
+        assert!((0..3).all(|k| (a[k] - b[k]).abs() < 1e-6), "{a:?} vs {b:?}");
+    }
+
+    // Through a package: the box writer's output is readable too, LODs come back coarse → fine.
+    let mut w = PmefxWriter::new(Cursor::new(Vec::new()));
+    w.add_ndjson("model/main.ndjson", &example("pump-skid-complete.ndjson"))
+        .unwrap();
+    w.set_mesh_origin(origin).unwrap();
+    let stats = LodStats {
+        triangles: Some(4),
+        vertex_count: Some(4),
+        error_mm: Some(0.0),
+    };
+    w.add_lod(id, Lod::Lod3Fine, "meshes/pipe.lod3.glb", &bytes, stats)
+        .unwrap();
+    w.generate_bbox_lods().unwrap();
+    let mut r = reader(&w.finish(FinishOptions::default()).unwrap().into_inner());
+    assert_eq!(r.verify(), Vec::<String>::new());
+    let o = r
+        .object_index()
+        .unwrap()
+        .into_iter()
+        .find(|o| o.id == id)
+        .unwrap();
+    let origin = r.manifest().mesh_origin.unwrap_or_default();
+    let coarse = glb::read_mesh_glb(&r.read_file(&o.lods[0].path).unwrap(), origin).unwrap();
+    let fine = glb::read_mesh_glb(&r.read_file(&o.lods[1].path).unwrap(), origin).unwrap();
+    assert_eq!((coarse.triangle_count(), fine.triangle_count()), (12, 4));
+    let bb = o.bbox.unwrap();
+    for p in &coarse.positions {
+        assert!(
+            p[0] >= bb.x_min - 1e-3
+                && p[0] <= bb.x_max + 1e-3
+                && p[2] >= bb.z_min - 1e-3
+                && p[2] <= bb.z_max + 1e-3
+        );
+    }
+}
+
+#[test]
+#[allow(clippy::manual_is_multiple_of)] // MSRV 1.75
+fn glb_reader_applies_node_transforms_and_rejects_garbage() {
+    let mesh = glb::GlbMesh {
+        positions: vec![[0.0, 0.0, 0.0], [1000.0, 0.0, 0.0], [0.0, 1000.0, 0.0]],
+        indices: vec![0, 1, 2],
+        ..Default::default()
+    };
+    let bytes = glb::mesh_glb("urn:pmef:obj:p:t", &mesh, Point3::default());
+    // Re-wrap the JSON chunk with a parent node translating by 2 m along glTF x (= project x).
+    let json_len = u32::from_le_bytes(bytes[12..16].try_into().unwrap()) as usize;
+    let mut doc = glb::parse_glb_json(&bytes).unwrap();
+    doc["nodes"] = json!([{"mesh": 0}, {"children": [0], "translation": [2.0, 0.0, 0.0]}]);
+    doc["scenes"] = json!([{"nodes": [1]}]);
+    let mut js = serde_json::to_vec(&doc).unwrap();
+    while js.len() % 4 != 0 {
+        js.push(b' ');
+    }
+    let bin = &bytes[20 + json_len..];
+    let mut out = b"glTF".to_vec();
+    out.extend_from_slice(&2u32.to_le_bytes());
+    out.extend_from_slice(&((20 + js.len() + bin.len()) as u32).to_le_bytes());
+    out.extend_from_slice(&(js.len() as u32).to_le_bytes());
+    out.extend_from_slice(b"JSON");
+    out.extend_from_slice(&js);
+    out.extend_from_slice(bin);
+    let m = glb::read_mesh_glb(&out, Point3::default()).unwrap();
+    assert!(
+        (m.positions[1][0] - 3000.0).abs() < 1e-3,
+        "{:?}",
+        m.positions
+    );
+    assert!(m.normals.is_empty());
+
+    assert!(glb::read_mesh_glb(b"not a glb at all, sorry", Point3::default()).is_err());
+    let mut truncated = bytes.clone();
+    truncated.truncate(bytes.len() - 8);
+    let n = truncated.len() as u32;
+    truncated[8..12].copy_from_slice(&n.to_le_bytes());
+    assert!(glb::read_mesh_glb(&truncated, Point3::default()).is_err());
+}
