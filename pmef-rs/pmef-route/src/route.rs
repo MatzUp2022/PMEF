@@ -786,7 +786,7 @@ fn route_one(
     done: &[RoutedLine],
     reserved: &[Aabb],
 ) -> RoutedLine {
-    let t0 = std::time::Instant::now();
+    let t0 = Clock::now();
     let st = &problem.settings;
     let rules = match rules::resolve(
         &spec.pipe_class,
@@ -1165,4 +1165,22 @@ fn attempt_branch(
     let mut poly = corners(&pts);
     poly.reverse();
     Ok((poly, on_poly[&tee_node], found.cost, found.expansions))
+}
+
+/// Wall clock for the report; `std::time::Instant` panics on `wasm32-unknown-unknown`, where
+/// the time is reported as 0.
+struct Clock(#[cfg(not(target_arch = "wasm32"))] std::time::Instant);
+impl Clock {
+    fn now() -> Clock {
+        Clock(
+            #[cfg(not(target_arch = "wasm32"))]
+            std::time::Instant::now(),
+        )
+    }
+    fn elapsed(&self) -> std::time::Duration {
+        #[cfg(not(target_arch = "wasm32"))]
+        return self.0.elapsed();
+        #[cfg(target_arch = "wasm32")]
+        return std::time::Duration::ZERO;
+    }
 }

@@ -1,0 +1,25 @@
+{
+  "project": "eaf-2026",
+  "revisionId": "r2026-11-25-001",
+  "parent": "urn:pmef:unit:eaf-2026:U-100",
+  "grid": {
+    "step": 50,
+    "margin": 2500
+  },
+  "settings": {
+    "bendPenalty": 1000,
+    "verticalFactor": 1.0,
+    "clearance": 50
+  },
+  "pmefScene": [
+    "../../examples/pump-skid-complete.ndjson"
+  ],
+  "pmefIgnore": [
+    "urn:pmef:obj:eaf-2026:CW-202-"
+  ],
+  "lineLists": [
+    {
+      "file": "pump-skid-pid.ndjson"
+    }
+  ]
+}

@@ -711,3 +711,61 @@ fn cable_fill_and_bend_radius() {
     assert!(c[0].ok, "{:?}", c[0].error);
     assert_eq!(c[0].length_mm, 9000.0 + 9000.0 + 2.0 * 3000.0);
 }
+
+#[test]
+fn line_list_routes_pid_lines_in_the_3d_scene() {
+    // Stage 6: P&ID lines (dexpi-pmef shape, no 3D placement) are routed between the nozzles
+    // of the 3D scene. The files are read through an in-memory reader, as in the WASM binding.
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/route");
+    let mut files = std::collections::HashMap::new();
+    for f in [
+        "pump-skid-pid.ndjson",
+        "../../examples/pump-skid-complete.ndjson",
+    ] {
+        files.insert(f.to_string(), std::fs::read_to_string(dir.join(f)).unwrap());
+    }
+    let read = |f: &str| files.get(f).cloned().ok_or(format!("{f}: not given"));
+    let text = std::fs::read_to_string(dir.join("pump-skid-linelist-route.json")).unwrap();
+    let p: RouteProblem = serde_json::from_str(&text).unwrap();
+    let out = pmef_route::run(p.clone(), None, &read).unwrap();
+
+    // CW-202: pump matched by isDerivedFrom, vessel by tag number; same route as the explicit
+    // problem (pump-skid-route.json, CW-202R), attached to the P&ID line.
+    assert_eq!(out.routes.len(), 1);
+    let r = &out.routes[0];
+    assert!(r.ok, "{:?}", r.error);
+    assert_eq!((r.id.as_str(), r.dn, r.bends), ("CW-202", 150, 4));
+    assert!(out
+        .objects
+        .iter()
+        .filter(|o| o["@type"] == "pmef:PipingSegment")
+        .all(|o| o["isPartOf"] == "urn:pmef:line:eaf-2026:CW-202"));
+    assert!(!out
+        .objects
+        .iter()
+        .any(|o| o["@type"] == "pmef:PipingNetworkSystem"));
+    // CW-205: standby pump not in the 3D scene; CW-206: no class.
+    let why: Vec<_> = out
+        .skipped_lines
+        .iter()
+        .map(|s| (s.line_number.as_str(), s.reason.as_str()))
+        .collect();
+    assert_eq!(why.len(), 2);
+    assert!(why[0].1.contains("PID-101.P-201B#N2"), "{why:?}");
+    assert!(why[1].1.starts_with("no pipeClass"), "{why:?}");
+
+    // With a default class CW-206 becomes a route as well; a line filter keeps only it.
+    let mut q = p.clone();
+    q.line_lists[0].pipe_class = Some("A1A2".into());
+    q.line_lists[0].lines = vec!["CW-206".into()];
+    let out = pmef_route::run(q, None, &read).unwrap();
+    assert_eq!(out.routes.len(), 1);
+    assert_eq!(out.routes[0].id, "CW-206");
+    assert_eq!(out.routes[0].dn, 100);
+    assert!(out.skipped_lines.is_empty());
+
+    // A missing file is an error, not a panic.
+    let mut q = p;
+    q.line_lists[0].file = "missing.ndjson".into();
+    assert!(pmef_route::run(q, None, &read).is_err());
+}

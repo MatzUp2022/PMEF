@@ -128,12 +128,42 @@ first; each reserves its cross-section on every tray it uses, and no tray may ex
 PMEF `@id`), provenance `generated`; the report lists path, trays and the fill per tray.
 Example: `tests/route/cable-trays-route.json`.
 
+**Line lists** (stage 6, `line_list.rs`). `lineLists` names PMEF packages with lines to route,
+typically DEXPI-Manager `dexpi-pmef` output of a P&ID: `pmef:PipingNetworkSystem` (line number,
+DN, class, design conditions, insulation) and `pmef:IsConnectedTo` from the equipment to the line
+with the nozzle mark as `connectionPointSource`. A P&ID has no 3D placement, so each nozzle is
+looked up in the 3D scene: the P&ID equipment by `@id` (stable `@id`s), else by `isDerivedFrom`
+(same functional object), else by tag number. A line with two nozzles in the scene becomes a
+route from the first to the second; further nozzles become branches. The generated segments
+attach to the P&ID line (`isPartOf` = its `@id`), no new line object is written. Lines without
+DN, without class (`lineLists[].pipeClass` sets a default) or with fewer than two nozzles in the
+scene are listed in the report (`skippedLines`) with the reason; `lineLists[].lines` restricts
+the run to some line numbers. Example: `tests/route/pump-skid-linelist-route.json` with the
+synthetic P&ID package `tests/route/pump-skid-pid.ndjson`.
+
+**WASM** (`pmef-route-wasm`). The whole run (`pmef_route::run`) reads its files through a
+reader instead of the file system, so it builds for `wasm32-unknown-unknown`. The binding
+exports `route(problemJson, filesJson, plant?)` → `{ok, ndjson, report}` and `version()`; the
+files the problem names are passed as `{"<name as in the problem>": "<content>"}`. A viewer
+re-routes interactively by changing the problem (terminals, `pmefIgnore` for the line being
+moved) and calling `route` again. The NDJSON is byte-identical to `pmef route`.
+
 ## Usage
 
 ```bash
 cd pmef-rs
 cargo run -p pmef-cli -- route ../tests/route/pump-skid-route.json -o /tmp/routed.ndjson \
   --report /tmp/route-report.json --plant urn:pmef:plant:eaf-2026:EAF-LINE-3
+```
+
+P&ID line list against the 3D scene, and the WASM build:
+
+```bash
+cargo run -p pmef-cli -- route ../tests/route/pump-skid-linelist-route.json -o /tmp/linelist.ndjson \
+  --report /tmp/linelist-report.json
+cargo build -p pmef-route-wasm --target wasm32-unknown-unknown --release
+wasm-bindgen --target web --out-dir /tmp/pmef-route-wasm \
+  target/wasm32-unknown-unknown/release/pmef_route_wasm.wasm   # wasm-bindgen-cli 0.2.130
 ```
 
 The corpus runs are reproducible with `tests/route/corpus/` (see its README).
@@ -153,6 +183,8 @@ The problem format is documented in `pmef-rs/pmef-route/src/problem.rs` (camelCa
 | `pmef-route` stage 2 test | plan-only scene, block with two corridors | 2 | sequentially L1 cuts L2 off; rip-up routes L2 first and L1 through the other corridor |
 | `pmef-route` stage 3 tests, `tests/route/header-branches-route.json` | header DN 100 with 2–3 consumers, one box | 1 line, 3 branches | straight and bent branches end in tees on the header; the third consumer tees into the first branch; tee spacing kept; output passes schema, geometry and topology checks |
 | `pmef-route` stage 4 tests | 20 m line over two beams; pump suction | 2 | supports on both beams plus fillers, no gap above 4.3 m (NPS 4); 1 000 mm straight before the suction is kept; header example with supports passes schema, geometry and topology checks |
+| `pmef-route` stage 6 test, `tests/route/pump-skid-linelist-route.json` | pump skid, synthetic P&ID package (3 lines) | 1 of 3 | CW-202 routed as in the explicit problem (4 bends, 2 343 mm) on the P&ID line; CW-205 skipped (standby pump not in 3D), CW-206 skipped (no class); with a default class and a line filter CW-206 is routed; output passes `pmef validate --strict` and the topology check |
+| `pmef-route-wasm` in Node 22 | same problem, files passed in memory | 1 | NDJSON byte-identical to `pmef route`, 35 ms |
 | `pmef-route` stage 5 tests, `tests/route/cable-trays-route.json` | power and signal trays, cross tray, L-shaped tray | 2–3 cables | each cable uses only its segregated tray; a full tray and a too small tray bend radius are refused; example output (2 `CableObject`s) passes `pmef validate --strict` |
 
 ## Later increments
@@ -177,6 +209,8 @@ The problem format is documented in `pmef-rs/pmef-route/src/problem.rs` (camelCa
    limit; output as `pmef:CableObject`. Open: reading trays from PMEF `CableTrayRun` geometry
    (today the problem lists them), drops routed through the voxel graph instead of L1 distances,
    tray sizing proposals when the fill limit is hit, cable lengths with tray-bend arcs.
-6. **Integration.** WASM build for ProDocAimAi and PlantView, interactive re-routing in the
-   viewers, DEXPI line lists as input (DEXPI-Manager `dexpi-pmef` gives line, class, DN and
-   connected nozzles via stable `@id`s).
+6. **Integration.** Done in stage 6: WASM binding `pmef-route-wasm` (CI builds it for
+   `wasm32-unknown-unknown`) and P&ID line lists as input (`lineLists`, `dexpi-pmef` shape).
+   Open, in the owning repos: the re-routing UI in PlantView (`mvcache-web`) and ProDocAimAi,
+   which vendor the WASM package (ADR 0042); a run of real `dexpi-pmef` output against a 3D model
+   of the same plant (the repository has no such pair yet, only the synthetic package).

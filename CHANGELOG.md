@@ -246,6 +246,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **`pmef route` stage 6 (integration)**: `lineLists` routes P&ID lines mapped to PMEF
+  (DEXPI-Manager `dexpi-pmef`: `PipingNetworkSystem` + `IsConnectedTo` with the nozzle mark)
+  between the nozzles of the 3D scene, matching equipment by `@id`, `isDerivedFrom` or tag
+  number; segments attach to the P&ID line, unroutable lines are reported (`skippedLines`).
+  New crate `pmef-route-wasm` (wasm-bindgen) exports `route(problem, files, plant)` for web
+  viewers; `pmef_route::run` reads files through a reader (no file system), CI builds the
+  crate for `wasm32-unknown-unknown`. Example: `tests/route/pump-skid-linelist-route.json`.
 - **`pmef route` stage 5 (cables)**: `trays` (tray runs as polylines with width, height,
   cable classes, bend radius, existing fill) and `cables` (class, diameter, minimum bend radius,
   ends) route cables over the tray network: drops to the nearest allowed tray (`cableSettings`:

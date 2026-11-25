@@ -84,6 +84,26 @@ jobs:
             --name pmef-adapter-plant3d --sut "sh tests/conformance/suts/plant3d-pcf.sh {input} {output}"
 
   # ──────────────────────────────────────────────────────────
+  # Routing kernel as WASM (pmef-route-wasm, docs/auto-routing.md)
+  # ──────────────────────────────────────────────────────────
+  wasm:
+    name: Routing kernel builds for wasm32
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: pmef-rs
+
+      - name: Build pmef-route-wasm
+        run: cargo build -p pmef-route-wasm --target wasm32-unknown-unknown --release
+
+  # ──────────────────────────────────────────────────────────
   # Lints — reported, not yet gating (~1600 pre-existing warnings,
   # mostly missing doc comments; see docs/AUDIT.md)
   # ──────────────────────────────────────────────────────────

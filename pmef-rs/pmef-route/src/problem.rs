@@ -41,6 +41,10 @@ pub struct RouteProblem {
     pub supports: Option<SupportSettings>,
     #[serde(default)]
     pub routes: Vec<RouteSpec>,
+    /// PMEF packages with lines to route (P&ID line lists, e.g. `dexpi-pmef` output); their
+    /// routes are appended to `routes`, nozzles resolved in `pmefScene`.
+    #[serde(default)]
+    pub line_lists: Vec<crate::line_list::LineListSpec>,
     /// Cable-tray network for cable routing.
     #[serde(default)]
     pub trays: Vec<crate::cable::TraySpec>,
