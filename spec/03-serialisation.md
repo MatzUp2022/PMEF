@@ -361,6 +361,11 @@ position (no per-object transform is applied by the reader). A mesh **SHOULD** n
 node after the object's `@id` and carry it in `extras.pmefId`, so that picking can be mapped
 back to the object.
 
+Writers **MAY** store vertex data compactly with the glTF extension `KHR_mesh_quantization`
+(normalised integer positions dequantised by the node transform, integer normals) and list it
+in `extensionsRequired`; readers **MUST** support it. Other required extensions **MUST NOT** be
+used. The position error introduced by quantisation counts towards the level's `errorMm`.
+
 ### 3.7 Spatial Index
 
 The optional spatial index is a loose octree over the object bounding boxes:
