@@ -49,10 +49,18 @@ fn ticks(lo: f64, hi: f64, step: f64, pins: &[f64]) -> Vec<f64> {
 impl Grid {
     /// Build an empty grid over `region` with spacing `step`, pinning the given points.
     pub fn new(region: Aabb, step: f64, pins: &[P3]) -> Self {
-        let ax: [Vec<f64>; 3] = [0, 1, 2].map(|a| {
-            let p: Vec<f64> = pins.iter().map(|q| q[a]).collect();
-            ticks(region.min[a], region.max[a], step, &p)
-        });
+        Self::with_ticks(
+            region,
+            step,
+            [0, 1, 2].map(|a| pins.iter().map(|q| q[a]).collect()),
+        )
+    }
+
+    /// Build an empty grid over `region` with spacing `step` and extra ticks per axis (e.g.
+    /// terminal coordinates, rack level elevations). Pins outside the region are dropped.
+    pub fn with_ticks(region: Aabb, step: f64, pins: [Vec<f64>; 3]) -> Self {
+        let ax: [Vec<f64>; 3] =
+            [0, 1, 2].map(|a| ticks(region.min[a], region.max[a], step, &pins[a]));
         let lo = [0, 1, 2].map(|a| {
             (0..ax[a].len())
                 .map(|i| {
@@ -200,6 +208,35 @@ impl Grid {
                 }
             }
         }
+    }
+
+    /// Nodes whose cell touches the box.
+    pub fn nodes_in(&self, b: &Aabb) -> Vec<usize> {
+        let r = [0, 1, 2].map(|a| self.range(a, b.min[a], b.max[a]));
+        let mut out = Vec::new();
+        for i in r[0].clone() {
+            for j in r[1].clone() {
+                for k in r[2].clone() {
+                    out.push(self.idx(i, j, k));
+                }
+            }
+        }
+        out
+    }
+
+    /// Block every node that lies outside all `keep` boxes (corridor of a coarse route).
+    pub fn block_outside(&mut self, keep: &[Aabb]) {
+        for idx in 0..self.len() {
+            let p = self.point(idx);
+            if !keep.iter().any(|b| b.contains(p)) {
+                self.set_hard(idx, true);
+            }
+        }
+    }
+
+    /// Number of blocked nodes.
+    pub fn blocked(&self) -> usize {
+        self.hard.iter().map(|w| w.count_ones() as usize).sum()
     }
 
     /// Nodes on the straight stub from `p` along axis direction `dir` for `len` mm.

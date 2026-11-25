@@ -40,6 +40,15 @@ impl Aabb {
         (0..3).all(|i| self.min[i] <= o.max[i] && o.min[i] <= self.max[i])
     }
 
+    /// Overlap of two boxes, if any.
+    pub fn intersect(&self, o: &Aabb) -> Option<Aabb> {
+        let b = Aabb {
+            min: [0, 1, 2].map(|i| self.min[i].max(o.min[i])),
+            max: [0, 1, 2].map(|i| self.max[i].min(o.max[i])),
+        };
+        (0..3).all(|i| b.min[i] <= b.max[i]).then_some(b)
+    }
+
     /// Whether the point lies inside (boundary counts).
     pub fn contains(&self, p: P3) -> bool {
         (0..3).all(|i| self.min[i] <= p[i] && p[i] <= self.max[i])
@@ -52,6 +61,63 @@ pub type Tri = [P3; 3];
 /// Bounding box of a triangle.
 pub fn tri_aabb(t: &Tri) -> Aabb {
     Aabb::from_points(t[0], t[1]).union(&Aabb::from_points(t[2], t[2]))
+}
+
+/// Triangles that are sorted along a Morton (Z-order) curve and grouped into chunks with
+/// bounding boxes, so that a query only tests the triangles of chunks that touch its box.
+/// Built once per mesh; each route then visits only the part of a large model (IFC plant
+/// models with millions of triangles) that lies near its region.
+#[derive(Debug, Clone, Default)]
+pub struct Mesh {
+    pub tris: Vec<Tri>,
+    chunks: Vec<(Aabb, usize, usize)>,
+}
+
+/// Triangles per chunk.
+const CHUNK: usize = 64;
+
+impl Mesh {
+    pub fn new(mut tris: Vec<Tri>) -> Self {
+        let Some(all) = tris.iter().map(tri_aabb).reduce(|a, b| a.union(&b)) else {
+            return Mesh::default();
+        };
+        let ext = [0, 1, 2].map(|i| (all.max[i] - all.min[i]).max(1e-9));
+        let code = |t: &Tri| -> u64 {
+            let mut m = 0u64;
+            for a in 0..3 {
+                let c = (t[0][a] + t[1][a] + t[2][a]) / 3.0;
+                let q = (((c - all.min[a]) / ext[a]) * 1_048_575.0) as u64;
+                for bit in 0..20 {
+                    m |= ((q >> bit) & 1) << (3 * bit + a);
+                }
+            }
+            m
+        };
+        tris.sort_by_cached_key(code);
+        let chunks = tris
+            .chunks(CHUNK)
+            .enumerate()
+            .map(|(i, c)| {
+                let b = c.iter().map(tri_aabb).reduce(|a, b| a.union(&b)).unwrap();
+                (b, i * CHUNK, i * CHUNK + c.len())
+            })
+            .collect();
+        Mesh { tris, chunks }
+    }
+
+    /// Bounding box of all triangles.
+    pub fn bounds(&self) -> Option<Aabb> {
+        self.chunks.iter().map(|c| c.0).reduce(|a, b| a.union(&b))
+    }
+
+    /// Triangles whose bounding box touches `b`.
+    pub fn query<'a>(&'a self, b: &'a Aabb) -> impl Iterator<Item = &'a Tri> + 'a {
+        self.chunks
+            .iter()
+            .filter(move |c| c.0.overlaps(b))
+            .flat_map(move |c| self.tris[c.1..c.2].iter())
+            .filter(move |t| tri_aabb(t).overlaps(b))
+    }
 }
 
 fn sub(a: P3, b: P3) -> P3 {
@@ -119,5 +185,26 @@ mod tests {
         assert!(!tri_box_overlap([0.0, 0.0, 2.5], [1.0, 1.0, 1.0], &t));
         // Box beside the slanted edge, inside the triangle's AABB.
         assert!(!tri_box_overlap([4.5, 4.5, 0.0], [0.5, 0.5, 0.5], &t));
+    }
+
+    #[test]
+    fn mesh_query_matches_brute_force() {
+        // 40 x 40 grid of small triangles in the z = 0 plane.
+        let mut tris = Vec::new();
+        for i in 0..40 {
+            for j in 0..40 {
+                let (x, y) = (i as f64 * 100.0, j as f64 * 100.0);
+                tris.push([[x, y, 0.0], [x + 50.0, y, 0.0], [x, y + 50.0, 0.0]]);
+            }
+        }
+        let m = Mesh::new(tris.clone());
+        let q = Aabb {
+            min: [1020.0, 480.0, -1.0],
+            max: [1530.0, 910.0, 1.0],
+        };
+        let brute = tris.iter().filter(|t| tri_aabb(t).overlaps(&q)).count();
+        assert_eq!(m.query(&q).count(), brute);
+        assert!(brute > 0);
+        assert_eq!(m.tris.len(), 1600);
     }
 }

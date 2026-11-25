@@ -246,6 +246,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **`pmef route` stage 1 (plant-scale graphs)** (`docs/auto-routing.md`): pipe racks
+  (`racks`: levels as preferred edges at top of steel + shoe + outer radius), coarse-to-fine
+  search (`grid.coarseStep`, `grid.corridor`) with fallback to the full graph, a Morton-chunked
+  triangle index for large OBJ models, and reserved terminal stubs (an earlier line no longer
+  blocks a later line's nozzle). On the corpus models, coarse-to-fine cuts the routing time
+  by a factor of 5 (Duplex) to 20 (Clinic).
 - **Catalog `piping-class-c5d1` 2024.3**: 90° long-radius elbows for DN 15, 20, 25, 32, 40, 65 and
   250, so every pipe size in the class has one (48 → 55 components). Every elbow now carries
   `centreToFace_mm` per ASME B16.9. `pmef route` can now route C5D1 lines in DN 25/40, which it
