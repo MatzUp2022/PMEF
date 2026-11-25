@@ -97,6 +97,14 @@ pub struct Settings {
     pub terminal_straight: f64,
     #[serde(default = "d_max")]
     pub max_expansions: usize,
+    /// Rip-up and reroute rounds after the sequential pass (0 = sequential only). Each round
+    /// takes a failed line, rips up the lines that block it, routes it first and re-routes
+    /// them.
+    #[serde(default = "d_rip")]
+    pub rip_up_rounds: usize,
+}
+fn d_rip() -> usize {
+    5
 }
 fn d_bend() -> f64 {
     1000.0
@@ -122,6 +130,7 @@ impl Default for Settings {
             penetration_penalty: d_pen(),
             terminal_straight: 0.0,
             max_expansions: d_max(),
+            rip_up_rounds: d_rip(),
         }
     }
 }

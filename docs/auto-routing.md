@@ -81,7 +81,12 @@ the coarse or the corridor search fails (e.g. a gap narrower than a coarse cell)
 graph is used, and the report notes which graph found the route. The corridor result is optimal
 within the corridor, not necessarily over the whole region.
 
-Lines are routed one after another; each routed line is an obstacle for the next.
+Lines are routed one after another; each routed line is an obstacle for the next. Then **rip-up
+and reroute** (`settings.ripUpRounds`, default 5) repairs failures of the order: a failed line is
+routed against the scene alone, the lines its route collides with are ripped up, the failed line
+is routed first and the ripped-up lines are routed again around it. The new solution is kept if
+it routes more lines, or as many at lower total cost; the report notes which lines were
+re-routed. A line that fails without any other line (rules, terminals, scene) is not retried.
 
 ## Usage
 
@@ -105,6 +110,7 @@ The problem format is documented in `pmef-rs/pmef-route/src/problem.rs` (camelCa
 | Duplex with `coarseStep` 500 (stage 1) | as above | 4 | all routed, 8.2 s → 1.6 s in total; length −1 % to +19 % per line (HW-103: one bend fewer) |
 | Clinic with `coarseStep` 600 (stage 1) | as above | 4 | all routed, 14.0 s → 0.7 s in total; length −1 % to +3 % per line |
 | `pmef-route` stage 1 tests | synthetic rack, wall with 400 mm gap | 3 | line climbs onto the rack level and runs 20 m along it; coarse-to-fine gives the fine optimum; fallback to the full graph for the narrow gap |
+| `pmef-route` stage 2 test | plan-only scene, block with two corridors | 2 | sequentially L1 cuts L2 off; rip-up routes L2 first and L1 through the other corridor |
 
 ## Later increments
 
@@ -112,8 +118,10 @@ The problem format is documented in `pmef-rs/pmef-route/src/problem.rs` (camelCa
    search with corridors, Morton-chunked triangle index, reserved terminal stubs. Open: Hanan /
    visibility graphs from obstacle boundaries instead of uniform ticks, octree occupancy so
    that very large regions do not need a dense node array.
-2. **Multi-line negotiation.** Rip-up and reroute (PathFinder-style congestion costs) instead of
-   strict sequential order; grouping of parallel lines on racks with spacing tables.
+2. **Multi-line negotiation.** Done in stage 2: rip-up and reroute of blocking lines. Open:
+   PathFinder-style congestion costs over all lines at once (also to improve solutions without
+   failures), packing of parallel lines into rack lanes with spacing tables (today the spacing
+   follows from outer radii and clearance, quantised to the grid).
 3. **Branches.** Tees and Steiner-tree routing for headers with several consumers.
 4. **More rules.** Slope for gravity lines (drains), 45° elbows, skewed nozzles, minimum straight
    lengths before instruments and pumps, valve accessibility and operating heights, insulation

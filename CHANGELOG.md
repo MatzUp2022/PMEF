@@ -246,6 +246,9 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **`pmef route` stage 2 (multi-line negotiation)**: rip-up and reroute after the sequential
+  pass (`settings.ripUpRounds`, default 5). A line blocked by earlier lines is routed first and
+  the blocking lines are re-routed around it; the report notes the re-routed lines.
 - **`pmef route` stage 1 (plant-scale graphs)** (`docs/auto-routing.md`): pipe racks
   (`racks`: levels as preferred edges at top of steel + shoe + outer radius), coarse-to-fine
   search (`grid.coarseStep`, `grid.corridor`) with fallback to the full graph, a Morton-chunked

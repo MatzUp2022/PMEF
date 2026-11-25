@@ -312,3 +312,62 @@ fn coarse_to_fine_falls_back_for_narrow_gaps() {
         r.notes
     );
 }
+
+/// Plan-only problem (one z level): L1 runs straight along the lower corridor and cuts L2
+/// (a short vertical line into the block's nozzle) off, unless L1 takes the upper corridor.
+fn rip_up_problem(rounds: usize) -> RouteProblem {
+    rip_up_problem_at(rounds, 0.0)
+}
+
+/// L2 at height `z2`, L1 at z = 0: for z2 = 180 the lines are 180 mm apart (more than outer
+/// radius plus clearance), but L1 still blocks the 100 mm grid cells of L2's level.
+fn rip_up_problem_at(rounds: usize, z2: f64) -> RouteProblem {
+    problem(json!({
+        "bounds": {"min": [1000, 0, 0], "max": [9000, 6000, z2]},
+        "settings": {"ripUpRounds": rounds},
+        "obstacles": [{"id": "B", "aabb": {"min": [3000, 2000, -500], "max": [7000, 4000, 500]}}],
+        "routes": [
+            {"id": "L1", "pipeClass": "A1A2", "dn": 100,
+             "from": {"point": [1000, 1000, 0], "direction": [1, 0, 0]},
+             "to": {"point": [9000, 1000, 0], "direction": [-1, 0, 0]}},
+            {"id": "L2", "pipeClass": "A1A2", "dn": 100,
+             "from": {"point": [5000, 0, z2], "direction": [0, 1, 0]},
+             "to": {"point": [5000, 2000, z2], "direction": [0, -1, 0], "owner": "B"}}
+        ]
+    }))
+}
+
+#[test]
+fn rip_up_reroutes_blocking_line() {
+    let seq = rip_up_problem(0);
+    let r = route_all(&seq, &scene(&seq));
+    assert!(r[0].ok && !r[1].ok, "{:?} {:?}", r[0].points, r[1].points);
+    assert_eq!(r[0].bends, 0);
+
+    let p = rip_up_problem(5);
+    let r = route_all(&p, &scene(&p));
+    assert!(r[0].ok && r[1].ok, "{:?} {:?}", r[0].error, r[1].error);
+    assert_eq!(r[1].bends, 0);
+    assert!(r[0].bends >= 4);
+    assert!(
+        r[0].points.iter().any(|q| q[1] > 4000.0),
+        "{:?}",
+        r[0].points
+    );
+    assert!(r[1]
+        .notes
+        .iter()
+        .any(|n| n.starts_with("rip-up: routed before L1")));
+    assert!(r[0].notes.iter().any(|n| n == "rip-up: re-routed after L2"));
+}
+
+#[test]
+fn rip_up_finds_blockers_by_grid_cells() {
+    let seq = rip_up_problem_at(0, 180.0);
+    let r = route_all(&seq, &scene(&seq));
+    assert!(r[0].ok && !r[1].ok, "{:?} {:?}", r[0].points, r[1].points);
+
+    let p = rip_up_problem_at(5, 180.0);
+    let r = route_all(&p, &scene(&p));
+    assert!(r[0].ok && r[1].ok, "{:?} {:?}", r[0].error, r[1].error);
+}

@@ -98,17 +98,113 @@ fn owner(t: &Terminal) -> Option<String> {
 /// Route every line of the problem in order.
 pub fn route_all(problem: &RouteProblem, scene: &Scene) -> Vec<RoutedLine> {
     let stubs = reserved_stubs(problem, scene);
-    let mut done: Vec<RoutedLine> = Vec::new();
-    for (i, spec) in problem.routes.iter().enumerate() {
-        let others: Vec<Aabb> = stubs
+    let others = |i: usize| -> Vec<Aabb> {
+        stubs
             .iter()
             .filter(|(j, _)| *j != i)
             .map(|(_, b)| *b)
-            .collect();
-        let r = route_one(problem, scene, spec, &done, &others);
-        done.push(r);
+            .collect()
+    };
+    let route = |i: usize, avoid: &[RoutedLine]| {
+        route_one(problem, scene, &problem.routes[i], avoid, &others(i))
+    };
+    // Lines that are routed, except `skip`.
+    let routed = |lines: &[RoutedLine], skip: &[usize]| -> Vec<RoutedLine> {
+        lines
+            .iter()
+            .enumerate()
+            .filter(|(j, r)| r.ok && !skip.contains(j))
+            .map(|(_, r)| r.clone())
+            .collect()
+    };
+
+    // 1. Sequential pass in the given order.
+    let mut lines: Vec<RoutedLine> = Vec::new();
+    for i in 0..problem.routes.len() {
+        let r = route(i, &lines);
+        lines.push(r);
     }
-    done
+
+    // 2. Rip-up and reroute: a line that failed is routed against the scene alone; the lines
+    //    its route collides with are ripped up, the failed line goes first, then the ripped-up
+    //    lines are routed again. The new solution is kept if it routes more lines (or as many
+    //    at lower total cost).
+    let mut tried: Vec<usize> = Vec::new();
+    for _ in 0..problem.settings.rip_up_rounds {
+        let Some(i) = (0..lines.len()).find(|i| !lines[*i].ok && !tried.contains(i)) else {
+            break;
+        };
+        tried.push(i);
+        let alone = route(i, &[]);
+        if !alone.ok {
+            continue; // fails without other lines too (rules, terminals, scene).
+        }
+        let clear = problem.routes[i]
+            .clearance
+            .unwrap_or(problem.settings.clearance);
+        // The search blocks a node when its *cell* (up to half a step around it) comes within
+        // radius plus clearance of a line, so test with that slack: lines a little further
+        // away than the clearance still block the graph.
+        let slack = problem.grid.step / 2.0;
+        let blockers: Vec<usize> = (0..lines.len())
+            .filter(|j| *j != i && lines[*j].ok && collides(&alone, &lines[*j], clear + slack))
+            .collect();
+        if blockers.is_empty() {
+            continue;
+        }
+        let mut cand = lines.clone();
+        cand[i] = route(
+            i,
+            &routed(
+                &cand,
+                &blockers.iter().copied().chain([i]).collect::<Vec<_>>(),
+            ),
+        );
+        for &b in &blockers {
+            // Avoid every routed line except `b` itself and blockers not yet re-routed.
+            let pending: Vec<usize> = blockers.iter().copied().skip_while(|x| *x != b).collect();
+            cand[b] = route(b, &routed(&cand, &pending));
+        }
+        let score = |ls: &[RoutedLine]| {
+            let ok = ls.iter().filter(|r| r.ok).count();
+            let cost: f64 = ls.iter().filter(|r| r.ok).map(|r| r.cost).sum();
+            (ok, cost)
+        };
+        let (n0, c0) = score(&lines);
+        let (n1, c1) = score(&cand);
+        if n1 > n0 || (n1 == n0 && c1 < c0 - 1e-6) {
+            let names: Vec<&str> = blockers
+                .iter()
+                .map(|b| problem.routes[*b].id.as_str())
+                .collect();
+            cand[i].notes.push(format!(
+                "rip-up: routed before {} (they blocked it in the sequential pass)",
+                names.join(", ")
+            ));
+            for &b in &blockers {
+                let id = problem.routes[i].id.clone();
+                cand[b].notes.push(format!("rip-up: re-routed after {id}"));
+            }
+            lines = cand;
+            tried.clear();
+            tried.push(i);
+        }
+    }
+    lines
+}
+
+/// Whether two routed lines come closer than their outer radii plus `clearance`.
+fn collides(a: &RoutedLine, b: &RoutedLine, clearance: f64) -> bool {
+    let outer = |r: &RoutedLine| {
+        r.outside_diameter.unwrap_or(0.0) / 2.0 + r.spec.as_ref().map_or(0.0, |s| s.insulation)
+    };
+    let (oa, ob) = (outer(a), outer(b));
+    a.points.windows(2).any(|s| {
+        let sa = Aabb::from_points(s[0], s[1]).inflate(oa + clearance - 1.0);
+        b.points
+            .windows(2)
+            .any(|t| Aabb::from_points(t[0], t[1]).inflate(ob).overlaps(&sa))
+    })
 }
 
 /// Terminal stubs of every route (route index, box of the straight run in front of the
@@ -118,7 +214,12 @@ pub fn route_all(problem: &RouteProblem, scene: &Scene) -> Vec<RoutedLine> {
 fn reserved_stubs(problem: &RouteProblem, scene: &Scene) -> Vec<(usize, Aabb)> {
     let mut out = Vec::new();
     for (i, spec) in problem.routes.iter().enumerate() {
-        let Ok(rules) = rules::resolve(&spec.pipe_class, spec.dn, None, None) else {
+        let Ok(rules) = rules::resolve(
+            &spec.pipe_class,
+            spec.dn,
+            spec.design_pressure,
+            spec.design_temperature,
+        ) else {
             continue;
         };
         let outer = rules.od / 2.0 + spec.insulation;
