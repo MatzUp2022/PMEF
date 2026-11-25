@@ -514,13 +514,14 @@ fn glb_reader_keeps_normals_and_winding_under_mirrored_nonuniform_scale() {
     let n = face(&p, &[0, 1, 2]).map(|x| x as f32);
     let mesh = glb::GlbMesh { positions: p.to_vec(), normals: vec![n; 3], indices: vec![0, 1, 2], color: None };
     let bytes = glb::mesh_glb("urn:pmef:obj:p:t", &mesh, Point3::default());
-    for scale in [[-2.0, 1.0, 0.5], [3.0, 1.0, 1.0], [1.0, -1.0, 1.0]] {
+    for scale in [[-2.0, 1.0, 0.5], [3.0, 1.0, 1.0], [1.0, -1.0, 1.0], [1e-5, 1e-5, 1e-5], [-1e-7, 1e-7, 2e-7]] {
         let out = rewrap(&bytes, |doc| {
             doc["nodes"] = json!([{"mesh": 0}, {"children": [0], "scale": scale}]);
             doc["scenes"] = json!([{"nodes": [1]}]);
         });
         let m = glb::read_mesh_glb(&out, Point3::default()).unwrap();
         let f = face(&m.positions, &m.indices);
+        assert_eq!(m.normals.len(), 3, "scale {scale:?}: normals dropped");
         for vn in &m.normals {
             let d = f[0] * vn[0] as f64 + f[1] * vn[1] as f64 + f[2] * vn[2] as f64;
             assert!(d > 0.999, "scale {scale:?}: face {f:?} vs normal {vn:?}");

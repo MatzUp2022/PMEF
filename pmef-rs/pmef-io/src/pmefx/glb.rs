@@ -490,7 +490,16 @@ pub fn read_mesh_glb(bytes: &[u8], origin: Point3) -> Result<GlbMesh, String> {
             // Normals transform with the inverse transpose of the linear part; its direction is the
             // cofactor matrix times sign(det). A reflection (det < 0) also reverses the winding.
             let det = det3(&m);
-            let cof = cofactor3(&m);
+            // Scale-independent singularity test: |det| over the product of the column lengths
+            // is 1 for any rotation/uniform scale and 0 for a degenerate transform (Hadamard).
+            let col = |c: usize| (m[c] * m[c] + m[c + 1] * m[c + 1] + m[c + 2] * m[c + 2]).sqrt();
+            let regular = det.abs() > 1e-9 * col(0) * col(4) * col(8);
+            // The cofactor scales with s²; normalise it so tiny scales keep usable normals.
+            let mut cof = cofactor3(&m);
+            let peak = cof.iter().flatten().fold(0.0f64, |a, v| a.max(v.abs()));
+            if peak > 0.0 {
+                cof.iter_mut().flatten().for_each(|v| *v /= peak);
+            }
             for p in &pos {
                 let t = [
                     m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12],
@@ -501,7 +510,7 @@ pub fn read_mesh_glb(bytes: &[u8], origin: Point3) -> Result<GlbMesh, String> {
                     .push(from_gltf([t[0] as f32, t[1] as f32, t[2] as f32], origin));
             }
             match prim["attributes"]["NORMAL"].as_u64() {
-                Some(na) if out.normals.len() == base as usize && det.abs() > 1e-12 => {
+                Some(na) if out.normals.len() == base as usize && regular => {
                     let sign = det.signum();
                     for v in g.accessor(na as usize, 3)? {
                         let t = [0, 1, 2].map(|r| {
