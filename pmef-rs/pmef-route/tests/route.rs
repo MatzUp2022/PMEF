@@ -637,3 +637,77 @@ fn supports_keep_the_span_around_tees() {
         "{xs:?}"
     );
 }
+
+fn cable_problem(extra: serde_json::Value) -> RouteProblem {
+    // Two parallel trays 1 m apart (power at y = 0, signal at y = 1000), joined at both ends by
+    // a cross tray carrying both classes; bend radius 300 mm.
+    let mut base = json!({
+        "project": "t", "revisionId": "r2026-11-25-001", "parent": "urn:pmef:unit:t:U1",
+        "trays": [
+            {"id": "urn:pmef:obj:t:CT-P", "points": [[0, 0, 3000], [20000, 0, 3000]],
+             "width": 300, "height": 100, "classes": ["power"]},
+            {"id": "urn:pmef:obj:t:CT-S", "points": [[0, 1000, 3000], [20000, 1000, 3000]],
+             "width": 300, "height": 100, "classes": ["signal"]},
+            {"id": "CT-X1", "points": [[0, 0, 3000], [0, 1000, 3000]], "width": 300, "height": 100},
+            {"id": "CT-X2", "points": [[20000, 0, 3000], [20000, 1000, 3000]], "width": 300, "height": 100}
+        ],
+        "cables": [
+            {"id": "C-1", "class": "signal", "cableType": "INSTRUMENTATION_PAIR", "diameter": 12,
+             "minBendRadius": 120,
+             "from": {"point": [2000, 500, 0], "id": "urn:pmef:obj:t:FT-1"},
+             "to": {"point": [18000, 500, 0], "id": "urn:pmef:obj:t:PLC-1", "terminal": "CH0"}}
+        ]
+    });
+    if let serde_json::Value::Object(m) = extra {
+        for (k, v) in m {
+            base[k] = v;
+        }
+    }
+    serde_json::from_value(base).unwrap()
+}
+
+#[test]
+fn cable_uses_its_segregated_tray() {
+    let p = cable_problem(json!({}));
+    let (c, fill) = pmef_route::cable::route_cables(&p);
+    assert!(c[0].ok, "{:?}", c[0].error);
+    // The signal cable drops onto the signal tray (equally far as the power tray).
+    assert_eq!(c[0].trays, ["urn:pmef:obj:t:CT-S"]);
+    assert_eq!(c[0].points[1], [2000.0, 1000.0, 3000.0]);
+    assert_eq!(c[0].length_mm, 16000.0 + 2.0 * 3500.0);
+    let f = fill.iter().find(|f| f.id == "urn:pmef:obj:t:CT-S").unwrap();
+    assert_eq!(f.cables, ["C-1"]);
+    assert!(f.fill > 0.0);
+    let objs = pmef_out::cables_to_pmef(&p, &c);
+    assert_eq!(objs[0]["@type"], "pmef:CableObject");
+    assert_eq!(objs[0]["cableTrayId"], "urn:pmef:obj:t:CT-S");
+    assert_eq!(objs[0]["routeLength"], 23.0);
+    assert_eq!(objs[0]["toTerminal"], "CH0");
+}
+
+#[test]
+fn cable_fill_and_bend_radius() {
+    // The signal tray is full: the cable may not use it, and the power tray is segregated.
+    let full = cable_problem(json!({"trays": [
+        {"id": "CT-S", "points": [[0, 1000, 3000], [20000, 1000, 3000]], "width": 300,
+         "height": 100, "classes": ["signal"], "fill": 39.9}
+    ]}));
+    let (c, _) = pmef_route::cable::route_cables(&full);
+    assert!(!c[0].ok);
+
+    // A stiff cable (bend radius 400 mm) cannot turn through the 300 mm tray bends; a long
+    // L-shaped tray then has no admissible path.
+    let l_tray = |r: f64| {
+        cable_problem(json!({
+            "trays": [{"id": "CT-L", "points": [[0, 0, 3000], [10000, 0, 3000], [10000, 10000, 3000]],
+                       "width": 300, "height": 100, "bendRadius": r}],
+            "cables": [{"id": "C-2", "class": "power", "diameter": 40, "minBendRadius": 400,
+                        "from": {"point": [1000, 0, 0]}, "to": {"point": [10000, 9000, 0]}}]
+        }))
+    };
+    let (c, _) = pmef_route::cable::route_cables(&l_tray(300.0));
+    assert!(!c[0].ok);
+    let (c, _) = pmef_route::cable::route_cables(&l_tray(600.0));
+    assert!(c[0].ok, "{:?}", c[0].error);
+    assert_eq!(c[0].length_mm, 9000.0 + 9000.0 + 2.0 * 3000.0);
+}

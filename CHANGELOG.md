@@ -246,6 +246,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **`pmef route` stage 5 (cables)**: `trays` (tray runs as polylines with width, height,
+  cable classes, bend radius, existing fill) and `cables` (class, diameter, minimum bend radius,
+  ends) route cables over the tray network: drops to the nearest allowed tray (`cableSettings`:
+  `maxDrop`, `dropFactor`), segregation by class, bend radius checked at every direction change,
+  fill limit (`maxFill`, default 40 %) with the largest cables first. Output: one
+  `pmef:CableObject` per cable (`routeLength`, `cableTrayId` of the main tray, ends); the report
+  adds the fill per tray. Example: `tests/route/cable-trays-route.json`. No E&I schema change.
 - **`pmef route` stage 4 (line rules)**: per-terminal straight length (`straight`), heat-tracing
   allowance (`tracing`) and pipe supports (`supports`: on structural steel within reach, i.e.
   PMEF members or obstacles with `structural: true`; gaps at most the ASME B31.1 Table 121.5

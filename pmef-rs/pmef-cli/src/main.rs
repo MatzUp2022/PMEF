@@ -739,6 +739,12 @@ fn cmd_route(problem: PathBuf, output: PathBuf, report: Option<PathBuf>, plant: 
         }));
     }
     lines.extend(pmef_route::pmef_out::to_pmef(&prob, &routed));
+    let (cables, fill) = if prob.cables.is_empty() {
+        (Vec::new(), Vec::new())
+    } else {
+        pmef_route::cable::route_cables(&prob)
+    };
+    lines.extend(pmef_route::pmef_out::cables_to_pmef(&prob, &cables));
     let mut out = String::new();
     for l in &lines {
         out.push_str(&serde_json::to_string(l)?);
@@ -760,10 +766,27 @@ fn cmd_route(problem: PathBuf, output: PathBuf, report: Option<PathBuf>, plant: 
             }
         }
     }
-    if let Some(rep) = report {
-        std::fs::write(rep, serde_json::to_string_pretty(&routed)?)?;
+    for c in &cables {
+        match &c.error {
+            None => println!(
+                "cable {}: {:.0} mm ({:.0} mm drops) on {}",
+                c.id, c.length_mm, c.drop_mm, c.trays.join(" > ")
+            ),
+            Some(e) => println!("cable {}: FAILED: {e}", c.id),
+        }
     }
-    if routed.iter().any(|r| !r.ok) {
+    for t in &fill {
+        println!("tray {}: {:.1} % fill, {} cable(s)", t.id, t.fill, t.cables.len());
+    }
+    if let Some(rep) = report {
+        let json = if prob.cables.is_empty() {
+            serde_json::to_string_pretty(&routed)?
+        } else {
+            serde_json::to_string_pretty(&serde_json::json!({"routes": routed, "cables": cables, "trayFill": fill}))?
+        };
+        std::fs::write(rep, json)?;
+    }
+    if routed.iter().any(|r| !r.ok) || cables.iter().any(|c| !c.ok) {
         std::process::exit(1);
     }
     Ok(())

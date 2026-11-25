@@ -1,0 +1,23 @@
+{
+  "project": "demo",
+  "revisionId": "r2026-11-25-001",
+  "parent": "urn:pmef:unit:demo:U-100",
+  "cableSettings": { "maxFill": 40, "maxDrop": 5000, "dropFactor": 2 },
+  "trays": [
+    { "id": "urn:pmef:obj:demo:CT-P01", "points": [[0, 0, 3000], [20000, 0, 3000]],
+      "width": 300, "height": 100, "classes": ["power"] },
+    { "id": "urn:pmef:obj:demo:CT-S01", "points": [[0, 1000, 3000], [20000, 1000, 3000], [20000, 8000, 3000]],
+      "width": 200, "height": 60, "classes": ["signal"] },
+    { "id": "CT-X01", "points": [[0, 0, 3000], [0, 1000, 3000]], "width": 300, "height": 100 }
+  ],
+  "cables": [
+    { "id": "W-101", "cableNumber": "W-101", "class": "power", "cableType": "POWER_LV",
+      "diameter": 32, "minBendRadius": 256,
+      "from": { "point": [500, -1500, 0], "id": "urn:pmef:obj:demo:MCC-1", "terminal": "F12" },
+      "to": { "point": [15000, -800, 0], "id": "urn:pmef:obj:demo:P-101" } },
+    { "id": "W-201", "class": "signal", "cableType": "INSTRUMENTATION_PAIR",
+      "diameter": 12, "minBendRadius": 120,
+      "from": { "point": [3000, 1500, 0], "id": "urn:pmef:obj:demo:FT-201" },
+      "to": { "point": [19000, 7500, 1000], "id": "urn:pmef:obj:demo:JB-2", "terminal": "X1:3" } }
+  ]
+}

@@ -363,3 +363,50 @@ fn line_objects(problem: &RouteProblem, r: &RoutedLine) -> Vec<Value> {
     objs.extend(comps);
     objs
 }
+
+/// PMEF `CableObject`s for the routed cables (failed cables are skipped). `isPartOf` is the
+/// problem's `parent`; without it no cable objects are written.
+pub fn cables_to_pmef(problem: &RouteProblem, cables: &[crate::cable::RoutedCable]) -> Vec<Value> {
+    let Some(parent) = &problem.parent else {
+        return Vec::new();
+    };
+    let proj = &problem.project;
+    let pmef_id = |s: &Option<String>| s.clone().filter(|x| x.starts_with("urn:pmef:"));
+    let mut out = Vec::new();
+    for c in cables.iter().filter(|c| c.ok) {
+        let Some(spec) = &c.spec else { continue };
+        let mut o = json!({
+            "@type": "pmef:CableObject",
+            "@id": format!("urn:pmef:obj:{proj}:{}", c.id),
+            "isPartOf": parent,
+            "cableNumber": spec.cable_number.clone().unwrap_or_else(|| c.id.clone()),
+            "routeLength": (c.length_mm / 100.0).round() / 10.0,
+        });
+        if let Some(t) = &spec.cable_type {
+            o["cableType"] = json!(t);
+        }
+        for (k, end) in [("from", &spec.from), ("to", &spec.to)] {
+            if let Some(id) = pmef_id(&end.id) {
+                o[format!("{k}Id")] = json!(id);
+            }
+            if let Some(t) = &end.terminal {
+                o[format!("{k}Terminal")] = json!(t);
+            }
+        }
+        if let Some(t) = pmef_id(&c.main_tray) {
+            o["cableTrayId"] = json!(t);
+        }
+        o["revision"] = json!({
+            "revisionId": problem.revision_id,
+            "changeState": "WIP",
+            "authoringTool": crate::GENERATOR,
+        });
+        o["provenance"] = json!({
+            "sourceType": "generated",
+            "sourceRef": format!("urn:pmef-route:{proj}:{}", c.id),
+        });
+        o["review"] = json!({ "status": "detected" });
+        out.push(o);
+    }
+    out
+}
