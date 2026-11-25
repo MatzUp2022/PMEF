@@ -769,3 +769,38 @@ fn line_list_routes_pid_lines_in_the_3d_scene() {
     q.line_lists[0].file = "missing.ndjson".into();
     assert!(pmef_route::run(q, None, &read).is_err());
 }
+
+#[test]
+fn line_list_route_ids_are_unique_across_the_problem() {
+    // Generated route ids must not collide with explicit routes, with routes of another line
+    // list, or with ids an earlier suffix would produce: segment, pipe and fitting @ids are
+    // derived from the route id.
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/route");
+    let mut files = std::collections::HashMap::new();
+    for f in [
+        "pump-skid-pid.ndjson",
+        "../../examples/pump-skid-complete.ndjson",
+    ] {
+        files.insert(f.to_string(), std::fs::read_to_string(dir.join(f)).unwrap());
+    }
+    let read = |f: &str| files.get(f).cloned().ok_or(format!("{f}: not given"));
+    let text = std::fs::read_to_string(dir.join("pump-skid-linelist-route.json")).unwrap();
+    let mut p: RouteProblem = serde_json::from_str(&text).unwrap();
+    let explicit: RouteProblem =
+        serde_json::from_str(&std::fs::read_to_string(dir.join("pump-skid-route.json")).unwrap())
+            .unwrap();
+    let mut a = explicit.routes[0].clone();
+    a.id = "CW-202".into();
+    let mut b = explicit.routes[1].clone();
+    b.id = "CW-202-2".into();
+    p.routes = vec![a, b];
+    p.line_lists.push(p.line_lists[0].clone());
+    let out = pmef_route::run(p, None, &read).unwrap();
+    let ids: Vec<_> = out.routes.iter().map(|r| r.id.as_str()).collect();
+    assert_eq!(ids, ["CW-202", "CW-202-2", "CW-202-3", "CW-202-4"]);
+    let mut seen = std::collections::HashSet::new();
+    for o in &out.objects {
+        let id = o["@id"].as_str().unwrap();
+        assert!(seen.insert(id.to_string()), "duplicate @id {id}");
+    }
+}

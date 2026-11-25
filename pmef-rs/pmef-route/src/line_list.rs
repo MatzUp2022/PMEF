@@ -18,7 +18,7 @@ use crate::problem::{BranchSpec, RouteProblem, RouteSpec, Terminal};
 use crate::scene::{read_ndjson, Reader, Scene, SceneError};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// A PMEF package with lines to route (e.g. `dexpi-pmef` output).
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,11 +43,14 @@ pub struct SkippedLine {
     pub reason: String,
 }
 
-/// Routes from the lines of `objs` (one line list package) against `scene`.
+/// Routes from the lines of `objs` (one line list package) against `scene`. `used` holds the
+/// route ids already taken in the problem; every generated id is unique against it and added to
+/// it (segment, pipe and fitting `@id`s are derived from the route id).
 pub fn routes_from_pmef(
     objs: &[Value],
     scene: &Scene,
     spec: &LineListSpec,
+    used: &mut HashSet<String>,
 ) -> (Vec<RouteSpec>, Vec<SkippedLine>) {
     // P&ID equipment: @id → candidate names in the scene.
     let mut names: HashMap<&str, Vec<&str>> = HashMap::new();
@@ -95,7 +98,6 @@ pub fn routes_from_pmef(
 
     let mut routes = Vec::new();
     let mut skipped = Vec::new();
-    let mut used_ids: HashMap<String, usize> = HashMap::new();
     for o in objs
         .iter()
         .filter(|o| o["@type"] == "pmef:PipingNetworkSystem")
@@ -149,15 +151,17 @@ pub fn routes_from_pmef(
             ..Terminal::default()
         };
         // Route id: local part of the line @id (stable), else the line number.
-        let mut id = match line.strip_prefix("urn:pmef:line:") {
+        let base = match line.strip_prefix("urn:pmef:line:") {
             Some(rest) => local_id(rest.rsplit(':').next().unwrap_or(rest)),
             None => local_id(&number),
         };
-        let n = used_ids.entry(id.clone()).or_insert(0);
-        *n += 1;
-        if *n > 1 {
-            id = format!("{id}-{n}");
+        let mut id = base.clone();
+        let mut n = 1;
+        while used.contains(&id) {
+            n += 1;
+            id = format!("{base}-{n}");
         }
+        used.insert(id.clone());
         let cond = &o["designConditions"];
         routes.push(RouteSpec {
             id,
@@ -195,9 +199,10 @@ pub fn expand(
     read: &Reader<'_>,
 ) -> Result<Vec<SkippedLine>, SceneError> {
     let mut skipped = Vec::new();
+    let mut used: HashSet<String> = problem.routes.iter().map(|r| r.id.clone()).collect();
     for spec in problem.line_lists.clone() {
         let objs = read_ndjson(&spec.file, read)?;
-        let (r, s) = routes_from_pmef(&objs, scene, &spec);
+        let (r, s) = routes_from_pmef(&objs, scene, &spec, &mut used);
         problem.routes.extend(r);
         skipped.extend(s);
     }
