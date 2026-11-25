@@ -83,6 +83,18 @@ fn terminal(t: &Terminal, scene: &Scene, which: &str) -> Result<(P3, usize), Str
     Ok((p, dir))
 }
 
+/// Obstacle id whose clearance a terminal stub may enter.
+fn owner(t: &Terminal) -> Option<String> {
+    t.owner
+        .clone()
+        .or_else(|| {
+            t.nozzle
+                .as_ref()
+                .map(|n| n.split('#').next().unwrap_or(n).to_string())
+        })
+        .or_else(|| t.connected_to.clone())
+}
+
 /// Route every line of the problem in order.
 pub fn route_all(problem: &RouteProblem, scene: &Scene) -> Vec<RoutedLine> {
     let mut done: Vec<RoutedLine> = Vec::new();
@@ -154,12 +166,27 @@ fn route_one(
     }
     let mut g = Grid::new(region, step, &[a, b]);
 
+    // Terminal stubs: straight runs that leave each terminal before the first elbow. Only the
+    // terminal's own equipment may touch them (a nozzle starts inside its equipment's
+    // clearance zone); other obstacles and earlier lines keep blocking them.
+    let first_need = rules.elbow_c2f + st.terminal_straight;
+    let stub_len = first_need.max(d + step);
+    let stubs = [g.stub(a, adir, stub_len), g.stub(b, bdir, stub_len)];
+    let owners = [owner(&spec.from), owner(&spec.to)];
+
     // Rasterise the scene and the lines routed so far, grown by this line's radius + clearance.
     let reach = region.inflate(d);
     for o in &scene.obstacles {
         if !o.bounds.overlaps(&reach) {
             continue;
         }
+        let mut mask: Vec<usize> = Vec::new();
+        for (s, w) in stubs.iter().zip(&owners) {
+            if w.as_deref() == Some(o.id.as_str()) {
+                mask.extend(s);
+            }
+        }
+        g.set_mask(&mask);
         let soft = (o.kind == ObstacleKind::Soft).then_some(o.penalty as f32);
         match &o.shape {
             Shape::Box(bx) => {
@@ -174,6 +201,7 @@ fn route_one(
             }
         }
     }
+    g.set_mask(&[]);
     for prev in done.iter().filter(|r| r.ok) {
         let po = prev.outside_diameter.unwrap_or(0.0) / 2.0
             + prev.spec.as_ref().map(|s| s.insulation).unwrap_or(0.0);
@@ -181,11 +209,22 @@ fn route_one(
             g.add_box(&Aabb::from_points(w[0], w[1]).inflate(po), d, None);
         }
     }
+    for s in &stubs {
+        g.clear_soft(s);
+    }
     let blocked_nodes = (0..g.len()).filter(|i| g.is_hard(*i)).count();
+    for (s, which) in stubs.iter().zip(["from", "to"]) {
+        if s.first().is_some_and(|i| g.is_hard(*i)) {
+            return failed(
+                spec,
+                format!(
+                    "{which}: terminal lies in the clearance zone of an obstacle other than \
+                     its own equipment (set `owner` if the obstacle belongs to the terminal)"
+                ),
+            );
+        }
+    }
 
-    let first_need = rules.elbow_c2f + st.terminal_straight;
-    g.carve(a, adir, first_need.max(d + step));
-    g.carve(b, bdir, first_need.max(d + step));
     let (Some(start), Some(goal)) = (g.node_at(a), g.node_at(b)) else {
         return failed(spec, "terminal not on the grid".into());
     };
@@ -206,7 +245,9 @@ fn route_one(
             .iter()
             .filter(|z| z.aabb.contains(m))
             .map(|z| z.factor)
-            .fold(1.0, f64::min)
+            // Overlapping zones: the most preferred (lowest) factor wins; outside all zones 1.
+            .reduce(f64::min)
+            .unwrap_or(1.0)
     };
     let params = SearchParams {
         start,

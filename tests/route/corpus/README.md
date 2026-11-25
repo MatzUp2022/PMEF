@@ -14,5 +14,10 @@ cp duplex-problem.json /tmp/duplex/problem.json
 python ifc2obstacles.py /tmp/clinic $C/Clinic_Structural.ifc $C/Clinic_Plumbing.ifc   # ~4 min
 ```
 
+`ifc2obstacles.py` merges all hard elements into one mesh (`duplex-hard`, `clinic-hard`), so the
+terminals name it as `owner`: boiler outlets and fixtures are part of that mesh. Only the terminal
+stub may enter its clearance zone; earlier lines still block the stub, which is why outlets on the
+same heater are spaced and ordered so that no line passes over another line's outlet.
+
 Screenshots: `python route2glb.py /tmp/duplex /tmp/duplex/report.json duplex-route.glb --soft`, then
 render with plant-test-corpus `render/shot.js` using `view-route.html` (soft obstacles transparent).

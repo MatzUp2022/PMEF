@@ -8,16 +8,16 @@
   ],
   "routes": [
     { "id": "HW-101", "pipeClass": "A1A2", "dn": 25,
-      "from": { "point": [5100, -7240, 4313], "direction": [0, 0, 1] },
-      "to":   { "point": [5700, -7000, 600],  "direction": [0, 0, -1] } },
+      "from": { "point": [5100, -7240, 4313], "direction": [0, 0, 1], "owner": "duplex-hard" },
+      "to":   { "point": [5700, -7000, 600],  "direction": [0, 0, -1], "owner": "duplex-hard" } },
     { "id": "HW-102", "pipeClass": "A1A2", "dn": 25,
-      "from": { "point": [3700, -10560, 4313], "direction": [0, 0, 1] },
-      "to":   { "point": [2850, -10500, 600],  "direction": [0, 0, -1] } },
+      "from": { "point": [3700, -10560, 4313], "direction": [0, 0, 1], "owner": "duplex-hard" },
+      "to":   { "point": [2850, -10500, 600],  "direction": [0, 0, -1], "owner": "duplex-hard" } },
     { "id": "HW-103", "pipeClass": "A1A2", "dn": 20,
-      "from": { "point": [5250, -7240, 4313], "direction": [0, 0, 1] },
-      "to":   { "point": [5202, -8480, 2000], "direction": [0, 0, 1] } },
+      "from": { "point": [4950, -7240, 4313], "direction": [0, 0, 1], "owner": "duplex-hard" },
+      "to":   { "point": [5202, -8480, 2000], "direction": [0, 0, 1], "owner": "duplex-hard" } },
     { "id": "HW-104", "pipeClass": "A1A2", "dn": 20,
-      "from": { "point": [3550, -10560, 4313], "direction": [0, 0, 1] },
-      "to":   { "point": [3268, -7230, 3650], "direction": [0, 0, 1] } }
+      "from": { "point": [3550, -10560, 4313], "direction": [0, 0, 1], "owner": "duplex-hard" },
+      "to":   { "point": [3268, -7230, 3650], "direction": [0, 0, 1], "owner": "duplex-hard" } }
   ]
 }

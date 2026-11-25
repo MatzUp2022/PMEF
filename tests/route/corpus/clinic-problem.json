@@ -39,7 +39,8 @@
      0,
      0,
      1
-    ]
+    ],
+    "owner": "clinic-hard"
    },
    "to": {
     "point": [
@@ -51,7 +52,8 @@
      0,
      0,
      1
-    ]
+    ],
+    "owner": "clinic-hard"
    }
   },
   {
@@ -68,7 +70,8 @@
      0,
      0,
      1
-    ]
+    ],
+    "owner": "clinic-hard"
    },
    "to": {
     "point": [
@@ -80,36 +83,8 @@
      0,
      0,
      1
-    ]
-   }
-  },
-  {
-   "id": "DHW-203",
-   "pipeClass": "A1A2",
-   "dn": 25,
-   "from": {
-    "point": [
-     -44085,
-     37709,
-     6423
     ],
-    "direction": [
-     0,
-     0,
-     1
-    ]
-   },
-   "to": {
-    "point": [
-     -17560,
-     48390,
-     5700
-    ],
-    "direction": [
-     0,
-     0,
-     1
-    ]
+    "owner": "clinic-hard"
    }
   },
   {
@@ -126,7 +101,8 @@
      0,
      0,
      1
-    ]
+    ],
+    "owner": "clinic-hard"
    },
    "to": {
     "point": [
@@ -138,7 +114,39 @@
      0,
      0,
      1
-    ]
+    ],
+    "owner": "clinic-hard"
+   }
+  },
+  {
+   "id": "DHW-203",
+   "pipeClass": "A1A2",
+   "dn": 25,
+   "from": {
+    "point": [
+     -44085,
+     37709,
+     6423
+    ],
+    "direction": [
+     0,
+     0,
+     1
+    ],
+    "owner": "clinic-hard"
+   },
+   "to": {
+    "point": [
+     -17560,
+     48390,
+     5700
+    ],
+    "direction": [
+     0,
+     0,
+     1
+    ],
+    "owner": "clinic-hard"
    }
   }
  ]

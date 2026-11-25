@@ -44,7 +44,10 @@ flowchart LR
    are exact graph nodes. Each node owns the cell between the mid-points to its neighbours. A node
    is blocked when its cell, grown by pipe radius + insulation + clearance, touches an obstacle
    (box test, or separating-axis triangle/box test for meshes). Because the cells tile space, thin
-   walls between nodes are never jumped. Each route rasterises with its own diameter.
+   walls between nodes are never jumped. Each route rasterises with its own diameter. Ticks never
+   leave the region, so routes stay inside fixed bounds. The straight stub in front of a terminal
+   may only enter the clearance zone of the terminal's own equipment (`owner`, default: the
+   nozzle's equipment); every other obstacle and every earlier line still blocks it.
 4. **Search** (`search.rs`). A flood fill first rejects enclosed terminals cheaply. Then A* over
    states (node, travel direction, has-bent, run-length bucket):
    - no reversal; turns are 90° elbows at nodes;
@@ -80,8 +83,8 @@ The problem format is documented in `pmef-rs/pmef-route/src/problem.rs` (camelCa
 | --- | --- | --- | --- |
 | `pmef-route` unit and integration tests | synthetic boxes, walls | 8 scenarios | L-route, clearance, elbow fit, sleeve, enclosed, class limits, second line avoids first, port chain |
 | `tests/route/pump-skid-route.json` | `examples/pump-skid-complete.ndjson` (pump box, vessel primitives, steel, existing CW-201) | 3 (DN 25–200) | all routed; `examples/pump-skid-auto-routed.ndjson` passes schema, topology and geometry checks |
-| plant-test-corpus Duplex (`Duplex_A` + `Duplex_Plumbing`) | 196 k vertices hard (existing plumbing, structure), walls/slabs soft | 4 hot-water lines boiler → fixtures | all routed, 4–6 bends, 2 slab penetrations each, < 2.5 s per line (release) |
-| plant-test-corpus Clinic (`Clinic_Structural` + `Clinic_Plumbing`) | 6 200 existing piping parts, 930 beams/columns, 140 MB OBJ; slabs/walls soft | 4 lines water heater → fixtures, 26–59 m, step 150 mm | all routed, 3–5 bends, 0.1–7.6 s per line (release); the rule kernel rejected C5D1 DN 25/40 because that class has no 90° elbow for these sizes |
+| plant-test-corpus Duplex (`Duplex_A` + `Duplex_Plumbing`) | 196 k vertices hard (existing plumbing, structure), walls/slabs soft | 4 hot-water lines boiler → fixtures | all routed, 4–6 bends, 0–2 slab penetrations, < 2.5 s per line (release) |
+| plant-test-corpus Clinic (`Clinic_Structural` + `Clinic_Plumbing`) | 6 200 existing piping parts, 930 beams/columns, 140 MB OBJ; slabs/walls soft | 4 lines water heater → fixtures, 26–59 m, step 150 mm | all routed, 3–5 bends, 0.1–6.5 s per line (release); the rule kernel rejected C5D1 DN 25/40 because that class has no 90° elbow for these sizes |
 
 ## Later increments
 

@@ -241,18 +241,43 @@ pub fn primitive_box(p: &Value) -> Option<Aabb> {
                 max: [0, 1, 2].map(|i| c[i].max(end[i]) + ext[i]),
             })
     };
+    // Field names per schemas/pmef-geometry.schema.json; legacy aliases are accepted.
     match t {
         "CYLINDER" | "PIPE" => Some(swept(f("radius")?, f("length").or(f("height"))?)),
-        "DISH" => Some(swept(f("shellRadius").or(f("radius"))?, f("depth")?)),
-        "CONE" => Some(swept(
-            f("radius")?.max(f("radius2").unwrap_or(0.0)),
-            f("length").or(f("height"))?,
-        )),
+        // `depth` is optional; the shell radius bounds every head type.
+        "DISH" => {
+            let r = f("shellRadius").or(f("radius"))?;
+            Some(swept(r, f("depth").unwrap_or(r)))
+        }
+        "CONE" | "SNOUT" => {
+            let r1 = f("r1").or(f("radius"))?;
+            let r2 = f("r2").or(f("radius2")).unwrap_or(0.0);
+            let off = f("offsetX")
+                .unwrap_or(0.0)
+                .hypot(f("offsetY").unwrap_or(0.0));
+            Some(swept(r1.max(r2) + off, f("length").or(f("height"))?))
+        }
         "SPHERE" => Some(Aabb::from_points(c, c).inflate(f("radius")?)),
+        "CIRC_TORUS" => Some(Aabb::from_points(c, c).inflate(f("torusRadius")? + f("tubeRadius")?)),
         "BOX" => {
-            let h = [f("length")?, f("width")?, f("height").or(f("depth"))?];
-            let r = (h[0] * h[0] + h[1] * h[1] + h[2] * h[2]).sqrt() / 2.0;
-            Some(Aabb::from_points(c, c).inflate(r))
+            let h = [
+                f("xLen").or(f("length"))?,
+                f("yLen").or(f("width"))?,
+                f("zLen").or(f("height")).or(f("depth"))?,
+            ];
+            let rotated = ["rotationX", "rotationY", "rotationZ"]
+                .iter()
+                .any(|k| f(k).is_some_and(|v| v.abs() > 1e-9));
+            if rotated {
+                // Rotated box: bounded by its circumscribed sphere.
+                let r = (h[0] * h[0] + h[1] * h[1] + h[2] * h[2]).sqrt() / 2.0;
+                Some(Aabb::from_points(c, c).inflate(r))
+            } else {
+                Some(Aabb {
+                    min: [0, 1, 2].map(|i| c[i] - h[i] / 2.0),
+                    max: [0, 1, 2].map(|i| c[i] + h[i] / 2.0),
+                })
+            }
         }
         _ => None,
     }

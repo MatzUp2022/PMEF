@@ -165,3 +165,69 @@ fn pump_skid_example_is_current() {
         .collect();
     assert_eq!(got, want);
 }
+
+#[test]
+fn avoidance_zone_is_bypassed() {
+    // Factor 10 on the direct corridor: the route takes a detour instead of crossing it.
+    let p = problem(json!({"zones": [
+        {"aabb": {"min": [1000, -300, -300], "max": [4000, 300, 300]}, "factor": 10.0}
+    ]}));
+    let r = route_all(&p, &scene(&p));
+    assert!(r[0].ok, "{:?}", r[0].error);
+    for w in r[0].points.windows(2) {
+        let on_axis = w[0][1].abs() < 300.0 && w[1][1].abs() < 300.0 && w[0][2].abs() < 300.0;
+        let spans = w[0][0].min(w[1][0]) < 2000.0 && w[0][0].max(w[1][0]) > 3000.0;
+        assert!(!(on_axis && spans), "run {w:?} crosses the avoidance zone");
+    }
+    assert!(r[0].bends > 1);
+}
+
+#[test]
+fn routes_stay_inside_bounds() {
+    let p = problem(json!({"bounds": {"min": [-550, -550, -550], "max": [5050, 3050, 550]}}));
+    let r = route_all(&p, &scene(&p));
+    assert!(r[0].ok, "{:?}", r[0].error);
+    for q in &r[0].points {
+        assert!(
+            q[0] <= 5050.0 && q[1] <= 3050.0 && q[2] <= 550.0,
+            "{q:?} outside bounds"
+        );
+    }
+}
+
+#[test]
+fn terminal_stub_only_ignores_its_owner() {
+    // A thin hard wall right in front of a point terminal blocks it ...
+    let wall =
+        json!([{"id": "W1", "aabb": {"min": [100, -1000, -1000], "max": [110, 1000, 1000]}}]);
+    let p = problem(json!({"obstacles": wall}));
+    let r = route_all(&p, &scene(&p));
+    assert!(
+        !r[0].ok,
+        "route passed through a foreign obstacle: {:?}",
+        r[0].points
+    );
+    // ... unless the terminal belongs to it (fixture, equipment).
+    let p = problem(json!({"obstacles": wall, "routes": [{
+        "id": "L1", "pipeClass": "A1A2", "dn": 100,
+        "from": {"point": [0, 0, 0], "direction": [1, 0, 0], "owner": "W1"},
+        "to": {"point": [5000, 3000, 0], "direction": [0, -1, 0]}
+    }]}));
+    let r = route_all(&p, &scene(&p));
+    assert!(r[0].ok, "{:?}", r[0].error);
+}
+
+#[test]
+fn schema_primitives_are_obstacles() {
+    use pmef_route::scene::primitive_box;
+    let b = primitive_box(
+        &json!({"type": "BOX", "center": [0, 0, 0], "xLen": 400, "yLen": 800, "zLen": 600}),
+    )
+    .unwrap();
+    assert_eq!(b.min, [-200.0, -400.0, -300.0]);
+    assert_eq!(b.max, [200.0, 400.0, 300.0]);
+    let c = primitive_box(&json!({"type": "CONE", "center": [0, 0, 0], "axis": [0, 0, 1], "r1": 300, "r2": 100, "length": 500})).unwrap();
+    assert_eq!(c.max, [300.0, 300.0, 500.0]);
+    assert!(primitive_box(&json!({"type": "SNOUT", "center": [0, 0, 0], "axis": [1, 0, 0], "r1": 100, "r2": 50, "length": 200})).is_some());
+    assert!(primitive_box(&json!({"type": "CIRC_TORUS", "center": [0, 0, 0], "axis": [0, 1, 0], "torusRadius": 300, "tubeRadius": 100, "angleDeg": 90})).is_some());
+}

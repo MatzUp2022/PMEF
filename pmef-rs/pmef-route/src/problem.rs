@@ -165,6 +165,11 @@ pub struct Terminal {
     /// Written to the generated end port's `connectedTo`.
     #[serde(default)]
     pub connected_to: Option<String>,
+    /// Obstacle id this terminal belongs to (equipment `@id`, fixture). Its clearance zone is
+    /// waived along the terminal stub; every other obstacle still blocks the stub.
+    /// Default: the equipment of `nozzle`, else `connectedTo`.
+    #[serde(default)]
+    pub owner: Option<String>,
 }
 
 /// One line to route.

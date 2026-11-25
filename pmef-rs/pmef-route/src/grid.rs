@@ -20,16 +20,25 @@ pub struct Grid {
     hard: Vec<u64>,
     /// Penetration penalty per node (soft obstacles, e.g. walls and slabs) [mm equivalent].
     soft: Vec<f32>,
+    /// Nodes that `mark` leaves untouched (terminal stubs while their own equipment is
+    /// rasterised).
+    mask: Vec<usize>,
 }
 
 fn ticks(lo: f64, hi: f64, step: f64, pins: &[f64]) -> Vec<f64> {
     let mut v: Vec<f64> = Vec::new();
-    let n = ((hi - lo) / step).ceil().max(1.0) as usize;
+    let far = |x: f64| pins.iter().all(|p| (p - x).abs() > 0.3 * step);
+    // Uniform ticks strictly inside [lo, hi]; the upper bound is added explicitly so that no
+    // node (and therefore no route) ever lies outside the region.
+    let n = ((hi - lo) / step + 1e-9).floor().max(0.0) as usize;
     for i in 0..=n {
         let x = lo + i as f64 * step;
-        if pins.iter().all(|p| (p - x).abs() > 0.3 * step) {
+        if x <= hi + 1e-6 && far(x) {
             v.push(x);
         }
+    }
+    if v.last().map_or(true, |l| hi - l > 1e-6) && far(hi) {
+        v.push(hi);
     }
     v.extend(pins.iter().copied().filter(|p| *p >= lo && *p <= hi));
     v.sort_by(f64::total_cmp);
@@ -76,6 +85,7 @@ impl Grid {
             n,
             hard: vec![0; total.div_ceil(64)],
             soft: Vec::new(),
+            mask: Vec::new(),
         }
     }
 
@@ -142,6 +152,9 @@ impl Grid {
     }
 
     fn mark(&mut self, idx: usize, soft_penalty: Option<f32>) {
+        if self.mask.binary_search(&idx).is_ok() {
+            return;
+        }
         match soft_penalty {
             None => self.set_hard(idx, true),
             Some(p) => {
@@ -189,19 +202,17 @@ impl Grid {
         }
     }
 
-    /// Free the nodes on the straight stub from `p` along axis direction `dir` for `len` mm
-    /// (nozzle stubs start inside the equipment's own clearance zone).
-    pub fn carve(&mut self, p: P3, dir: usize, len: f64) {
-        let Some(start) = self.node_at(p) else { return };
+    /// Nodes on the straight stub from `p` along axis direction `dir` for `len` mm.
+    pub fn stub(&self, p: P3, dir: usize, len: f64) -> Vec<usize> {
+        let mut out = Vec::new();
+        let Some(start) = self.node_at(p) else {
+            return out;
+        };
         let a = dir / 2;
         let s = if dir % 2 == 0 { 1.0 } else { -1.0 };
         let mut c = self.ijk(start);
         loop {
-            let idx = self.idx(c[0], c[1], c[2]);
-            self.set_hard(idx, false);
-            if !self.soft.is_empty() {
-                self.soft[idx] = 0.0;
-            }
+            out.push(self.idx(c[0], c[1], c[2]));
             if (self.ax[a][c[a]] - p[a]) * s >= len - 1e-6 {
                 break;
             }
@@ -211,6 +222,25 @@ impl Grid {
                 c[a] -= 1;
             } else {
                 break;
+            }
+        }
+        out
+    }
+
+    /// Protect `nodes` from further marking until the mask is cleared again (empty slice).
+    /// Used to rasterise a terminal's own equipment without blocking the terminal stub, while
+    /// every other obstacle still blocks it.
+    pub fn set_mask(&mut self, nodes: &[usize]) {
+        self.mask = nodes.to_vec();
+        self.mask.sort_unstable();
+    }
+
+    /// Remove the soft-obstacle penalty from `nodes` (the terminal sleeve is part of the
+    /// connected fixture, not an extra penetration).
+    pub fn clear_soft(&mut self, nodes: &[usize]) {
+        if !self.soft.is_empty() {
+            for &i in nodes {
+                self.soft[i] = 0.0;
             }
         }
     }
@@ -266,5 +296,22 @@ mod tests {
             .collect();
         assert!(!blocked.is_empty());
         assert!(blocked.iter().all(|x| (400.0..=500.0).contains(x)));
+    }
+
+    #[test]
+    fn ticks_stay_inside_bounds() {
+        let g = Grid::new(
+            Aabb {
+                min: [0.0, 0.0, 0.0],
+                max: [1050.0, 0.0, 300.0],
+            },
+            100.0,
+            &[],
+        );
+        assert_eq!(g.ax[0].first(), Some(&0.0));
+        assert_eq!(g.ax[0].last(), Some(&1050.0));
+        assert!(g.ax[0].iter().all(|x| (0.0..=1050.0).contains(x)));
+        assert_eq!(g.ax[1], vec![0.0]);
+        assert_eq!(g.ax[2].last(), Some(&300.0));
     }
 }
