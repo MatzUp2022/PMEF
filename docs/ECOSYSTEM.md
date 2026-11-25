@@ -1,6 +1,6 @@
 # Ökosystem: Verantwortung je Repository
 
-Stand: 2026-11-21 · Freigegeben von Marcel · Gilt identisch in allen acht Repositories.
+Stand: 2026-11-25 · Freigegeben von Marcel · Gilt identisch in allen acht Repositories.
 
 Dieses Dokument legt fest, welches Repository welche Funktion **besitzt**. Ziel ist, dass keine
 Funktion in zwei Repositories parallel entsteht. Vor jeder neuen Funktion gilt: Gehört sie laut
@@ -25,7 +25,7 @@ Kern          PMEF (Informationsmodell, Kataloge)    cad-kernel (exakte Geometri
 
 | Repo | Besitzt | Baut nicht (Nicht-Scope) | Liefert nach außen |
 | --- | --- | --- | --- |
-| PMEF | Informationsmodell 3D-Objekte (Piping, Equipment, Steel), JSON-Schemas, Kataloge (Rohrklassen, Flansche, Profile, Werkstoffe), NDJSON-I/O, Diff/Merge, Snapping, Adapter zu AVEVA E3D und AutoCAD Plant 3D | Viewer, Datenbank/Server, Workflows, P&ID-Topologie (→ DEXPI-Manager) | Crates `pmef-core`, `pmef-io`, `pmef-validate`, `pmef-geom`; Schemas; Katalog-JSON |
+| PMEF | Informationsmodell 3D-Objekte (Piping, Equipment, Steel), JSON-Schemas, Kataloge (Rohrklassen, Flansche, Profile, Werkstoffe), NDJSON-I/O, Diff/Merge, Snapping, Auto-Routing-Kernel (`pmef-route`: Rohrleitungen im Graph/Voxel-Raster nach Rohrklassen-Regeln, später Kabel), Adapter zu AVEVA E3D und AutoCAD Plant 3D | Viewer, Datenbank/Server, Workflows, P&ID-Topologie (→ DEXPI-Manager) | Crates `pmef-core`, `pmef-io`, `pmef-validate`, `pmef-geom`, `pmef-catalogs`, `pmef-route`; CLI `pmef route`; Schemas; Katalog-JSON |
 | cad-kernel | Exakte Geometrie: NURBS, B-Rep-Topologie, Schnitte, Booleans, Tessellierung | Szene, Rendering, Fachobjekte, Dateiformate | Crate `kernel-api` (Rust + WASM) |
 | DEXPI-Manager | DEXPI-Parsing/-Validierung/-Export, P&ID-/PFD-Graph, Regel-Engine, Safety (HAZOP, SIL, LOPA), P/T-Berechnung für Rohrklassen, Adapter zu P&ID-Werkzeugen | Dokumentenmanagement, Transmittals, Revisions-Workflows, Schweißen, Prüfung, Kabel/Elektro, Bau/IBN (→ ProDocAimAi); eigene Rohrklassen-/Maßtabellen (→ PMEF-Kataloge); 3D-Tool-Adapter (→ PMEF); 2D-Ableitung (→ PlantView); Erkennungs-KI (→ EngineeringAI) | Crates `dexpi-core`, `pid-graph`, `rule-engine`, `pipe-class-engine`; WASM `wasm-bindings` |
 | PlantView | Viewer-Formate (glTF, IFC, STEP, OBJ/STL, PCF, `.mvcache`), Konvertierung, Streaming, Desktop-/Web-Viewer, 2D-Ableitung (HLR, DXF, PDF, SVG), BIM-Prüfungen (IDS, BCF, bSDD) | Fach-Datenmodelle je Disziplin (→ PMEF), eigener DEXPI-Parser (→ `dexpi-core`), NURBS-/B-Rep-Auswertung (→ cad-kernel), Lifecycle-Module (→ ProDocAimAi), Erkennungs-KI (→ EngineeringAI) | CLI, WASM `mvcache-web`, Geometriequelle für `geom-api` |
@@ -44,6 +44,10 @@ Kern          PMEF (Informationsmodell, Kataloge)    cad-kernel (exakte Geometri
    drei Konsumenten.
 5. **ProDocAimAi ↔ ProcessHubAi** teilen Code weiterhin per Kopie (ProcessHubAi CLAUDE.md §7a); ein
    gemeinsames Paket erst, wenn ein drittes TS-Produkt es braucht.
+6. **Auto-Routing** (2026-11-25): Der Graph- und Regel-Kernel für automatisches Routing von
+   Rohrleitungen (später Kabel) ist das Crate `pmef-route` in PMEF, weil er Rohrklassen, Rohrmaße und
+   das PMEF-Modell braucht. Engines und Plattformen binden ihn wie `pmef-core` ein; Viewer zeigen
+   das Ergebnis, bauen aber keinen eigenen Router.
 
 ## Eingefroren (nur Bugfixes, kein Ausbau)
 

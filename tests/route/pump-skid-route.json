@@ -1,0 +1,28 @@
+{
+  "project": "eaf-2026",
+  "revisionId": "r2026-11-25-001",
+  "parent": "urn:pmef:unit:eaf-2026:U-100",
+  "grid": { "step": 50, "margin": 2500 },
+  "settings": { "bendPenalty": 1000, "verticalFactor": 1.0, "clearance": 50 },
+  "pmefScene": ["../../examples/pump-skid-complete.ndjson"],
+  "pmefIgnore": ["urn:pmef:obj:eaf-2026:CW-202-"],
+  "routes": [
+    {
+      "id": "CW-202R", "line": "urn:pmef:line:eaf-2026:CW-202", "pipeClass": "A1A2", "dn": 150,
+      "from": { "nozzle": "urn:pmef:obj:eaf-2026:P-201A#N2" },
+      "to": { "nozzle": "urn:pmef:obj:eaf-2026:V-201#N1" },
+      "designPressure": 1600000, "designTemperature": 333.15
+    },
+    {
+      "id": "CW-203", "line": "urn:pmef:line:eaf-2026:CW-203", "pipeClass": "A1A2", "dn": 200,
+      "from": { "nozzle": "urn:pmef:obj:eaf-2026:V-201#N2" },
+      "to": { "point": [5000, 7500, 1500], "direction": [0, -1, 0] },
+      "designPressure": 1600000, "designTemperature": 333.15
+    },
+    {
+      "id": "DR-201", "lineNumber": "1\"-DR-201-A1A2", "pipeClass": "A1A2", "dn": 25,
+      "from": { "nozzle": "urn:pmef:obj:eaf-2026:P-201A#N3" },
+      "to": { "point": [10500, 6800, 100], "direction": [0, 0, 1] }
+    }
+  ]
+}

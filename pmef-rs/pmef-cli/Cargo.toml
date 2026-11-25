@@ -17,6 +17,7 @@ tracing-subscriber.workspace = true
 pmef-core.workspace = true
 pmef-io.workspace = true
 pmef-validate.workspace = true
+pmef-route = { path = "../pmef-route" }
 pmef-adapter-plant3d = { path = "../pmef-adapter-plant3d" }
 
 [dev-dependencies]

@@ -27,7 +27,7 @@ REV = {"revisionId": "r2026-10-31-001", "changeState": "SHARED", "authoringTool"
 # ── base objects ────────────────────────────────────────────────────────────
 
 
-RFC_EXAMPLES = {"asbuilt-recognition.ndjson"}  # 0.10.0 feature examples, used only where named
+RFC_EXAMPLES = {"asbuilt-recognition.ndjson", "pump-skid-auto-routed.ndjson"}  # 0.10.0 feature examples, used only where named
 
 
 def _load_examples(names: set[str] | None = None) -> list[dict]:

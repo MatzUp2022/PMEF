@@ -359,7 +359,7 @@
     },
     "Provenance": {
       "title": "Provenance",
-      "description": "Origin of a PMEF object: manual modelling, CAD import or automated recognition from drawings, scans or photos (RFC-0001, spec 02 §2.9).",
+      "description": "Origin of a PMEF object: manual modelling, CAD import, automated recognition from drawings, scans or photos, or generation by a design algorithm (RFC-0001, spec 02 §2.9).",
       "type": "object",
       "required": [
         "sourceType"
@@ -373,9 +373,10 @@
             "iso-drawing",
             "2d-drawing",
             "scan",
-            "photo"
+            "photo",
+            "generated"
           ],
-          "description": "Kind of source the object was created from."
+          "description": "Kind of source the object was created from. 'generated' = produced by a design algorithm (e.g. auto-routing, pmef-route) rather than recognised from a source."
         },
         "sourceRef": {
           "type": "string",

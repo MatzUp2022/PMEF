@@ -1,0 +1,23 @@
+{
+  "project": "duplex-test", "revisionId": "r2026-11-25-001", "parent": "urn:pmef:unit:duplex-test:HOUSE",
+  "grid": { "step": 50, "margin": 1500 },
+  "settings": { "bendPenalty": 600, "clearance": 25, "penetrationPenalty": 3000, "verticalFactor": 1.0 },
+  "obstacles": [
+    { "id": "duplex-hard", "kind": "hard", "obj": "hard.obj" },
+    { "id": "duplex-soft", "kind": "soft", "obj": "soft.obj" }
+  ],
+  "routes": [
+    { "id": "HW-101", "pipeClass": "A1A2", "dn": 25,
+      "from": { "point": [5100, -7240, 4313], "direction": [0, 0, 1], "owner": "duplex-hard" },
+      "to":   { "point": [5700, -7000, 600],  "direction": [0, 0, -1], "owner": "duplex-hard" } },
+    { "id": "HW-102", "pipeClass": "A1A2", "dn": 25,
+      "from": { "point": [3700, -10560, 4313], "direction": [0, 0, 1], "owner": "duplex-hard" },
+      "to":   { "point": [2850, -10500, 600],  "direction": [0, 0, -1], "owner": "duplex-hard" } },
+    { "id": "HW-103", "pipeClass": "A1A2", "dn": 20,
+      "from": { "point": [4950, -7240, 4313], "direction": [0, 0, 1], "owner": "duplex-hard" },
+      "to":   { "point": [5202, -8480, 2000], "direction": [0, 0, 1], "owner": "duplex-hard" } },
+    { "id": "HW-104", "pipeClass": "A1A2", "dn": 20,
+      "from": { "point": [3550, -10560, 4313], "direction": [0, 0, 1], "owner": "duplex-hard" },
+      "to":   { "point": [3268, -7230, 3650], "direction": [0, 0, 1], "owner": "duplex-hard" } }
+  ]
+}

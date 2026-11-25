@@ -1,0 +1,15 @@
+[package]
+name = "pmef-route"
+description = "PMEF auto-routing kernel: orthogonal pipe routing in a voxel graph with piping-class rules, output as PMEF"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+serde.workspace = true
+# Not the workspace entry (preserve_order), see pmef-catalogs/Cargo.toml.
+serde_json = "1"
+thiserror.workspace = true
+pmef-catalogs = { path = "../pmef-catalogs" }

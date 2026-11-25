@@ -1,0 +1,13 @@
+<!doctype html><html><body style="margin:0;background:#f4f5f7"><canvas id=c></canvas>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three'; import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+const p=new URLSearchParams(location.search), W=innerWidth,H=innerHeight;
+const r=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,preserveDrawingBuffer:true}); r.setSize(W,H); r.setClearColor(0xf4f5f7);
+const sc=new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xffffff,0x8090a0,2.0)); const d=new THREE.DirectionalLight(0xffffff,1.8); d.position.set(1,2,1.5); sc.add(d);
+new GLTFLoader().load(p.get('f'),g=>{const o=g.scene; o.traverse(m=>{if(m.isMesh){const hc=!!m.geometry.attributes.color; m.material=new THREE.MeshStandardMaterial({vertexColors:hc,color:hc?0xffffff:0xaaaaaa,flatShading:true,roughness:0.75,metalness:0.05,side:THREE.DoubleSide}); if(m.name.startsWith("soft")){m.material.transparent=true;m.material.opacity=0.10;m.material.depthWrite=false;}}}); sc.add(o);
+ const b=new THREE.Box3().setFromObject(o), s=b.getSize(new THREE.Vector3()), c=b.getCenter(new THREE.Vector3());
+ const az=+(p.get('az')||45)*Math.PI/180, el=+(p.get('el')||30)*Math.PI/180, R=s.length()*(+(p.get('z')||0.85));
+ const cam=new THREE.PerspectiveCamera(35,W/H,R/1000,R*20); cam.position.set(c.x+R*Math.cos(el)*Math.cos(az),c.y+R*Math.sin(el),c.z+R*Math.cos(el)*Math.sin(az)); cam.lookAt(c);
+ r.render(sc,cam); document.title='done';});
+</script></body></html>

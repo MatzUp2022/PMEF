@@ -1,0 +1,153 @@
+{
+ "project": "clinic-test",
+ "revisionId": "r2026-11-25-001",
+ "parent": "urn:pmef:unit:clinic-test:BUILDING",
+ "grid": {
+  "step": 150,
+  "margin": 1500
+ },
+ "settings": {
+  "bendPenalty": 1500,
+  "clearance": 25,
+  "penetrationPenalty": 5000,
+  "verticalFactor": 1.2
+ },
+ "obstacles": [
+  {
+   "id": "clinic-hard",
+   "kind": "hard",
+   "obj": "hard.obj"
+  },
+  {
+   "id": "clinic-soft",
+   "kind": "soft",
+   "obj": "soft.obj"
+  }
+ ],
+ "routes": [
+  {
+   "id": "DHW-201",
+   "pipeClass": "C5D1",
+   "dn": 50,
+   "from": {
+    "point": [
+     -44085,
+     37409,
+     6423
+    ],
+    "direction": [
+     0,
+     0,
+     1
+    ],
+    "owner": "clinic-hard"
+   },
+   "to": {
+    "point": [
+     -20760,
+     35480,
+     5600
+    ],
+    "direction": [
+     0,
+     0,
+     1
+    ],
+    "owner": "clinic-hard"
+   }
+  },
+  {
+   "id": "DHW-202",
+   "pipeClass": "A1A2",
+   "dn": 40,
+   "from": {
+    "point": [
+     -43785,
+     37409,
+     6423
+    ],
+    "direction": [
+     0,
+     0,
+     1
+    ],
+    "owner": "clinic-hard"
+   },
+   "to": {
+    "point": [
+     -37170,
+     13370,
+     1000
+    ],
+    "direction": [
+     0,
+     0,
+     1
+    ],
+    "owner": "clinic-hard"
+   }
+  },
+  {
+   "id": "DHW-204",
+   "pipeClass": "A1A2",
+   "dn": 50,
+   "from": {
+    "point": [
+     -43785,
+     37709,
+     6423
+    ],
+    "direction": [
+     0,
+     0,
+     1
+    ],
+    "owner": "clinic-hard"
+   },
+   "to": {
+    "point": [
+     -5470,
+     22940,
+     1100
+    ],
+    "direction": [
+     0,
+     0,
+     1
+    ],
+    "owner": "clinic-hard"
+   }
+  },
+  {
+   "id": "DHW-203",
+   "pipeClass": "A1A2",
+   "dn": 25,
+   "from": {
+    "point": [
+     -44085,
+     37709,
+     6423
+    ],
+    "direction": [
+     0,
+     0,
+     1
+    ],
+    "owner": "clinic-hard"
+   },
+   "to": {
+    "point": [
+     -17560,
+     48390,
+     5700
+    ],
+    "direction": [
+     0,
+     0,
+     1
+    ],
+    "owner": "clinic-hard"
+   }
+  }
+ ]
+}
