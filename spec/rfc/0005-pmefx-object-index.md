@@ -2,8 +2,8 @@
 
 | Field | Value |
 |---|---|
-| **Status** | `DRAFT` — reference implementation, schema, example and tests in this repository; RFC issue still to be opened |
-| **Discussion** | to be opened (30-day period starts with the issue) |
+| **Status** | `DRAFT` — reference implementation, schema, example and tests in this repository |
+| **Discussion** | [#15](https://github.com/MatzUp2022/PMEF/issues/15) — opened 2026-11-25, 30-day period until 2026-12-25 |
 | **Target version** | 0.10.0 (container version `pmefxVersion: "1.0"`; additive, no change to NDJSON objects) |
 | **Depends on** | spec 03 §3 (PMEFX 0.9), spec 02 §2.4 (`GeometryReference.lod`) |
 | **Working groups** | WG-Geometry, WG-Serialisation |
@@ -81,4 +81,4 @@ the format.
 
 ## Review Status
 
-- 2026-11-25: draft with implementation; awaiting RFC issue, WG review and TSC sign-off.
+- 2026-11-25: draft with implementation; RFC issue #15 opened; awaiting WG review and TSC sign-off.
