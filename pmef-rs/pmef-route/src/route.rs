@@ -142,8 +142,12 @@ pub fn route_all(problem: &RouteProblem, scene: &Scene) -> Vec<RoutedLine> {
         let clear = problem.routes[i]
             .clearance
             .unwrap_or(problem.settings.clearance);
+        // The search blocks a node when its *cell* (up to half a step around it) comes within
+        // radius plus clearance of a line, so test with that slack: lines a little further
+        // away than the clearance still block the graph.
+        let slack = problem.grid.step / 2.0;
         let blockers: Vec<usize> = (0..lines.len())
-            .filter(|j| *j != i && lines[*j].ok && collides(&alone, &lines[*j], clear))
+            .filter(|j| *j != i && lines[*j].ok && collides(&alone, &lines[*j], clear + slack))
             .collect();
         if blockers.is_empty() {
             continue;
