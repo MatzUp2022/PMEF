@@ -13,7 +13,7 @@ All catalogs are licensed under **CC0 1.0 Universal** (public domain).
 | `profiles-aisc-extended.json` | AISC channels (C, MC) and structural tees (WT) | AISC Steel Construction Manual 16th ed. | 51 |
 | `piping-class-a1a2.json` | Piping class A1A2 (CS, ANSI-150, DN15–DN600) | ASME B16.5, B16.9, B16.11 | 203 |
 | `piping-class-b3c1.json` | Piping class B3C1 (CS, ANSI-300, DN15–DN400) | ASME B16.5, B16.9 | 143 |
-| `piping-class-c5d1.json` | Piping class C5D1 (316L SS, ANSI-150, DN15–DN300) | ASME B16.5, B16.9, B36.19M | 48 |
+| `piping-class-c5d1.json` | Piping class C5D1 (316L SS, ANSI-150, DN15–DN300) | ASME B16.5, B16.9, B36.19M | 55 |
 | `piping-class-en-p1a.json` | Piping class EN-P1A (CS, PN40, DN15–DN300) | EN 1092-1, EN 10253-2, EN 10216-2 | 61 |
 | `pipe-dimensions.json` | Pipe OD and wall thickness (ASME) | ASME B36.10M, B36.19M | 31 |
 | `pipe-dimensions-en.json` | Pipe OD and wall thickness (EN) | EN 10220 | 19 DN sizes |

@@ -84,6 +84,22 @@ fn class_limits(doc: &Value) -> (Option<f64>, Option<f64>, Option<f64>) {
     (p, tmax, tmin)
 }
 
+/// Centre-to-face of a 90° elbow derived from its radius designation (B16.9 / EN 10253:
+/// bend radius = factor x nominal size). Returns (value [mm], factor, nominal size [mm]).
+fn derived_c2f(radius: &str, dn: u32) -> (f64, f64, f64) {
+    let factor = match radius {
+        "LONG_RADIUS" => 1.5,
+        "SHORT_RADIUS" => 1.0,
+        "3D" => 3.0,
+        "5D" => 5.0,
+        r => r.trim_end_matches('D').parse().unwrap_or(1.5),
+    };
+    let nps_mm = pmef_catalogs::dn_to_nps(dn)
+        .map(|n| n * 25.4)
+        .unwrap_or(dn as f64);
+    ((factor * nps_mm * 10.0).round() / 10.0, factor, nps_mm)
+}
+
 /// Resolve the rules for `pipe_class` / `dn` and check optional design conditions
 /// (pressure [Pa], temperature [K]).
 pub fn resolve(
@@ -172,22 +188,12 @@ pub fn resolve(
     let c2f = match elbow.get("centreToFace_mm").and_then(Value::as_f64) {
         Some(v) => v,
         None => {
-            // B16.9 / EN 10253: 90° bend centre-to-face = bend radius = factor x nominal size.
-            let factor = match radius.as_str() {
-                "LONG_RADIUS" => 1.5,
-                "SHORT_RADIUS" => 1.0,
-                "3D" => 3.0,
-                "5D" => 5.0,
-                r => r.trim_end_matches('D').parse().unwrap_or(1.5),
-            };
-            let nps_mm = pmef_catalogs::dn_to_nps(dn)
-                .map(|n| n * 25.4)
-                .unwrap_or(dn as f64);
+            let (v, factor, nps_mm) = derived_c2f(&radius, dn);
             notes.push(format!(
                 "{} has no centreToFace_mm; derived {factor} x {nps_mm:.1} mm from radius {radius}",
                 elbow["catalogId"].as_str().unwrap_or("?")
             ));
-            (factor * nps_mm * 10.0).round() / 10.0
+            v
         }
     };
 
@@ -220,10 +226,20 @@ mod tests {
     }
 
     #[test]
+    fn c5d1_small_bore_elbows() {
+        // Catalog C5D1 2024.3 has a 90° elbow with centreToFace_mm for every pipe size.
+        for (dn, c2f) in [(25, 38.1), (40, 57.2), (50, 76.2)] {
+            let r = resolve("C5D1", dn, None, None).unwrap();
+            assert_eq!(r.elbow_c2f, c2f);
+            assert!(r.notes.is_empty());
+        }
+    }
+
+    #[test]
     fn derived_centre_to_face() {
-        let r = resolve("C5D1", 50, None, None).unwrap();
-        assert_eq!(r.elbow_c2f, 76.2);
-        assert_eq!(r.notes.len(), 1);
+        assert_eq!(derived_c2f("1.5D", 50).0, 76.2);
+        assert_eq!(derived_c2f("LONG_RADIUS", 100).0, 152.4);
+        assert_eq!(derived_c2f("3D", 50).0, 152.4);
     }
 
     #[test]

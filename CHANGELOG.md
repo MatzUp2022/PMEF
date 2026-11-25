@@ -246,6 +246,10 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **Catalog `piping-class-c5d1` 2024.3**: 90° long-radius elbows for DN 15, 20, 25, 32, 40, 65 and
+  250, so every pipe size in the class has one (48 → 55 components). Every elbow now carries
+  `centreToFace_mm` per ASME B16.9. `pmef route` can now route C5D1 lines in DN 25/40, which it
+  rejected before for lack of an elbow.
 - **Auto-routing kernel `pmef-route`** (new crate, CLI `pmef route`): routes pipes in a voxel graph
   around PMEF equipment, steel, existing piping and OBJ meshes, with elbow-fit, clearance and
   piping-class rules from the PMEF catalogs, and writes PMEF `Pipe`/`Elbow` components. Design and
