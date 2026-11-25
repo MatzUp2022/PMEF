@@ -241,6 +241,7 @@ impl<W: Write + Seek> PmefxWriter<W> {
         let text = std::str::from_utf8(bytes).map_err(|_| PmefxError::Invalid(format!("{path}: not UTF-8")))?;
         let mut count = 0u64;
         let mut new_objects = Vec::new();
+        let mut new_ids: std::collections::HashSet<String> = std::collections::HashSet::new();
         for (i, line) in text.lines().enumerate() {
             let t = line.trim();
             if t.is_empty() || t.starts_with("//") {
@@ -263,7 +264,7 @@ impl<W: Write + Seek> PmefxWriter<W> {
                 }
             }
             count += 1;
-            if self.objects.contains_key(&id) || new_objects.iter().any(|o: &ObjectEntry| o.id == id) {
+            if self.objects.contains_key(&id) || !new_ids.insert(id.clone()) {
                 return invalid(format!("{path}:{}: duplicate @id {id}", i + 1));
             }
             new_objects.push(ObjectEntry {
@@ -609,6 +610,28 @@ impl<R: Read + Seek> PmefxReader<R> {
             }
         }
 
+        // Reverse direction (§3.5): every object of every NDJSON file is in the index.
+        let ndjson_paths: Vec<String> = m.files.iter().filter(|f| f.kind == FileKind::Ndjson).map(|f| f.path.clone()).collect();
+        if m.object_index.is_some() {
+            for path in ndjson_paths {
+                let bytes = match self.read_file(&path) {
+                    Ok(b) => b,
+                    Err(_) => continue, // already reported above
+                };
+                for line in String::from_utf8_lossy(&bytes).lines() {
+                    let t = line.trim();
+                    if t.is_empty() || t.starts_with("//") {
+                        continue;
+                    }
+                    if let Some(id) = serde_json::from_str::<Value>(t).ok().and_then(|v| v.get("@id").and_then(Value::as_str).map(str::to_string)) {
+                        if !seen.contains(id.as_str()) {
+                            issues.push(format!("{id} in {path} is missing from the object index"));
+                        }
+                    }
+                }
+            }
+        }
+
         // Spatial index: every object with a bbox exactly once, nothing unknown.
         match self.octree() {
             Ok(Some(tree)) => {
@@ -658,6 +681,15 @@ impl<R: Read + Seek> PmefxReader<R> {
             }
             if name != MANIFEST_PATH {
                 check_path(&name).map_err(PmefxError::Invalid)?;
+            }
+            // Lexical checks are not enough: refuse to follow an existing symlink anywhere
+            // below `dir`, so an entry cannot be redirected outside the extraction directory.
+            let mut cur = dir.to_path_buf();
+            for seg in name.split('/') {
+                cur.push(seg);
+                if std::fs::symlink_metadata(&cur).map(|md| md.file_type().is_symlink()).unwrap_or(false) {
+                    return invalid(format!("refusing to extract {name}: {} is a symbolic link", cur.display()));
+                }
             }
             let target = dir.join(&name);
             if let Some(parent) = target.parent() {

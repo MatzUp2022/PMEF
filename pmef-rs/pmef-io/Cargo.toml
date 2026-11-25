@@ -22,3 +22,4 @@ pmefx = ["dep:zip", "dep:sha2"]
 [dev-dependencies]
 jsonschema = { workspace = true, features = ["draft202012"] }
 zip.workspace = true
+sha2.workspace = true

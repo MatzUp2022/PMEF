@@ -313,3 +313,49 @@ fn box_mesh_faces_point_outwards() {
     assert_eq!(doc["accessors"][0]["min"], json!([0.0, 0.0, -0.5]));
     assert_eq!(doc["accessors"][0]["max"], json!([2.0, 0.75, 0.5]));
 }
+
+#[test]
+fn verify_detects_objects_missing_from_the_index() {
+    // Drop a hierarchy object (no bbox, so the octree cannot notice) and fix up count and hash.
+    let good = pack("pump-skid-complete.ndjson");
+    let dropped = "urn:pmef:unit:eaf-2026:U-100";
+    let mut new_index = Vec::new();
+    let bad = rewrite(&good, |name, data| {
+        (name == OBJECT_INDEX_PATH).then(|| {
+            let text = String::from_utf8(data).unwrap();
+            let kept: Vec<&str> = text.lines().filter(|l| !l.contains(&format!("\"id\":\"{dropped}\""))).collect();
+            ((kept.join("\n") + "\n").into_bytes(), zip::CompressionMethod::Deflated)
+        })
+    });
+    let mut r = reader(&bad);
+    new_index.extend(r.read_file(OBJECT_INDEX_PATH).unwrap());
+    let mut m = r.manifest().clone();
+    m.object_count = Some(m.object_count.unwrap() - 1);
+    use sha2::Digest;
+    let digest: String = sha2::Sha256::digest(&new_index).iter().map(|b| format!("{b:02x}")).collect();
+    for f in &mut m.files {
+        if f.path == OBJECT_INDEX_PATH {
+            f.size_bytes = Some(new_index.len() as u64);
+            f.sha256 = Some(digest.clone());
+        }
+    }
+    let manifest = serde_json::to_vec(&m).unwrap();
+    let bad = rewrite(&bad, |name, _| (name == MANIFEST_PATH).then(|| (manifest.clone(), zip::CompressionMethod::Deflated)));
+    let issues = reader(&bad).verify();
+    assert_eq!(issues, vec![format!("{dropped} in model/pump-skid-complete.ndjson is missing from the object index")]);
+}
+
+#[cfg(unix)]
+#[test]
+fn extraction_does_not_follow_symlinks() {
+    let base = std::env::temp_dir().join(format!("pmefx-symlink-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&base);
+    let (out, elsewhere) = (base.join("out"), base.join("elsewhere"));
+    std::fs::create_dir_all(&out).unwrap();
+    std::fs::create_dir_all(&elsewhere).unwrap();
+    std::os::unix::fs::symlink(&elsewhere, out.join("model")).unwrap();
+    let err = reader(&pack("stress-model-cw201.ndjson")).extract_to(&out).unwrap_err();
+    assert!(err.to_string().contains("symbolic link"), "{err}");
+    assert_eq!(std::fs::read_dir(&elsewhere).unwrap().count(), 0, "nothing written through the link");
+    std::fs::remove_dir_all(&base).unwrap();
+}
