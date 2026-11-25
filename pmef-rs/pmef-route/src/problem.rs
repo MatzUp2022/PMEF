@@ -33,6 +33,9 @@ pub struct RouteProblem {
     pub obstacles: Vec<ObstacleSpec>,
     #[serde(default)]
     pub zones: Vec<Zone>,
+    /// Pipe racks: their levels are preferred edges of the graph.
+    #[serde(default)]
+    pub racks: Vec<Rack>,
     pub routes: Vec<RouteSpec>,
 }
 
@@ -46,6 +49,14 @@ pub struct GridSettings {
     /// Extra space around the terminals of a route when no `bounds` are given [mm].
     #[serde(default = "d_margin")]
     pub margin: f64,
+    /// Coarse-to-fine search: route on a grid with this spacing first [mm], then on `step`
+    /// only inside a corridor around the coarse route. Falls back to the full fine grid if the
+    /// coarse or the corridor search fails. `None`: fine grid only.
+    #[serde(default)]
+    pub coarse_step: Option<f64>,
+    /// Half-width of the corridor around the coarse route [mm] (default: `coarseStep`).
+    #[serde(default)]
+    pub corridor: Option<f64>,
 }
 fn d_step() -> f64 {
     100.0
@@ -58,6 +69,8 @@ impl Default for GridSettings {
         GridSettings {
             step: d_step(),
             margin: d_margin(),
+            coarse_step: None,
+            corridor: None,
         }
     }
 }
@@ -147,6 +160,49 @@ pub struct ObstacleSpec {
 pub struct Zone {
     pub aabb: Aabb,
     pub factor: f64,
+}
+
+/// Horizontal axis of a pipe rack.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RackAxis {
+    X,
+    Y,
+}
+
+/// Pipe rack: a straight, horizontal corridor with one or more levels (tiers). Lines that run
+/// along the rack axis on a level cost `factor` per mm instead of 1, so routes are drawn onto
+/// the rack. The steel itself comes from the scene (PMEF steel, OBJ or boxes).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Rack {
+    pub id: String,
+    pub axis: RackAxis,
+    /// Plan footprint of the rack (x/y extent) [mm]; z is ignored.
+    pub footprint: Aabb,
+    /// Top-of-steel elevations of the levels [mm].
+    pub levels: Vec<f64>,
+    /// Cost factor along the rack (< 1 = preferred).
+    #[serde(default = "d_rack_factor")]
+    pub factor: f64,
+    /// Height of the pipe shoe between top of steel and the bottom of the pipe (incl.
+    /// insulation) [mm]. At least the clearance is kept.
+    #[serde(default = "d_shoe")]
+    pub shoe_height: f64,
+}
+fn d_rack_factor() -> f64 {
+    0.5
+}
+fn d_shoe() -> f64 {
+    100.0
+}
+
+impl Rack {
+    /// Centreline elevations of a line with outer radius `outer` resting on each level.
+    pub fn centrelines(&self, outer: f64, clearance: f64) -> Vec<f64> {
+        let gap = self.shoe_height.max(clearance + 1.0);
+        self.levels.iter().map(|l| l + gap + outer).collect()
+    }
 }
 
 /// End point of a route.

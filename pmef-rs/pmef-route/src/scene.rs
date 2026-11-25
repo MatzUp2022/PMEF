@@ -1,6 +1,6 @@
 //! Scene: obstacles and nozzles, from explicit boxes, OBJ meshes and PMEF packages.
 
-use crate::geom::{tri_aabb, Aabb, Tri, P3};
+use crate::geom::{Aabb, Mesh, Tri, P3};
 use crate::problem::{ObstacleKind, RouteProblem};
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -10,7 +10,7 @@ use std::path::Path;
 #[derive(Debug, Clone)]
 pub enum Shape {
     Box(Aabb),
-    Mesh(Vec<Tri>),
+    Mesh(Mesh),
 }
 
 /// One obstacle of the scene.
@@ -46,14 +46,10 @@ impl Scene {
     pub fn push(&mut self, id: String, kind: ObstacleKind, penalty: f64, shape: Shape) {
         let bounds = match &shape {
             Shape::Box(b) => *b,
-            Shape::Mesh(t) => t
-                .iter()
-                .map(tri_aabb)
-                .reduce(|a, b| a.union(&b))
-                .unwrap_or(Aabb {
-                    min: [0.0; 3],
-                    max: [0.0; 3],
-                }),
+            Shape::Mesh(m) => m.bounds().unwrap_or(Aabb {
+                min: [0.0; 3],
+                max: [0.0; 3],
+            }),
         };
         self.obstacles.push(Obstacle {
             id,
@@ -94,7 +90,7 @@ impl Scene {
                         .map_err(|e| SceneError::Io(p.display().to_string(), e))?;
                     let tris = parse_obj(&text)
                         .map_err(|(l, m)| SceneError::Parse(p.display().to_string(), l, m))?;
-                    s.push(o.id.clone(), o.kind, pen, Shape::Mesh(tris));
+                    s.push(o.id.clone(), o.kind, pen, Shape::Mesh(Mesh::new(tris)));
                 }
                 _ => return Err(SceneError::Shape(o.id.clone())),
             }

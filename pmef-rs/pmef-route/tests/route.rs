@@ -231,3 +231,84 @@ fn schema_primitives_are_obstacles() {
     assert!(primitive_box(&json!({"type": "SNOUT", "center": [0, 0, 0], "axis": [1, 0, 0], "r1": 100, "r2": 50, "length": 200})).is_some());
     assert!(primitive_box(&json!({"type": "CIRC_TORUS", "center": [0, 0, 0], "axis": [0, 1, 0], "torusRadius": 300, "tubeRadius": 100, "angleDeg": 90})).is_some());
 }
+
+fn rack_problem(racks: serde_json::Value) -> RouteProblem {
+    problem(json!({
+        "bounds": {"min": [-1500, -1500, -500], "max": [21500, 1500, 5000]},
+        "routes": [{
+            "id": "L1", "pipeClass": "A1A2", "dn": 100,
+            "from": {"point": [0, 0, 0], "direction": [0, 0, 1]},
+            "to": {"point": [20000, 0, 0], "direction": [0, 0, 1]}
+        }],
+        // Rack deck (top of steel 4000) between the two terminals.
+        "obstacles": [{"id": "DECK", "aabb": {"min": [2000, -1000, 3800], "max": [18000, 1000, 4000]}}],
+        "racks": racks
+    }))
+}
+
+#[test]
+fn rack_level_is_preferred() {
+    let without = rack_problem(json!([]));
+    let r0 = &route_all(&without, &scene(&without))[0];
+    assert!(r0.ok, "{:?}", r0.error);
+    assert!(r0.points.iter().all(|p| p[2] < 3700.0), "{:?}", r0.points);
+
+    let with = rack_problem(json!([{
+        "id": "PR-1", "axis": "x", "levels": [4000],
+        "footprint": {"min": [0, -1000, 0], "max": [20000, 1000, 0]}
+    }]));
+    let r = &route_all(&with, &scene(&with))[0];
+    assert!(r.ok, "{:?}", r.error);
+    // Centreline = top of steel + shoe 100 + outer radius.
+    let z = 4000.0 + 100.0 + 114.3 / 2.0;
+    let on_rack: f64 = r
+        .points
+        .windows(2)
+        .filter(|w| w[0][2] == z && w[1][2] == z)
+        .map(|w| (w[1][0] - w[0][0]).abs())
+        .sum();
+    assert!(on_rack >= 19000.0, "{:?}", r.points);
+    assert_eq!(r.bends, 2);
+}
+
+#[test]
+fn coarse_to_fine_matches_fine() {
+    let obstacles =
+        json!([{"id": "E1", "aabb": {"min": [2000, -1000, -1000], "max": [3000, 1000, 1000]}}]);
+    let fine = problem(json!({"obstacles": obstacles}));
+    let f = &route_all(&fine, &scene(&fine))[0];
+    let coarse = problem(json!({
+        "obstacles": obstacles,
+        "grid": {"step": 100, "margin": 1500, "coarseStep": 500}
+    }));
+    let c = &route_all(&coarse, &scene(&coarse))[0];
+    assert!(f.ok && c.ok, "{:?} {:?}", f.error, c.error);
+    assert!(
+        c.notes
+            .iter()
+            .any(|n| n.starts_with("coarse-to-fine: 500 mm graph")),
+        "{:?}",
+        c.notes
+    );
+    assert!(c.grid_nodes < f.grid_nodes);
+    // The corridor contains an optimal route of the full graph.
+    assert!((c.cost - f.cost).abs() < 1e-6, "{} vs {}", c.cost, f.cost);
+}
+
+#[test]
+fn coarse_to_fine_falls_back_for_narrow_gaps() {
+    // A wall across the whole region with a 400 mm gap: too narrow for 500 mm cells.
+    let wall = |id: &str, y0: f64, y1: f64| json!({"id": id, "aabb": {"min": [2400, y0, -2000], "max": [2500, y1, 2000]}});
+    let p = problem(json!({
+        "bounds": {"min": [-1500, -1500, -500], "max": [6500, 4500, 500]},
+        "obstacles": [wall("W1", -2000.0, 1000.0), wall("W2", 1400.0, 5000.0)],
+        "grid": {"step": 50, "margin": 1500, "coarseStep": 500}
+    }));
+    let r = &route_all(&p, &scene(&p))[0];
+    assert!(r.ok, "{:?} {:?}", r.error, r.notes);
+    assert!(
+        r.notes.iter().any(|n| n.contains("full 50 mm graph")),
+        "{:?}",
+        r.notes
+    );
+}

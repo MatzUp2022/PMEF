@@ -45,9 +45,18 @@ flowchart LR
    is blocked when its cell, grown by pipe radius + insulation + clearance, touches an obstacle
    (box test, or separating-axis triangle/box test for meshes). Because the cells tile space, thin
    walls between nodes are never jumped. Each route rasterises with its own diameter. Ticks never
-   leave the region, so routes stay inside fixed bounds. The straight stub in front of a terminal
+   leave the region, so routes stay inside fixed bounds. Large meshes are sorted along a Morton curve into
+   chunks of 64 triangles with bounding boxes, so a route only tests the triangles near its
+   region. The straight stub in front of a terminal
    may only enter the clearance zone of the terminal's own equipment (`owner`, default: the
    nozzle's equipment); every other obstacle and every earlier line still blocks it.
+   The stubs of all *other* lines (up to the far side of their first elbow) are reserved as
+   obstacles, so an earlier line never runs directly in front of a later line's nozzle.
+   **Pipe racks** (`racks`: axis, plan footprint, top-of-steel levels, `factor`, `shoeHeight`)
+   pin a tick at each level's centreline elevation (top of steel + shoe + outer radius, the shoe
+   at least the clearance) plus a guard tick 1 mm below it, so the beam leaves the level node
+   free. Edges along the rack axis on a level cost `factor` (default 0.5) per mm: rack levels
+   are preferred edges of the graph.
 4. **Search** (`search.rs`). A flood fill first rejects enclosed terminals cheaply. Then A* over
    states (node, travel direction, has-bent, run-length bucket):
    - no reversal; turns are 90° elbows at nodes;
@@ -63,6 +72,14 @@ flowchart LR
    face). Ports are chained with `connectedTo`. Each object carries `provenance.sourceType =
    "generated"`, `sourceRef = urn:pmef-route:<project>:<route>`, `review.status = "detected"` and
    a `WIP` revision: auto-routed lines are proposals until a person reviews them.
+
+**Coarse-to-fine** (`grid.coarseStep`, `grid.corridor`). The line is routed on a coarse graph
+first; obstacles within `corridor` of a terminal are left out there, because large cells would
+block a nozzle. The fine graph is then built only over the coarse route grown by `corridor`
+(default: `coarseStep`) and searched with all rules; nodes outside the corridor are blocked. If
+the coarse or the corridor search fails (e.g. a gap narrower than a coarse cell), the full fine
+graph is used, and the report notes which graph found the route. The corridor result is optimal
+within the corridor, not necessarily over the whole region.
 
 Lines are routed one after another; each routed line is an obstacle for the next.
 
@@ -85,12 +102,16 @@ The problem format is documented in `pmef-rs/pmef-route/src/problem.rs` (camelCa
 | `tests/route/pump-skid-route.json` | `examples/pump-skid-complete.ndjson` (pump box, vessel primitives, steel, existing CW-201) | 3 (DN 25–200) | all routed; `examples/pump-skid-auto-routed.ndjson` passes schema, topology and geometry checks |
 | plant-test-corpus Duplex (`Duplex_A` + `Duplex_Plumbing`) | 196 k vertices hard (existing plumbing, structure), walls/slabs soft | 4 hot-water lines boiler → fixtures | all routed, 4–6 bends, 0–2 slab penetrations, < 2.5 s per line (release) |
 | plant-test-corpus Clinic (`Clinic_Structural` + `Clinic_Plumbing`) | 6 200 existing piping parts, 930 beams/columns, 140 MB OBJ; slabs/walls soft | 4 lines water heater → fixtures, 26–59 m, step 150 mm | all routed (3 × C5D1 incl. DN 25/40, 1 × A1A2), 3–5 bends, 0.1–7 s per line (release); before catalog C5D1 2024.3 the rule kernel rejected C5D1 DN 25/40 (no 90° elbow) |
+| Duplex with `coarseStep` 500 (stage 1) | as above | 4 | all routed, 8.2 s → 1.6 s in total; length −1 % to +19 % per line (HW-103: one bend fewer) |
+| Clinic with `coarseStep` 600 (stage 1) | as above | 4 | all routed, 14.0 s → 0.7 s in total; length −1 % to +3 % per line |
+| `pmef-route` stage 1 tests | synthetic rack, wall with 400 mm gap | 3 | line climbs onto the rack level and runs 20 m along it; coarse-to-fine gives the fine optimum; fallback to the full graph for the narrow gap |
 
 ## Later increments
 
-1. **Plant-scale graphs.** Sparse graphs instead of a full voxel grid: pipe-rack networks
-   (rack levels as preferred edges), Hanan / visibility graphs from obstacle boundaries, octree
-   occupancy for large models. Coarse-to-fine search (route on 500 mm, refine near terminals).
+1. **Plant-scale graphs.** Done in stage 1: rack levels as preferred edges, coarse-to-fine
+   search with corridors, Morton-chunked triangle index, reserved terminal stubs. Open: Hanan /
+   visibility graphs from obstacle boundaries instead of uniform ticks, octree occupancy so
+   that very large regions do not need a dense node array.
 2. **Multi-line negotiation.** Rip-up and reroute (PathFinder-style congestion costs) instead of
    strict sequential order; grouping of parallel lines on racks with spacing tables.
 3. **Branches.** Tees and Steiner-tree routing for headers with several consumers.

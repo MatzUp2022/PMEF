@@ -21,3 +21,7 @@ same heater are spaced and ordered so that no line passes over another line's ou
 
 Screenshots: `python route2glb.py /tmp/duplex /tmp/duplex/report.json duplex-route.glb --soft`, then
 render with plant-test-corpus `render/shot.js` using `view-route.html` (soft obstacles transparent).
+
+Coarse-to-fine (stage 1): add `"coarseStep": 500` (Duplex) or `600` (Clinic) to `grid` in the
+problem file. The route report notes which graph found each route; results are in
+`docs/auto-routing.md`.

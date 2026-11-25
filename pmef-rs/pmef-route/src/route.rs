@@ -3,7 +3,7 @@
 
 use crate::geom::{Aabb, P3};
 use crate::grid::Grid;
-use crate::problem::{ObstacleKind, RouteProblem, RouteSpec, Terminal};
+use crate::problem::{ObstacleKind, Rack, RackAxis, RouteProblem, RouteSpec, Terminal};
 use crate::rules::{self, PipeRules};
 use crate::scene::{Scene, Shape};
 use crate::search::{search, SearchParams};
@@ -97,12 +97,44 @@ fn owner(t: &Terminal) -> Option<String> {
 
 /// Route every line of the problem in order.
 pub fn route_all(problem: &RouteProblem, scene: &Scene) -> Vec<RoutedLine> {
+    let stubs = reserved_stubs(problem, scene);
     let mut done: Vec<RoutedLine> = Vec::new();
-    for spec in &problem.routes {
-        let r = route_one(problem, scene, spec, &done);
+    for (i, spec) in problem.routes.iter().enumerate() {
+        let others: Vec<Aabb> = stubs
+            .iter()
+            .filter(|(j, _)| *j != i)
+            .map(|(_, b)| *b)
+            .collect();
+        let r = route_one(problem, scene, spec, &done, &others);
         done.push(r);
     }
     done
+}
+
+/// Terminal stubs of every route (route index, box of the straight run in front of the
+/// terminal grown by the line's outer radius). A line must not block the stub of another
+/// line, whether that line is routed before or after it: otherwise an earlier line passing
+/// right in front of a nozzle makes the later line impossible.
+fn reserved_stubs(problem: &RouteProblem, scene: &Scene) -> Vec<(usize, Aabb)> {
+    let mut out = Vec::new();
+    for (i, spec) in problem.routes.iter().enumerate() {
+        let Ok(rules) = rules::resolve(&spec.pipe_class, spec.dn, None, None) else {
+            continue;
+        };
+        let outer = rules.od / 2.0 + spec.insulation;
+        // Up to the far side of the first elbow: its centre lies at least centre-to-face +
+        // terminal straight out, on the next graph tick (≤ one step further), and the pipe
+        // surface reaches the outer radius beyond that.
+        let len = rules.elbow_c2f + problem.settings.terminal_straight + problem.grid.step + outer;
+        for (t, which) in [(&spec.from, "from"), (&spec.to, "to")] {
+            if let Ok((p, dir)) = terminal(t, scene, which) {
+                let mut q = p;
+                q[dir / 2] += if dir % 2 == 0 { len } else { -len };
+                out.push((i, Aabb::from_points(p, q).inflate(outer)));
+            }
+        }
+    }
+    out
 }
 
 fn failed(spec: &RouteSpec, msg: String) -> RoutedLine {
@@ -131,11 +163,233 @@ fn failed(spec: &RouteSpec, msg: String) -> RoutedLine {
     }
 }
 
+/// Everything one graph attempt of a route needs.
+struct Ctx<'a> {
+    problem: &'a RouteProblem,
+    scene: &'a Scene,
+    done: &'a [RoutedLine],
+    /// Terminal stubs of the other routes.
+    reserved: &'a [Aabb],
+    rules: &'a PipeRules,
+    ends: [(P3, usize); 2],
+    owners: [Option<String>; 2],
+    /// Outer radius + clearance [mm].
+    d: f64,
+    first_need: f64,
+    /// Rack level centrelines of this line: (rack index, elevation).
+    rack_z: Vec<(usize, f64)>,
+}
+
+/// Result of one graph attempt.
+struct Attempt {
+    poly: Vec<P3>,
+    penetrations: usize,
+    cost: f64,
+    expansions: usize,
+    grid_nodes: usize,
+    blocked_nodes: usize,
+}
+
+/// Failure of one graph attempt (message, grid size, blocked nodes).
+type AttemptErr = (String, usize, usize);
+
+/// Corner points of a node path.
+fn corners(pts: &[P3]) -> Vec<P3> {
+    let mut poly = vec![pts[0]];
+    for w in 1..pts.len().saturating_sub(1) {
+        let (p, q, r) = (pts[w - 1], pts[w], pts[w + 1]);
+        let d1 = axis_dir([q[0] - p[0], q[1] - p[1], q[2] - p[2]]);
+        let d2 = axis_dir([r[0] - q[0], r[1] - q[1], r[2] - q[2]]);
+        if d1 != d2 {
+            poly.push(q);
+        }
+    }
+    poly.push(*pts.last().unwrap());
+    poly
+}
+
+/// Build the graph over `region` with spacing `step` and search it.
+///
+/// `corridor`: only nodes inside these boxes are free (fine pass of coarse-to-fine).
+/// `free_near_terminals`: obstacles within this distance of a terminal are not rasterised
+/// (coarse pass: large cells near a nozzle would block it; the fine pass resolves that area).
+fn attempt(
+    c: &Ctx,
+    region: Aabb,
+    step: f64,
+    corridor: Option<&[Aabb]>,
+    free_near_terminals: Option<f64>,
+) -> Result<Attempt, AttemptErr> {
+    let st = &c.problem.settings;
+    let [(a, adir), (b, bdir)] = c.ends;
+    let mut pins: [Vec<f64>; 3] = [0, 1, 2].map(|i| vec![a[i], b[i]]);
+    for (_, z) in &c.rack_z {
+        // The level node plus a guard tick 1 mm below it: the level node's cell then ends just
+        // under the centreline, so the rack beam (grown by radius + clearance) leaves it free.
+        pins[2].push(*z);
+        pins[2].push(*z - 1.0);
+    }
+    let mut g = Grid::with_ticks(region, step, pins);
+    if let Some(keep) = corridor {
+        g.block_outside(keep);
+    }
+
+    // Terminal stubs: straight runs that leave each terminal before the first elbow. Only the
+    // terminal's own equipment may touch them (a nozzle starts inside its equipment's
+    // clearance zone); other obstacles and earlier lines keep blocking them.
+    let stub_len = c.first_need.max(c.d + step);
+    let stubs = [g.stub(a, adir, stub_len), g.stub(b, bdir, stub_len)];
+    let free: Vec<usize> = match free_near_terminals {
+        Some(r) => [a, b]
+            .iter()
+            .flat_map(|p| g.nodes_in(&Aabb::from_points(*p, *p).inflate(r)))
+            .collect(),
+        None => Vec::new(),
+    };
+
+    // Rasterise the scene and the lines routed so far, grown by this line's radius + clearance.
+    let reach = region.inflate(c.d);
+    let reach_boxes: Vec<Aabb> = match corridor {
+        Some(keep) => keep.iter().map(|k| k.inflate(c.d)).collect(),
+        None => vec![reach],
+    };
+    for o in &c.scene.obstacles {
+        if !reach_boxes.iter().any(|r| o.bounds.overlaps(r)) {
+            continue;
+        }
+        let mut mask = free.clone();
+        for (s, w) in stubs.iter().zip(&c.owners) {
+            if w.as_deref() == Some(o.id.as_str()) {
+                mask.extend(s);
+            }
+        }
+        g.set_mask(&mask);
+        let soft = (o.kind == ObstacleKind::Soft).then_some(o.penalty as f32);
+        match &o.shape {
+            Shape::Box(bx) => {
+                g.add_box(bx, c.d, soft);
+            }
+            Shape::Mesh(m) => {
+                for r in &reach_boxes {
+                    // Triangles in two overlapping corridor boxes are rasterised twice; marking
+                    // is idempotent.
+                    for t in m.query(r) {
+                        g.add_triangle(t, c.d, soft);
+                    }
+                }
+            }
+        }
+    }
+    // Other lines' terminal stubs; this line's own stubs stay free (a real clash between two
+    // stubs is then reported by the later line).
+    let mut own: Vec<usize> = free.clone();
+    own.extend(stubs.iter().flatten());
+    g.set_mask(&own);
+    for r in c.reserved {
+        if reach_boxes.iter().any(|x| r.overlaps(x)) {
+            g.add_box(r, c.d, None);
+        }
+    }
+    g.set_mask(&free);
+    for prev in c.done.iter().filter(|r| r.ok) {
+        let po = prev.outside_diameter.unwrap_or(0.0) / 2.0
+            + prev.spec.as_ref().map(|s| s.insulation).unwrap_or(0.0);
+        for w in prev.points.windows(2) {
+            g.add_box(&Aabb::from_points(w[0], w[1]).inflate(po), c.d, None);
+        }
+    }
+    g.set_mask(&[]);
+    for s in &stubs {
+        g.clear_soft(s);
+    }
+    let blocked_nodes = g.blocked();
+    let fail = |m: String| Err((m, g.len(), blocked_nodes));
+    for (s, which) in stubs.iter().zip(["from", "to"]) {
+        if s.first().is_some_and(|i| g.is_hard(*i)) {
+            return fail(format!(
+                "{which}: terminal lies in the clearance zone of an obstacle other than \
+                 its own equipment (set `owner` if the obstacle belongs to the terminal)"
+            ));
+        }
+    }
+    let (Some(start), Some(goal)) = (g.node_at(a), g.node_at(b)) else {
+        return fail("terminal not on the grid".into());
+    };
+
+    let zones = &c.problem.zones;
+    let racks = &c.problem.racks;
+    let min_factor = zones
+        .iter()
+        .map(|z| z.factor)
+        .chain(racks.iter().map(|r| r.factor))
+        .fold(1.0_f64, f64::min)
+        .max(1e-3);
+    let factor = |u: usize, v: usize| -> f64 {
+        let (p, q) = (g.point(u), g.point(v));
+        let m = [0, 1, 2].map(|i| (p[i] + q[i]) / 2.0);
+        // Overlapping zones and racks: the most preferred (lowest) factor wins; elsewhere 1.
+        let zone = zones
+            .iter()
+            .filter(|z| z.aabb.contains(m))
+            .map(|z| z.factor);
+        let along = |r: &Rack| {
+            let a = match r.axis {
+                RackAxis::X => 0,
+                RackAxis::Y => 1,
+            };
+            (p[a] - q[a]).abs() > 1e-9 && (0..3).all(|i| i == a || (p[i] - q[i]).abs() < 1e-9)
+        };
+        let rack = c
+            .rack_z
+            .iter()
+            .filter(|(ri, z)| {
+                let r = &racks[*ri];
+                (m[2] - z).abs() < 1e-6
+                    && along(r)
+                    && (0..2).all(|i| r.footprint.min[i] <= m[i] && m[i] <= r.footprint.max[i])
+            })
+            .map(|(ri, _)| racks[*ri].factor);
+        zone.chain(rack).reduce(f64::min).unwrap_or(1.0)
+    };
+    let params = SearchParams {
+        start,
+        start_dir: adir,
+        goal,
+        goal_dir: bdir ^ 1,
+        first_need: c.first_need,
+        between_need: 2.0 * c.rules.elbow_c2f,
+        last_need: c.first_need,
+        bend_penalty: st.bend_penalty,
+        vertical_factor: st.vertical_factor,
+        min_factor,
+        max_expansions: st.max_expansions,
+    };
+    let found = match search(&g, &params, &factor) {
+        Ok(f) => f,
+        Err(e) => return fail(e.to_string()),
+    };
+    let pts: Vec<P3> = found.nodes.iter().map(|n| g.point(*n)).collect();
+    let penetrations = found
+        .nodes
+        .windows(2)
+        .filter(|w| g.soft(w[1]) > 0.0 && g.soft(w[0]) == 0.0)
+        .count();
+    Ok(Attempt {
+        poly: corners(&pts),
+        penetrations,
+        cost: found.cost,
+        expansions: found.expansions,
+        grid_nodes: g.len(),
+        blocked_nodes,
+    })
+}
+
 fn route_one(
     problem: &RouteProblem,
     scene: &Scene,
     spec: &RouteSpec,
     done: &[RoutedLine],
+    reserved: &[Aabb],
 ) -> RoutedLine {
     let t0 = std::time::Instant::now();
     let st = &problem.settings;
@@ -156,7 +410,8 @@ fn route_one(
         (Err(e), _) | (_, Err(e)) => return failed(spec, e),
     };
     let outer = rules.od / 2.0 + spec.insulation;
-    let d = outer + spec.clearance.unwrap_or(st.clearance);
+    let clearance = spec.clearance.unwrap_or(st.clearance);
+    let d = outer + clearance;
     let step = problem.grid.step;
     let region = problem
         .bounds
@@ -164,136 +419,80 @@ fn route_one(
     if !region.contains(a) || !region.contains(b) {
         return failed(spec, "a terminal lies outside the bounds".into());
     }
-    let mut g = Grid::new(region, step, &[a, b]);
+    let rack_z = problem
+        .racks
+        .iter()
+        .enumerate()
+        .flat_map(|(i, r)| {
+            r.centrelines(outer, clearance)
+                .into_iter()
+                .map(move |z| (i, z))
+        })
+        .filter(|(_, z)| region.min[2] <= *z && *z <= region.max[2])
+        .collect();
+    let c = Ctx {
+        problem,
+        scene,
+        done,
+        reserved,
+        rules: &rules,
+        ends: [(a, adir), (b, bdir)],
+        owners: [owner(&spec.from), owner(&spec.to)],
+        d,
+        first_need: rules.elbow_c2f + st.terminal_straight,
+        rack_z,
+    };
 
-    // Terminal stubs: straight runs that leave each terminal before the first elbow. Only the
-    // terminal's own equipment may touch them (a nozzle starts inside its equipment's
-    // clearance zone); other obstacles and earlier lines keep blocking them.
-    let first_need = rules.elbow_c2f + st.terminal_straight;
-    let stub_len = first_need.max(d + step);
-    let stubs = [g.stub(a, adir, stub_len), g.stub(b, bdir, stub_len)];
-    let owners = [owner(&spec.from), owner(&spec.to)];
-
-    // Rasterise the scene and the lines routed so far, grown by this line's radius + clearance.
-    let reach = region.inflate(d);
-    for o in &scene.obstacles {
-        if !o.bounds.overlaps(&reach) {
-            continue;
-        }
-        let mut mask: Vec<usize> = Vec::new();
-        for (s, w) in stubs.iter().zip(&owners) {
-            if w.as_deref() == Some(o.id.as_str()) {
-                mask.extend(s);
-            }
-        }
-        g.set_mask(&mask);
-        let soft = (o.kind == ObstacleKind::Soft).then_some(o.penalty as f32);
-        match &o.shape {
-            Shape::Box(bx) => {
-                g.add_box(bx, d, soft);
-            }
-            Shape::Mesh(tris) => {
-                for t in tris {
-                    if crate::geom::tri_aabb(t).overlaps(&reach) {
-                        g.add_triangle(t, d, soft);
+    let mut notes = rules.notes.clone();
+    let mut result = None;
+    if let Some(cs) = problem.grid.coarse_step.filter(|cs| *cs > step) {
+        let w = problem.grid.corridor.unwrap_or(cs);
+        match attempt(&c, region, cs, None, Some(w)) {
+            Ok(coarse) => {
+                // Corridor: every coarse run grown by `w`, clipped to the region.
+                let keep: Vec<Aabb> = coarse
+                    .poly
+                    .windows(2)
+                    .filter_map(|s| Aabb::from_points(s[0], s[1]).inflate(w).intersect(&region))
+                    .collect();
+                let sub = keep.iter().copied().reduce(|x, y| x.union(&y)).unwrap();
+                match attempt(&c, sub, step, Some(&keep), None) {
+                    Ok(fine) => {
+                        notes.push(format!(
+                            "coarse-to-fine: {cs} mm graph ({} nodes, {} bends), then {step} mm \
+                             corridor ±{w} mm",
+                            coarse.grid_nodes,
+                            coarse.poly.len() - 2
+                        ));
+                        result = Some(Ok(fine));
                     }
+                    Err((e, ..)) => notes.push(format!(
+                        "coarse-to-fine: corridor search failed ({e}); full {step} mm graph"
+                    )),
                 }
             }
+            Err((e, ..)) => notes.push(format!(
+                "coarse-to-fine: {cs} mm graph failed ({e}); full {step} mm graph"
+            )),
         }
     }
-    g.set_mask(&[]);
-    for prev in done.iter().filter(|r| r.ok) {
-        let po = prev.outside_diameter.unwrap_or(0.0) / 2.0
-            + prev.spec.as_ref().map(|s| s.insulation).unwrap_or(0.0);
-        for w in prev.points.windows(2) {
-            g.add_box(&Aabb::from_points(w[0], w[1]).inflate(po), d, None);
-        }
-    }
-    for s in &stubs {
-        g.clear_soft(s);
-    }
-    let blocked_nodes = (0..g.len()).filter(|i| g.is_hard(*i)).count();
-    for (s, which) in stubs.iter().zip(["from", "to"]) {
-        if s.first().is_some_and(|i| g.is_hard(*i)) {
-            return failed(
-                spec,
-                format!(
-                    "{which}: terminal lies in the clearance zone of an obstacle other than \
-                     its own equipment (set `owner` if the obstacle belongs to the terminal)"
-                ),
-            );
-        }
-    }
-
-    let (Some(start), Some(goal)) = (g.node_at(a), g.node_at(b)) else {
-        return failed(spec, "terminal not on the grid".into());
-    };
-
-    let zones = &problem.zones;
-    let min_factor = zones
-        .iter()
-        .map(|z| z.factor)
-        .fold(1.0_f64, f64::min)
-        .max(1e-3);
-    let factor = |u: usize, v: usize| -> f64 {
-        if zones.is_empty() {
-            return 1.0;
-        }
-        let (p, q) = (g.point(u), g.point(v));
-        let m = [0, 1, 2].map(|i| (p[i] + q[i]) / 2.0);
-        zones
-            .iter()
-            .filter(|z| z.aabb.contains(m))
-            .map(|z| z.factor)
-            // Overlapping zones: the most preferred (lowest) factor wins; outside all zones 1.
-            .reduce(f64::min)
-            .unwrap_or(1.0)
-    };
-    let params = SearchParams {
-        start,
-        start_dir: adir,
-        goal,
-        goal_dir: bdir ^ 1,
-        first_need,
-        between_need: 2.0 * rules.elbow_c2f,
-        last_need: first_need,
-        bend_penalty: st.bend_penalty,
-        vertical_factor: st.vertical_factor,
-        min_factor,
-        max_expansions: st.max_expansions,
-    };
-    let found = match search(&g, &params, &factor) {
-        Ok(f) => f,
-        Err(e) => {
-            let mut r = failed(spec, e.to_string());
-            r.grid_nodes = g.len();
-            r.blocked_nodes = blocked_nodes;
-            r.millis = t0.elapsed().as_millis();
-            return r;
+    let result = result.unwrap_or_else(|| attempt(&c, region, step, None, None));
+    let r = match result {
+        Ok(r) => r,
+        Err((e, nodes, blocked)) => {
+            let mut f = failed(spec, e);
+            f.grid_nodes = nodes;
+            f.blocked_nodes = blocked;
+            f.notes = notes;
+            f.millis = t0.elapsed().as_millis();
+            return f;
         }
     };
-
-    // Corner points.
-    let pts: Vec<P3> = found.nodes.iter().map(|n| g.point(*n)).collect();
-    let mut poly = vec![pts[0]];
-    for w in 1..pts.len().saturating_sub(1) {
-        let (p, q, r) = (pts[w - 1], pts[w], pts[w + 1]);
-        let d1 = axis_dir([q[0] - p[0], q[1] - p[1], q[2] - p[2]]);
-        let d2 = axis_dir([r[0] - q[0], r[1] - q[1], r[2] - q[2]]);
-        if d1 != d2 {
-            poly.push(q);
-        }
-    }
-    poly.push(*pts.last().unwrap());
-    let length_mm = poly
+    let length_mm = r
+        .poly
         .windows(2)
         .map(|w| (0..3).map(|i| (w[1][i] - w[0][i]).abs()).sum::<f64>())
         .sum();
-    let penetrations = found
-        .nodes
-        .windows(2)
-        .filter(|w| g.soft(w[1]) > 0.0 && g.soft(w[0]) == 0.0)
-        .count();
 
     RoutedLine {
         id: spec.id.clone(),
@@ -305,16 +504,16 @@ fn route_one(
         pipe_entry: Some(rules.pipe_entry.clone()),
         elbow_entry: Some(rules.elbow_entry.clone()),
         elbow_centre_to_face: Some(rules.elbow_c2f),
-        bends: poly.len() - 2,
-        points: poly,
+        bends: r.poly.len() - 2,
+        points: r.poly,
         length_mm,
-        penetrations,
-        cost: found.cost,
-        expansions: found.expansions,
-        grid_nodes: g.len(),
-        blocked_nodes,
+        penetrations: r.penetrations,
+        cost: r.cost,
+        expansions: r.expansions,
+        grid_nodes: r.grid_nodes,
+        blocked_nodes: r.blocked_nodes,
         millis: t0.elapsed().as_millis(),
-        notes: rules.notes.clone(),
+        notes,
         rules: Some(rules),
         spec: Some(spec.clone()),
     }
