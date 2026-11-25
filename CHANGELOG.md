@@ -246,6 +246,14 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **Auto-routing kernel `pmef-route`** (new crate, CLI `pmef route`): routes pipes in a voxel graph
+  around PMEF equipment, steel, existing piping and OBJ meshes, with elbow-fit, clearance and
+  piping-class rules from the PMEF catalogs, and writes PMEF `Pipe`/`Elbow` components. Design and
+  later increments: `docs/auto-routing.md`. Ownership: `docs/ECOSYSTEM.md` decision 6.
+- **`provenance.sourceType` value `generated`** (spec 02 §2.9.1, `pmef-base` `$defs/Provenance`,
+  RFC-0001 table): object produced by a design algorithm such as auto-routing. Such objects SHOULD
+  carry `review.status: detected` until checked. New example `examples/pump-skid-auto-routed.ndjson`
+  (0.10.0 feature example, not used for the 0.9.0 conformance fixtures).
 - **`pmef-catalogs` crate** (`pmef-rs/pmef-catalogs`) — embeds every catalog in `catalogs/` so
   other repositories read PMEF catalogs instead of keeping their own tables (ecosystem roadmap
   stage 2, `docs/ECOSYSTEM.md`). Raw/parsed access by `catalogId`, plus typed pipe sizes

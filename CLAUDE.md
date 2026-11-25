@@ -73,6 +73,7 @@ cargo run -p pmef-cli -- merge ../tests/diff/design.ndjson ../tests/merge/ours-d
 cargo run -p pmef-cli -- convert ../examples/pump-skid-complete.ndjson --to pcf -o /tmp/pcf   # PMEF -> Plant 3D (PCF)
 cargo run -p pmef-cli -- convert /tmp/pcf --to pmef --base ../examples/pump-skid-complete.ndjson -o /tmp/back.ndjson
 cargo run -p pmef-cli -- check ../examples/pump-skid-complete.ndjson   # package structure: header, unique @id, connectedTo
+cargo run -p pmef-cli -- route ../tests/route/pump-skid-route.json -o /tmp/routed.ndjson --report /tmp/route.json --plant urn:pmef:plant:eaf-2026:EAF-LINE-3   # auto-routing (docs/auto-routing.md)
 cd ..
 
 # Conformance suite (spec 06; details in tests/README.md)
@@ -86,6 +87,7 @@ python tests/geometry/run.py                              # check-geometry rules
 python tests/catalogs/run.py                              # check-catalogs rules fire on the broken catalogs
 python tests/validators/differential.py --pmef pmef-rs/target/debug/pmef   # Rust and Python validators agree
 python scripts/generate-asbuilt-example.py examples/asbuilt-recognition.ndjson   # after catalog/algorithm changes
+# after pmef-route or catalog changes: regenerate examples/pump-skid-auto-routed.ndjson with `pmef route` (see above, -o ../examples/pump-skid-auto-routed.ndjson)
 ```
 
 CI also runs Mermaid validation (`mmdc` via `scripts/extract-mermaid.py`), markdownlint

@@ -57,7 +57,7 @@ The definitions live in `pmef-base.schema.json` (`$defs/Provenance`, `$defs/Revi
 
 | Field | Req. | Type | Description |
 |---|---|---|---|
-| `sourceType` | **MUST** | enum | `manual`, `cad-import`, `iso-drawing`, `2d-drawing`, `scan`, `photo` |
+| `sourceType` | **MUST** | enum | `manual`, `cad-import`, `iso-drawing`, `2d-drawing`, `scan`, `photo`, `generated` (since 0.10.0, see spec 02 §2.9.1) |
 | `sourceRef` | SHOULD (MUST unless `manual`) | URI | Source document / page / region or point-cloud segment |
 | `recognizer` | SHOULD for automated sources | object | `name` (MUST), `version` (MUST) |
 | `confidence` | MUST if `recognizer` present | number 0..1 | Recogniser confidence for this object |

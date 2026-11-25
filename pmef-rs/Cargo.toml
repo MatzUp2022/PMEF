@@ -6,6 +6,7 @@ members = [
     "pmef-validate",
     "pmef-geom",
     "pmef-catalogs",
+    "pmef-route",
     "pmef-cli",
     "pmef-adapter-plant3d",
     "pmef-adapter-cadmatic",

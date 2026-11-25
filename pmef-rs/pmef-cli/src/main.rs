@@ -159,6 +159,24 @@ enum Commands {
     /// Structural check of a PMEF package: one FileHeader first, every line readable,
     /// unique @id, all references resolve. This checks *data*; implementation conformance
     /// (spec 06) is tested with the suite: `python tests/run_tests.py`.
+    /// Route pipes automatically (graph + piping-class rules) and write them as PMEF.
+    ///
+    /// Input is a routing problem (JSON, see pmef-route/README.md); lines are routed in order
+    /// and each routed line is an obstacle for the next. Exit code 1 if any route failed.
+    Route {
+        /// Routing problem (JSON).
+        problem: PathBuf,
+        /// Output NDJSON with the generated lines.
+        #[arg(long, short)]
+        output: PathBuf,
+        /// Route report (JSON: polylines, lengths, bends, search statistics).
+        #[arg(long)]
+        report: Option<PathBuf>,
+        /// Write a FileHeader with this plantId first, so the output is a complete package.
+        #[arg(long)]
+        plant: Option<String>,
+    },
+
     Check {
         /// PMEF package to check.
         file: PathBuf,
@@ -247,6 +265,7 @@ async fn main() -> Result<()> {
             cmd_index(file, &key, filter_type, output).await
         }
         Commands::Check { file, json, output } => cmd_check(file, json, output),
+        Commands::Route { problem, output, report, plant } => cmd_route(problem, output, report, plant),
         Commands::Conformance { file, output, .. } => {
             eprintln!("note: `pmef conformance` is deprecated; use `pmef check` (package check) or \
                        `python tests/run_tests.py` (implementation conformance, spec 06)");
@@ -644,6 +663,48 @@ async fn cmd_index(
 }
 
 /// Structural package check (`pmef check`): data, not implementation conformance.
+fn cmd_route(problem: PathBuf, output: PathBuf, report: Option<PathBuf>, plant: Option<String>) -> Result<()> {
+    let text = std::fs::read_to_string(&problem)?;
+    let prob: pmef_route::RouteProblem = serde_json::from_str(&text)
+        .map_err(|e| anyhow::anyhow!("{}: {e}", problem.display()))?;
+    let base = problem.parent().map(PathBuf::from).unwrap_or_default();
+    let scene = pmef_route::Scene::load(&prob, &base)?;
+    let routed = pmef_route::route_all(&prob, &scene);
+    let mut lines = Vec::new();
+    if let Some(plant) = plant {
+        lines.push(serde_json::json!({
+            "@type": "pmef:FileHeader",
+            "@id": format!("urn:pmef:pkg:{}:auto-route", prob.project),
+            "pmefVersion": "0.9.0", "plantId": plant, "projectCode": prob.project,
+            "coordinateSystem": "Z-up", "units": "mm", "revisionId": prob.revision_id,
+            "changeState": "WIP", "authoringTool": pmef_route::GENERATOR,
+        }));
+    }
+    lines.extend(pmef_route::pmef_out::to_pmef(&prob, &routed));
+    let mut out = String::new();
+    for l in &lines {
+        out.push_str(&serde_json::to_string(l)?);
+        out.push('\n');
+    }
+    std::fs::write(&output, out)?;
+    for r in &routed {
+        match &r.error {
+            None => println!(
+                "{}: DN{} {}  {:.0} mm, {} bends, {} penetrations, {} states, {} ms",
+                r.id, r.dn, r.pipe_class, r.length_mm, r.bends, r.penetrations, r.expansions, r.millis
+            ),
+            Some(e) => println!("{}: FAILED: {e}", r.id),
+        }
+    }
+    if let Some(rep) = report {
+        std::fs::write(rep, serde_json::to_string_pretty(&routed)?)?;
+    }
+    if routed.iter().any(|r| !r.ok) {
+        std::process::exit(1);
+    }
+    Ok(())
+}
+
 fn cmd_check(file: PathBuf, json_output: bool, output: Option<PathBuf>) -> Result<()> {
     use pmef_io::{NdjsonReader, PmefIoError, ReaderConfig};
     use std::collections::{HashMap, HashSet};
