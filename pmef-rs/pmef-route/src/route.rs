@@ -118,7 +118,12 @@ pub fn route_all(problem: &RouteProblem, scene: &Scene) -> Vec<RoutedLine> {
 fn reserved_stubs(problem: &RouteProblem, scene: &Scene) -> Vec<(usize, Aabb)> {
     let mut out = Vec::new();
     for (i, spec) in problem.routes.iter().enumerate() {
-        let Ok(rules) = rules::resolve(&spec.pipe_class, spec.dn, None, None) else {
+        let Ok(rules) = rules::resolve(
+            &spec.pipe_class,
+            spec.dn,
+            spec.design_pressure,
+            spec.design_temperature,
+        ) else {
             continue;
         };
         let outer = rules.od / 2.0 + spec.insulation;
