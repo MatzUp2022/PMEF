@@ -44,6 +44,9 @@ pub struct RoutedLine {
     /// Branches (tee → consumer), in the order of the problem.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub branches: Vec<RoutedBranch>,
+    /// Pipe supports on horizontal runs (with `supports` in the problem).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub supports: Vec<Support>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tee_entry: Option<String>,
     #[serde(skip)]
@@ -52,6 +55,21 @@ pub struct RoutedLine {
     pub tee: Option<TeeRule>,
     #[serde(skip)]
     pub spec: Option<RouteSpec>,
+}
+
+/// A pipe support placed on a horizontal run.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Support {
+    /// Point on the centreline [mm].
+    pub point: P3,
+    /// Bottom of the pipe (incl. insulation) below `point`: the support's bearing point [mm].
+    pub bearing: P3,
+    /// Polyline the support sits on: 0 = run from–to, k = branch k-1.
+    pub on: usize,
+    /// Scene obstacle (steel) that carries it, if any lies within reach below.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub steel: Option<String>,
 }
 
 /// Outcome of one branch.
@@ -226,13 +244,178 @@ pub fn route_all(problem: &RouteProblem, scene: &Scene) -> Vec<RoutedLine> {
             tried.push(i);
         }
     }
+    if let Some(sup) = &problem.supports {
+        for l in lines.iter_mut().filter(|l| l.ok) {
+            place_supports(l, scene, sup);
+        }
+    }
     lines
+}
+
+/// Place supports on the horizontal runs of a routed line: first where steel lies within
+/// reach below the pipe, then in between so that no gap exceeds the maximum span (and no run
+/// end is more than half a span from a support). Supports stay off elbows and tees.
+fn place_supports(l: &mut RoutedLine, scene: &Scene, set: &crate::problem::SupportSettings) {
+    let (Some(spec), Some(rules)) = (l.spec.clone(), l.rules.clone()) else {
+        return;
+    };
+    let (span, note) = match set.max_span {
+        Some(s) => (s, None),
+        None => rules::max_span(spec.dn),
+    };
+    l.notes.extend(note);
+    l.notes.push(format!("supports: maximum span {span} mm"));
+    let outer = spec.outer(rules.od);
+    let c2f = rules.elbow_c2f;
+    let (run_c2e, branch_c2e) = l
+        .tee
+        .as_ref()
+        .map_or((0.0, 0.0), |t| (t.run_c2e, t.branch_c2e));
+    let tees: Vec<P3> = l
+        .branches
+        .iter()
+        .filter(|b| b.ok)
+        .map(|b| b.points[0])
+        .collect();
+    let steel: Vec<(&str, Aabb)> = scene
+        .obstacles
+        .iter()
+        .filter(|o| o.kind == ObstacleKind::Hard)
+        .filter_map(|o| match o.shape {
+            Shape::Box(b) => Some((o.id.as_str(), b)),
+            Shape::Mesh(_) => None,
+        })
+        .collect();
+    let mut runs: Vec<(usize, Vec<P3>)> = vec![(0, l.points.clone())];
+    runs.extend(
+        l.branches
+            .iter()
+            .enumerate()
+            .filter(|(_, b)| b.ok)
+            .map(|(bi, b)| (bi + 1, b.points.clone())),
+    );
+    let mut out = Vec::new();
+    for (k, poly) in runs {
+        let n = poly.len();
+        for s in 0..n - 1 {
+            let (a, b) = (poly[s], poly[s + 1]);
+            let Some(ad) = axis_dir([b[0] - a[0], b[1] - a[1], b[2] - a[2]]) else {
+                continue;
+            };
+            let ax = ad / 2;
+            if ax == 2 {
+                continue; // vertical
+            }
+            let sign = if ad % 2 == 0 { 1.0 } else { -1.0 };
+            let len = (b[ax] - a[ax]).abs();
+            let at = |t: f64| {
+                let mut q = a;
+                q[ax] += sign * t;
+                q
+            };
+            // Usable part of the run: off the elbows and the tee a branch starts at.
+            let off = |idx: usize| {
+                if idx == 0 && k > 0 {
+                    branch_c2e
+                } else if idx == 0 || idx == n - 1 {
+                    0.0
+                } else {
+                    c2f
+                }
+            };
+            let (lo, hi) = (off(s), len - off(s + 1));
+            if hi - lo < 1.0 {
+                continue;
+            }
+            let bottom = a[2] - outer;
+            // Steel under the run, within reach: (position along the run, id).
+            let under = |t: f64| -> Option<&str> {
+                let q = at(t);
+                steel
+                    .iter()
+                    .filter(|(_, bx)| {
+                        bx.max[2] <= bottom + 1e-6
+                            && bx.max[2] >= bottom - set.reach
+                            && (0..2).all(|i| bx.min[i] <= q[i] && q[i] <= bx.max[i])
+                    })
+                    .max_by(|x, y| x.1.max[2].total_cmp(&y.1.max[2]))
+                    .map(|(id, _)| *id)
+            };
+            let mut pos: Vec<f64> = steel
+                .iter()
+                .filter(|(_, bx)| {
+                    let other = 1 - ax;
+                    bx.max[2] <= bottom + 1e-6
+                        && bx.max[2] >= bottom - set.reach
+                        && bx.min[other] <= a[other]
+                        && a[other] <= bx.max[other]
+                })
+                .filter_map(|(_, bx)| {
+                    // Overlap of the steel with the usable run, as distances from `a`.
+                    let (t0, t1) = if sign > 0.0 {
+                        (bx.min[ax] - a[ax], bx.max[ax] - a[ax])
+                    } else {
+                        (a[ax] - bx.max[ax], a[ax] - bx.min[ax])
+                    };
+                    let (t0, t1) = (t0.max(lo), t1.min(hi));
+                    (t0 <= t1).then_some((t0 + t1) / 2.0)
+                })
+                .collect();
+            pos.sort_by(f64::total_cmp);
+            pos.dedup_by(|x, y| (*x - *y).abs() < 1.0);
+            // Fill: interior gaps up to `span`, run ends up to `span / 2`.
+            let mut fill = Vec::new();
+            if pos.is_empty() {
+                let m = ((hi - lo) / span).ceil().max(1.0) as usize;
+                let w = (hi - lo) / m as f64;
+                fill.extend((0..m).map(|i| lo + (i as f64 + 0.5) * w));
+            } else {
+                let first = pos[0];
+                let m = ((first - lo - span / 2.0) / span).ceil().max(0.0) as usize;
+                fill.extend((1..=m).map(|i| first - i as f64 * span));
+                for w in pos.windows(2) {
+                    let m = ((w[1] - w[0]) / span).ceil().max(1.0) as usize;
+                    let g = (w[1] - w[0]) / m as f64;
+                    fill.extend((1..m).map(|i| w[0] + i as f64 * g));
+                }
+                let last = *pos.last().unwrap();
+                let m = ((hi - last - span / 2.0) / span).ceil().max(0.0) as usize;
+                fill.extend((1..=m).map(|i| last + i as f64 * span));
+            }
+            pos.extend(fill.into_iter().map(|t| t.clamp(lo, hi)));
+            pos.sort_by(f64::total_cmp);
+            pos.dedup_by(|x, y| (*x - *y).abs() < 1.0);
+            for t in pos {
+                // Shift off a tee body on this run.
+                let mut t = t;
+                for tc in &tees {
+                    let d = (0..3).map(|i| (tc[i] - at(t)[i]).abs()).sum::<f64>();
+                    if d < run_c2e {
+                        let tt = (tc[ax] - a[ax]) * sign;
+                        t = if t < tt { tt - run_c2e } else { tt + run_c2e };
+                    }
+                }
+                let p = at(t);
+                let mut bearing = p;
+                bearing[2] -= outer;
+                out.push(Support {
+                    point: p,
+                    bearing,
+                    on: k,
+                    steel: under(t).map(str::to_string),
+                });
+            }
+        }
+    }
+    l.supports = out;
 }
 
 /// Whether two routed lines come closer than their outer radii plus `clearance`.
 fn collides(a: &RoutedLine, b: &RoutedLine, clearance: f64) -> bool {
     let outer = |r: &RoutedLine| {
-        r.outside_diameter.unwrap_or(0.0) / 2.0 + r.spec.as_ref().map_or(0.0, |s| s.insulation)
+        r.spec
+            .as_ref()
+            .map_or(0.0, |s| s.outer(r.outside_diameter.unwrap_or(0.0)))
     };
     let (oa, ob) = (outer(a), outer(b));
     a.polylines().flat_map(|p| p.windows(2)).any(|s| {
@@ -258,15 +441,16 @@ fn reserved_stubs(problem: &RouteProblem, scene: &Scene) -> Vec<(usize, Aabb)> {
         ) else {
             continue;
         };
-        let outer = rules.od / 2.0 + spec.insulation;
+        let outer = spec.outer(rules.od);
         // Up to the far side of the first elbow: its centre lies at least centre-to-face +
         // terminal straight out, on the next graph tick (≤ one step further), and the pipe
         // surface reaches the outer radius beyond that.
-        let len = rules.elbow_c2f + problem.settings.terminal_straight + problem.grid.step + outer;
         let ends = [&spec.from, &spec.to]
             .into_iter()
             .chain(spec.branches.iter().map(|b| &b.to));
         for t in ends {
+            let straight = t.straight.unwrap_or(problem.settings.terminal_straight);
+            let len = rules.elbow_c2f + straight + problem.grid.step + outer;
             if let Ok((p, dir)) = terminal(t, scene, "terminal") {
                 let mut q = p;
                 q[dir / 2] += if dir % 2 == 0 { len } else { -len };
@@ -299,6 +483,7 @@ fn failed(spec: &RouteSpec, msg: String) -> RoutedLine {
         millis: 0,
         notes: Vec::new(),
         branches: Vec::new(),
+        supports: Vec::new(),
         tee_entry: None,
         rules: None,
         tee: None,
@@ -318,7 +503,9 @@ struct Ctx<'a> {
     owners: [Option<String>; 2],
     /// Outer radius + clearance [mm].
     d: f64,
-    first_need: f64,
+    /// Straight length before the first / after the last elbow (centre-to-face + terminal
+    /// straight) at `from` and `to` [mm].
+    needs: [f64; 2],
     /// Rack level centrelines of this line: (rack index, elevation).
     rack_z: Vec<(usize, f64)>,
 }
@@ -408,8 +595,10 @@ fn rasterise(
     }
     g.set_mask(free);
     for prev in c.done.iter().filter(|r| r.ok) {
-        let po = prev.outside_diameter.unwrap_or(0.0) / 2.0
-            + prev.spec.as_ref().map(|s| s.insulation).unwrap_or(0.0);
+        let po = prev
+            .spec
+            .as_ref()
+            .map_or(0.0, |s| s.outer(prev.outside_diameter.unwrap_or(0.0)));
         for poly in prev.polylines() {
             for w in poly.windows(2) {
                 g.add_box(&Aabb::from_points(w[0], w[1]).inflate(po), c.d, None);
@@ -493,8 +682,10 @@ fn attempt(
     // Terminal stubs: straight runs that leave each terminal before the first elbow. Only the
     // terminal's own equipment may touch them (a nozzle starts inside its equipment's
     // clearance zone); other obstacles and earlier lines keep blocking them.
-    let stub_len = c.first_need.max(c.d + step);
-    let stubs = [g.stub(a, adir, stub_len), g.stub(b, bdir, stub_len)];
+    let stubs = [
+        g.stub(a, adir, c.needs[0].max(c.d + step)),
+        g.stub(b, bdir, c.needs[1].max(c.d + step)),
+    ];
     let free: Vec<usize> = match free_near_terminals {
         Some(r) => [a, b]
             .iter()
@@ -527,9 +718,9 @@ fn attempt(
             node: goal,
             dir: bdir ^ 1,
         },
-        first_need: c.first_need,
+        first_need: c.needs[0],
         between_need: 2.0 * c.rules.elbow_c2f,
-        last_need: c.first_need,
+        last_need: c.needs[1],
         straight_need: 0.0,
         bend_penalty: st.bend_penalty,
         vertical_factor: st.vertical_factor,
@@ -581,7 +772,7 @@ fn route_one(
         (Ok(x), Ok(y)) => (x, y),
         (Err(e), _) | (_, Err(e)) => return failed(spec, e),
     };
-    let outer = rules.od / 2.0 + spec.insulation;
+    let outer = spec.outer(rules.od);
     let clearance = spec.clearance.unwrap_or(st.clearance);
     let d = outer + clearance;
     let step = problem.grid.step;
@@ -611,7 +802,8 @@ fn route_one(
         ends: [(a, adir), (b, bdir)],
         owners: [owner(&spec.from), owner(&spec.to)],
         d,
-        first_need: rules.elbow_c2f + st.terminal_straight,
+        needs: [&spec.from, &spec.to]
+            .map(|t| rules.elbow_c2f + t.straight.unwrap_or(st.terminal_straight)),
         rack_z,
     };
 
@@ -683,6 +875,7 @@ fn route_one(
         millis: 0,
         notes,
         branches: Vec::new(),
+        supports: Vec::new(),
         tee_entry: None,
         rules: None,
         tee: None,
@@ -763,7 +956,10 @@ fn route_branches(
             .unwrap();
         let k = left.remove(pos);
         let b = &spec.branches[k];
-        match attempt_branch(c, line, &tee, outer, ends[k], owner(&b.to)) {
+        let straight =
+            b.to.straight
+                .unwrap_or(c.problem.settings.terminal_straight);
+        match attempt_branch(c, line, &tee, outer, ends[k], owner(&b.to), straight) {
             Ok((pts, on, cost, expansions)) => {
                 let rb = &mut line.branches[k];
                 rb.ok = true;
@@ -795,7 +991,9 @@ fn attempt_branch(
     outer: f64,
     (p, dir): (P3, usize),
     owner: Option<String>,
+    straight: f64,
 ) -> Result<(Vec<P3>, usize, f64, usize), String> {
+    let first_need = c.rules.elbow_c2f + straight;
     let st = &c.problem.settings;
     let step = c.problem.grid.step;
     let tree: Vec<&Vec<P3>> = line.polylines().collect();
@@ -823,7 +1021,7 @@ fn attempt_branch(
         pins[2].push(*z - 1.0);
     }
     let mut g = Grid::with_ticks(region, step, pins);
-    let stub = g.stub(p, dir, c.first_need.max(c.d + step));
+    let stub = g.stub(p, dir, first_need.max(c.d + step));
     rasterise(
         c,
         &mut g,
@@ -849,28 +1047,26 @@ fn attempt_branch(
 
     // Tee positions: nodes on straight runs, clear of the fittings at both ends of the run and
     // of tees already on it.
-    let ts = st.terminal_straight;
+    let spec = line.spec.as_ref().ok_or("line without spec")?;
+    let ts = |t: &Terminal| t.straight.unwrap_or(st.terminal_straight);
+    // Tree runs with their stable id (0 = run from–to, k = branch k-1 of the spec, independent of
+    // the routing order) and the straight length
+    // required at their start / end terminal.
+    let mut runs: Vec<(usize, &Vec<P3>, f64, f64)> =
+        vec![(0, &line.points, ts(&spec.from), ts(&spec.to))];
+    for (bi, b) in line.branches.iter().enumerate().filter(|(_, b)| b.ok) {
+        runs.push((bi + 1, &b.points, 0.0, ts(&spec.branches[bi].to)));
+    }
     let tees: Vec<P3> = line
         .branches
         .iter()
         .filter(|b| b.ok)
         .map(|b| b.points[0])
         .collect();
-    // Stable id of each tree polyline (0 = run, i + 1 = branch i of the spec), independent of
-    // the order in which the branches were routed.
-    let tree_ids: Vec<usize> = std::iter::once(0)
-        .chain(
-            line.branches
-                .iter()
-                .enumerate()
-                .filter(|(_, b)| b.ok)
-                .map(|(i, _)| i + 1),
-        )
-        .collect();
     let mut nodes: HashMap<usize, u8> = HashMap::new();
     let mut on_poly: HashMap<usize, usize> = HashMap::new();
     let mut segs = Vec::new();
-    for (k, poly) in tree.iter().enumerate() {
+    for &(k, poly, ts_start, ts_end) in &runs {
         let n = poly.len();
         for s in 0..n - 1 {
             let (a, b) = (poly[s], poly[s + 1]);
@@ -883,8 +1079,10 @@ fn attempt_branch(
             let end_need = |idx: usize| {
                 if idx == 0 && k > 0 {
                     tee.run_c2e + tee.branch_c2e // the run starts at a tee centre
-                } else if idx == 0 || idx == n - 1 {
-                    tee.run_c2e + ts // terminal
+                } else if idx == 0 {
+                    tee.run_c2e + ts_start // terminal
+                } else if idx == n - 1 {
+                    tee.run_c2e + ts_end // terminal
                 } else {
                     tee.run_c2e + c.rules.elbow_c2f // elbow
                 }
@@ -907,7 +1105,7 @@ fn attempt_branch(
                 }
                 if let Some(node) = g.node_at(q) {
                     *nodes.entry(node).or_insert(0) |= mask;
-                    on_poly.entry(node).or_insert(tree_ids[k]);
+                    on_poly.entry(node).or_insert(k);
                 }
             }
         }
@@ -919,10 +1117,10 @@ fn attempt_branch(
         start,
         start_dir: dir,
         goal: Goal::Tree { nodes, segs },
-        first_need: c.first_need,
+        first_need,
         between_need: 2.0 * c.rules.elbow_c2f,
         last_need: c.rules.elbow_c2f + tee.branch_c2e,
-        straight_need: tee.branch_c2e + ts,
+        straight_need: tee.branch_c2e + straight,
         bend_penalty: st.bend_penalty,
         vertical_factor: st.vertical_factor,
         min_factor: min_factor(c.problem),

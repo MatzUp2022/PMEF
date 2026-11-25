@@ -36,6 +36,9 @@ pub struct RouteProblem {
     /// Pipe racks: their levels are preferred edges of the graph.
     #[serde(default)]
     pub racks: Vec<Rack>,
+    /// Place pipe supports on the routed lines (off when absent).
+    #[serde(default)]
+    pub supports: Option<SupportSettings>,
     pub routes: Vec<RouteSpec>,
 }
 
@@ -171,6 +174,22 @@ pub struct Zone {
     pub factor: f64,
 }
 
+/// Pipe support placement on horizontal runs.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SupportSettings {
+    /// Maximum distance between supports [mm]. Default: suggested span of ASME B31.1
+    /// Table 121.5 (water service) for the line's size.
+    #[serde(default)]
+    pub max_span: Option<f64>,
+    /// Steel whose top lies at most this far below the pipe carries a support [mm].
+    #[serde(default = "d_reach")]
+    pub reach: f64,
+}
+fn d_reach() -> f64 {
+    1000.0
+}
+
 /// Horizontal axis of a pipe rack.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -235,6 +254,11 @@ pub struct Terminal {
     /// Default: the equipment of `nozzle`, else `connectedTo`.
     #[serde(default)]
     pub owner: Option<String>,
+    /// Straight length required at this terminal before the first elbow or tee, in addition
+    /// to its centre-to-face [mm] (e.g. pump suction, flow meter inlet). Overrides
+    /// `settings.terminalStraight`.
+    #[serde(default)]
+    pub straight: Option<f64>,
 }
 
 /// One line to route.
@@ -258,6 +282,9 @@ pub struct RouteSpec {
     /// Insulation thickness [mm].
     #[serde(default)]
     pub insulation: f64,
+    /// Radial allowance for heat tracing on top of the insulation [mm].
+    #[serde(default)]
+    pub tracing: f64,
     /// Overrides `settings.clearance` [mm].
     #[serde(default)]
     pub clearance: Option<f64>,
@@ -271,6 +298,13 @@ pub struct RouteSpec {
     /// (the run from `from` to `to` and the branches routed before it).
     #[serde(default)]
     pub branches: Vec<BranchSpec>,
+}
+
+impl RouteSpec {
+    /// Outer radius incl. insulation and tracing allowance for outside diameter `od` [mm].
+    pub fn outer(&self, od: f64) -> f64 {
+        od / 2.0 + self.insulation + self.tracing
+    }
 }
 
 /// A branch of a line: an equal tee on the line's tree and a run to `to`.

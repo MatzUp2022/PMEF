@@ -246,6 +246,11 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **`pmef route` stage 4 (line rules)**: per-terminal straight length (`straight`), heat-tracing
+  allowance (`tracing`) and pipe supports (`supports`: on steel within reach, gaps at most the
+  ASME B31.1 Table 121.5 span) written as `pmef:PipeSupport`. The search keeps the straight
+  length before the last elbow exactly (state key), also when it exceeds twice the elbow
+  centre-to-face.
 - **`pmef route` stage 3 (branches)**: `routes[].branches` route further consumers of a line
   onto its tree with equal tees from the class catalog (ASME B16.9 centre-to-end if the catalog
   has none), nearest consumer first; output adds one `PipingSegment` per branch and

@@ -515,3 +515,69 @@ fn branch_routed_out_of_order_keeps_its_tee() {
         }
     }
 }
+
+#[test]
+fn supports_sit_on_steel_and_keep_the_span() {
+    // Straight DN 100 line at z = 0 over 20 m; two beams cross it (top 200 mm below the pipe
+    // bottom, outside the clearance), at x = 4000 and x = 13000.
+    let beam = |id: &str, x: f64| json!({"id": id, "aabb": {"min": [x - 100.0, -1000, -300], "max": [x + 100.0, 1000, -257.15]}});
+    let p = problem(json!({
+        "obstacles": [beam("urn:pmef:obj:t:BM-1", 4000.0), beam("urn:pmef:obj:t:BM-2", 13000.0)],
+        "supports": {},
+        "routes": [{
+            "id": "L1", "pipeClass": "A1A2", "dn": 100,
+            "from": {"point": [0, 0, 0], "direction": [1, 0, 0]},
+            "to": {"point": [20000, 0, 0], "direction": [-1, 0, 0]}
+        }]
+    }));
+    let r = &route_all(&p, &scene(&p))[0];
+    assert!(r.ok, "{:?}", r.error);
+    assert_eq!(r.bends, 0);
+    let xs: Vec<f64> = r.supports.iter().map(|s| s.point[0]).collect();
+    assert!(xs.contains(&4000.0) && xs.contains(&13000.0), "{xs:?}");
+    // B31.1 span for NPS 4: 4300 mm; ends within half a span.
+    assert!(
+        xs.windows(2).all(|w| w[1] - w[0] <= 4300.0 + 1e-6),
+        "{xs:?}"
+    );
+    assert!(
+        xs[0] <= 2150.0 && 20000.0 - xs.last().unwrap() <= 2150.0,
+        "{xs:?}"
+    );
+    let on_steel: Vec<_> = r
+        .supports
+        .iter()
+        .filter_map(|s| s.steel.as_deref())
+        .collect();
+    assert_eq!(on_steel, ["urn:pmef:obj:t:BM-1", "urn:pmef:obj:t:BM-2"]);
+    assert_eq!(r.supports[0].bearing[2], -114.3 / 2.0);
+
+    let objs = pmef_out::to_pmef(&p, std::slice::from_ref(r));
+    let sups: Vec<_> = objs
+        .iter()
+        .filter(|o| o["@type"] == "pmef:PipeSupport")
+        .collect();
+    assert_eq!(sups.len(), xs.len());
+    assert!(sups
+        .iter()
+        .any(|s| s["structuralAttachmentId"] == "urn:pmef:obj:t:BM-1"));
+}
+
+#[test]
+fn terminal_straight_length_is_kept() {
+    // Pump suction: 1000 mm straight at `to` before the last elbow.
+    let p = problem(json!({
+        "routes": [{
+            "id": "L1", "pipeClass": "A1A2", "dn": 100,
+            "from": {"point": [0, 0, 0], "direction": [1, 0, 0]},
+            "to": {"point": [5000, 500, 0], "direction": [0, -1, 0], "straight": 1000}
+        }]
+    }));
+    let r = &route_all(&p, &scene(&p))[0];
+    assert!(r.ok, "{:?}", r.error);
+    let n = r.points.len();
+    let last = (0..3)
+        .map(|i| (r.points[n - 1][i] - r.points[n - 2][i]).abs())
+        .sum::<f64>();
+    assert!(last >= 152.0 + 1000.0, "{:?}", r.points);
+}

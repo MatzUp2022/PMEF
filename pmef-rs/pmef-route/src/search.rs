@@ -85,7 +85,7 @@ pub enum SearchError {
     Limit(usize),
 }
 
-const BUCKETS: u64 = 7;
+const BUCKETS: u64 = 15;
 
 #[derive(Clone, Copy)]
 struct Rec {
@@ -127,14 +127,29 @@ pub fn search(
     }
     let start_own = g.is_own(p.start);
     let need = |bent: bool| if bent { p.between_need } else { p.first_need };
+    // Longest straight length that still matters for this leg (turning, or reaching the goal).
+    let horizon = |bent: bool| {
+        if bent {
+            p.between_need.max(p.last_need)
+        } else {
+            p.first_need.max(p.straight_need)
+        }
+    };
+    // State key: run lengths are bucketed up to the horizon; whether the run allows a turn is
+    // kept exactly, so a cheaper state that cannot turn yet never prunes one that can.
     let key = |node: usize, dir: usize, bent: bool, run: f64| -> u64 {
-        let n = need(bent);
+        let n = horizon(bent);
         let b = if run >= n - 1e-6 {
             BUCKETS
         } else {
-            ((run / n) * BUCKETS as f64) as u64
+            (((run / n) * BUCKETS as f64) as u64).min(BUCKETS - 1)
         };
-        ((node as u64) << 8) | ((dir as u64) << 4) | ((bent as u64) << 3) | b.min(BUCKETS)
+        let turn = run >= need(bent) - 1e-6;
+        ((node as u64) << 10)
+            | ((dir as u64) << 6)
+            | ((bent as u64) << 5)
+            | ((turn as u64) << 4)
+            | b
     };
     let vf = p.vertical_factor.min(1.0);
     let h = |node: usize, dir: usize| -> f64 {
