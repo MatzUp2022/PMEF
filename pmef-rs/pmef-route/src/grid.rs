@@ -6,7 +6,7 @@
 //! plus clearance, touches an obstacle. Because the cells tile space, thin obstacles (walls,
 //! plates) between two nodes are never skipped.
 
-use crate::geom::{tri_aabb, tri_box_overlap, Aabb, Tri, P3};
+use crate::geom::{tri_aabb, tri_box_overlap, Aabb, Mesh, Tri, P3};
 
 /// Grid over a region with occupancy layers.
 #[derive(Debug, Clone)]
@@ -230,6 +230,73 @@ impl Grid {
         }
     }
 
+    /// Mark the nodes inside a closed mesh within `b` (e.g. the inside of a thick wall, which
+    /// `add_triangle` leaves free: it only marks the nodes near the faces). A vertical line
+    /// through every column of nodes is intersected with the triangles; the winding number of
+    /// the crossings (sign of the face normal's z) tells inside from outside, so overlapping
+    /// solids (wall junctions) and either face orientation work. Columns whose crossings do not
+    /// balance (open surfaces) are skipped.
+    pub fn fill_mesh_interior(&mut self, m: &Mesh, b: &Aabb, soft_penalty: Option<f32>) {
+        // Off-tick column position: no column passes exactly through a shared edge or vertex.
+        const JX: f64 = 0.013_7;
+        const JY: f64 = 0.007_1;
+        let ri = self.range(0, b.min[0], b.max[0]);
+        let rj = self.range(1, b.min[1], b.max[1]);
+        let mut hits: Vec<(f64, i32)> = Vec::new();
+        for i in ri {
+            let x = self.ax[0][i] + JX;
+            for j in rj.clone() {
+                let y = self.ax[1][j] + JY;
+                let line = Aabb {
+                    min: [x, y, b.min[2] - 1.0],
+                    max: [x, y, b.max[2] + 1.0],
+                };
+                hits.clear();
+                let mut low_side = 0;
+                for t in m.query(&Aabb {
+                    min: [x, y, f64::NEG_INFINITY],
+                    max: [x, y, f64::INFINITY],
+                }) {
+                    if let Some((z, w)) = vertical_hit(t, x, y) {
+                        if z < line.min[2] {
+                            low_side += w;
+                        } else {
+                            hits.push((z, w));
+                        }
+                    }
+                }
+                if hits.is_empty() && low_side == 0 {
+                    continue;
+                }
+                hits.sort_by(|a, c| a.0.total_cmp(&c.0));
+                if low_side + hits.iter().map(|h| h.1).sum::<i32>() != 0 {
+                    continue;
+                }
+                let mut wind = low_side;
+                let mut from = f64::NEG_INFINITY;
+                let mut spans: Vec<(f64, f64)> = Vec::new();
+                for &(z, w) in &hits {
+                    let before = wind;
+                    wind += w;
+                    if before == 0 && wind != 0 {
+                        from = z;
+                    } else if before != 0 && wind == 0 {
+                        spans.push((from, z));
+                    }
+                }
+                for (z0, z1) in spans {
+                    for k in self.range(2, z0.max(b.min[2]), z1.min(b.max[2])) {
+                        let z = self.ax[2][k];
+                        if z > z0 && z < z1 {
+                            let idx = self.idx(i, j, k);
+                            self.mark(idx, soft_penalty);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /// Nodes whose cell touches the box.
     pub fn nodes_in(&self, b: &Aabb) -> Vec<usize> {
         let r = [0, 1, 2].map(|a| self.range(a, b.min[a], b.max[a]));
@@ -320,6 +387,25 @@ impl Grid {
         }
         Some(self.idx(c[0], c[1], c[2]))
     }
+}
+
+/// Crossing of the vertical line through (x, y) with a triangle: height and winding sign
+/// (+1 where the line enters the solid going up, i.e. the face points down).
+fn vertical_hit(t: &Tri, x: f64, y: f64) -> Option<(f64, i32)> {
+    let (a, b, c) = (t[0], t[1], t[2]);
+    let nz = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+    if nz.abs() < 1e-12 {
+        return None;
+    }
+    // Barycentric coordinates of (x, y) in the projected triangle.
+    let l1 = ((b[1] - c[1]) * (x - c[0]) + (c[0] - b[0]) * (y - c[1])) / nz;
+    let l2 = ((c[1] - a[1]) * (x - c[0]) + (a[0] - c[0]) * (y - c[1])) / nz;
+    let l3 = 1.0 - l1 - l2;
+    if l1 < 0.0 || l2 < 0.0 || l3 < 0.0 {
+        return None;
+    }
+    let z = l1 * a[2] + l2 * b[2] + l3 * c[2];
+    Some((z, if nz < 0.0 { 1 } else { -1 }))
 }
 
 #[cfg(test)]

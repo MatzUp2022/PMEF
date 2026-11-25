@@ -764,6 +764,23 @@ fn line_list_routes_pid_lines_in_the_3d_scene() {
     assert_eq!(out.routes[0].dn, 100);
     assert!(out.skipped_lines.is_empty());
 
+    // Project class codes are mapped to catalog classes.
+    let mut files2 = files.clone();
+    let pid = files2["pump-skid-pid.ndjson"]
+        .replace("\"pipeClass\":\"A1A2\"", "\"pipeClass\":\"75HB13\"");
+    files2.insert("pump-skid-pid.ndjson".into(), pid);
+    let read2 = |f: &str| files2.get(f).cloned().ok_or(format!("{f}: not given"));
+    let mut q = p.clone();
+    q.line_lists[0].lines = vec!["6\"-CW-202-A1A2".into()];
+    let out = pmef_route::run(q.clone(), None, &read2).unwrap();
+    assert!(!out.routes[0].ok, "unknown class 75HB13 must fail");
+    q.line_lists[0]
+        .class_map
+        .insert("75HB13".into(), "A1A2".into());
+    let out = pmef_route::run(q, None, &read2).unwrap();
+    assert!(out.routes[0].ok, "{:?}", out.routes[0].error);
+    assert_eq!(out.routes[0].pipe_class, "A1A2");
+
     // A missing file is an error, not a panic.
     let mut q = p;
     q.line_lists[0].file = "missing.ndjson".into();
@@ -802,5 +819,60 @@ fn line_list_route_ids_are_unique_across_the_problem() {
     for o in &out.objects {
         let id = o["@id"].as_str().unwrap();
         assert!(seen.insert(id.to_string()), "duplicate @id {id}");
+    }
+}
+
+/// Closed box as 12 outward-facing triangles.
+fn box_mesh(min: [f64; 3], max: [f64; 3]) -> pmef_route::geom::Mesh {
+    let c = |i: usize| {
+        [
+            if i & 1 == 0 { min[0] } else { max[0] },
+            if i & 2 == 0 { min[1] } else { max[1] },
+            if i & 4 == 0 { min[2] } else { max[2] },
+        ]
+    };
+    // (corner indices of each face, counter-clockwise seen from outside)
+    let quads = [
+        [0, 2, 3, 1],
+        [4, 5, 7, 6],
+        [0, 1, 5, 4],
+        [2, 6, 7, 3],
+        [0, 4, 6, 2],
+        [1, 3, 7, 5],
+    ];
+    let mut tris = Vec::new();
+    for q in quads {
+        tris.push([c(q[0]), c(q[1]), c(q[2])]);
+        tris.push([c(q[0]), c(q[2]), c(q[3])]);
+    }
+    pmef_route::geom::Mesh::new(tris)
+}
+
+#[test]
+fn no_turns_inside_a_thick_soft_mesh() {
+    // A 2 m thick block given as a mesh (not a box): only the nodes near its faces were soft, so
+    // a line could enter it, turn inside and leave through the side. The whole volume is soft.
+    let p = problem(json!({
+        "routes": [{
+            "id": "L1", "pipeClass": "A1A2", "dn": 100,
+            "from": {"point": [0, 0, 0], "direction": [1, 0, 0]},
+            "to": {"point": [2000, 6000, 0], "direction": [0, -1, 0]}
+        }]
+    }));
+    let mut s = scene(&p);
+    // Cheap penetration: entering through the -x face and turning inside towards the +y face
+    // (8.7 k) would beat going around (9.8 k) if the inside were free.
+    let (lo, hi) = ([1000.0, -5000.0, -5000.0], [3000.0, 5000.0, 5000.0]);
+    s.push(
+        "wall".into(),
+        pmef_route::problem::ObstacleKind::Soft,
+        100.0,
+        pmef_route::scene::Shape::Mesh(box_mesh(lo, hi)),
+    );
+    let r = route_all(&p, &s);
+    assert!(r[0].ok, "{:?}", r[0].error);
+    for q in &r[0].points[1..r[0].points.len() - 1] {
+        let inside = (0..3).all(|a| q[a] > lo[a] && q[a] < hi[a]);
+        assert!(!inside, "bend at {q:?} inside the wall: {:?}", r[0].points);
     }
 }

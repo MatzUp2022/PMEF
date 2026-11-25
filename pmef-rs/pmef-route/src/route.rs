@@ -611,6 +611,11 @@ fn rasterise(
                     for t in m.query(r) {
                         g.add_triangle(t, c.d, soft);
                     }
+                    // A soft solid (wall, slab) is a penetration over its whole thickness, not
+                    // only near its faces: otherwise a line could run along inside a thick wall.
+                    if soft.is_some() {
+                        g.fill_mesh_interior(m, r, soft);
+                    }
                 }
             }
         }
