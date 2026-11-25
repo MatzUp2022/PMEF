@@ -22,6 +22,9 @@ pub struct Obstacle {
     pub penalty: f64,
     pub shape: Shape,
     pub bounds: Aabb,
+    /// Structural steel that pipe supports may rest on (PMEF members, or `structural` in the
+    /// problem). Equipment, existing piping and other hard obstacles are not.
+    pub structural: bool,
 }
 
 /// Obstacles plus named nozzles (`<@id>#<mark>` → point, outward direction).
@@ -57,6 +60,7 @@ impl Scene {
             penalty,
             shape,
             bounds,
+            structural: false,
         });
     }
 
@@ -93,6 +97,9 @@ impl Scene {
                     s.push(o.id.clone(), o.kind, pen, Shape::Mesh(Mesh::new(tris)));
                 }
                 _ => return Err(SceneError::Shape(o.id.clone())),
+            }
+            if let Some(last) = s.obstacles.last_mut() {
+                last.structural = o.structural;
             }
         }
         Ok(s)
@@ -153,6 +160,9 @@ impl Scene {
                     0.0,
                     Shape::Box(Aabb::from_points(a, b).inflate(half)),
                 );
+                if let Some(last) = self.obstacles.last_mut() {
+                    last.structural = true;
+                }
                 continue;
             }
             if let Some(b) = o["geometry"]["boundingBox"].as_object() {

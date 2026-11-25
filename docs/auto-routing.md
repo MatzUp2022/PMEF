@@ -85,9 +85,10 @@ within the corridor, not necessarily over the whole region.
 straight length in front of it, e.g. pump suction or flow meter inlet, instead of
 `settings.terminalStraight`. `tracing` on a route adds a radial heat-tracing allowance to
 insulation. With `supports` (`maxSpan`, `reach`), pipe supports are placed on horizontal runs:
-first where hard box obstacles (PMEF steel members) lie within `reach` below the pipe, then in
-between so that no gap exceeds the maximum span and no run end is more than half a span from a
-support; supports stay off elbows and tees. The default span is the ASME B31.1 Table 121.5
+first where structural steel (PMEF steel members, or problem obstacles with `structural: true`)
+lies within `reach` below the pipe, then in between so that no gap exceeds the maximum span and
+no run end is more than half a span from a support; supports stay off elbows and tees, and gaps
+opened by moving a support off a tee are filled again. The default span is the ASME B31.1 Table 121.5
 suggestion (water service) for the largest tabulated size not above the line's size. Output:
 `pmef:PipeSupport` (`RESTING`, `structuralAttachmentId` when the steel is a PMEF object) with
 one port at the bearing point (pipe bottom), pointing down.

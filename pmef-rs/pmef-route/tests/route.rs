@@ -520,7 +520,7 @@ fn branch_routed_out_of_order_keeps_its_tee() {
 fn supports_sit_on_steel_and_keep_the_span() {
     // Straight DN 100 line at z = 0 over 20 m; two beams cross it (top 200 mm below the pipe
     // bottom, outside the clearance), at x = 4000 and x = 13000.
-    let beam = |id: &str, x: f64| json!({"id": id, "aabb": {"min": [x - 100.0, -1000, -300], "max": [x + 100.0, 1000, -257.15]}});
+    let beam = |id: &str, x: f64| json!({"id": id, "structural": true, "aabb": {"min": [x - 100.0, -1000, -300], "max": [x + 100.0, 1000, -257.15]}});
     let p = problem(json!({
         "obstacles": [beam("urn:pmef:obj:t:BM-1", 4000.0), beam("urn:pmef:obj:t:BM-2", 13000.0)],
         "supports": {},
@@ -580,4 +580,60 @@ fn terminal_straight_length_is_kept() {
         .map(|i| (r.points[n - 1][i] - r.points[n - 2][i]).abs())
         .sum::<f64>();
     assert!(last >= 152.0 + 1000.0, "{:?}", r.points);
+}
+
+#[test]
+fn supports_rest_only_on_structural_obstacles() {
+    // A hard box under the line that is not marked structural (e.g. equipment) is no support.
+    let p = problem(json!({
+        "obstacles": [{"id": "E-1", "aabb": {"min": [3900, -1000, -300], "max": [4100, 1000, -257.15]}}],
+        "supports": {},
+        "routes": [{
+            "id": "L1", "pipeClass": "A1A2", "dn": 100,
+            "from": {"point": [0, 0, 0], "direction": [1, 0, 0]},
+            "to": {"point": [10000, 0, 0], "direction": [-1, 0, 0]}
+        }]
+    }));
+    let r = &route_all(&p, &scene(&p))[0];
+    assert!(r.ok, "{:?}", r.error);
+    assert!(!r.supports.is_empty());
+    assert!(r.supports.iter().all(|s| s.steel.is_none()));
+}
+
+#[test]
+fn supports_keep_the_span_around_tees() {
+    // 17 200 mm header, span 4 300 mm: the fill puts a support at 6 450 mm, where the branch
+    // tee sits; moving it off the tee must not open a gap above the span.
+    let p = problem(json!({
+        "supports": {"maxSpan": 4300},
+        "routes": [{
+            "id": "H1", "pipeClass": "A1A2", "dn": 100,
+            "from": {"point": [0, 0, 0], "direction": [1, 0, 0]},
+            "to": {"point": [17200, 0, 0], "direction": [-1, 0, 0]},
+            "branches": [{"id": "B1", "to": {"point": [6450, 2000, 0], "direction": [0, -1, 0]}}]
+        }]
+    }));
+    let r = &route_all(&p, &scene(&p))[0];
+    assert!(r.ok, "{:?} {:?}", r.error, r.branches);
+    let tee = r.branches[0].points[0];
+    assert_eq!(tee, [6450.0, 0.0, 0.0]);
+    let run_c2e = r.tee.as_ref().unwrap().run_c2e;
+    let xs: Vec<f64> = r
+        .supports
+        .iter()
+        .filter(|s| s.on == 0)
+        .map(|s| s.point[0])
+        .collect();
+    assert!(
+        xs.iter().all(|x| (x - tee[0]).abs() >= run_c2e - 1e-6),
+        "{xs:?}"
+    );
+    assert!(
+        xs.windows(2).all(|w| w[1] - w[0] <= 4300.0 + 1e-6),
+        "{xs:?}"
+    );
+    assert!(
+        xs[0] <= 2150.0 + 1e-6 && 17200.0 - xs.last().unwrap() <= 2150.0 + 1e-6,
+        "{xs:?}"
+    );
 }

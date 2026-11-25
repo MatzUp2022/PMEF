@@ -280,7 +280,7 @@ fn place_supports(l: &mut RoutedLine, scene: &Scene, set: &crate::problem::Suppo
     let steel: Vec<(&str, Aabb)> = scene
         .obstacles
         .iter()
-        .filter(|o| o.kind == ObstacleKind::Hard)
+        .filter(|o| o.kind == ObstacleKind::Hard && o.structural)
         .filter_map(|o| match o.shape {
             Shape::Box(b) => Some((o.id.as_str(), b)),
             Shape::Mesh(_) => None,
@@ -383,18 +383,50 @@ fn place_supports(l: &mut RoutedLine, scene: &Scene, set: &crate::problem::Suppo
                 fill.extend((1..=m).map(|i| last + i as f64 * span));
             }
             pos.extend(fill.into_iter().map(|t| t.clamp(lo, hi)));
-            pos.sort_by(f64::total_cmp);
-            pos.dedup_by(|x, y| (*x - *y).abs() < 1.0);
-            for t in pos {
-                // Shift off a tee body on this run.
+            // Tee centres on this run (distance from `a`): a support must stay `run_c2e` off.
+            let tee_ts: Vec<f64> = tees
+                .iter()
+                .filter(|tc| (0..3).all(|i| i == ax || (tc[i] - a[i]).abs() < 1e-6))
+                .map(|tc| (tc[ax] - a[ax]) * sign)
+                .filter(|tt| *tt > lo - run_c2e && *tt < hi + run_c2e)
+                .collect();
+            let off_tee = |t: f64| {
                 let mut t = t;
-                for tc in &tees {
-                    let d = (0..3).map(|i| (tc[i] - at(t)[i]).abs()).sum::<f64>();
-                    if d < run_c2e {
-                        let tt = (tc[ax] - a[ax]) * sign;
-                        t = if t < tt { tt - run_c2e } else { tt + run_c2e };
+                for tt in &tee_ts {
+                    if (t - tt).abs() < run_c2e {
+                        t = if t < *tt { tt - run_c2e } else { tt + run_c2e };
                     }
                 }
+                t
+            };
+            // Shift supports off tees, then refill gaps the shift opened (a few rounds: a new
+            // support may land on a tee again).
+            for _ in 0..8 {
+                for t in pos.iter_mut() {
+                    *t = off_tee(*t);
+                }
+                pos.sort_by(f64::total_cmp);
+                pos.dedup_by(|x, y| (*x - *y).abs() < 1.0);
+                let mut add = Vec::new();
+                for w in pos.windows(2) {
+                    let m = ((w[1] - w[0]) / span - 1e-9).ceil().max(1.0) as usize;
+                    let g = (w[1] - w[0]) / m as f64;
+                    add.extend((1..m).map(|i| w[0] + i as f64 * g));
+                }
+                if let (Some(f), Some(l)) = (pos.first().copied(), pos.last().copied()) {
+                    if f - lo > span / 2.0 + 1e-6 {
+                        add.push((f - span).max(lo));
+                    }
+                    if hi - l > span / 2.0 + 1e-6 {
+                        add.push((l + span).min(hi));
+                    }
+                }
+                if add.is_empty() {
+                    break;
+                }
+                pos.extend(add);
+            }
+            for t in pos {
                 let p = at(t);
                 let mut bearing = p;
                 bearing[2] -= outer;

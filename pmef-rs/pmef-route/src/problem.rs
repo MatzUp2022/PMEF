@@ -164,6 +164,9 @@ pub struct ObstacleSpec {
     /// OBJ file (triangles, mm), relative to the problem file.
     #[serde(default)]
     pub obj: Option<String>,
+    /// Structural steel: pipe supports may rest on it (only box obstacles).
+    #[serde(default)]
+    pub structural: bool,
 }
 
 /// Region with a cost factor (< 1 = preferred corridor such as a pipe rack, > 1 = avoid).
