@@ -56,6 +56,10 @@ chrono        = { version = "0.4", features = ["serde"] }
 # CLI
 clap          = { version = "4", features = ["derive"] }
 
+# PMEFX container (spec 03 §3, RFC-0005)
+zip           = { version = "2", default-features = false, features = ["deflate"] }
+sha2          = "0.10"
+
 # Numeric / geometry
 nalgebra      = "0.32"
 

@@ -217,7 +217,8 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
 ### P3 — maturity
 
 - **P3.1** Unit tests for `pmef-cli`.
-- **P3.2** PMEFX reader/writer in `pmef-io`.
+- **P3.2** ~~PMEFX reader/writer in `pmef-io`.~~ Done 2026-11-25: `pmef_io::pmefx`, CLI
+  `pack`/`unpack`/`verify` (RFC-0005).
 - **P3.3** Migrate `validate-examples.py` from `RefResolver` to `referencing`.
 - **P3.4** Rust dependency section in THIRD-PARTY-NOTICES.md; SBOM in releases.
 - **P3.5** Machine-readable standards crosswalks with round-trip tests (DEXPI, IFC, CAEX).

@@ -171,9 +171,30 @@ References between PMEF objects are expressed via `@id` values. The following ru
 
 ### 3.1 Overview
 
-A PMEFX file is a ZIP archive that bundles one or more PMEF
-NDJSON files with associated geometry assets. It uses the file
-extension `.pmefx`.
+A PMEFX file is a ZIP archive that bundles one or more PMEF NDJSON files with the geometry
+and documents that belong to them. It uses the file extension `.pmefx` and the media type
+`application/vnd.pmef.pmefx+zip`.
+
+PMEFX is a *package around* PMEF, not a second data model: attributes, topology and catalog
+references live only in the NDJSON records. Version 1.0 of the container
+([RFC-0005](rfc/0005-pmefx-object-index.md)) adds an **object index** that links every object,
+by its stable `@id`, to three representations:
+
+| Representation | Purpose | Format |
+|---|---|---|
+| NDJSON record | attributes, topology, catalog snap | PMEF NDJSON (this chapter §2) |
+| Mesh levels of detail | fast display, streaming | glTF 2.0 binary (`.glb`), coarse → fine |
+| Exact B-rep | editing, fabrication, clash with tolerances | STEP AP242 (ISO 10303-242) |
+
+A viewer reads `manifest.json` and the object index, decides from bounding boxes and the
+optional spatial index (§3.7) what is visible, and then range-reads only the meshes it needs.
+B-reps are read only when an object is opened for editing. The `@id` is the link key: PMEFX
+introduces no second identifier (no extra UUID), so diffs, merges and as-built correspondences
+(§9, §10, RFC-0003) keep working on packaged data.
+
+The schema `schemas/pmefx-manifest.schema.json` is normative together with this section. Its
+root validates `manifest.json`, `$defs/ObjectEntry` validates each object index line and
+`$defs/Octree` validates the spatial index.
 
 ### 3.2 Archive Structure
 
@@ -181,13 +202,22 @@ extension `.pmefx`.
 my-plant.pmefx  (ZIP archive)
 ├── manifest.json           — package manifest (REQUIRED)
 ├── model/
-│   ├── main.ndjson         — primary PMEF NDJSON file
+│   ├── main.ndjson         — primary PMEF NDJSON file (REQUIRED)
 │   ├── ei.ndjson           — E&I objects (optional split)
 │   └── steel.ndjson        — structural objects (optional split)
+├── index/
+│   ├── objects.ndjson      — object index (REQUIRED in 1.0)
+│   └── octree.json         — spatial index (optional)
+├── meshes/
+│   ├── obj_proj_P-201A.bbox.glb    — BBOX_ONLY level
+│   ├── obj_proj_P-201A.lod1.glb    — LOD1_COARSE level
+│   └── obj_proj_P-201A.lod3.glb    — LOD3_FINE level
+├── brep/
+│   └── obj_proj_P-201A.stp — exact geometry, STEP AP242
 ├── geometry/
-│   ├── model.glb           — glTF 2.0 geometry (optional)
+│   ├── model.glb           — whole-model glTF 2.0 (optional)
 │   ├── model.usdc          — OpenUSD geometry (optional)
-│   └── model.stp           — STEP AP242 (optional)
+│   └── model.stp           — whole-model STEP AP242 (optional)
 ├── catalogs/
 │   ├── piping-class-a1a2.json
 │   └── profiles-en.json
@@ -196,37 +226,72 @@ my-plant.pmefx  (ZIP archive)
     └── ISO-CW-201-Rev2.pdf
 ```
 
+Only `manifest.json` and the files it names are fixed; the directory names above are the
+recommended layout. Rules:
+
+1. The archive **MUST** be a ZIP file (APPNOTE 6.3.x). ZIP64 extensions **MUST** be used for
+   entries or archives larger than 4 GiB. Encryption and multi-volume archives **MUST NOT** be
+   used.
+2. Entry paths **MUST** be relative, use `/` as separator and **MUST NOT** contain empty, `.`
+   or `..` segments, backslashes or colons. Readers **MUST** reject paths that escape the
+   extraction directory.
+3. Every entry other than `manifest.json` **MUST** be listed in `manifest.files`, and every
+   listed file **MUST** exist.
+4. Entries of type `gltf`, `step` and `usd` **MUST** be stored without compression (ZIP method
+   0), so that readers can range-read them over HTTP or memory-map them. Other entries
+   **SHOULD** use Deflate.
+5. Writers **SHOULD** produce reproducible archives: entries in a deterministic order and a
+   fixed entry timestamp, so identical content yields identical bytes.
+
 ### 3.3 Manifest
 
 The `manifest.json` file **MUST** be present at the root of the archive.
 
-Required manifest fields:
+| Field | Required | Description |
+|-------|----------|-------------|
+| `pmefxVersion` | **MUST** (1.0) | Container version, `"1.0"`. Absent in 0.9 manifests; readers treat its absence as a 0.9 package without object index. |
+| `pmefVersion` | **MUST** | PMEF data version of the NDJSON files |
+| `packageId` | **MUST** | `@id` of the main file's `pmef:FileHeader` |
+| `mainFile` | **MUST** | Relative path to the primary NDJSON file |
+| `files` | **MUST** | All archive entries except `manifest.json`: `path`, `type` (`ndjson`, `gltf`, `step`, `usd`, `catalog`, `document`, `index`, `other`), `sizeBytes`, `sha256`, and `objects` for NDJSON files |
+| `createdAt` | **MUST** | ISO 8601 timestamp |
+| `coordinateSystem` | **MUST** | `"Z-up"` or `"Y-up"` |
+| `objectIndex` | **MUST** (1.0) | Path of the object index (§3.5), recommended `index/objects.ndjson` |
+| `objectCount` | SHOULD | Number of object index lines |
+| `spatialIndex` | MAY | Path of the spatial index (§3.7), recommended `index/octree.json` |
+| `meshOrigin` | MAY | Origin of all mesh assets in project coordinates, `{x, y, z}` [mm] (§3.6). Default `0,0,0`. |
+| `generator` | MAY | `{name, version}` of the writing software |
 
-| Field | Description |
-|-------|-------------|
-| `pmefVersion` | PMEF version |
-| `packageId` | `@id` of the `pmef:FileHeader` object |
-| `mainFile` | Relative path to the primary NDJSON file |
-| `files` | Array of all files in the archive with type and path |
-| `createdAt` | ISO 8601 timestamp |
-| `coordinateSystem` | `"Z-up"` or `"Y-up"` |
+`sha256` is the lower-case hexadecimal SHA-256 of the uncompressed entry; writers **SHOULD**
+provide it for every file and readers **MUST** report a mismatch.
 
 Example manifest:
 
 ```json
 {
+  "pmefxVersion": "1.0",
   "pmefVersion": "0.9.0",
   "packageId": "urn:pmef:pkg:proj:my-plant",
   "mainFile": "model/main.ndjson",
   "coordinateSystem": "Z-up",
   "createdAt": "2026-03-31T10:00:00Z",
   "files": [
-    {"path": "model/main.ndjson", "type": "ndjson", "objects": 1250},
-    {"path": "model/ei.ndjson", "type": "ndjson", "objects": 340},
-    {"path": "geometry/model.glb", "type": "gltf", "sizeBytes": 48200000}
-  ]
+    {"path": "model/main.ndjson", "type": "ndjson", "objects": 1250, "sizeBytes": 812400, "sha256": "…"},
+    {"path": "meshes/obj_proj_P-201A.lod1.glb", "type": "gltf", "sizeBytes": 18320, "sha256": "…"},
+    {"path": "brep/obj_proj_P-201A.stp", "type": "step", "sizeBytes": 402112, "sha256": "…"},
+    {"path": "index/objects.ndjson", "type": "index", "sizeBytes": 301877, "sha256": "…"},
+    {"path": "index/octree.json", "type": "index", "sizeBytes": 40210, "sha256": "…"}
+  ],
+  "meshOrigin": {"x": 125000.0, "y": 48000.0, "z": 0.0},
+  "objectIndex": "index/objects.ndjson",
+  "objectCount": 1250,
+  "spatialIndex": "index/octree.json",
+  "generator": {"name": "pmef-io", "version": "0.9.0"}
 }
 ```
+
+A complete manifest and index generated from `examples/pump-skid-complete.ndjson` are in
+`examples/pmefx/pump-skid-complete/`.
 
 ### 3.4 Split File Packages
 
@@ -237,6 +302,101 @@ within a PMEFX archive. The rules for split packages are:
 2. All `pmef:FileHeader` objects in a split package **MUST** reference the same `plantId`.
 3. Cross-file `isPartOf` and other references **MUST** use the full `urn:pmef:` URI (not a relative path).
 4. The manifest **MUST** list all NDJSON files.
+5. An `@id` **MUST** be unique across all NDJSON files of the package.
+
+### 3.5 Object Index
+
+The object index is an NDJSON file with one entry per PMEF object of the package (including
+the `pmef:FileHeader` and hierarchy objects), sorted by `id`.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `id` | **MUST** | The object's `@id` |
+| `type` | **MUST** | The object's `@type` |
+| `record` | **MUST** | `{path, line}`: NDJSON file and 1-based physical line that holds the object |
+| `bbox` | SHOULD | Axis-aligned bounding box in project coordinates [mm] (`xMin` … `zMax`) |
+| `lods` | MAY | Mesh levels of detail (below) |
+| `brep` | MAY | `{path, format}`: exact geometry; `format` is `step` (AP242) or a vendor extension `x-<name>` |
+
+`bbox` **SHOULD** be the object's `geometry.boundingBox`. Where that is absent, writers
+**MAY** derive it from the object's anchor points (`coordinate`, `center`, `startPoint`,
+`endPoint`), grown by half the largest `nominalDiameter`/`outsideDiameter`; objects without a
+box with extent carry no `bbox`.
+
+Each entry of `lods`:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `lod` | **MUST** | `BBOX_ONLY`, `LOD1_COARSE`, `LOD2_MEDIUM`, `LOD3_FINE`, `LOD4_FABRICATION` (spec 02 §2.4) |
+| `path` | **MUST** | Archive path of a glTF 2.0 binary |
+| `triangles` | SHOULD | Triangle count |
+| `vertexCount` | SHOULD | Vertex count — lets viewers check GPU budgets before loading |
+| `errorMm` | SHOULD | Largest geometric deviation from the finest available representation [mm] (a Hausdorff-distance estimate is sufficient); drives screen-space-error LOD selection |
+| `sizeBytes` | MAY | Size of the `.glb` |
+
+`lods` **MUST** be ordered coarse to fine, and each level **MUST** occur at most once per
+object. Readers that find no `errorMm` **SHOULD** fall back to the projected size of the
+object's bounding sphere.
+
+Example line:
+
+```json
+{"id":"urn:pmef:obj:proj:P-201A","type":"pmef:Pump","record":{"path":"model/main.ndjson","line":17},"bbox":{"xMin":124100.0,"xMax":125900.0,"yMin":47600.0,"yMax":48400.0,"zMin":0.0,"zMax":1250.0},"lods":[{"lod":"BBOX_ONLY","path":"meshes/obj_proj_P-201A.bbox.glb","triangles":12,"vertexCount":24,"sizeBytes":1704},{"lod":"LOD1_COARSE","path":"meshes/obj_proj_P-201A.lod1.glb","triangles":420,"vertexCount":260,"errorMm":35.0,"sizeBytes":18320},{"lod":"LOD3_FINE","path":"meshes/obj_proj_P-201A.lod3.glb","triangles":21800,"vertexCount":11400,"errorMm":0.5,"sizeBytes":702044}],"brep":{"path":"brep/obj_proj_P-201A.stp","format":"step"}}
+```
+
+### 3.6 Mesh Assets
+
+Mesh assets are self-contained glTF 2.0 binaries (one `.glb` per object and level). glTF is
+Y-up and metre-based; PMEF project coordinates are Z-up millimetres (spec 02 §2.7). A project
+point `p` maps to glTF coordinates relative to `o = manifest.meshOrigin` as
+
+```text
+gltf = ( (p.x − o.x) / 1000,  (p.z − o.z) / 1000,  −(p.y − o.y) / 1000 )
+```
+
+This is a proper rotation plus scaling, so triangle winding is preserved. `meshOrigin` keeps
+vertex values small enough for 32-bit floats in plants with large site coordinates; writers
+**SHOULD** set it near the centre of the package extent. Mesh vertices are in final project
+position (no per-object transform is applied by the reader). A mesh **SHOULD** name its root
+node after the object's `@id` and carry it in `extras.pmefId`, so that picking can be mapped
+back to the object.
+
+### 3.7 Spatial Index
+
+The optional spatial index is a loose octree over the object bounding boxes:
+
+```json
+{"maxDepth": 8, "maxObjectsPerNode": 64,
+ "root": {"bbox": {…}, "objects": ["urn:pmef:…"], "children": [{"bbox": {…}, "objects": […], "children": […]}]}}
+```
+
+1. Cells subdivide regularly into octants, starting from the union of all object boxes. An
+   object is stored in the deepest node whose cell fully contains its box, so it **MUST**
+   appear in exactly one node.
+2. A node's `bbox` is *loose*: the union of all object boxes in its subtree. It **MUST**
+   enclose its objects and its children's boxes, and may extend beyond the node's cell.
+3. Every object index entry with a `bbox` **MUST** appear in the octree; entries without
+   `bbox` **MUST NOT**.
+
+Viewers cull against the loose boxes and load a node's meshes only when it is visible.
+
+### 3.8 Choice of ZIP (and not HDF5)
+
+ZIP with stored mesh entries already gives random access (central directory, byte offsets,
+HTTP range requests), streaming writes and ZIP64 for archives beyond 4 GiB, and it can be
+inspected with standard tools. HDF5 is not used in 1.0: it adds a large native dependency,
+is hard to read in browsers (WebAssembly) and offers no advantage for per-object binary blobs.
+A future version may add an HDF5 or chunked-store variant if measured packages show that the
+ZIP central directory or the object index becomes the bottleneck (order of 10⁷ objects);
+such a variant would keep the manifest and index model unchanged.
+
+### 3.9 Conformance
+
+A conformant writer produces archives that satisfy §3.2–§3.7. A conformant reader checks at
+least: manifest schema, the listing rule (§3.2 rule 3), sizes and `sha256`, stored geometry
+entries, the `FileHeader` first line of each NDJSON file, that each `record` points to the
+object with that `@id`, LOD ordering, and the octree rules. The reference implementation is
+`pmef_io::pmefx` with the CLI commands `pmef pack`, `pmef unpack` and `pmef verify`.
 
 ---
 
