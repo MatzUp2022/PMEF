@@ -338,10 +338,19 @@ def run_mode(pmef, d, mode):
         prob["obstacles"] = [o for o in prob["obstacles"] if o["kind"] != "soft"]
     path = os.path.join(d, f"problem-{mode}.json")
     json.dump(prob, open(path, "w"), indent=1)
+    routed, report = os.path.join(d, f"routed-{mode}.ndjson"), os.path.join(d, f"report-{mode}.json")
+    # Stale outputs of an earlier run must never stand in for this one.
+    for f in (routed, report):
+        if os.path.exists(f):
+            os.remove(f)
     t0 = time.time()
-    subprocess.run([pmef, "route", path, "-o", os.path.join(d, f"routed-{mode}.ndjson"),
-                    "--report", os.path.join(d, f"report-{mode}.json")], capture_output=True, text=True, timeout=1800)
-    rep = json.load(open(os.path.join(d, f"report-{mode}.json")))[0]
+    # A non-zero exit with a report means unroutable lines (reported per route); no report
+    # means the router itself failed.
+    res = subprocess.run([pmef, "route", path, "-o", routed, "--report", report],
+                         capture_output=True, text=True, timeout=1800)
+    if not os.path.exists(report):
+        raise RuntimeError(f"pmef route failed for {path} (exit {res.returncode}): {res.stderr.strip()}")
+    rep = json.load(open(report))[0]
     rep["seconds"] = round(time.time() - t0, 1)
     return rep
 
