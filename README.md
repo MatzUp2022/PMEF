@@ -107,11 +107,12 @@ schemas/
   pmef-piping-component.schema.json — PipingNetworkSystem → PipingSegment → 11 component types
   pmef-equipment.schema.json        — 10 equipment types (Vessel, Pump, HX, Column, Reactor…)
   pmef-steel.schema.json            — SteelSystem, SteelMember, SteelNode, SteelConnection
-  pmef-ei.schema.json               — instruments, loops, PLC, cables, cable trays, MTP modules
+  pmef-ei.schema.json               — instruments, loops, PLC, cables, cable trays + fittings, MTP modules
+  pmef-hvac.schema.json             — DuctNetworkSystem → DuctSegment → ducts, bends, transitions, dampers…
   pmef-relationships.schema.json    — typed relationships (IsConnectedTo, HasEquivalentIn, …)
   pmef-geometry.schema.json         — 15 parametric primitives
   pmef-property-sets.schema.json    — property-set definitions (CFIHOS-aligned)
-  pmef-catalog.schema.json          — piping classes, profiles, dimensions, materials, RDL maps
+  pmef-catalog.schema.json          — piping classes, profiles, dimensions, materials, ducts, supports, cables, RDL maps
 ```
 
 ---

@@ -14,6 +14,7 @@ Status values (issue template): `DRAFT` → `REVIEW` → `APPROVED` / `REJECTED`
 | [0003](0003-as-built-correspondence.md) | Persisted as-built ↔ design correspondence | 0.10.0 | `REVIEW` | [#8](https://github.com/MatzUp2022/PMEF/issues/8) | `AS_BUILT` is not a content revision in delta packages (TSC) |
 | [0004](0004-polytropic-efficiency-camelcase.md) | `polytropicEfficiency` camelCase spelling | 0.10.0 / 1.0.0 | `APPROVED` | — | — |
 | [0005](0005-pmefx-object-index.md) | PMEFX 1.0: object index, mesh LODs, exact B-rep, octree | 0.10.0 | `DRAFT` | [#15](https://github.com/MatzUp2022/PMEF/issues/15) | LOD error metric; ZIP vs. HDF5 criteria (WG-Serialisation) |
+| [0006](0006-hvac-ducts-tray-fittings-catalogs.md) | HVAC duct domain, cable tray fittings, support and cable catalogs | 0.10.0 | `DRAFT` | — | Air terminals/AHUs, duct hangers, tray supports (follow-ups) |
 
 RFCs 0001–0003 are fully implemented in this repository (schemas, spec text, Rust reference
 implementation, examples, tests in CI); each RFC's *Review Status* section lists the evidence.

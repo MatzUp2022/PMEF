@@ -110,6 +110,8 @@ pub struct CableObject {
     pub from_id: PmefId,
     pub to_id: PmefId,
     #[serde(skip_serializing_if="Option::is_none")] pub route_length:Option<f64>,
+    /// Cable type from a CABLE_TYPES catalog (RFC-0006).
+    #[serde(default, skip_serializing_if="Option::is_none")] pub catalog_ref:Option<crate::catalog::CatalogReference>,
     #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
     /// RFC-0001 provenance / review / asBuilt blocks.
     #[serde(flatten, default)]
@@ -129,6 +131,35 @@ pub struct CableTrayRun {
     #[serde(skip_serializing_if="Option::is_none")] pub fill_level:Option<f64>,
     #[serde(skip_serializing_if="Option::is_none")] pub reserve_capacity:Option<f64>,
     #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
+}
+
+/// Bend, tee, cross, reducer, riser or end piece joining cable tray runs (RFC-0006).
+#[derive(Debug,Clone,Serialize,Deserialize)]
+#[serde(rename_all="camelCase")]
+#[allow(missing_docs)]
+pub struct CableTrayFitting {
+    #[serde(rename="@type")] pub entity_type: String,
+    #[serde(rename="@id")] pub id: PmefId,
+    pub is_part_of: PmefId,
+    pub fitting_mark: String,
+    /// HORIZONTAL_BEND, VERTICAL_BEND_UP/DOWN, TEE, CROSS, REDUCER, OFFSET, RISER, END_PIECE.
+    pub fitting_type: String,
+    #[serde(default, skip_serializing_if="Option::is_none")] pub tray_type:Option<String>,
+    /// Main width [mm].
+    pub width: f64,
+    #[serde(default, skip_serializing_if="Option::is_none")] pub height:Option<f64>,
+    #[serde(default, skip_serializing_if="Option::is_none")] pub branch_width:Option<f64>,
+    #[serde(default, skip_serializing_if="Option::is_none")] pub angle:Option<f64>,
+    /// Inner bend radius [mm].
+    #[serde(default, skip_serializing_if="Option::is_none")] pub bend_radius:Option<f64>,
+    #[serde(default, skip_serializing_if="Option::is_none")] pub material:Option<String>,
+    #[serde(default, skip_serializing_if="Vec::is_empty")] pub connected_tray_ids:Vec<PmefId>,
+    #[serde(default, skip_serializing_if="Option::is_none")] pub catalog_ref:Option<crate::catalog::CatalogReference>,
+    #[serde(default, skip_serializing_if="Option::is_none")] pub geometry:Option<crate::geometry::GeometryReference>,
+    #[serde(default, skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
     /// RFC-0001 provenance / review / asBuilt blocks.
     #[serde(flatten, default)]
     pub recognition: crate::provenance::RecognitionMetadata,

@@ -342,6 +342,57 @@ def check_piping_classes():
                         bad(w, f"{k} {e[k]} vs {ref[rk]} in the flange dimension catalog")
 
 
+# ── duct sizes, pipe supports, cable types (RFC-0006) ─────────────────────────
+
+def check_ducts():
+    f = "duct-dimensions-en.json"
+    prev = {}
+    for e in load(f)["entries"]:
+        w = f"{f}:{e['catalogId']}"
+        checked[f] = checked.get(f, 0) + 1
+        if e["series"] == "ROUND" and "area_m2" in e:
+            close(w, "area_m2", e["area_m2"], math.pi * (e["size_mm"] / 1000) ** 2 / 4, 0.001)
+        if e["size_mm"] <= prev.get(e["series"], 0):
+            bad(w, f"{e['series']} size {e['size_mm']} not larger than the previous one")
+        prev[e["series"]] = e["size_mm"]
+
+
+def check_supports():
+    f = "pipe-supports-generic.json"
+    codes = set()
+    for e in load(f)["entries"]:
+        w = f"{f}:{e['supportCode']}"
+        checked[f] = checked.get(f, 0) + 1
+        if e["supportCode"] in codes:
+            bad(w, "duplicate supportCode")
+        codes.add(e["supportCode"])
+        if e["dnMin"] > e["dnMax"]:
+            bad(w, f"dnMin {e['dnMin']} > dnMax {e['dnMax']}")
+        if e["supportType"] == "ANCHOR" and set(e["restraints"]) != {"AXIAL", "LATERAL", "VERTICAL_DOWN", "VERTICAL_UP", "ROTATION"}:
+            bad(w, "ANCHOR must restrain all degrees of freedom")
+        if e["supportType"] == "GUIDE" and "LATERAL" not in e["restraints"]:
+            bad(w, "GUIDE must restrain LATERAL")
+        if e["supportType"].startswith("SPRING") and "travel_mm" not in e:
+            bad(w, "spring support without travel_mm")
+
+
+def check_cables():
+    f = "cable-types-en.json"
+    names = set()
+    for e in load(f)["entries"]:
+        w = f"{f}:{e['designation']}"
+        checked[f] = checked.get(f, 0) + 1
+        if e["designation"] in names:
+            bad(w, "duplicate designation")
+        names.add(e["designation"])
+        if e.get("numberOfPairs", 0) * 2 > e["numberOfCores"]:
+            bad(w, f"{e['numberOfPairs']} pairs need at least {2 * e['numberOfPairs']} cores")
+        core_area = e["numberOfCores"] * e["crossSection_mm2"]
+        od = e.get("outerDiameter_mm")
+        if od and math.pi * od * od / 4 <= core_area:
+            bad(w, f"outer diameter {od} mm cannot hold {core_area:g} mm² of conductor")
+
+
 def main():
     global CAT
     if "--dir" in sys.argv:
@@ -350,6 +401,9 @@ def main():
     check_pipes()
     check_flanges()
     check_piping_classes()
+    check_ducts()
+    check_supports()
+    check_cables()
     if "--verbose" in sys.argv:
         for k, v in sorted(checked.items()):
             print(f"  {k}: {v} checks")

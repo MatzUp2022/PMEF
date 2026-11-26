@@ -45,3 +45,37 @@ fn parses_nps_designations() {
     assert_eq!(pmef_catalogs::parse_nps("2.5"), Some(2.5));
     assert_eq!(pmef_catalogs::parse_nps("abc"), None);
 }
+
+#[test]
+fn duct_sizes_round_and_rectangular() {
+    use pmef_catalogs::{duct_sizes, next_duct_size, DuctSeries};
+    let round = duct_sizes(DuctSeries::Round);
+    assert!(round.windows(2).all(|w| w[0].size_mm < w[1].size_mm));
+    for e in &round {
+        let a = std::f64::consts::PI * (e.size_mm / 1000.0).powi(2) / 4.0;
+        assert!((e.area_m2.unwrap() - a).abs() < 1e-6, "{}", e.id);
+    }
+    assert_eq!(next_duct_size(DuctSeries::Round, 380.0), Some(400.0));
+    assert_eq!(next_duct_size(DuctSeries::Rectangular, 350.0), Some(400.0));
+    assert_eq!(next_duct_size(DuctSeries::Round, 5000.0), None);
+}
+
+#[test]
+fn pipe_supports_by_dn_and_restraint() {
+    let guides = pmef_catalogs::supports_for(100, &["VERTICAL_DOWN", "LATERAL"]);
+    assert!(guides.iter().any(|s| s.support_code == "GS-SHOE"));
+    assert!(!guides.iter().any(|s| s.support_code == "RS-SHOE"));
+    let anchors = pmef_catalogs::supports_for(200, &["AXIAL", "ROTATION"]);
+    assert_eq!(anchors.len(), 1);
+    assert_eq!(anchors[0].support_type, "ANCHOR");
+    assert!(pmef_catalogs::supports_for(10, &[]).is_empty());
+}
+
+#[test]
+fn cable_types_carry_bend_radius() {
+    let c = pmef_catalogs::cable_type("NYY-J 5x2.5").unwrap();
+    assert_eq!(c.number_of_cores, 5);
+    assert_eq!(c.min_bend_radius_mm(), Some(14.0 * 12.0));
+    assert!(pmef_catalogs::cable_type("NOPE").is_none());
+    assert!(pmef_catalogs::cable_types().iter().all(|c| c.min_bend_radius_mm().is_some()));
+}

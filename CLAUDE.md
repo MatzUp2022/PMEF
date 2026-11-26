@@ -27,7 +27,8 @@ PMEF is the backbone data model for a recognition product that builds plant mode
 
 ## Scope (current focus)
 
-Active: Piping, Structural Steel, Equipment. Adapters: AVEVA E3D and AutoCAD Plant 3D only.
+Active: Piping, Structural Steel, Equipment, HVAC (RFC-0006). E&I is extended only on request
+(RFC-0006 added cable tray fittings and the cable catalog). Adapters: AVEVA E3D and AutoCAD Plant 3D only.
 All other disciplines/adapters are frozen: do not extend them unless explicitly asked.
 
 ## Conventions

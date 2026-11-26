@@ -43,8 +43,12 @@ pub fn schema_for_type(type_str: &str) -> Option<&'static str> {
         "pmef:Filter" | "pmef:Turbine" | "pmef:GenericEquipment"
             => Some("pmef-equipment.schema.json"),
         "pmef:InstrumentObject" | "pmef:InstrumentLoop" | "pmef:PLCObject" |
-        "pmef:CableObject" | "pmef:CableTrayRun" | "pmef:MTPModule"
+        "pmef:CableObject" | "pmef:CableTrayRun" | "pmef:CableTrayFitting" | "pmef:MTPModule"
             => Some("pmef-ei.schema.json"),
+        "pmef:DuctNetworkSystem" | "pmef:DuctSegment" | "pmef:Duct" | "pmef:DuctBend" |
+        "pmef:DuctTransition" | "pmef:DuctBranch" | "pmef:DuctDamper" |
+        "pmef:DuctAccessDoor" | "pmef:DuctTestPort"
+            => Some("pmef-hvac.schema.json"),
         "pmef:SteelSystem" | "pmef:SteelMember" | "pmef:SteelNode" | "pmef:SteelConnection"
             => Some("pmef-steel.schema.json"),
         "pmef:ParametricGeometry" => Some("pmef-geometry.schema.json"),

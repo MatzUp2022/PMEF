@@ -370,6 +370,156 @@
       "expect": "valid"
     },
     {
+      "id": "EI-U-009",
+      "name": "CableTrayFitting — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "ei",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/EI-U-009.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "EI-U-010",
+      "name": "CableTrayFitting with unknown fittingType — rejected",
+      "category": "negative",
+      "level": 2,
+      "domain": "ei",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/EI-U-010.ndjson",
+      "expect": "invalid"
+    },
+    {
+      "id": "HVAC-U-001",
+      "name": "DuctNetworkSystem — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/HVAC-U-001.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "HVAC-U-002",
+      "name": "DuctSegment — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/HVAC-U-002.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "HVAC-U-003",
+      "name": "Duct (round, spiral) — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/HVAC-U-003.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "HVAC-U-004",
+      "name": "DuctBend — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/HVAC-U-004.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "HVAC-U-005",
+      "name": "DuctTransition round to square — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/HVAC-U-005.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "HVAC-U-006",
+      "name": "DuctBranch — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/HVAC-U-006.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "HVAC-U-007",
+      "name": "DuctDamper (fire) — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/HVAC-U-007.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "HVAC-U-008",
+      "name": "DuctAccessDoor — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/HVAC-U-008.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "HVAC-U-009",
+      "name": "DuctTestPort — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/HVAC-U-009.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "HVAC-U-010",
+      "name": "Round duct port without diameter — rejected",
+      "category": "negative",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/HVAC-U-010.ndjson",
+      "expect": "invalid"
+    },
+    {
+      "id": "HVAC-U-011",
+      "name": "DuctBranch with two ports — rejected",
+      "category": "negative",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/HVAC-U-011.ndjson",
+      "expect": "invalid"
+    },
+    {
+      "id": "HVAC-U-012",
+      "name": "DuctNetworkSystem without airType — rejected",
+      "category": "negative",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/HVAC-U-012.ndjson",
+      "expect": "invalid"
+    },
+    {
+      "id": "HVAC-U-013",
+      "name": "DuctAccessDoor without hostId — rejected",
+      "category": "negative",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/HVAC-U-013.ndjson",
+      "expect": "invalid"
+    },
+    {
       "id": "STEEL-U-001",
       "name": "SteelSystem — valid",
       "category": "unit",

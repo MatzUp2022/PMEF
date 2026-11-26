@@ -1,0 +1,192 @@
+{
+  "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
+  "catalogId": "pipe-supports-generic",
+  "catalogType": "PIPE_SUPPORT_TYPES",
+  "version": "2026.1",
+  "description": "Generic pipe support assemblies for preliminary design and auto-routing. A pmef:PipeSupport references an entry via catalogRef {catalogId: 'pipe-supports-generic', standard: <supportCode>}.",
+  "units": {
+    "dnMin": "DN",
+    "dnMax": "DN",
+    "shoeHeight_mm": "mm",
+    "travel_mm": "mm"
+  },
+  "fieldDefinitions": {
+    "restraints": "Restrained degrees of freedom in pipe coordinates: AXIAL along the pipe, LATERAL horizontal across it, VERTICAL_DOWN/UP, ROTATION about the pipe axes.",
+    "shoeHeight_mm": "Distance from the top of the support steel to the bottom of the pipe."
+  },
+  "notes": [
+    "Synthetic, vendor-neutral catalog. Load ratings are deliberately not given: they depend on the manufacturer and the support steel.",
+    "Designs must be verified by pipe stress analysis."
+  ],
+  "entries": [
+    {
+      "catalogId": "RS-SHOE",
+      "supportCode": "RS-SHOE",
+      "supportType": "RESTING",
+      "description": "Resting shoe, welded or clamped",
+      "dnMin": 50,
+      "dnMax": 600,
+      "restraints": [
+        "VERTICAL_DOWN"
+      ],
+      "insulatedPipe": true,
+      "shoeHeight_mm": 100,
+      "material": "S235JR"
+    },
+    {
+      "catalogId": "GS-SHOE",
+      "supportCode": "GS-SHOE",
+      "supportType": "GUIDE",
+      "description": "Guided shoe with lateral guides",
+      "dnMin": 50,
+      "dnMax": 600,
+      "restraints": [
+        "VERTICAL_DOWN",
+        "LATERAL"
+      ],
+      "insulatedPipe": true,
+      "shoeHeight_mm": 100,
+      "material": "S235JR"
+    },
+    {
+      "catalogId": "DS-SHOE",
+      "supportCode": "DS-SHOE",
+      "supportType": "DIRECTIONAL",
+      "description": "Axial stop (line stop) on shoe",
+      "dnMin": 50,
+      "dnMax": 600,
+      "restraints": [
+        "VERTICAL_DOWN",
+        "AXIAL"
+      ],
+      "insulatedPipe": true,
+      "shoeHeight_mm": 100,
+      "material": "S235JR"
+    },
+    {
+      "catalogId": "AS-SHOE",
+      "supportCode": "AS-SHOE",
+      "supportType": "ANCHOR",
+      "description": "Anchor shoe, welded to support steel",
+      "dnMin": 50,
+      "dnMax": 600,
+      "restraints": [
+        "AXIAL",
+        "LATERAL",
+        "VERTICAL_DOWN",
+        "VERTICAL_UP",
+        "ROTATION"
+      ],
+      "insulatedPipe": true,
+      "shoeHeight_mm": 100,
+      "material": "S235JR"
+    },
+    {
+      "catalogId": "UB",
+      "supportCode": "UB",
+      "supportType": "CLAMP",
+      "description": "U-bolt on support steel, bare pipe",
+      "dnMin": 15,
+      "dnMax": 300,
+      "restraints": [
+        "VERTICAL_DOWN",
+        "VERTICAL_UP",
+        "LATERAL"
+      ],
+      "insulatedPipe": false,
+      "material": "Steel, galvanized"
+    },
+    {
+      "catalogId": "RH",
+      "supportCode": "RH",
+      "supportType": "HANGER",
+      "description": "Rod hanger with pipe clamp",
+      "dnMin": 15,
+      "dnMax": 300,
+      "restraints": [
+        "VERTICAL_DOWN"
+      ],
+      "insulatedPipe": false,
+      "material": "Steel, galvanized"
+    },
+    {
+      "catalogId": "SH-VAR",
+      "supportCode": "SH-VAR",
+      "supportType": "SPRING_VARIABLE",
+      "description": "Variable spring hanger",
+      "dnMin": 50,
+      "dnMax": 600,
+      "restraints": [
+        "VERTICAL_DOWN"
+      ],
+      "travel_mm": 50,
+      "material": "Steel"
+    },
+    {
+      "catalogId": "SH-CON",
+      "supportCode": "SH-CON",
+      "supportType": "SPRING_CONSTANT",
+      "description": "Constant spring hanger",
+      "dnMin": 100,
+      "dnMax": 600,
+      "restraints": [
+        "VERTICAL_DOWN"
+      ],
+      "travel_mm": 150,
+      "material": "Steel"
+    },
+    {
+      "catalogId": "TR",
+      "supportCode": "TR",
+      "supportType": "TRUNNION",
+      "description": "Trunnion welded to an elbow, resting on steel",
+      "dnMin": 100,
+      "dnMax": 600,
+      "restraints": [
+        "VERTICAL_DOWN"
+      ],
+      "insulatedPipe": true,
+      "material": "Pipe material"
+    },
+    {
+      "catalogId": "DL",
+      "supportCode": "DL",
+      "supportType": "DUMMY_LEG",
+      "description": "Dummy leg welded to an elbow",
+      "dnMin": 50,
+      "dnMax": 400,
+      "restraints": [
+        "VERTICAL_DOWN"
+      ],
+      "material": "Pipe material"
+    },
+    {
+      "catalogId": "SD",
+      "supportCode": "SD",
+      "supportType": "SADDLE",
+      "description": "Saddle for large or insulated pipes",
+      "dnMin": 200,
+      "dnMax": 1200,
+      "restraints": [
+        "VERTICAL_DOWN"
+      ],
+      "insulatedPipe": true,
+      "shoeHeight_mm": 150,
+      "material": "S235JR"
+    },
+    {
+      "catalogId": "SP-PTFE",
+      "supportCode": "SP-PTFE",
+      "supportType": "SLIDE_PLATE",
+      "description": "Shoe on PTFE slide plate (low friction)",
+      "dnMin": 50,
+      "dnMax": 600,
+      "restraints": [
+        "VERTICAL_DOWN"
+      ],
+      "insulatedPipe": true,
+      "shoeHeight_mm": 100,
+      "material": "S235JR + PTFE"
+    }
+  ]
+}

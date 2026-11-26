@@ -1,7 +1,8 @@
 //! PMEF engineering catalogs, embedded for consumers.
 //!
 //! PMEF is the single home of engineering catalogs in the ecosystem (`docs/ECOSYSTEM.md`):
-//! piping classes, flange and pipe dimensions, materials and steel profiles. Other repositories
+//! piping classes, flange, pipe and duct dimensions, materials, steel profiles, pipe support
+//! types and cable types. Other repositories
 //! (e.g. DEXPI-Manager `pipe-class-engine`) read them through this crate instead of keeping
 //! their own copies of the tables. The JSON files in `catalogs/` stay the source of truth; this
 //! crate only embeds them at compile time.
@@ -12,8 +13,16 @@ use serde_json::Value;
 /// Every catalog in `catalogs/`, by file stem (= `catalogId`).
 const CATALOGS: &[(&str, &str)] = &[
     (
+        "cable-types-en",
+        include_str!("../../../catalogs/cable-types-en.json"),
+    ),
+    (
         "caesarII-cii-mapping",
         include_str!("../../../catalogs/caesarII-cii-mapping.json"),
+    ),
+    (
+        "duct-dimensions-en",
+        include_str!("../../../catalogs/duct-dimensions-en.json"),
     ),
     (
         "flange-dimensions",
@@ -42,6 +51,10 @@ const CATALOGS: &[(&str, &str)] = &[
     (
         "pipe-dimensions-en",
         include_str!("../../../catalogs/pipe-dimensions-en.json"),
+    ),
+    (
+        "pipe-supports-generic",
+        include_str!("../../../catalogs/pipe-supports-generic.json"),
     ),
     (
         "piping-class-a1a2",
@@ -149,4 +162,139 @@ pub fn parse_nps(s: &str) -> Option<f64> {
         return frac(s);
     }
     s.parse().ok()
+}
+
+fn entries<T: serde::de::DeserializeOwned>(id: &str) -> Vec<T> {
+    #[derive(Deserialize)]
+    struct Doc<T> {
+        entries: Vec<T>,
+    }
+    let doc: Doc<T> = serde_json::from_str(raw(id).unwrap_or_else(|| panic!("{id} catalog")))
+        .unwrap_or_else(|e| panic!("{id} entries: {e}"));
+    doc.entries
+}
+
+/// Standard duct size series (RFC-0006).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum DuctSeries {
+    /// Round nominal diameter (EN 1506).
+    Round,
+    /// Preferred rectangular side length (EN 1505).
+    Rectangular,
+}
+
+/// One standard air-duct size from `duct-dimensions-en`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct DuctSize {
+    /// Entry id, e.g. `R400`.
+    #[serde(rename = "catalogId")]
+    pub id: String,
+    /// Round diameter or rectangular side length.
+    pub series: DuctSeries,
+    /// Diameter or side length [mm].
+    pub size_mm: f64,
+    /// Inside area of a round duct [m²].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub area_m2: Option<f64>,
+}
+
+/// All standard duct sizes of a series, ascending.
+pub fn duct_sizes(series: DuctSeries) -> Vec<DuctSize> {
+    let mut v: Vec<DuctSize> = entries::<DuctSize>("duct-dimensions-en")
+        .into_iter()
+        .filter(|e| e.series == series)
+        .collect();
+    v.sort_by(|a, b| a.size_mm.total_cmp(&b.size_mm));
+    v
+}
+
+/// Smallest standard size of a series that is at least `min_mm` (sizing a duct to a
+/// required dimension).
+pub fn next_duct_size(series: DuctSeries, min_mm: f64) -> Option<f64> {
+    duct_sizes(series).into_iter().map(|e| e.size_mm).find(|&s| s >= min_mm)
+}
+
+/// One pipe support assembly from `pipe-supports-generic`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PipeSupportType {
+    /// Catalog code, e.g. `GS-SHOE` (referenced as `catalogRef.standard`).
+    pub support_code: String,
+    /// `SupportSpec.supportType` value.
+    pub support_type: String,
+    /// Description.
+    #[serde(default)]
+    pub description: String,
+    /// Smallest DN.
+    pub dn_min: u32,
+    /// Largest DN.
+    pub dn_max: u32,
+    /// Restrained degrees of freedom.
+    pub restraints: Vec<String>,
+    /// Raises the pipe above its insulation.
+    #[serde(default)]
+    pub insulated_pipe: bool,
+    /// Shoe height [mm].
+    #[serde(default, rename = "shoeHeight_mm", skip_serializing_if = "Option::is_none")]
+    pub shoe_height_mm: Option<f64>,
+    /// Spring travel [mm].
+    #[serde(default, rename = "travel_mm", skip_serializing_if = "Option::is_none")]
+    pub travel_mm: Option<f64>,
+}
+
+/// All pipe support types.
+pub fn pipe_support_types() -> Vec<PipeSupportType> {
+    entries("pipe-supports-generic")
+}
+
+/// Support types that fit a pipe of nominal diameter `dn` and restrain every listed
+/// degree of freedom (e.g. `["VERTICAL_DOWN", "LATERAL"]` for a guide).
+pub fn supports_for(dn: u32, restraints: &[&str]) -> Vec<PipeSupportType> {
+    pipe_support_types()
+        .into_iter()
+        .filter(|s| s.dn_min <= dn && dn <= s.dn_max)
+        .filter(|s| restraints.iter().all(|r| s.restraints.iter().any(|x| x == r)))
+        .collect()
+}
+
+/// One cable type from `cable-types-en`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CableType {
+    /// Designation, e.g. `NYY-J 5x2.5` (referenced as `catalogRef.standard`).
+    pub designation: String,
+    /// `CableObject.cableType` value.
+    pub cable_type: String,
+    /// Number of cores.
+    pub number_of_cores: u32,
+    /// Conductor cross-section [mm²].
+    #[serde(rename = "crossSection_mm2")]
+    pub cross_section_mm2: f64,
+    /// Typical outer diameter [mm].
+    #[serde(default, rename = "outerDiameter_mm", skip_serializing_if = "Option::is_none")]
+    pub outer_diameter_mm: Option<f64>,
+    /// Minimum bend radius as a multiple of the outer diameter.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min_bend_radius_factor: Option<f64>,
+    /// Rated voltage, e.g. `0.6/1 kV`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rated_voltage: Option<String>,
+}
+
+impl CableType {
+    /// Minimum bend radius [mm] (outer diameter × factor).
+    pub fn min_bend_radius_mm(&self) -> Option<f64> {
+        Some(self.outer_diameter_mm? * self.min_bend_radius_factor?)
+    }
+}
+
+/// All cable types.
+pub fn cable_types() -> Vec<CableType> {
+    entries("cable-types-en")
+}
+
+/// A cable type by designation.
+pub fn cable_type(designation: &str) -> Option<CableType> {
+    cable_types().into_iter().find(|c| c.designation == designation)
 }

@@ -25,7 +25,8 @@ EXPECT = {
     "coords": {"RT-009"},
     "header-last": {"INTG-001"},
 }
-NEGATIVE = {"PIPE-U-003", "PIPE-U-015", "EQUIP-U-011", "EQUIP-U-012", "EI-U-003", "STEEL-U-005", "REL-U-008",
+NEGATIVE = {"PIPE-U-003", "PIPE-U-015", "EQUIP-U-011", "EQUIP-U-012", "EI-U-003", "EI-U-010", "STEEL-U-005", "REL-U-008",
+            "HVAC-U-010", "HVAC-U-011", "HVAC-U-012", "HVAC-U-013",
             "GEOM-U-008"}
 
 
@@ -55,7 +56,7 @@ def main() -> int:
     if code == 0 or failed(rep) != NEGATIVE:
         problems.append(f"accept-all validator must fail exactly the negative tests, got {sorted(failed(rep))}")
     else:
-        print("✓ accept-all validator fails exactly the 8 negative tests")
+        print(f"✓ accept-all validator fails exactly the {len(NEGATIVE)} negative tests")
     for p in problems:
         print(f"✗ {p}")
     print("self-test", "FAILED" if problems else "passed")

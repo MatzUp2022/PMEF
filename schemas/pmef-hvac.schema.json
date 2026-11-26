@@ -1,0 +1,333 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pmef.net/schemas/0.9/pmef-hvac.schema.json",
+  "title": "PMEF HVAC Domain — Air Ducts",
+  "description": "Schema for DuctNetworkSystem, DuctSegment and all DuctComponent subtypes (straight ducts, bends, transitions, branches, dampers, access doors, test ports). Cross-sections round, square, rectangular and flat-oval; connections flanged, welded or slip-joint; insulation per component. Aligned with IFC 4.3 IfcDuctSegment/IfcDuctFitting/IfcDamper, EN 1505/1506 (dimensions) and EN 16798-3 (air types). RFC-0006.",
+
+  "$defs": {
+
+    "DuctCrossSection": {
+      "title": "Duct Cross-Section",
+      "description": "Inside cross-section of a duct or duct port [mm]. ROUND needs 'diameter'; SQUARE needs 'width' (height = width); RECTANGULAR and FLAT_OVAL need 'width' and 'height' (flat-oval: width = major axis, height = minor axis).",
+      "type": "object",
+      "required": ["shape"],
+      "properties": {
+        "shape":    { "type": "string", "enum": ["ROUND","SQUARE","RECTANGULAR","FLAT_OVAL"] },
+        "diameter": { "type": "number", "exclusiveMinimum": 0, "description": "Nominal inside diameter [mm] (ROUND)" },
+        "width":    { "type": "number", "exclusiveMinimum": 0, "description": "Inside width [mm] (SQUARE, RECTANGULAR, FLAT_OVAL major axis)" },
+        "height":   { "type": "number", "exclusiveMinimum": 0, "description": "Inside height [mm] (RECTANGULAR, FLAT_OVAL minor axis)" }
+      },
+      "allOf": [
+        { "if": { "properties": { "shape": { "const": "ROUND" } } },       "then": { "required": ["diameter"] } },
+        { "if": { "properties": { "shape": { "const": "SQUARE" } } },      "then": { "required": ["width"] } },
+        { "if": { "properties": { "shape": { "enum": ["RECTANGULAR","FLAT_OVAL"] } } }, "then": { "required": ["width","height"] } }
+      ],
+      "additionalProperties": false
+    },
+
+    "DuctPort": {
+      "title": "Duct Connection Port",
+      "description": "A connection end of a duct component. A transition from round to square has one ROUND and one SQUARE port.",
+      "type": "object",
+      "required": ["portId","coordinate","crossSection"],
+      "properties": {
+        "portId":       { "type": "string", "description": "Port identifier within this component, e.g. 'P1', 'P2', 'BRANCH'" },
+        "portType":     { "type": "string", "enum": ["INLET","OUTLET","BIDIRECTIONAL","BRANCH"], "default": "BIDIRECTIONAL" },
+        "coordinate":   { "$ref": "pmef-base.schema.json#/$defs/Coordinate3D", "description": "Port centre point [mm]" },
+        "direction":    { "$ref": "pmef-base.schema.json#/$defs/UnitVector3D", "description": "Connection direction (pointing away from the component)" },
+        "crossSection": { "$ref": "#/$defs/DuctCrossSection" },
+        "connectionType": {
+          "type": "string",
+          "enum": ["FLANGED","WELDED","SLIP_JOINT","SOCKET_SPIGOT","CLAMPED","PLAIN"],
+          "description": "End connection: FLANGED (profile frame or angle flange), WELDED, SLIP_JOINT (S/drive cleat), SOCKET_SPIGOT (round push-fit with seal), CLAMPED (clamp band), PLAIN"
+        },
+        "flangeProfile":{ "type": "string", "description": "Flange profile designation if FLANGED, e.g. 'MEZ 20', 'L 30x30x3'" },
+        "connectedTo": {
+          "oneOf": [
+            { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+            { "type": "null" }
+          ],
+          "description": "ID of the connected component. Port fragments ('#portId') are not allowed by PmefId; the connected port follows from coordinate coincidence (spec 02 §4.5)."
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "DuctDesignConditions": {
+      "title": "Duct Design Conditions",
+      "type": "object",
+      "properties": {
+        "airflowRate":         { "type": "number", "minimum": 0, "description": "Design volume flow [m³/h]" },
+        "designPressure":      { "type": "number", "description": "Design static pressure relative to ambient [Pa]; negative for extract systems" },
+        "operatingTemperature":{ "type": "number", "description": "Air temperature [°C]" },
+        "maxVelocity":         { "type": "number", "exclusiveMinimum": 0, "description": "Maximum air velocity [m/s]" },
+        "airTightnessClass":   { "type": "string", "enum": ["A","B","C","D"], "description": "Air-tightness class per EN 1507 / EN 12237" }
+      },
+      "additionalProperties": false
+    },
+
+    "DuctSpec": {
+      "title": "Duct Component Specification",
+      "type": "object",
+      "properties": {
+        "material":       { "type": "string", "enum": ["GALVANIZED_STEEL","STAINLESS_STEEL","ALUMINIUM","BLACK_STEEL","PLASTIC","FIBREGLASS_BOARD","TEXTILE","OTHER"] },
+        "materialGrade":  { "type": "string", "description": "e.g. 'DX51D+Z275', '1.4301'" },
+        "sheetThickness": { "type": "number", "exclusiveMinimum": 0, "description": "Sheet thickness [mm]" },
+        "construction":   { "type": "string", "enum": ["SPIRAL_SEAM","LONGITUDINAL_SEAM","WELDED","FLEXIBLE","SEGMENTED"], "description": "How the duct body is made" },
+        "standard":       { "type": "string", "description": "Dimension/manufacturing standard, e.g. 'EN 1506', 'EN 1505'" },
+        "weight":         { "type": "number", "minimum": 0, "description": "[kg]" }
+      },
+      "additionalProperties": false
+    },
+
+    "DuctInsulation": {
+      "title": "Duct Insulation",
+      "description": "Insulation applied to the outside (or lining the inside) of a duct component.",
+      "type": "object",
+      "required": ["insulationType","thickness"],
+      "properties": {
+        "insulationType": { "type": "string", "enum": ["THERMAL","CONDENSATION","ACOUSTIC","FIRE"], "description": "Purpose of the insulation" },
+        "material":       { "type": "string", "description": "e.g. 'MINERAL_WOOL', 'ELASTOMERIC_FOAM', 'PIR'" },
+        "thickness":      { "type": "number", "exclusiveMinimum": 0, "description": "[mm]" },
+        "internal":       { "type": "boolean", "default": false, "description": "True for an internal lining" },
+        "cladding":       { "type": "string", "description": "Jacket/cladding, e.g. 'ALUMINIUM_FOIL', 'GALVANIZED_SHEET'" },
+        "fireRating":     { "type": "string", "description": "Fire resistance of fire insulation, e.g. 'EI 60'" }
+      },
+      "additionalProperties": false
+    },
+
+    "DuctNetworkSystem": {
+      "title": "Duct Network System",
+      "description": "A complete air distribution system (supply, extract, ...). Analogue of PipingNetworkSystem.",
+      "type": "object",
+      "required": ["@type","@id","pmefVersion","isPartOf","systemNumber","airType"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
+      "properties": {
+        "@type":        { "const": "pmef:DuctNetworkSystem" },
+        "@id":          { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "pmefVersion":  { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "isPartOf":     { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Parent unit/area/plant" },
+        "systemNumber": { "type": "string", "description": "System tag, e.g. 'ZUL-01', 'SA-101'" },
+        "airType": {
+          "type": "string",
+          "enum": ["SUPPLY","EXTRACT","OUTDOOR","EXHAUST","RECIRCULATION","TRANSFER","SMOKE_EXTRACT","PROCESS_EXHAUST","OTHER"],
+          "description": "Air type per EN 16798-3 (supply = Zuluft, extract = Abluft, outdoor = Außenluft, exhaust = Fortluft, recirculation = Umluft)"
+        },
+        "serviceDescription": { "type": "string" },
+        "designConditions":   { "$ref": "#/$defs/DuctDesignConditions" },
+        "segments": {
+          "type": "array",
+          "description": "Ordered list of DuctSegment IDs",
+          "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" }
+        },
+        "iec81346":   { "$ref": "pmef-base.schema.json#/$defs/Iec81346Designation" },
+        "rdlType":    { "$ref": "pmef-base.schema.json#/$defs/RdlUri" },
+        "documents":  { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/DocumentLink" } },
+        "revision":   { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" },
+        "customAttributes": { "type": "object", "additionalProperties": { "type": ["string","number","boolean","null"] } }
+      },
+      "additionalProperties": false
+    },
+
+    "DuctSegment": {
+      "title": "Duct Segment",
+      "description": "A contiguous run of a duct system with uniform specification.",
+      "type": "object",
+      "required": ["@type","@id","isPartOf"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
+      "properties": {
+        "@type":         { "const": "pmef:DuctSegment" },
+        "@id":           { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "isPartOf":      { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Parent DuctNetworkSystem" },
+        "segmentNumber": { "type": "integer", "minimum": 1 },
+        "ductSpec":      { "$ref": "#/$defs/DuctSpec" },
+        "insulation":    { "$ref": "#/$defs/DuctInsulation" },
+        "components": {
+          "type": "array",
+          "description": "Ordered list of component IDs in routing sequence",
+          "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" }
+        },
+        "revision":   { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
+      },
+      "additionalProperties": false
+    },
+
+    "DuctComponent": {
+      "title": "Duct Component (abstract base)",
+      "description": "Base type for all physical duct components. Never instantiated directly — use a subtype.",
+      "type": "object",
+      "required": ["@type","@id","pmefVersion","isPartOf"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
+      "properties": {
+        "@type":       { "type": "string", "description": "Concrete type: pmef:Duct, pmef:DuctBend, ..." },
+        "@id":         { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "pmefVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "isPartOf":    { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Parent DuctSegment or DuctNetworkSystem" },
+        "tagNumber":   { "type": "string", "description": "Tag if individually tagged (dampers, access doors)" },
+        "itemNumber":  { "type": "string", "description": "Item / position number on the duct drawing" },
+        "ductSpec":    { "$ref": "#/$defs/DuctSpec" },
+        "insulation":  { "$ref": "#/$defs/DuctInsulation" },
+        "catalogRef":  { "$ref": "pmef-base.schema.json#/$defs/CatalogReference" },
+        "iec81346":    { "$ref": "pmef-base.schema.json#/$defs/Iec81346Designation" },
+        "rdlType":     { "$ref": "pmef-base.schema.json#/$defs/RdlUri" },
+        "ports": {
+          "type": "array",
+          "description": "Connection ends of this component",
+          "items": { "$ref": "#/$defs/DuctPort" },
+          "minItems": 1
+        },
+        "geometry":   { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
+        "documents":  { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/DocumentLink" } },
+        "revision":   { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" },
+        "customAttributes": { "type": "object", "additionalProperties": { "type": ["string","number","boolean","null"] } }
+      }
+    },
+
+    "Duct": {
+      "title": "Straight Duct",
+      "allOf": [
+        { "$ref": "#/$defs/DuctComponent" },
+        {
+          "properties": {
+            "@type":  { "const": "pmef:Duct" },
+            "length": { "type": "number", "exclusiveMinimum": 0, "description": "Length [mm]" }
+          },
+          "required": ["ports"]
+        }
+      ]
+    },
+
+    "DuctBend": {
+      "title": "Duct Bend / Elbow",
+      "allOf": [
+        { "$ref": "#/$defs/DuctComponent" },
+        {
+          "properties": {
+            "@type":        { "const": "pmef:DuctBend" },
+            "angle":        { "type": "number", "exclusiveMinimum": 0, "maximum": 180, "description": "Bend angle [°]" },
+            "bendType":     { "type": "string", "enum": ["RADIUS","SEGMENTED","MITRED"], "description": "Smooth radius, segmented (gores) or mitred elbow" },
+            "radius":       { "type": "number", "minimum": 0, "description": "Centreline radius [mm] (0 for MITRED)" },
+            "segments":     { "type": "integer", "minimum": 2, "description": "Number of gores if SEGMENTED" },
+            "turningVanes": { "type": "boolean", "description": "Guide/turning vanes fitted" },
+            "bendPlane":    { "type": "string", "enum": ["HARD","EASY"], "description": "Rectangular ducts: bend across the height (HARD) or the width (EASY)" }
+          },
+          "required": ["angle","ports"]
+        }
+      ]
+    },
+
+    "DuctTransition": {
+      "title": "Duct Transition",
+      "description": "Change of cross-section (size and/or shape), e.g. round to square, rectangular to round, round reducer. The two ports carry the two cross-sections.",
+      "allOf": [
+        { "$ref": "#/$defs/DuctComponent" },
+        {
+          "properties": {
+            "@type":          { "const": "pmef:DuctTransition" },
+            "transitionType": { "type": "string", "enum": ["CONCENTRIC","ECCENTRIC"] },
+            "length":         { "type": "number", "exclusiveMinimum": 0, "description": "Overall length [mm]" },
+            "ports":          { "minItems": 2, "maxItems": 2 }
+          },
+          "required": ["ports"]
+        }
+      ]
+    },
+
+    "DuctBranch": {
+      "title": "Duct Branch",
+      "description": "T-piece, lateral, Y-piece (trouser), cross or saddle tap.",
+      "allOf": [
+        { "$ref": "#/$defs/DuctComponent" },
+        {
+          "properties": {
+            "@type":       { "const": "pmef:DuctBranch" },
+            "branchType":  { "type": "string", "enum": ["TEE","LATERAL","Y_PIECE","CROSS","SADDLE_TAP"] },
+            "branchAngle": { "type": "number", "exclusiveMinimum": 0, "maximum": 90, "description": "Angle between main run and branch [°]" },
+            "ports":       { "minItems": 3 }
+          },
+          "required": ["branchType","ports"]
+        }
+      ]
+    },
+
+    "DuctDamper": {
+      "title": "Duct Damper",
+      "allOf": [
+        { "$ref": "#/$defs/DuctComponent" },
+        {
+          "properties": {
+            "@type":          { "const": "pmef:DuctDamper" },
+            "damperType":     { "type": "string", "enum": ["VOLUME_CONTROL","SHUT_OFF","NON_RETURN","FIRE","SMOKE","FIRE_SMOKE","PRESSURE_RELIEF"] },
+            "actuation":      { "type": "string", "enum": ["MANUAL","ELECTRIC","PNEUMATIC","THERMAL_FUSE","SELF_ACTING"] },
+            "fireResistance": { "type": "string", "description": "Classification per EN 13501-3, e.g. 'EI 90 S'" },
+            "length":         { "type": "number", "exclusiveMinimum": 0, "description": "Installation length [mm]" },
+            "instrumentId":   { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Actuator/position switch as InstrumentObject" }
+          },
+          "required": ["damperType","ports"]
+        }
+      ]
+    },
+
+    "DuctAccessDoor": {
+      "title": "Duct Access Door / Hatch",
+      "description": "Inspection or cleaning opening (Revisionsöffnung) mounted on a host duct component. Has no ports; placed by 'hostId' and 'position'.",
+      "allOf": [
+        { "$ref": "#/$defs/DuctComponent" },
+        {
+          "properties": {
+            "@type":         { "const": "pmef:DuctAccessDoor" },
+            "doorType":      { "type": "string", "enum": ["ACCESS_DOOR","ACCESS_HATCH","CLEANING_OPENING"] },
+            "hostId":        { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Duct component the door is mounted on" },
+            "position":      { "$ref": "pmef-base.schema.json#/$defs/Coordinate3D", "description": "Centre of the opening [mm]" },
+            "normal":        { "$ref": "pmef-base.schema.json#/$defs/UnitVector3D", "description": "Outward normal of the opening" },
+            "openingWidth":  { "type": "number", "exclusiveMinimum": 0, "description": "[mm]" },
+            "openingHeight": { "type": "number", "exclusiveMinimum": 0, "description": "[mm]; omit for round openings" },
+            "insulated":     { "type": "boolean", "description": "Door panel is insulated" }
+          },
+          "required": ["doorType","hostId","position","openingWidth"]
+        }
+      ]
+    },
+
+    "DuctTestPort": {
+      "title": "Duct Test Port",
+      "description": "Measuring socket (Messstutzen) for pressure, flow or temperature measurements, mounted on a host duct component.",
+      "allOf": [
+        { "$ref": "#/$defs/DuctComponent" },
+        {
+          "properties": {
+            "@type":        { "const": "pmef:DuctTestPort" },
+            "purpose":      { "type": "string", "enum": ["PRESSURE","FLOW","TEMPERATURE","HUMIDITY","SAMPLING","MULTI"] },
+            "hostId":       { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Duct component the port is mounted on" },
+            "position":     { "$ref": "pmef-base.schema.json#/$defs/Coordinate3D", "description": "Port location [mm]" },
+            "normal":       { "$ref": "pmef-base.schema.json#/$defs/UnitVector3D" },
+            "portDiameter": { "type": "number", "exclusiveMinimum": 0, "description": "Socket diameter [mm]" },
+            "instrumentId": { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Instrument fitted to the port, if any" }
+          },
+          "required": ["purpose","hostId","position"]
+        }
+      ]
+    }
+  },
+
+  "oneOf": [
+    { "$ref": "#/$defs/DuctNetworkSystem" },
+    { "$ref": "#/$defs/DuctSegment" },
+    { "$ref": "#/$defs/Duct" },
+    { "$ref": "#/$defs/DuctBend" },
+    { "$ref": "#/$defs/DuctTransition" },
+    { "$ref": "#/$defs/DuctBranch" },
+    { "$ref": "#/$defs/DuctDamper" },
+    { "$ref": "#/$defs/DuctAccessDoor" },
+    { "$ref": "#/$defs/DuctTestPort" }
+  ]
+}
