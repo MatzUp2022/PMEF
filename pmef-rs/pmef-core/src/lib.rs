@@ -15,6 +15,7 @@
 //! ├── piping/        — PipingNetworkSystem, PipingComponent subtypes
 //! ├── equipment/     — EquipmentObject subtypes, Nozzle
 //! ├── ei/            — InstrumentObject, PLCObject, CableObject, …
+//! ├── hvac/          — DuctNetworkSystem, duct components (RFC-0006)
 //! ├── steel/         — SteelMember, SteelNode, SteelConnection
 //! ├── relationships/ — typed relationship objects
 //! └── traits/        — PmefObject, PmefVisitor, Adapter
@@ -28,6 +29,7 @@ pub mod diff;
 pub mod ei;
 pub mod equipment;
 pub mod geometry;
+pub mod hvac;
 pub mod matching;
 pub mod merge;
 pub mod plant;
@@ -42,12 +44,16 @@ pub mod types;
 
 // Convenience re-exports
 pub use catalog::{CatalogReference, DocumentLink, Port, VendorMapping};
-pub use ei::{CableObject, CableTrayRun, InstrumentLoop, InstrumentObject, MtpModule, PlcObject};
+pub use ei::{CableObject, CableTrayFitting, CableTrayRun, InstrumentLoop, InstrumentObject, MtpModule, PlcObject};
 pub use equipment::{
     Compressor, EquipmentBasic, Filter, GenericEquipment, HeatExchanger, Nozzle,
     Pump, Reactor, Tank, Turbine, Vessel,
 };
 pub use geometry::{GeometryLayer, GeometryReference, Lod};
+pub use hvac::{
+    Duct, DuctAccessDoor, DuctBend, DuctBranch, DuctCrossSection, DuctDamper, DuctNetworkSystem,
+    DuctPort, DuctSegment, DuctShape, DuctTestPort, DuctTransition,
+};
 pub use plant::{Area, FileHeader, Plant, Unit};
 pub use piping::{
     Elbow, Flange, Gasket, Olet, Pipe, PipeSupport, PipingNetworkSystem,

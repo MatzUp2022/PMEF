@@ -76,7 +76,17 @@ fn registry() -> BTreeMap<&'static str, RoundTrip> {
     m.insert("pmef:PLCObject", rt::<core::PlcObject>);
     m.insert("pmef:CableObject", rt::<core::CableObject>);
     m.insert("pmef:CableTrayRun", rt::<core::CableTrayRun>);
+    m.insert("pmef:CableTrayFitting", rt::<core::CableTrayFitting>);
     m.insert("pmef:MTPModule", rt::<core::MtpModule>);
+    m.insert("pmef:DuctNetworkSystem", rt::<core::DuctNetworkSystem>);
+    m.insert("pmef:DuctSegment", rt::<core::DuctSegment>);
+    m.insert("pmef:Duct", rt::<core::Duct>);
+    m.insert("pmef:DuctBend", rt::<core::DuctBend>);
+    m.insert("pmef:DuctTransition", rt::<core::DuctTransition>);
+    m.insert("pmef:DuctBranch", rt::<core::DuctBranch>);
+    m.insert("pmef:DuctDamper", rt::<core::DuctDamper>);
+    m.insert("pmef:DuctAccessDoor", rt::<core::DuctAccessDoor>);
+    m.insert("pmef:DuctTestPort", rt::<core::DuctTestPort>);
     m.insert("pmef:HasEquivalentIn", rt::<core::HasEquivalentIn>);
     m.insert("pmef:IsDerivedFrom", rt::<core::IsDerivedFrom>);
     m.insert("pmef:IsPartOf", rt::<core::IsPartOf>);
