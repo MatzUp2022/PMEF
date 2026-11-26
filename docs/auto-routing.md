@@ -126,7 +126,9 @@ first; each reserves its cross-section on every tray it uses, and no tray may ex
 (default 40 % of width × height). Output: `pmef:CableObject` (`routeLength` in m, `cableType`,
 `fromId`/`toId`, terminals, `cableTrayId` of the tray carrying the longest part when it is a
 PMEF `@id`), provenance `generated`; the report lists path, trays and the fill per tray.
-Example: `tests/route/cable-trays-route.json`.
+`cables[].trays` limits a cable to the trays it names; such cables are routed before the others.
+A viewer re-routes one cable and keeps the others where they are by giving each other cable the
+trays it used (report `cables[].trays`). Example: `tests/route/cable-trays-route.json`.
 
 **Line lists** (stage 6, `line_list.rs`). `lineLists` names PMEF packages with lines to route,
 typically DEXPI-Manager `dexpi-pmef` output of a P&ID: `pmef:PipingNetworkSystem` (line number,
@@ -139,7 +141,10 @@ attach to the P&ID line (`isPartOf` = its `@id`), no new line object is written.
 DN, without class (`lineLists[].pipeClass` sets a default) or with fewer than two nozzles in the
 scene are listed in the report (`skippedLines`) with the reason; `lineLists[].lines` restricts
 the run to some line numbers, and `lineLists[].classMap` maps the project piping class codes of
-the P&ID (e.g. `"75HB13": "A1A2"`) to catalog classes. Example: `tests/route/pump-skid-linelist-route.json` with the
+the P&ID (e.g. `"75HB13": "A1A2"`) to catalog classes. The report lists the generated routes
+(`lineListRoutes`); a route in `routes` whose `line` is a line-list line replaces that line, so a
+viewer edits one line-list line (terminals, class, DN) by copying its generated route into
+`routes` and re-routes it alone like any other route. Example: `tests/route/pump-skid-linelist-route.json` with the
 synthetic P&ID package `tests/route/pump-skid-pid.ndjson`.
 
 **WASM** (`pmef-route-wasm`). The whole run (`pmef_route::run`) reads its files through a

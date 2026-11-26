@@ -788,6 +788,91 @@ fn line_list_routes_pid_lines_in_the_3d_scene() {
 }
 
 #[test]
+fn cables_bound_to_trays_keep_their_trays_when_another_is_rerouted() {
+    // Tray A takes one 100 mm cable (40 % of 300 x 100 mm), tray B runs parallel 1.2 m away.
+    let p = |c2_diameter: f64, c1_trays: serde_json::Value| {
+        cable_problem(json!({
+            "trays": [
+                {"id": "A", "points": [[0, 0, 3000], [20000, 0, 3000]], "width": 300, "height": 100},
+                {"id": "B", "points": [[0, -1200, 3000], [20000, -1200, 3000]], "width": 300, "height": 100}
+            ],
+            "cables": [
+                {"id": "C-1", "class": "power", "diameter": 100, "minBendRadius": 100,
+                 "from": {"point": [2000, 200, 0]}, "to": {"point": [18000, 200, 0]},
+                 "trays": c1_trays},
+                {"id": "C-2", "class": "power", "diameter": c2_diameter, "minBendRadius": 100,
+                 "from": {"point": [2000, 300, 0]}, "to": {"point": [18000, 300, 0]}}
+            ]
+        }))
+    };
+    let (c, _) = pmef_route::cable::route_cables(&p(90.0, json!([])));
+    assert_eq!(
+        (c[0].trays.clone(), c[1].trays.clone()),
+        (vec!["A".to_string()], vec!["B".to_string()])
+    );
+    // C-2 grows to 110 mm: routed alone first (largest first) it would take tray A from C-1.
+    let (c, _) = pmef_route::cable::route_cables(&p(110.0, json!([])));
+    assert_eq!(c[1].trays, ["A"]);
+    // Bound to the trays it used, C-1 keeps tray A and C-2 is re-routed around it.
+    let (c, fill) = pmef_route::cable::route_cables(&p(110.0, json!(["A"])));
+    assert!(c.iter().all(|c| c.ok), "{c:?}");
+    assert_eq!(
+        (c[0].trays.clone(), c[1].trays.clone()),
+        (vec!["A".to_string()], vec!["B".to_string()])
+    );
+    assert_eq!(fill[0].cables, ["C-1"]);
+    // A cable bound to trays it cannot reach fails.
+    let (c, _) = pmef_route::cable::route_cables(&p(90.0, json!(["missing"])));
+    assert!(!c[0].ok);
+}
+
+#[test]
+fn a_line_list_line_given_as_route_is_not_routed_twice() {
+    // A viewer edits a line-list line by copying its generated route (report lineListRoutes)
+    // into routes[]; the line list then leaves that line to the explicit route.
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/route");
+    let mut files = std::collections::HashMap::new();
+    for f in [
+        "pump-skid-pid.ndjson",
+        "../../examples/pump-skid-complete.ndjson",
+    ] {
+        files.insert(f.to_string(), std::fs::read_to_string(dir.join(f)).unwrap());
+    }
+    let read = |f: &str| files.get(f).cloned().ok_or(format!("{f}: not given"));
+    let text = std::fs::read_to_string(dir.join("pump-skid-linelist-route.json")).unwrap();
+    let mut p: RouteProblem = serde_json::from_str(&text).unwrap();
+    p.line_lists[0].pipe_class = Some("A1A2".into());
+    let out = pmef_route::run(p.clone(), None, &read).unwrap();
+    let report = out.report();
+    let generated: Vec<pmef_route::problem::RouteSpec> =
+        serde_json::from_value(report["lineListRoutes"].clone()).unwrap();
+    let ids: Vec<_> = generated.iter().map(|r| r.id.as_str()).collect();
+    assert_eq!(ids, ["CW-202", "CW-206"]);
+
+    let first: Vec<_> = out.routes.iter().map(|r| (r.ok, r.length_mm)).collect();
+
+    // Copy CW-202 into routes[]: routed once, from routes[], with the same result.
+    let mut q = p.clone();
+    q.routes = vec![generated[0].clone()];
+    let out = pmef_route::run(q, None, &read).unwrap();
+    let ids: Vec<_> = out.routes.iter().map(|r| r.id.as_str()).collect();
+    assert_eq!(ids, ["CW-202", "CW-206"]);
+    // CW-206 starts in the clearance zone of the pump (as without the copy); CW-202 routes.
+    assert!(out.routes[0].ok, "{:?}", out.routes[0].error);
+    let again: Vec<_> = out.routes.iter().map(|r| (r.ok, r.length_mm)).collect();
+    assert_eq!(again, first);
+    assert_eq!(out.line_list_routes.len(), 1);
+    assert_eq!(out.line_list_routes[0].id, "CW-206");
+    assert!(out
+        .objects
+        .iter()
+        .filter(
+            |o| o["@type"] == "pmef:PipingSegment" && o["@id"].as_str().unwrap().contains("CW-202")
+        )
+        .all(|o| o["isPartOf"] == "urn:pmef:line:eaf-2026:CW-202"));
+}
+
+#[test]
 fn line_list_route_ids_are_unique_across_the_problem() {
     // Generated route ids must not collide with explicit routes, with routes of another line
     // list, or with ids an earlier suffix would produce: segment, pipe and fitting @ids are
@@ -806,10 +891,13 @@ fn line_list_route_ids_are_unique_across_the_problem() {
     let explicit: RouteProblem =
         serde_json::from_str(&std::fs::read_to_string(dir.join("pump-skid-route.json")).unwrap())
             .unwrap();
+    // Without `line`: a route naming the P&ID line would take that line out of the line list.
     let mut a = explicit.routes[0].clone();
     a.id = "CW-202".into();
+    a.line = None;
     let mut b = explicit.routes[1].clone();
     b.id = "CW-202-2".into();
+    b.line = None;
     p.routes = vec![a, b];
     p.line_lists.push(p.line_lists[0].clone());
     let out = pmef_route::run(p, None, &read).unwrap();

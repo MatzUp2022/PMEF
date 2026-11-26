@@ -253,6 +253,11 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **`pmef route`: re-route a single line-list line or cable.** The report of a problem with line
+  lists or cables carries `lineListRoutes` (the routes generated from the line lists); a route in
+  `routes` whose `line` is a line-list line now replaces that line instead of routing it twice.
+  `cables[].trays` limits a cable to the named trays, and such cables are routed first, so a
+  viewer can fix the other cables on the trays they used and re-route one cable alone.
 - **`pmef-route-wasm` `RouteSession`: parse a building model once.** `addFile` /
   `removeFile` / `hasFile` / `route(problem, plant)`; the first run parses each file (OBJ mesh
   with its search tree, PMEF package) and drops its text, later runs reuse it. Clinic (140 MB
