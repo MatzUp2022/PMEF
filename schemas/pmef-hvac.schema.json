@@ -47,7 +47,7 @@
             { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
             { "type": "null" }
           ],
-          "description": "ID of the connected component (optionally '#portId')"
+          "description": "ID of the connected component. Port fragments ('#portId') are not allowed by PmefId; the connected port follows from coordinate coincidence (spec 02 §4.5)."
         }
       },
       "additionalProperties": false

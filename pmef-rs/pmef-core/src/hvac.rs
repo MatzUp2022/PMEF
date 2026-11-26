@@ -57,7 +57,8 @@ impl DuctCrossSection {
     fn dims(&self) -> Option<(f64, f64)> {
         match self.shape {
             DuctShape::Round => self.diameter.map(|d| (d, d)),
-            DuctShape::Square => self.width.map(|w| (w, self.height.unwrap_or(w))),
+            // A square section is width × width; a stray `height` is ignored.
+            DuctShape::Square => self.width.map(|w| (w, w)),
             DuctShape::Rectangular | DuctShape::FlatOval => Some((self.width?, self.height?)),
         }
     }
@@ -110,7 +111,7 @@ pub struct DuctPort {
     pub connection_type: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub flange_profile: Option<String>,
-    /// `@id` of the adjacent component (optionally `#portId`).
+    /// `@id` of the adjacent component (no `#portId` fragment; `PmefId` does not allow it).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub connected_to: Option<String>,
 }
@@ -390,6 +391,12 @@ mod tests {
 
     fn close(a: f64, b: f64) {
         assert!((a - b).abs() < 1e-6, "{a} != {b}");
+    }
+
+    #[test]
+    fn square_ignores_height() {
+        let s = DuctCrossSection { shape: DuctShape::Square, diameter: None, width: Some(400.0), height: Some(200.0) };
+        assert_eq!(s.area_mm2(), Some(160_000.0));
     }
 
     #[test]
