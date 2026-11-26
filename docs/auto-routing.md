@@ -149,6 +149,14 @@ files the problem names are passed as `{"<name as in the problem>": "<content>"}
 re-routes interactively by changing the problem (terminals, `pmefIgnore` for the line being
 moved) and calling `route` again. The NDJSON is byte-identical to `pmef route`.
 
+For large models the binding also exports a session, `new RouteSession()` with
+`addFile(name, content)`, `removeFile(name)`, `hasFile(name)` and `route(problemJson, plant?)`.
+The first run that needs a file parses it (OBJ meshes with their search tree, PMEF packages via
+`pmef_route::SceneCache`) and drops its text; later runs reuse the parsed form, so moving one
+line in a building model does not pass and parse the building again. Adding a file again under
+the same name replaces it. `pmefIgnore` is still applied per run, so the cache holds files, not
+obstacles.
+
 ## Usage
 
 ```bash
@@ -186,6 +194,7 @@ The problem format is documented in `pmef-rs/pmef-route/src/problem.rs` (camelCa
 | `pmef-route` stage 4 tests | 20 m line over two beams; pump suction | 2 | supports on both beams plus fillers, no gap above 4.3 m (NPS 4); 1 000 mm straight before the suction is kept; header example with supports passes schema, geometry and topology checks |
 | `pmef-route` stage 6 test, `tests/route/pump-skid-linelist-route.json` | pump skid, synthetic P&ID package (3 lines) | 1 of 3 | CW-202 routed as in the explicit problem (4 bends, 2 343 mm) on the P&ID line; CW-205 skipped (standby pump not in 3D), CW-206 skipped (no class); with a default class and a line filter CW-206 is routed; output passes `pmef validate --strict` and the topology check |
 | `pmef-route-wasm` in Node 22 | same problem, files passed in memory | 1 | NDJSON byte-identical to `pmef route`, 35 ms |
+| `pmef-route-wasm` `RouteSession` in Node 22 | Clinic (140 MB OBJ), each line routed on its own as when one line is moved | 4 | one-shot `route`: 9.6–10.7 s per call (JSON transfer and OBJ parse each time); session: first run 2.9 s (parse), then 0.36–14.6 s per line, i.e. the search alone; with `coarseStep` 600: first run 3.7 s, then 0.25–0.61 s per line |
 | `pmef-route` stage 5 tests, `tests/route/cable-trays-route.json` | power and signal trays, cross tray, L-shaped tray | 2–3 cables | each cable uses only its segregated tray; a full tray and a too small tray bend radius are refused; example output (2 `CableObject`s) passes `pmef validate --strict` |
 
 ## Reference tests

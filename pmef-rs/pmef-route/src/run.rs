@@ -6,7 +6,7 @@ use crate::cable::{route_cables, RoutedCable, TrayFill};
 use crate::line_list::{expand, SkippedLine};
 use crate::pmef_out::{cables_to_pmef, to_pmef};
 use crate::route::{route_all, RoutedLine};
-use crate::scene::{Reader, Scene, SceneError};
+use crate::scene::{Reader, Scene, SceneCache, SceneError};
 use crate::{RouteProblem, GENERATOR};
 use serde_json::{json, Value};
 
@@ -56,12 +56,23 @@ impl RunOutput {
 
 /// Route a problem. `plant` adds a `pmef:FileHeader` for that plant `@id`.
 pub fn run(
-    mut problem: RouteProblem,
+    problem: RouteProblem,
     plant: Option<&str>,
     read: &Reader<'_>,
 ) -> Result<RunOutput, SceneError> {
-    let scene = Scene::load_with(&problem, read)?;
-    let skipped_lines = expand(&mut problem, &scene, read)?;
+    run_cached(problem, plant, read, &mut SceneCache::default())
+}
+
+/// As [`run`], taking parsed scene files from `cache` and adding those it lacks; repeated
+/// runs over the same building model parse it once.
+pub fn run_cached(
+    mut problem: RouteProblem,
+    plant: Option<&str>,
+    read: &Reader<'_>,
+    cache: &mut SceneCache,
+) -> Result<RunOutput, SceneError> {
+    let scene = Scene::load_cached(&problem, read, cache)?;
+    let skipped_lines = expand(&mut problem, &scene, read, cache)?;
     let routes = route_all(&problem, &scene);
     let (cables, tray_fill) = if problem.cables.is_empty() {
         (Vec::new(), Vec::new())

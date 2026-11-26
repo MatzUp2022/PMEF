@@ -31,8 +31,8 @@ pub mod search;
 
 pub use problem::RouteProblem;
 pub use route::{route_all, RoutedLine};
-pub use run::{run, RunOutput};
-pub use scene::Scene;
+pub use run::{run, run_cached, RunOutput};
+pub use scene::{Scene, SceneCache};
 
 /// Name and version written to generated objects.
 pub const GENERATOR: &str = concat!("pmef-route ", env!("CARGO_PKG_VERSION"));

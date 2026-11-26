@@ -253,6 +253,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **`pmef-route-wasm` `RouteSession`: parse a building model once.** `addFile` /
+  `removeFile` / `hasFile` / `route(problem, plant)`; the first run parses each file (OBJ mesh
+  with its search tree, PMEF package) and drops its text, later runs reuse it. Clinic (140 MB
+  OBJ) in Node 22: one-shot `route` 9.6–10.7 s per call, session 2.9 s for the first run and then
+  only the search (0.25–0.61 s per line with `coarseStep` 600). In `pmef-route`:
+  `SceneCache`, `Scene::load_cached`, `run_cached`; `Shape::Mesh` now holds an `Arc<Mesh>`.
+
 - **`pmef route` reference tests**: `tests/route/corpus/reference_runs.py` re-routes pipe runs
   modelled in the corpus (Duplex, Clinic) between their own end points and compares length,
   bends, clashes and deviation, with comparison images; `dexpi_layout.py` runs the DEXPI

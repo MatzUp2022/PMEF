@@ -3,14 +3,16 @@
 use crate::geom::{Aabb, Mesh, Tri, P3};
 use crate::problem::{ObstacleKind, RouteProblem};
 use serde_json::Value;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
+use std::sync::Arc;
 
 /// Shape of an obstacle.
 #[derive(Debug, Clone)]
 pub enum Shape {
     Box(Aabb),
-    Mesh(Mesh),
+    /// Shared, so a [`SceneCache`] hands the same parsed mesh to every run without copying it.
+    Mesh(Arc<Mesh>),
 }
 
 /// One obstacle of the scene.
@@ -56,6 +58,52 @@ pub fn fs_reader(base: &Path) -> impl Fn(&str) -> Result<String, String> + '_ {
     move |f: &str| std::fs::read_to_string(base.join(f)).map_err(|e| e.to_string())
 }
 
+/// Parsed scene files, kept across runs: OBJ meshes (with their search tree) and PMEF NDJSON
+/// packages, by file name as written in the problem. A viewer that re-routes interactively
+/// parses a large building model once instead of on every run (see `pmef-route-wasm`
+/// `RouteSession`). Which objects of a package become obstacles (`pmefIgnore`) is still
+/// decided per run, so the cache only holds parsed files.
+#[derive(Debug, Clone, Default)]
+pub struct SceneCache {
+    meshes: HashMap<String, Arc<Mesh>>,
+    ndjson: HashMap<String, Arc<Vec<Value>>>,
+}
+
+impl SceneCache {
+    /// Forget the parsed content of `file` (it changed or was removed).
+    pub fn invalidate(&mut self, file: &str) {
+        self.meshes.remove(file);
+        self.ndjson.remove(file);
+    }
+
+    /// Whether `file` is held parsed.
+    pub fn contains(&self, file: &str) -> bool {
+        self.meshes.contains_key(file) || self.ndjson.contains_key(file)
+    }
+
+    /// The OBJ mesh `file`, parsed on first use.
+    pub fn mesh(&mut self, file: &str, read: &Reader<'_>) -> Result<Arc<Mesh>, SceneError> {
+        if let Some(m) = self.meshes.get(file) {
+            return Ok(m.clone());
+        }
+        let text = read(file).map_err(|e| SceneError::Io(file.to_string(), e))?;
+        let tris = parse_obj(&text).map_err(|(l, m)| SceneError::Parse(file.to_string(), l, m))?;
+        let m = Arc::new(Mesh::new(tris));
+        self.meshes.insert(file.to_string(), m.clone());
+        Ok(m)
+    }
+
+    /// The PMEF NDJSON package `file`, parsed on first use.
+    pub fn ndjson(&mut self, file: &str, read: &Reader<'_>) -> Result<Arc<Vec<Value>>, SceneError> {
+        if let Some(v) = self.ndjson.get(file) {
+            return Ok(v.clone());
+        }
+        let v = Arc::new(read_ndjson(file, read)?);
+        self.ndjson.insert(file.to_string(), v.clone());
+        Ok(v)
+    }
+}
+
 /// Read a PMEF NDJSON file through `read`.
 pub fn read_ndjson(f: &str, read: &Reader<'_>) -> Result<Vec<Value>, SceneError> {
     let text = read(f).map_err(|e| SceneError::Io(f.to_string(), e))?;
@@ -99,9 +147,18 @@ impl Scene {
     /// Build the scene of a problem, reading the files it names through `read` (file name as
     /// written in the problem → content). Used where there is no file system (WASM).
     pub fn load_with(problem: &RouteProblem, read: &Reader<'_>) -> Result<Scene, SceneError> {
+        Scene::load_cached(problem, read, &mut SceneCache::default())
+    }
+
+    /// As [`Scene::load_with`], taking parsed files from `cache` and adding those it lacks.
+    pub fn load_cached(
+        problem: &RouteProblem,
+        read: &Reader<'_>,
+        cache: &mut SceneCache,
+    ) -> Result<Scene, SceneError> {
         let mut s = Scene::default();
         for f in &problem.pmef_scene {
-            let objs = read_ndjson(f, read)?;
+            let objs = cache.ndjson(f, read)?;
             s.add_pmef(&objs, &problem.pmef_ignore);
         }
         for o in &problem.obstacles {
@@ -109,10 +166,8 @@ impl Scene {
             match (&o.aabb, &o.obj) {
                 (Some(b), None) => s.push(o.id.clone(), o.kind, pen, Shape::Box(*b)),
                 (None, Some(f)) => {
-                    let text = read(f).map_err(|e| SceneError::Io(f.clone(), e))?;
-                    let tris =
-                        parse_obj(&text).map_err(|(l, m)| SceneError::Parse(f.clone(), l, m))?;
-                    s.push(o.id.clone(), o.kind, pen, Shape::Mesh(Mesh::new(tris)));
+                    let m = cache.mesh(f, read)?;
+                    s.push(o.id.clone(), o.kind, pen, Shape::Mesh(m));
                 }
                 _ => return Err(SceneError::Shape(o.id.clone())),
             }
