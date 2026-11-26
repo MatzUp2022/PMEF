@@ -1,4 +1,6 @@
-✗ equipment-steel-negative.ndjson (12 issue(s))
+✗ equipment-steel-negative.ndjson (14 issue(s))
+     urn:pmef:obj:geomtest:ELB-SENSE: CIRC_TORUS ends at [4700.0, 0.0, 300.0], not at the other port [5300.0, 0.0, 300.0] (axis/startDir sense, spec 04 right-hand rule)
+     urn:pmef:obj:geomtest:ELB-NOSTART: CIRC_TORUS ends at [4700.0, 0.0, 300.0], not at the other port [5300.0, 0.0, 300.0] (axis/startDir sense, spec 04 right-hand rule)
      urn:pmef:obj:geomtest:P-BOX#INBOX: nozzle face is 250 mm inside the equipment bounding box
      urn:pmef:obj:geomtest:V-BAD#IN: nozzle face is 500 mm inside the equipment body
      urn:pmef:obj:geomtest:V-BAD#INWARD: nozzle direction points into the equipment (must point outward)

@@ -36,6 +36,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **Elbow `CW-201-ELB-001` in `examples/pump-skid-complete.ndjson` swept the wrong way.** Its
+  CIRC_TORUS had `axis: [0,1,0]`; by the right-hand rule of spec 04 the arc then ends at
+  x = 10890.4 instead of at port P2 (x = 11500). The spec is right, the example was wrong:
+  `axis` is now `[0,-1,0]`. Fixture GEOM-U-003 and `examples/pmefx/` are regenerated.
+  `scripts/check-geometry.py` now checks that an elbow's CIRC_TORUS runs from one port to the
+  other (new case `ELB-SENSE` in `tests/geometry/`).
+
 - **`pmef-core` no longer enables serde_json `preserve_order`** — same fix as for `pmef-catalogs`:
   consumers outside this workspace (DEXPI-Manager's DEXPI→PMEF mapping) keep plain JSON maps.
   Inside the workspace `pmef-io`/`pmef-cli` still enable it, so output order is unchanged.
