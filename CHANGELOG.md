@@ -253,6 +253,16 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **HVAC duct domain** `pmef-hvac.schema.json` ([RFC-0006](spec/rfc/0006-hvac-ducts-tray-fittings-catalogs.md),
+  spec 02 §11): `DuctNetworkSystem`, `DuctSegment`, `Duct`, `DuctBend`, `DuctTransition`,
+  `DuctBranch`, `DuctDamper`, `DuctAccessDoor`, `DuctTestPort`. Cross-sections ROUND, SQUARE,
+  RECTANGULAR, FLAT_OVAL per port; connection type (flanged, welded, slip joint…) per port;
+  insulation per segment or component. Rust: `pmef-core::hvac` (area, hydraulic diameter, velocity).
+- **`pmef:CableTrayFitting`** (E&I, spec 02 §6.6) and optional **`CableObject.catalogRef`**.
+- **Catalog types** `DUCT_DIMENSIONS`, `PIPE_SUPPORT_TYPES`, `CABLE_TYPES` with the catalogs
+  `duct-dimensions-en`, `pipe-supports-generic`, `cable-types-en`, consistency rules in
+  `check-catalogs.py` and typed accessors in `pmef-catalogs`.
+- Example `examples/utilities-hvac-cable.ndjson`; conformance tests `HVAC-U-001…013`, `EI-U-009/010`.
 - **`pmef route`: re-route a single line-list line or cable.** The report of a problem with line
   lists or cables carries `lineListRoutes` (the routes generated from the line lists); a route in
   `routes` whose `line` is a line-list line now replaces that line instead of routing it twice.

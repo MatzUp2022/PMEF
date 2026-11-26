@@ -426,6 +426,7 @@ pmef-piping-component.schema.json  — Piping domain
 pmef-equipment.schema.json         — Equipment domain
 pmef-ei.schema.json                — E&I domain
 pmef-steel.schema.json             — Structural Steel domain
+pmef-hvac.schema.json              — HVAC duct domain (since 0.10, RFC-0006)
 pmef-geometry.schema.json          — Geometry layer
 pmef-property-sets.schema.json     — all property sets
 pmef-relationships.schema.json     — typed relationships

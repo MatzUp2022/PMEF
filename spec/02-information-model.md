@@ -19,6 +19,7 @@
 8. [Relationship Model](#8-relationship-model)
 9. [Property Sets](#9-property-sets)
 10. [Extension Mechanism](#10-extension-mechanism)
+11. [HVAC Domain](#11-hvac-domain)
 
 ---
 
@@ -58,7 +59,7 @@ Every non-geometry, non-relationship PMEF object **SHOULD** contain:
 
 ### 1.4 Entity Type Registry
 
-The following `@type` values are normatively defined in PMEF v0.9:
+The following `@type` values are normatively defined in PMEF v0.9 (and v0.10 where marked):
 
 **Plant Hierarchy:** `pmef:FileHeader`, `pmef:Plant`, `pmef:Unit`, `pmef:Area`
 
@@ -74,7 +75,11 @@ The following `@type` values are normatively defined in PMEF v0.9:
 
 **E&I:** `pmef:InstrumentObject`, `pmef:InstrumentLoop`,
 `pmef:PLCObject`, `pmef:CableObject`, `pmef:CableTrayRun`,
-`pmef:MTPModule`
+`pmef:CableTrayFitting`, `pmef:MTPModule`
+
+**HVAC** (since 0.10, RFC-0006): `pmef:DuctNetworkSystem`, `pmef:DuctSegment`,
+`pmef:Duct`, `pmef:DuctBend`, `pmef:DuctTransition`, `pmef:DuctBranch`,
+`pmef:DuctDamper`, `pmef:DuctAccessDoor`, `pmef:DuctTestPort`
 
 **Structural Steel:** `pmef:SteelSystem`, `pmef:SteelMember`, `pmef:SteelNode`, `pmef:SteelConnection`
 
@@ -540,6 +545,32 @@ Represents an electrical cable or cable bundle between two termination points.
 termination point: `InstrumentObject`, `PLCObject`,
 `CableTrayRun`, or another `CableObject` (for cable joints).
 
+`catalogRef` (optional, since 0.10, RFC-0006) is a `CatalogReference` (§2.5) to an entry
+of a `CABLE_TYPES` catalog (e.g. `cable-types-en`). When present, the catalog entry is the
+source of core count, cross-section, outer diameter and minimum bend radius; values
+carried on the object **SHOULD** agree with it.
+
+### 6.6 CableTrayFitting
+
+Represents a formed piece that joins cable tray runs (since 0.10, RFC-0006).
+`fittingType` is one of `HORIZONTAL_BEND`, `VERTICAL_BEND_UP`, `VERTICAL_BEND_DOWN`,
+`TEE`, `CROSS`, `REDUCER`, `OFFSET`, `RISER`, `END_PIECE`. `width` [mm] is required;
+`branchWidth` applies to `TEE`, `CROSS` and `REDUCER`; `angle` [°] to bends and offsets.
+
+- `bendRadius` [mm] is the inner bend radius. A cable routed over the fitting **MUST NOT**
+  have a minimum bend radius greater than `bendRadius`.
+- `connectedTrayIds` lists the `@id`s of the `CableTrayRun`s the fitting joins. Each
+  **MUST** resolve to a `CableTrayRun` in the package or be an external reference.
+- `catalogRef` **MAY** reference a manufacturer-neutral or vendor catalog entry.
+
+### 6.7 Cable Routing over Trays
+
+A `CableObject` names the tray run it is laid on with `cableTrayId`. Fittings are not
+referenced from the cable: the path through a fitting follows from its `connectedTrayIds`.
+A routing tool that lays a cable over several runs **SHOULD** check every fitting on the
+path against the cable's minimum bend radius (outer diameter × `minBendRadiusFactor` of
+the `CABLE_TYPES` entry).
+
 ### 6.5 MTPModule
 
 Represents a modular process unit described by an MTP 2.0 file.
@@ -751,6 +782,11 @@ spring hangers, constant hanger, anchor, guide), design loads
 [N, N·m], spring rate [N/mm], hot and cold loads [N],
 travel range [mm], attachment type.
 
+Since 0.10 (RFC-0006), `PipeSupport.catalogRef` **MAY** reference a `PIPE_SUPPORT_TYPES`
+catalog entry (e.g. `pipe-supports-generic`) by its `supportCode`. The entry fixes the
+support type, the restrained degrees of freedom and the DN range; the object's
+`SupportSpec.supportType` **SHOULD** equal the entry's `supportType`.
+
 ---
 
 ## 10 Extension Mechanism
@@ -802,6 +838,80 @@ unknown `@type` values.
   "isPartOf": "urn:pmef:unit:proj:U-600"
 }
 ```
+
+---
+
+## 11 HVAC Domain
+
+Since 0.10 (RFC-0006). Schema: `pmef-hvac.schema.json`. The domain follows the three-level
+pattern of piping (§4): system → segment → component.
+
+### 11.1 DuctNetworkSystem
+
+An air system (e.g. supply air of one air handling unit). `systemNumber` and `airType` are
+required. `airType` is one of `SUPPLY`, `EXTRACT`, `OUTDOOR`, `EXHAUST`, `RECIRCULATION`,
+`TRANSFER`, `SMOKE_EXTRACT`, `PROCESS_EXHAUST`, `OTHER` (air categories after EN 16798-3).
+`designConditions` carries airflow rate [m³/h], design pressure [Pa], operating
+temperature [°C], maximum velocity [m/s] and the air tightness class (`A`–`D`, EN 12237 /
+EN 1507). IDs use the `line` domain segment, like piping lines.
+
+### 11.2 DuctSegment
+
+A section of a duct system with uniform specification (`DuctSpec`: material, grade, sheet
+thickness [mm], construction, standard) and optionally uniform insulation. IDs use the
+`seg` domain segment. Components reference their segment via `isPartOf`.
+
+### 11.3 Cross-Section
+
+Every duct port carries a `crossSection`:
+
+| `shape` | Required dimensions |
+|---|---|
+| `ROUND` | `diameter` |
+| `SQUARE` | `width` (= height) |
+| `RECTANGULAR` | `width`, `height` |
+| `FLAT_OVAL` | `width` (major axis), `height` (minor axis) |
+
+All dimensions are inner dimensions in mm. Derived values (area, hydraulic diameter
+4·A/U, velocity) are computed, not stored. A component whose ports carry different
+sections is a `DuctTransition`; there is no separate type per shape change.
+
+### 11.4 DuctPort and Connections
+
+`DuctPort` extends the port concept of §2.6 with `crossSection` (required),
+`connectionType` (`FLANGED`, `WELDED`, `SLIP_JOINT`, `SOCKET_SPIGOT`, `CLAMPED`, `PLAIN`)
+and an optional `flangeProfile` (e.g. a frame profile designation). `connectedTo` follows
+the topology rules of §4.5: it is symmetric, and two connected ports **MUST** have equal
+cross-sections and **SHOULD** have the same `connectionType`.
+
+### 11.5 Components
+
+| `@type` | Purpose | Ports |
+|---|---|---|
+| `pmef:Duct` | straight duct, `length` [mm] | 2 |
+| `pmef:DuctBend` | bend, `angle` [°] required; `bendType` `RADIUS`, `SEGMENTED`, `MITRED`; `radius`, `segments`, `turningVanes`, `bendPlane` | 2 |
+| `pmef:DuctTransition` | change of size and/or shape | exactly 2 |
+| `pmef:DuctBranch` | `branchType` `TEE`, `LATERAL`, `Y_PIECE`, `CROSS`, `SADDLE_TAP` | ≥ 3 |
+| `pmef:DuctDamper` | `damperType` incl. `FIRE`, `SMOKE`, `FIRE_SMOKE`; `fireResistance` (e.g. `EI 90 S`), `actuation`, `instrumentId` | 2 |
+| `pmef:DuctAccessDoor` | inspection door or hatch | none |
+| `pmef:DuctTestPort` | measuring nipple for pressure, flow, temperature or sampling | none |
+
+Access doors and test ports are **mounted items**: they have no flow ports, reference the
+component they sit on with `hostId`, and give a `position` (and optional `normal`) in plant
+coordinates. `hostId` **MUST** reference a duct component of the same package.
+
+### 11.6 Insulation
+
+`DuctInsulation` **MAY** be given on a `DuctSegment` (default for its components) or on a
+component (overrides the segment). `insulationType` (`THERMAL`, `CONDENSATION`, `ACOUSTIC`,
+`FIRE`) and `thickness` [mm] are required; `internal: true` marks internal lining.
+`cladding` and `fireRating` are optional.
+
+### 11.7 Catalogs
+
+Nominal duct sizes come from a `DUCT_DIMENSIONS` catalog (e.g. `duct-dimensions-en` with
+round sizes after EN 1506 and rectangular side lengths after EN 1505). Recognition and
+design tools **SHOULD** snap measured sizes to the next catalog size.
 
 ---
 
