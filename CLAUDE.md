@@ -115,8 +115,9 @@ needs regenerated fixtures (`generate_fixtures.py`) — CI fails otherwise.
 PMEF is the **core layer** of the MatzUp2022 ecosystem: the single information model for 3D plant
 objects and the single home of engineering catalogs. Other repos depend on PMEF, never the reverse.
 
-PMEF owns: schemas, information model (Piping, Equipment, Structural Steel), catalogs (piping classes,
-flanges, pipe dimensions, profiles, materials), NDJSON I/O, diff/merge, snapping, adapters to
+PMEF owns: schemas, information model (Piping, Equipment, Structural Steel, HVAC, cables and cable
+trays), catalogs (piping classes, flanges, pipe dimensions, profiles, materials, duct sizes, pipe
+supports, cable types), NDJSON I/O, diff/merge, snapping, adapters to
 AVEVA E3D and AutoCAD Plant 3D.
 
 Not in scope here — build it in the owning repo instead:
@@ -126,6 +127,9 @@ Not in scope here — build it in the owning repo instead:
 - Exact B-rep/NURBS geometry → cad-kernel (PMEF only defines geometry references and primitives)
 - Document management, revisions, workflows, lifecycle data → ProDocAimAi
 - Recognition from 2D drawings/scans → EngineeringAI (it *produces* PMEF with provenance)
+- Interactive design/authoring UI → cad-studio (uses `pmef-core`, `pmef-route` and `pmef-catalogs`)
+- Calculation: shared basis → eng-calc, pipe stress → piping-solver, structural FEM → structural-solver;
+  SLD and cable calculation → electrical
 
 Catalog data needed by other repos (e.g. DEXPI-Manager `pipe-class-engine`) is added here, not
 duplicated there.
