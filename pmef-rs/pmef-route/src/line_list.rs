@@ -15,7 +15,7 @@
 //! scene) are listed with the reason.
 
 use crate::problem::{BranchSpec, RouteProblem, RouteSpec, Terminal};
-use crate::scene::{read_ndjson, Reader, Scene, SceneError};
+use crate::scene::{Reader, Scene, SceneCache, SceneError};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -199,17 +199,18 @@ pub fn routes_from_pmef(
     (routes, skipped)
 }
 
-/// Append the routes of every `lineLists` entry of `problem` (read through `read`), after the
-/// routes given explicitly.
+/// Append the routes of every `lineLists` entry of `problem` (read through `read`, parsed
+/// files kept in `cache`), after the routes given explicitly.
 pub fn expand(
     problem: &mut RouteProblem,
     scene: &Scene,
     read: &Reader<'_>,
+    cache: &mut SceneCache,
 ) -> Result<Vec<SkippedLine>, SceneError> {
     let mut skipped = Vec::new();
     let mut used: HashSet<String> = problem.routes.iter().map(|r| r.id.clone()).collect();
     for spec in problem.line_lists.clone() {
-        let objs = read_ndjson(&spec.file, read)?;
+        let objs = cache.ndjson(&spec.file, read)?;
         let (r, s) = routes_from_pmef(&objs, scene, &spec, &mut used);
         problem.routes.extend(r);
         skipped.extend(s);

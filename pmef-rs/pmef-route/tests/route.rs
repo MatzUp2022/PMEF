@@ -867,7 +867,7 @@ fn no_turns_inside_a_thick_soft_mesh() {
         "wall".into(),
         pmef_route::problem::ObstacleKind::Soft,
         100.0,
-        pmef_route::scene::Shape::Mesh(box_mesh(lo, hi)),
+        pmef_route::scene::Shape::Mesh(std::sync::Arc::new(box_mesh(lo, hi))),
     );
     let r = route_all(&p, &s);
     assert!(r[0].ok, "{:?}", r[0].error);
