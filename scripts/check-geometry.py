@@ -9,7 +9,9 @@ Piping
   3. In-line two-port components (pipe, flange, gasket, valve, reducer): port directions point
      away from the component along its axis (spec 02 §2.6); pipeLength equals the port distance.
   4. Elbow: the two port axes intersect (bend centre point), the centre point is equidistant
-     from both ports, and the angle between the axes matches `angle`.
+     from both ports, and the angle between the axes matches `angle`. A CIRC_TORUS geometry of
+     the elbow (spec 04: arc from `center + R·startDir`, swept by `angleDeg` about `axis` by the
+     right-hand rule) starts at one port and ends at the other.
 
 Equipment (spec 02 §5.2, spec 04 primitives)
   5. Nozzle directions are unit vectors.
@@ -109,12 +111,39 @@ def check(objs):
             bend = 180.0 - math.degrees(math.acos(cosang))
             if "angle" in o and abs(bend - o["angle"]) > 0.5:
                 issues.append(f"{oid}: angle {o['angle']}° but port directions give {bend:.1f}°")
+            geom = by_id.get((o.get("geometry") or {}).get("ref")) or {}
+            prim = geom.get("primitive") or {}
+            if prim.get("type") == "CIRC_TORUS":
+                issues += check_torus(oid, prim, p1, p2)
     issues += check_equipment(objs, by_id)
     issues += check_steel(objs, by_id)
     return issues
 
 
 # ── equipment ─────────────────────────────────────────────────────────────────
+
+def rotate(v, a, deg):
+    """v rotated about the unit axis a by deg (right-hand rule, Rodrigues)."""
+    t = math.radians(deg)
+    c, s = math.cos(t), math.sin(t)
+    cr = [a[1] * v[2] - a[2] * v[1], a[2] * v[0] - a[0] * v[2], a[0] * v[1] - a[1] * v[0]]
+    d = dot(a, v)
+    return [v[i] * c + cr[i] * s + a[i] * d * (1 - c) for i in range(3)]
+
+
+def check_torus(oid, prim, p1, p2):
+    """Elbow torus (spec 04 CIRC_TORUS) runs from one port to the other."""
+    c, r = prim["center"], prim["torusRadius"]
+    start = add(c, unit(prim["startDir"]), r)
+    end = add(c, rotate(unit(prim["startDir"]), unit(prim["axis"]), prim["angleDeg"]), r)
+    if min(norm(sub(start, p1)), norm(sub(start, p2))) > TOL:
+        return [f"{oid}: CIRC_TORUS starts at {[round(x, 1) for x in start]}, not at a port"]
+    other = p2 if norm(sub(start, p1)) <= TOL else p1
+    if norm(sub(end, other)) > TOL:
+        return [f"{oid}: CIRC_TORUS ends at {[round(x, 1) for x in end]}, not at the other port "
+                f"{[round(x, 1) for x in other]} (axis/startDir sense, spec 04 right-hand rule)"]
+    return []
+
 
 def unit(a):
     n = norm(a)

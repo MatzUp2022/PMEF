@@ -226,6 +226,11 @@ Circular torus segment. Used for pipe elbows and bends.
 
 **Constraint:** `torusRadius > tubeRadius` (the torus ring does not self-intersect).
 
+The P2 end lies at `center + torusRadius · rot(axis, angleDeg)(startDir)`. *Example
+(non-normative):* a 90° elbow from a pipe running in +X that turns up into +Z has
+`startDir = [0,0,-1]` and `axis = [0,-1,0]`; with `axis = [0,1,0]` the arc would turn back
+toward −X.
+
 #### SNOUT
 
 Eccentric frustum with lateral offset. Used for eccentric reducers, off-centre nozzles.
