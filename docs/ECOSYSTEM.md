@@ -1,6 +1,6 @@
 # Ökosystem: Verantwortung je Repository
 
-Stand: 2026-11-26 · Freigegeben von Marcel · Gilt identisch in allen acht Repositories.
+Stand: 2026-11-26 · Freigegeben von Marcel · Gilt identisch in allen Repositories der Tabelle.
 
 Dieses Dokument legt fest, welches Repository welche Funktion **besitzt**. Ziel ist, dass keine
 Funktion in zwei Repositories parallel entsteht. Vor jeder neuen Funktion gilt: Gehört sie laut
@@ -10,13 +10,13 @@ Tabelle einem anderen Repository, wird sie dort gebaut (oder dort angefragt), ni
 
 ```text
 Plattformen   ProDocAimAi (CDE/AIM)            ProcessHubAi (BPM)  --API-->  ProDocAimAi
-                   |  WASM-Pakete, REST-API
-Engines       DEXPI-Manager   PlantView   cad-engine   EngineeringAI   eng-calc*   electrical*
+Anwendungen   cad-studio (Konstruktion)
+                   |  WASM-Pakete, REST-API, Cargo-Crates
+Engines       DEXPI-Manager   PlantView   cad-engine   EngineeringAI
+              eng-calc → piping-solver, structural-solver   electrical
                    |  Cargo-Crates (Git-Tags)
 Kern          PMEF (Informationsmodell, Kataloge)    cad-kernel (exakte Geometrie)
 ```
-
-`*` = beschlossen, Repository noch anzulegen (Entscheidungen vom 2026-11-26, Nr. 2 und 4).
 
 - Abhängigkeiten zeigen **nur nach unten**. Keine Schicht ruft eine höhere auf.
 - Engines kennen einander nur über Daten (PMEF, DEXPI) mit stabilen `@id`s, nicht über interne Typen.
@@ -27,16 +27,19 @@ Kern          PMEF (Informationsmodell, Kataloge)    cad-kernel (exakte Geometri
 
 | Repo | Besitzt | Baut nicht (Nicht-Scope) | Liefert nach außen |
 | --- | --- | --- | --- |
-| PMEF | Informationsmodell 3D-Objekte (Piping, Equipment, Steel, HVAC-Kanäle, Kabel und Kabeltrassen inkl. Formteile), JSON-Schemas, Kataloge (Rohrklassen, Flansche, Profile, Werkstoffe, Kanalmaße, Rohrhalterungen, Kabeltypen), NDJSON-I/O, Diff/Merge, Snapping, Auto-Routing-Kernel (`pmef-route`: Rohrleitungen im Graph/Voxel-Raster nach Rohrklassen-Regeln, später Kabel), Adapter zu AVEVA E3D und AutoCAD Plant 3D | Viewer, Datenbank/Server, Workflows, P&ID-Topologie (→ DEXPI-Manager), Konstruktions-UI (→ cad-engine `cad-studio`), Berechnungs-Solver (→ eng-calc), Schaltplan-Modell und Elektro-Berechnung (→ electrical) | Crates `pmef-core`, `pmef-io`, `pmef-validate`, `pmef-geom`, `pmef-catalogs`, `pmef-route`; CLI `pmef route`; Schemas; Katalog-JSON |
+| PMEF | Informationsmodell 3D-Objekte (Piping, Equipment, Steel, HVAC-Kanäle, Kabel und Kabeltrassen inkl. Formteile), JSON-Schemas, Kataloge (Rohrklassen, Flansche, Profile, Werkstoffe, Kanalmaße, Rohrhalterungen, Kabeltypen), NDJSON-I/O, Diff/Merge, Snapping, Auto-Routing-Kernel (`pmef-route`: Rohrleitungen im Graph/Voxel-Raster nach Rohrklassen-Regeln, später Kabel), Adapter zu AVEVA E3D und AutoCAD Plant 3D | Viewer, Datenbank/Server, Workflows, P&ID-Topologie (→ DEXPI-Manager), Konstruktions-UI (→ cad-studio), Berechnungs-Solver (→ eng-calc, piping-solver, structural-solver), Schaltplan-Modell und Elektro-Berechnung (→ electrical) | Crates `pmef-core`, `pmef-io`, `pmef-validate`, `pmef-geom`, `pmef-catalogs`, `pmef-route`; CLI `pmef route`; Schemas; Katalog-JSON |
 | cad-kernel | Exakte Geometrie: NURBS, B-Rep-Topologie, Schnitte, Booleans, Tessellierung | Szene, Rendering, Fachobjekte, Dateiformate | Crate `kernel-api` (Rust + WASM) |
 | DEXPI-Manager | DEXPI-Parsing/-Validierung/-Export, P&ID-/PFD-Graph, Regel-Engine, Safety (HAZOP, SIL, LOPA), P/T-Berechnung für Rohrklassen, Adapter zu P&ID-Werkzeugen | Dokumentenmanagement, Transmittals, Revisions-Workflows, Schweißen, Prüfung, Kabel/Elektro, Bau/IBN (→ ProDocAimAi); eigene Rohrklassen-/Maßtabellen (→ PMEF-Kataloge); 3D-Tool-Adapter (→ PMEF); 2D-Ableitung (→ PlantView); Erkennungs-KI (→ EngineeringAI) | Crates `dexpi-core`, `pid-graph`, `rule-engine`, `pipe-class-engine`; WASM `wasm-bindings` |
 | PlantView | Viewer-Formate (glTF, IFC, STEP, OBJ/STL, PCF, `.mvcache`), Konvertierung, Streaming, Desktop-/Web-Viewer, 2D-Ableitung (HLR, DXF, PDF, SVG), BIM-Prüfungen (IDS, BCF, bSDD) | Fach-Datenmodelle je Disziplin (→ PMEF), eigener DEXPI-Parser (→ `dexpi-core`), NURBS-/B-Rep-Auswertung (→ cad-kernel), Lifecycle-Module (→ ProDocAimAi), Erkennungs-KI (→ EngineeringAI) | CLI, WASM `mvcache-web`, Geometriequelle für `geom-api` |
-| cad-engine | Natives Echtzeit-Rendering großer Modelle (wgpu), Physik, Montage-, Kranhub- und Kinematiksimulation; Konstruktionsprogramm `cad-studio` (interaktives Verlegen und Bearbeiten von Rohrleitungen, Halterungen, Stahl, Kanälen, Trassen; speichert PMEF) | Formatimport außer PMEF/`.mvcache` (→ PlantView), Fachdatenmodelle und Regeln (→ PMEF, `cad-studio` nutzt `pmef-core`/`pmef-route`), exakte Geometrie (→ cad-kernel) | `geom-api`, `cad-render`, `cad-physics`, App `cad-studio` |
+| cad-engine | Natives Echtzeit-Rendering großer Modelle (wgpu), Picking, Physik, Montage-, Kranhub- und Kinematiksimulation | Formatimport außer PMEF/`.mvcache` (→ PlantView), Fachdatenmodelle und Regeln (→ PMEF), exakte Geometrie (→ cad-kernel), Bearbeitungs-UI (→ cad-studio) | `geom-api`, `cad-render`, `cad-physics` |
+| cad-studio | Konstruktionsprogramm: interaktives Verlegen und Bearbeiten von Rohrleitungen, Halterungen, Stahl, Kanälen, Trassen; Bearbeitungsmodell mit Rückgängig; Darstellung von PMEF-Objekten; speichert PMEF | Rendering-Kern (→ cad-engine), Fachdatenmodell, Kataloge und Routing-Regeln (→ PMEF `pmef-core`, `pmef-route`, `pmef-catalogs`), exakte Geometrie (→ cad-kernel), Berechnung (→ eng-calc) | App `cad-studio` (Fenster, Skript, headless), Crates `studio-core`, `geom-pmef` |
 | EngineeringAI | Erkennung aus 2D-Zeichnungen, Isometrien, PDF/DWG/DXF/DGN und Punktwolken; Ausgabe PMEF bzw. DEXPI mit Provenienz, Konfidenz, Review-Status | LLM-Chat-/Copilot-Funktionen der Plattformen, eigenes Datenmodell | Erkennungs-Pipeline (CLI/Service) |
 | ProDocAimAi | CDE/EDMS, Revisionen, Workflows, Transmittals, Tags/Equipment-Lifecycle, Klassenbibliothek, RDS-/81346-Strukturen, ITP, Handover, AAS/CFIHOS/SAP-Export | Geometrie, Formatparser, P&ID-Logik (kommen als WASM aus den Engines) | Öffentliche REST-API |
 | ProcessHubAi | Prozessmanagement, Workflow-Ausführung, Engineering Edition (Deliverable-Abhängigkeiten); Prozessseite der Material-/Logistikfluss-Simulation, Anbindung externer Simulationswerkzeuge per Konnektor | CDE-Funktionen, Dokumentablage, MDR/VDRL, Schedule/EVM (→ ProDocAimAi); eigener Materialfluss-Simulator | REST-API, Konnektor zu ProDocAimAi |
-| eng-calc* | Berechnungs-Solver: Rohrstatik (ASME B31.3, EN 13480), Stabwerk (EC3); liest PMEF, schreibt Ergebnisse als PMEF-Eigenschaften zurück | Datenmodell (→ PMEF), Viewer, 1D-Hydraulik (→ DEXPI-Manager), CFD | Crate(s), CLI |
-| electrical* | Schaltplan-Modell (Einlinienschaltbild), Kabelberechnung (Querschnitt, Spannungsfall, Kurzschluss nach IEC 60364/60909), Klemmenpläne | Kabel- und Trassenobjekte im 3D-Modell (→ PMEF), Kabelliste/-verfolgung im Projekt (→ ProDocAimAi) | Crate(s), WASM |
+| eng-calc | Gemeinsame Berechnungsbasis: Lastfälle und Kombinationen, Einheiten, Werkstoffkennwerte aus PMEF-Katalogen, Berechnungsmodell aus PMEF, Ergebnisformat und Rückschreiben als PMEF-Eigenschaften, Export nach CAESAR II bzw. RFEM/RSTAB | Gleichungslöser der Fachgebiete (→ piping-solver, structural-solver), Datenmodell (→ PMEF), Viewer, 1D-Hydraulik (→ DEXPI-Manager), CFD | Crates, CLI |
+| piping-solver | Rohrstatik: Balken-FE für Rohrleitungen mit Bögen, Halterungen, Federn; Nachweise ASME B31.3 und EN 13480 | Lastfall-Verwaltung und PMEF-Anbindung (→ eng-calc), Stahlbau (→ structural-solver) | Crate, nutzt `eng-calc` |
+| structural-solver | Stabwerk-FE für Stahlbau, Nachweise EC3 (EN 1993) | Lastfall-Verwaltung und PMEF-Anbindung (→ eng-calc), Rohrleitungen (→ piping-solver) | Crate, nutzt `eng-calc` |
+| electrical | Schaltplan-Modell (Einlinienschaltbild), Kabelberechnung (Querschnitt, Spannungsfall, Kurzschluss nach IEC 60364/60909), Klemmenpläne | Kabel- und Trassenobjekte im 3D-Modell (→ PMEF), Kabelliste/-verfolgung im Projekt (→ ProDocAimAi) | Crate(s), WASM |
 
 ## Getroffene Entscheidungen (2026-11-21)
 
@@ -55,10 +58,13 @@ Kern          PMEF (Informationsmodell, Kataloge)    cad-kernel (exakte Geometri
 
 ## Getroffene Entscheidungen (2026-11-26)
 
-1. **Konstruktionsprogramm** ist die neue App `cad-studio` in **cad-engine** (nativer Renderer und
-   Picking sind dort, Geometrie aus cad-kernel, Daten und Routing aus PMEF). Kein neues Repository.
-2. **Berechnungs-Solver** (Rohrstatik, Stabwerk) entstehen im neuen Engine-Repository **eng-calc**.
-   Bis dahin Export nach CAESAR II bzw. RFEM/RSTAB aus PMEF. 1D-Hydraulik bleibt in DEXPI-Manager.
+1. **Konstruktionsprogramm** ist das eigene Repository **cad-studio** (Anwendungsschicht). Es nutzt
+   Renderer und Picking aus cad-engine, Daten, Kataloge und Routing aus PMEF, später Geometrie aus
+   cad-kernel. (Zuerst war eine App in cad-engine vorgesehen; am selben Tag auf das eigene Repository
+   geändert.)
+2. **Berechnung** liegt in drei Engine-Repositories: **eng-calc** als gemeinsame Basis (Lastfälle,
+   PMEF-Anbindung, Ergebnisse, Export nach CAESAR II bzw. RFEM/RSTAB), **piping-solver** für die
+   Rohrstatik und **structural-solver** für den Stahlbau. 1D-Hydraulik bleibt in DEXPI-Manager.
 3. **Material-/Logistikfluss-Simulation** wird nicht selbst gebaut: Prozessseite in ProcessHubAi,
    Simulation über Anbindung eines Fremdwerkzeugs per Konnektor.
 4. **Elektro-Engine** (Einlinienschaltbild, Kabelberechnung, Klemmenpläne) entsteht im neuen
@@ -94,6 +100,6 @@ Freigabe je Modul.
 
 ## Pflege
 
-Änderungen an der Matrix werden in allen acht Repositories gleichzeitig vorgenommen. Bei Konflikt
+Änderungen an der Matrix werden in allen Repositories der Tabelle gleichzeitig vorgenommen. Bei Konflikt
 zwischen diesem Dokument und einer repo-lokalen Planung gilt dieses Dokument; den Konflikt im PR
 benennen.

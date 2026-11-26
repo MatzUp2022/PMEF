@@ -127,8 +127,9 @@ Not in scope here — build it in the owning repo instead:
 - Exact B-rep/NURBS geometry → cad-kernel (PMEF only defines geometry references and primitives)
 - Document management, revisions, workflows, lifecycle data → ProDocAimAi
 - Recognition from 2D drawings/scans → EngineeringAI (it *produces* PMEF with provenance)
-- Interactive design/authoring UI → cad-engine `cad-studio` (uses `pmef-core` and `pmef-route`)
-- Calculation solvers (pipe stress, structural FEM) → eng-calc; SLD and cable calculation → electrical
+- Interactive design/authoring UI → cad-studio (uses `pmef-core`, `pmef-route` and `pmef-catalogs`)
+- Calculation: shared basis → eng-calc, pipe stress → piping-solver, structural FEM → structural-solver;
+  SLD and cable calculation → electrical
 
 Catalog data needed by other repos (e.g. DEXPI-Manager `pipe-class-engine`) is added here, not
 duplicated there.
