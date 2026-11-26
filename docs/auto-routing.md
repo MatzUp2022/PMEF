@@ -138,7 +138,8 @@ route from the first to the second; further nozzles become branches. The generat
 attach to the P&ID line (`isPartOf` = its `@id`), no new line object is written. Lines without
 DN, without class (`lineLists[].pipeClass` sets a default) or with fewer than two nozzles in the
 scene are listed in the report (`skippedLines`) with the reason; `lineLists[].lines` restricts
-the run to some line numbers. Example: `tests/route/pump-skid-linelist-route.json` with the
+the run to some line numbers, and `lineLists[].classMap` maps the project piping class codes of
+the P&ID (e.g. `"75HB13": "A1A2"`) to catalog classes. Example: `tests/route/pump-skid-linelist-route.json` with the
 synthetic P&ID package `tests/route/pump-skid-pid.ndjson`.
 
 **WASM** (`pmef-route-wasm`). The whole run (`pmef_route::run`) reads its files through a
@@ -187,6 +188,34 @@ The problem format is documented in `pmef-rs/pmef-route/src/problem.rs` (camelCa
 | `pmef-route-wasm` in Node 22 | same problem, files passed in memory | 1 | NDJSON byte-identical to `pmef route`, 35 ms |
 | `pmef-route` stage 5 tests, `tests/route/cable-trays-route.json` | power and signal trays, cross tray, L-shaped tray | 2–3 cables | each cable uses only its segregated tray; a full tray and a too small tray bend radius are refused; example output (2 `CableObject`s) passes `pmef validate --strict` |
 
+## Reference tests
+
+`tests/route/corpus/reference_runs.py` takes pipe runs that the corpus models already contain and
+routes them again between the same end points, with the run itself removed from the obstacles
+(the other plumbing stays hard, walls and slabs soft). Each run is routed twice: `default` (walls
+and slabs soft, crossing costs `penetrationPenalty`) and `chases` (no soft obstacles, as if the
+pipe may run in a wall chase). Metrics per run: length ratio to the reference, bends, clash
+(length closer to other geometry than the pipe radius, 150 mm at each end ignored), length inside
+walls and slabs, mean deviation from the reference polyline. Comparison images (plan and
+elevation per run) are written next to the summary; see `tests/route/corpus/README.md`.
+
+| Model | Runs | Routed (default / chases) | Clash of the routes | Length ratio | Bends vs. reference | Finding |
+|---|---|---|---|---|---|---|
+| Duplex (`Duplex_Plumbing` in `Duplex_A`), DN 25, 1.5–3.4 m, step 50 mm | 12 | 11 / 12 | 0 (references 0) | default 0.98–1.24 (4 runs at the reference length), chases 0.88–1.14 (5) | −3 … +4 | The modelled pipes run largely inside party and furring walls (up to 2.8 m of 3.4 m); with walls soft the router crosses them instead (2–4 penetrations) and becomes longer. R07 fails with soft walls at clearance 25 mm on the 50 mm grid (routes with clearance 0, on a 25 mm grid or in `chases`). |
+| Clinic (`Clinic_Plumbing` in `Clinic_Structural`), DN 15–100, 13–47 m, step 50 mm, coarse 500 mm | 12 | 11 / 11 | 0 (references: 6 runs clash, up to 4 m) | 0.67–1.05, 7 runs within ±3 % | −15 … +5 | Routes run at the same length as the reference but often on the other side of a room (mean deviation up to 1.3 m): several equal-length paths exist. R01 is 33 % shorter than the 19-bend reference. R10 (DN 100) is refused: its end lies in the clearance zone of other plumbing, which the reference also clashes with. |
+| DEXPI reference P&ID C01 (`dexpi-pmef` output of DEXPI-Manager), synthetic layout | 11 lines | 5 | – | – | – | Lines with two nozzles in the P&ID are routed (DN 50/80, classes 75HB13/73HG12 mapped with `classMap`); 6 lines are skipped with "1 nozzle connection(s)": they end at battery limits or off-page connectors. There is still no P&ID with a 3D model of the same plant to compare against. |
+
+The reference tests found one kernel bug, fixed with them: soft mesh obstacles marked only their
+surface cells, so a route could run *inside* a thick wall, paying the penetration penalty once
+(Duplex R01: 2.5 m inside walls with 3 penetrations). The rasteriser now also marks the interior
+of soft meshes (`Grid::fill_mesh_interior`, winding number along vertical lines), and the search
+does not turn inside them (test `no_turns_inside_a_thick_soft_mesh`).
+
+Open from the reference tests: an explicit chase or shaft obstacle type (soft zone in which
+running along is allowed, instead of either soft or no walls); terminal clearance relaxed for the
+pipe it continues (R10); a preference among equal-length routes for the side where other pipes
+already run (Clinic).
+
 ## Later increments
 
 1. **Plant-scale graphs.** Done in stage 1: rack levels as preferred edges, coarse-to-fine
@@ -213,4 +242,6 @@ The problem format is documented in `pmef-rs/pmef-route/src/problem.rs` (camelCa
    `wasm32-unknown-unknown`) and P&ID line lists as input (`lineLists`, `dexpi-pmef` shape).
    Open, in the owning repos: the re-routing UI in PlantView (`mvcache-web`) and ProDocAimAi,
    which vendor the WASM package (ADR 0042); a run of real `dexpi-pmef` output against a 3D model
-   of the same plant (the repository has no such pair yet, only the synthetic package).
+   of the same plant (no such pair is available; the DEXPI reference P&ID C01 runs on a synthetic
+   layout, see Reference tests). Project piping class codes of the P&ID map to catalog classes
+   with `lineLists[].classMap`.

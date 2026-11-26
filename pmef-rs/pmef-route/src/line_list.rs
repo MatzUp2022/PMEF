@@ -32,6 +32,9 @@ pub struct LineListSpec {
     /// Piping class for lines without `pipeClass`.
     #[serde(default)]
     pub pipe_class: Option<String>,
+    /// Project piping class codes of the P&ID → PMEF catalog classes (e.g. `"75HB13": "A1A2"`).
+    #[serde(default)]
+    pub class_map: std::collections::BTreeMap<String, String>,
 }
 
 /// A line of a line list that was not turned into a route.
@@ -122,7 +125,12 @@ pub fn routes_from_pmef(
         };
         let Some(class) = o["pipeClass"]
             .as_str()
-            .map(str::to_string)
+            .map(|c| {
+                spec.class_map
+                    .get(c)
+                    .cloned()
+                    .unwrap_or_else(|| c.to_string())
+            })
             .or_else(|| spec.pipe_class.clone())
         else {
             skip("no pipeClass (set lineLists[].pipeClass)".into());

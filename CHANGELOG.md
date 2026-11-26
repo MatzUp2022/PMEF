@@ -246,6 +246,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **`pmef route` reference tests**: `tests/route/corpus/reference_runs.py` re-routes pipe runs
+  modelled in the corpus (Duplex, Clinic) between their own end points and compares length,
+  bends, clashes and deviation, with comparison images; `dexpi_layout.py` runs the DEXPI
+  reference P&ID C01 (`dexpi-pmef` output) on a synthetic layout. Results in
+  `docs/auto-routing.md` (Reference tests). Fix found by them: soft mesh obstacles now block
+  their interior, so routes no longer run inside thick walls. `lineLists[].classMap` maps P&ID
+  piping class codes to catalog classes.
 - **`pmef route` stage 6 (integration)**: `lineLists` routes P&ID lines mapped to PMEF
   (DEXPI-Manager `dexpi-pmef`: `PipingNetworkSystem` + `IsConnectedTo` with the nozzle mark)
   between the nozzles of the 3D scene, matching equipment by `@id`, `isDerivedFrom` or tag
