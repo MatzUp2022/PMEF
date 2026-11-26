@@ -1,0 +1,223 @@
+{
+  "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
+  "catalogId": "duct-dimensions-en",
+  "catalogType": "DUCT_DIMENSIONS",
+  "version": "2026.1",
+  "description": "Standard sheet-metal air-duct sizes: round nominal diameters (EN 1506) and preferred rectangular side lengths (EN 1505). A rectangular duct combines two side lengths (width x height) from this list.",
+  "standard": "EN 1505, EN 1506",
+  "units": {
+    "size_mm": "mm",
+    "area_m2": "m²"
+  },
+  "fieldDefinitions": {
+    "size_mm": "ROUND: nominal (inside) diameter d. RECTANGULAR: one preferred inside side length.",
+    "area_m2": "Inside cross-section area of a round duct, π·d²/4."
+  },
+  "notes": [
+    "Round sizes are the commonly stocked subset of the EN 1506 series; check the standard for intermediate sizes.",
+    "Flat-oval ducts have no standard size series and are described per object (DuctCrossSection)."
+  ],
+  "entries": [
+    {
+      "catalogId": "R80",
+      "series": "ROUND",
+      "size_mm": 80,
+      "area_m2": 0.005027
+    },
+    {
+      "catalogId": "R100",
+      "series": "ROUND",
+      "size_mm": 100,
+      "area_m2": 0.007854
+    },
+    {
+      "catalogId": "R125",
+      "series": "ROUND",
+      "size_mm": 125,
+      "area_m2": 0.012272
+    },
+    {
+      "catalogId": "R150",
+      "series": "ROUND",
+      "size_mm": 150,
+      "area_m2": 0.017671
+    },
+    {
+      "catalogId": "R160",
+      "series": "ROUND",
+      "size_mm": 160,
+      "area_m2": 0.020106
+    },
+    {
+      "catalogId": "R200",
+      "series": "ROUND",
+      "size_mm": 200,
+      "area_m2": 0.031416
+    },
+    {
+      "catalogId": "R250",
+      "series": "ROUND",
+      "size_mm": 250,
+      "area_m2": 0.049087
+    },
+    {
+      "catalogId": "R300",
+      "series": "ROUND",
+      "size_mm": 300,
+      "area_m2": 0.070686
+    },
+    {
+      "catalogId": "R315",
+      "series": "ROUND",
+      "size_mm": 315,
+      "area_m2": 0.077931
+    },
+    {
+      "catalogId": "R355",
+      "series": "ROUND",
+      "size_mm": 355,
+      "area_m2": 0.09898
+    },
+    {
+      "catalogId": "R400",
+      "series": "ROUND",
+      "size_mm": 400,
+      "area_m2": 0.125664
+    },
+    {
+      "catalogId": "R450",
+      "series": "ROUND",
+      "size_mm": 450,
+      "area_m2": 0.159043
+    },
+    {
+      "catalogId": "R500",
+      "series": "ROUND",
+      "size_mm": 500,
+      "area_m2": 0.19635
+    },
+    {
+      "catalogId": "R560",
+      "series": "ROUND",
+      "size_mm": 560,
+      "area_m2": 0.246301
+    },
+    {
+      "catalogId": "R630",
+      "series": "ROUND",
+      "size_mm": 630,
+      "area_m2": 0.311725
+    },
+    {
+      "catalogId": "R710",
+      "series": "ROUND",
+      "size_mm": 710,
+      "area_m2": 0.395919
+    },
+    {
+      "catalogId": "R800",
+      "series": "ROUND",
+      "size_mm": 800,
+      "area_m2": 0.502655
+    },
+    {
+      "catalogId": "R900",
+      "series": "ROUND",
+      "size_mm": 900,
+      "area_m2": 0.636173
+    },
+    {
+      "catalogId": "R1000",
+      "series": "ROUND",
+      "size_mm": 1000,
+      "area_m2": 0.785398
+    },
+    {
+      "catalogId": "R1120",
+      "series": "ROUND",
+      "size_mm": 1120,
+      "area_m2": 0.985203
+    },
+    {
+      "catalogId": "R1250",
+      "series": "ROUND",
+      "size_mm": 1250,
+      "area_m2": 1.227185
+    },
+    {
+      "catalogId": "S100",
+      "series": "RECTANGULAR",
+      "size_mm": 100
+    },
+    {
+      "catalogId": "S150",
+      "series": "RECTANGULAR",
+      "size_mm": 150
+    },
+    {
+      "catalogId": "S200",
+      "series": "RECTANGULAR",
+      "size_mm": 200
+    },
+    {
+      "catalogId": "S250",
+      "series": "RECTANGULAR",
+      "size_mm": 250
+    },
+    {
+      "catalogId": "S300",
+      "series": "RECTANGULAR",
+      "size_mm": 300
+    },
+    {
+      "catalogId": "S400",
+      "series": "RECTANGULAR",
+      "size_mm": 400
+    },
+    {
+      "catalogId": "S500",
+      "series": "RECTANGULAR",
+      "size_mm": 500
+    },
+    {
+      "catalogId": "S600",
+      "series": "RECTANGULAR",
+      "size_mm": 600
+    },
+    {
+      "catalogId": "S800",
+      "series": "RECTANGULAR",
+      "size_mm": 800
+    },
+    {
+      "catalogId": "S1000",
+      "series": "RECTANGULAR",
+      "size_mm": 1000
+    },
+    {
+      "catalogId": "S1200",
+      "series": "RECTANGULAR",
+      "size_mm": 1200
+    },
+    {
+      "catalogId": "S1400",
+      "series": "RECTANGULAR",
+      "size_mm": 1400
+    },
+    {
+      "catalogId": "S1600",
+      "series": "RECTANGULAR",
+      "size_mm": 1600
+    },
+    {
+      "catalogId": "S1800",
+      "series": "RECTANGULAR",
+      "size_mm": 1800
+    },
+    {
+      "catalogId": "S2000",
+      "series": "RECTANGULAR",
+      "size_mm": 2000
+    }
+  ]
+}

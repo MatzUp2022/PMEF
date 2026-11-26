@@ -1,0 +1,21 @@
+{
+  "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
+  "catalogId": "duct-dimensions-en",
+  "catalogType": "DUCT_DIMENSIONS",
+  "version": "test",
+  "description": "Broken: wrong area, unsorted size.",
+  "entries": [
+    {
+      "catalogId": "R200",
+      "series": "ROUND",
+      "size_mm": 200,
+      "area_m2": 0.0314159
+    },
+    {
+      "catalogId": "R160",
+      "series": "ROUND",
+      "size_mm": 160,
+      "area_m2": 0.025
+    }
+  ]
+}

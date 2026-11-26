@@ -17,4 +17,14 @@
 ✗ piping-class-x.json:X-PIPE-80: DN80 SCH40 not in the pipe dimension catalog
 ✗ piping-class-x.json:X-FLWN-50: boltCircleDiameter_mm 120.7 vs 160.0 in the flange dimension catalog
 ✗ piping-class-x.json:X-FLWN-50: numberOfBolts 4 vs 6 in the flange dimension catalog
-✗ catalogs: 19 inconsistencies
+✗ duct-dimensions-en.json:R160: area_m2 0.025 vs 0.02011 derived (+24.3 %, tolerance ±0 %)
+✗ duct-dimensions-en.json:R160: ROUND size 160 not larger than the previous one
+✗ pipe-supports-generic.json:X: dnMin 300 > dnMax 50
+✗ pipe-supports-generic.json:X: GUIDE must restrain LATERAL
+✗ pipe-supports-generic.json:X: duplicate supportCode
+✗ pipe-supports-generic.json:X: ANCHOR must restrain all degrees of freedom
+✗ pipe-supports-generic.json:SP: spring support without travel_mm
+✗ cable-types-en.json:A: 4 pairs need at least 8 cores
+✗ cable-types-en.json:A: duplicate designation
+✗ cable-types-en.json:A: outer diameter 10 mm cannot hold 380 mm² of conductor
+✗ catalogs: 29 inconsistencies

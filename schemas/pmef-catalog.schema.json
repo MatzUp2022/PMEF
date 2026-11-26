@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
   "title": "PMEF Catalog",
-  "description": "Schema for PMEF open catalog files (steel profiles, piping classes, pipe/flange dimensions, materials, instruments, and reference-data mappings). The shape of each 'entries' item is constrained by 'catalogType'.",
+  "description": "Schema for PMEF open catalog files (steel profiles, piping classes, pipe/flange/duct dimensions, materials, instruments, pipe support types, cable types, and reference-data mappings). The shape of each 'entries' item is constrained by 'catalogType'.",
   "type": "object",
   "required": [
     "catalogId",
@@ -31,7 +31,10 @@
         "INSTRUMENT_CATALOG",
         "MATERIAL_GRADES",
         "RDL_MAPPING",
-        "PIPE_STRESS_MAPPING"
+        "PIPE_STRESS_MAPPING",
+        "DUCT_DIMENSIONS",
+        "PIPE_SUPPORT_TYPES",
+        "CABLE_TYPES"
       ],
       "description": "Catalog domain type. Determines the required fields of each entry."
     },
@@ -191,6 +194,45 @@
             "type": "array",
             "minItems": 1,
             "items": { "$ref": "#/$defs/pipeStressMappingEntry" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "catalogType": { "const": "DUCT_DIMENSIONS" } }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/ductDimensionEntry" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "catalogType": { "const": "PIPE_SUPPORT_TYPES" } }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/pipeSupportTypeEntry" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "catalogType": { "const": "CABLE_TYPES" } }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/cableTypeEntry" }
           }
         }
       }
@@ -411,6 +453,77 @@
           "description": "Target path within the PMEF model for the mapped value."
         }
       }
+    },
+    "ductDimensionEntry": {
+      "type": "object",
+      "title": "Duct Dimension Entry",
+      "description": "A standard air-duct size: a round nominal diameter (EN 1506) or a rectangular side length (EN 1505).",
+      "required": ["series", "size_mm"],
+      "properties": {
+        "catalogId": { "$ref": "#/$defs/catalogRef" },
+        "series": { "type": "string", "enum": ["ROUND", "RECTANGULAR"], "description": "ROUND: size_mm is the nominal diameter; RECTANGULAR: size_mm is a preferred side length (width or height)." },
+        "size_mm": { "type": "number", "exclusiveMinimum": 0, "description": "Nominal diameter or side length [mm]." },
+        "area_m2": { "type": "number", "exclusiveMinimum": 0, "description": "Inside cross-section area [m²] (ROUND: π·d²/4)." }
+      },
+      "additionalProperties": false
+    },
+    "pipeSupportTypeEntry": {
+      "type": "object",
+      "title": "Pipe Support Type Entry",
+      "description": "A standard pipe support assembly that a PipeSupport references via catalogRef (catalogId = this catalog, standard = supportCode).",
+      "required": ["supportCode", "supportType", "dnMin", "dnMax", "restraints"],
+      "properties": {
+        "catalogId": { "$ref": "#/$defs/catalogRef" },
+        "supportCode": { "type": "string", "minLength": 1, "description": "Catalog code of the assembly, e.g. 'RS-SHOE'." },
+        "supportType": {
+          "type": "string",
+          "enum": ["ANCHOR", "GUIDE", "DIRECTIONAL", "SPRING_VARIABLE", "SPRING_CONSTANT", "HANGER", "RESTING", "TRUNNION", "CLAMP", "STRAP", "SADDLE", "DUMMY_LEG", "SLIDE_PLATE"],
+          "description": "Same values as SupportSpec.supportType."
+        },
+        "description": { "type": "string" },
+        "dnMin": { "type": "integer", "minimum": 1, "description": "Smallest nominal diameter DN the assembly fits." },
+        "dnMax": { "type": "integer", "minimum": 1, "description": "Largest nominal diameter DN the assembly fits." },
+        "restraints": {
+          "type": "array",
+          "description": "Degrees of freedom the support restrains, in pipe coordinates (axial = along the pipe).",
+          "items": { "type": "string", "enum": ["AXIAL", "LATERAL", "VERTICAL_DOWN", "VERTICAL_UP", "ROTATION"] },
+          "uniqueItems": true
+        },
+        "insulatedPipe": { "type": "boolean", "description": "Assembly raises the pipe above its insulation (shoe/saddle height)." },
+        "shoeHeight_mm": { "type": "number", "exclusiveMinimum": 0, "description": "Height from support steel to pipe bottom [mm]." },
+        "maxLoad_N": { "type": "number", "exclusiveMinimum": 0, "description": "Indicative maximum vertical load [N]." },
+        "travel_mm": { "type": "number", "exclusiveMinimum": 0, "description": "Working travel of spring supports [mm]." },
+        "material": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "cableTypeEntry": {
+      "type": "object",
+      "title": "Cable Type Entry",
+      "description": "A cable type (designation + cores x cross-section) that a CableObject references via catalogRef.",
+      "required": ["designation", "cableType", "numberOfCores", "crossSection_mm2"],
+      "properties": {
+        "catalogId": { "$ref": "#/$defs/catalogRef" },
+        "designation": { "type": "string", "minLength": 1, "description": "Full designation, e.g. 'NYY-J 3x2.5'." },
+        "cableType": {
+          "type": "string",
+          "enum": ["SIGNAL_ANALOG", "SIGNAL_DISCRETE", "POWER_LV", "POWER_MV", "INSTRUMENTATION_PAIR", "MULTIPAIR", "MULTICORE", "PROFIBUS_PA", "PROFIBUS_DP", "PROFINET", "FIELDBUS_FF", "HART", "FIBER_OPTIC", "COAXIAL", "EARTHING", "CONTROL_SHIELDED"],
+          "description": "Same values as CableObject.cableType."
+        },
+        "numberOfCores": { "type": "integer", "minimum": 1 },
+        "numberOfPairs": { "type": "integer", "minimum": 0 },
+        "crossSection_mm2": { "type": "number", "exclusiveMinimum": 0, "description": "Conductor cross-section [mm²]." },
+        "conductor": { "type": "string", "enum": ["CU", "AL"], "description": "Conductor material." },
+        "insulation": { "type": "string", "description": "Core insulation, e.g. 'PVC', 'XLPE', 'EPR'." },
+        "sheath": { "type": "string", "description": "Outer sheath, e.g. 'PVC', 'LSZH', 'PCP'." },
+        "screenType": { "type": "string", "enum": ["UNSCREENED", "INDIVIDUALLY_SCREENED", "OVERALL_SCREENED", "DOUBLE_SCREENED"] },
+        "armoured": { "type": "boolean" },
+        "ratedVoltage": { "type": "string", "description": "Rated voltage U0/U, e.g. '0.6/1 kV', '300/500 V'." },
+        "outerDiameter_mm": { "type": "number", "exclusiveMinimum": 0, "description": "Typical outer diameter [mm]; manufacturer data governs." },
+        "minBendRadiusFactor": { "type": "number", "exclusiveMinimum": 0, "description": "Minimum bending radius as a multiple of the outer diameter (fixed installation)." },
+        "standard": { "type": "string", "description": "Product standard, e.g. 'VDE 0276-603'." }
+      },
+      "additionalProperties": false
     }
   }
 }

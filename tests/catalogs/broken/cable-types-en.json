@@ -1,0 +1,23 @@
+{
+  "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
+  "catalogId": "cable-types-en",
+  "catalogType": "CABLE_TYPES",
+  "version": "test",
+  "description": "Broken cables.",
+  "entries": [
+    {
+      "designation": "A",
+      "cableType": "MULTIPAIR",
+      "numberOfCores": 4,
+      "numberOfPairs": 4,
+      "crossSection_mm2": 0.75
+    },
+    {
+      "designation": "A",
+      "cableType": "POWER_LV",
+      "numberOfCores": 4,
+      "crossSection_mm2": 95,
+      "outerDiameter_mm": 10
+    }
+  ]
+}

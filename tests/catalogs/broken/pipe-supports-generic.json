@@ -1,0 +1,36 @@
+{
+  "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
+  "catalogId": "pipe-supports-generic",
+  "catalogType": "PIPE_SUPPORT_TYPES",
+  "version": "test",
+  "description": "Broken supports.",
+  "entries": [
+    {
+      "supportCode": "X",
+      "supportType": "GUIDE",
+      "dnMin": 300,
+      "dnMax": 50,
+      "restraints": [
+        "VERTICAL_DOWN"
+      ]
+    },
+    {
+      "supportCode": "X",
+      "supportType": "ANCHOR",
+      "dnMin": 50,
+      "dnMax": 300,
+      "restraints": [
+        "AXIAL"
+      ]
+    },
+    {
+      "supportCode": "SP",
+      "supportType": "SPRING_VARIABLE",
+      "dnMin": 50,
+      "dnMax": 300,
+      "restraints": [
+        "VERTICAL_DOWN"
+      ]
+    }
+  ]
+}
