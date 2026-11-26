@@ -134,8 +134,12 @@ def rotate(v, a, deg):
 def check_torus(oid, prim, p1, p2):
     """Elbow torus (spec 04 CIRC_TORUS) runs from one port to the other."""
     c, r = prim["center"], prim["torusRadius"]
-    start = add(c, unit(prim["startDir"]), r)
-    end = add(c, rotate(unit(prim["startDir"]), unit(prim["axis"]), prim["angleDeg"]), r)
+    # startDir is optional (schema): it then points from the centre toward P1 (spec 04).
+    sd = prim.get("startDir") or sub(p1, c)
+    if norm(sd) < 1e-9:
+        return [f"{oid}: CIRC_TORUS centre lies on port P1"]
+    start = add(c, unit(sd), r)
+    end = add(c, rotate(unit(sd), unit(prim["axis"]), prim["angleDeg"]), r)
     if min(norm(sub(start, p1)), norm(sub(start, p2))) > TOL:
         return [f"{oid}: CIRC_TORUS starts at {[round(x, 1) for x in start]}, not at a port"]
     other = p2 if norm(sub(start, p1)) <= TOL else p1
