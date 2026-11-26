@@ -76,6 +76,11 @@ pub struct CableSpec {
     pub min_bend_radius: f64,
     pub from: CableEnd,
     pub to: CableEnd,
+    /// Trays (`@id` or mark) the cable may use; empty = any. Cables with trays are routed
+    /// before the others, so a viewer can re-route one cable and keep the rest where they are
+    /// by giving each of them the trays it used (report `cables[].trays`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub trays: Vec<String>,
 }
 
 /// Cable routing settings.
@@ -215,11 +220,13 @@ pub fn route_cables(problem: &RouteProblem) -> (Vec<RoutedCable>, Vec<TrayFill>)
         .map(|t| t.fill / 100.0 * t.width * t.height)
         .collect();
     let mut on: Vec<Vec<String>> = vec![Vec::new(); trays.len()];
+    // Cables bound to trays first (their trays are known), then largest first.
     let mut order: Vec<usize> = (0..problem.cables.len()).collect();
     order.sort_by(|a, b| {
-        problem.cables[*b]
-            .diameter
-            .total_cmp(&problem.cables[*a].diameter)
+        let (ca, cb) = (&problem.cables[*a], &problem.cables[*b]);
+        (ca.trays.is_empty())
+            .cmp(&cb.trays.is_empty())
+            .then(cb.diameter.total_cmp(&ca.diameter))
     });
     let mut out: Vec<Option<RoutedCable>> = vec![None; problem.cables.len()];
     for ci in order {
@@ -230,6 +237,7 @@ pub fn route_cables(problem: &RouteProblem) -> (Vec<RoutedCable>, Vec<TrayFill>)
             .enumerate()
             .map(|(i, t)| {
                 (t.classes.is_empty() || t.classes.contains(&c.class))
+                    && (c.trays.is_empty() || c.trays.contains(&t.id))
                     && used[i] + area <= set.max_fill / 100.0 * t.width * t.height + 1e-9
             })
             .collect();
@@ -302,7 +310,7 @@ fn route_cable(
     }
     if drops == 0 {
         res.error = Some(format!(
-            "no tray for class {} within {} mm of the cable ends (segregation, fill or distance)",
+            "no tray for class {} within {} mm of the cable ends (segregation, fill, distance or the cable's trays)",
             c.class, set.max_drop
         ));
         return res;

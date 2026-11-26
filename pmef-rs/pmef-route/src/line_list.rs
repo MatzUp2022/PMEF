@@ -48,12 +48,14 @@ pub struct SkippedLine {
 
 /// Routes from the lines of `objs` (one line list package) against `scene`. `used` holds the
 /// route ids already taken in the problem; every generated id is unique against it and added to
-/// it (segment, pipe and fitting `@id`s are derived from the route id).
+/// it (segment, pipe and fitting `@id`s are derived from the route id). Lines whose `@id` is in
+/// `given` (the `line` of an explicit route) are left out: the explicit route routes them.
 pub fn routes_from_pmef(
     objs: &[Value],
     scene: &Scene,
     spec: &LineListSpec,
     used: &mut HashSet<String>,
+    given: &HashSet<String>,
 ) -> (Vec<RouteSpec>, Vec<SkippedLine>) {
     // P&ID equipment: @id → candidate names in the scene.
     let mut names: HashMap<&str, Vec<&str>> = HashMap::new();
@@ -109,7 +111,7 @@ pub fn routes_from_pmef(
             continue;
         };
         let number = o["lineNumber"].as_str().unwrap_or(line).to_string();
-        if !spec.lines.is_empty() && !spec.lines.contains(&number) {
+        if given.contains(line) || (!spec.lines.is_empty() && !spec.lines.contains(&number)) {
             continue;
         }
         let mut skip = |reason: String| {
@@ -200,7 +202,9 @@ pub fn routes_from_pmef(
 }
 
 /// Append the routes of every `lineLists` entry of `problem` (read through `read`, parsed
-/// files kept in `cache`), after the routes given explicitly.
+/// files kept in `cache`), after the routes given explicitly. A line that an explicit route
+/// names as its `line` is not expanded again: a viewer edits a line-list line by copying its
+/// generated route (report `lineListRoutes`) into `routes` and changing it there.
 pub fn expand(
     problem: &mut RouteProblem,
     scene: &Scene,
@@ -209,9 +213,14 @@ pub fn expand(
 ) -> Result<Vec<SkippedLine>, SceneError> {
     let mut skipped = Vec::new();
     let mut used: HashSet<String> = problem.routes.iter().map(|r| r.id.clone()).collect();
+    let given: HashSet<String> = problem
+        .routes
+        .iter()
+        .filter_map(|r| r.line.clone())
+        .collect();
     for spec in problem.line_lists.clone() {
         let objs = cache.ndjson(&spec.file, read)?;
-        let (r, s) = routes_from_pmef(&objs, scene, &spec, &mut used);
+        let (r, s) = routes_from_pmef(&objs, scene, &spec, &mut used, &given);
         problem.routes.extend(r);
         skipped.extend(s);
     }

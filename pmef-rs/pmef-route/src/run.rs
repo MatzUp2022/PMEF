@@ -5,6 +5,7 @@
 use crate::cable::{route_cables, RoutedCable, TrayFill};
 use crate::line_list::{expand, SkippedLine};
 use crate::pmef_out::{cables_to_pmef, to_pmef};
+use crate::problem::RouteSpec;
 use crate::route::{route_all, RoutedLine};
 use crate::scene::{Reader, Scene, SceneCache, SceneError};
 use crate::{RouteProblem, GENERATOR};
@@ -20,6 +21,9 @@ pub struct RunOutput {
     pub tray_fill: Vec<TrayFill>,
     /// Lines of the line lists that were not routed, with the reason.
     pub skipped_lines: Vec<SkippedLine>,
+    /// The routes generated from the line lists (as they were routed): a viewer copies one into
+    /// `routes` to edit and re-route that line alone.
+    pub line_list_routes: Vec<RouteSpec>,
     /// The problem had cables or line lists: the report is an object, not the route array.
     extended: bool,
 }
@@ -40,13 +44,13 @@ impl RunOutput {
         out
     }
 
-    /// The report: the array of routed lines, or `{routes, cables, trayFill, skippedLines}`
-    /// when the problem has cables or line lists.
+    /// The report: the array of routed lines, or `{routes, cables, trayFill, skippedLines,
+    /// lineListRoutes}` when the problem has cables or line lists.
     pub fn report(&self) -> Value {
         if self.extended {
             json!({
                 "routes": self.routes, "cables": self.cables, "trayFill": self.tray_fill,
-                "skippedLines": self.skipped_lines,
+                "skippedLines": self.skipped_lines, "lineListRoutes": self.line_list_routes,
             })
         } else {
             json!(self.routes)
@@ -72,7 +76,9 @@ pub fn run_cached(
     cache: &mut SceneCache,
 ) -> Result<RunOutput, SceneError> {
     let scene = Scene::load_cached(&problem, read, cache)?;
+    let explicit = problem.routes.len();
     let skipped_lines = expand(&mut problem, &scene, read, cache)?;
+    let line_list_routes = problem.routes[explicit..].to_vec();
     let routes = route_all(&problem, &scene);
     let (cables, tray_fill) = if problem.cables.is_empty() {
         (Vec::new(), Vec::new())
@@ -97,6 +103,7 @@ pub fn run_cached(
         cables,
         tray_fill,
         skipped_lines,
+        line_list_routes,
         extended: !problem.cables.is_empty() || !problem.line_lists.is_empty(),
     })
 }
