@@ -205,6 +205,7 @@ DOMAIN_SCHEMAS = {
     "equipment": {"pmef-equipment.schema.json"},
     "ei": {"pmef-ei.schema.json"},
     "steel": {"pmef-steel.schema.json"},
+    "hvac": {"pmef-hvac.schema.json"},
 }
 
 
@@ -378,7 +379,7 @@ def main(argv: list[str] | None = None) -> int:
                     help="validation command with a {file} placeholder (exit 0 = valid), or 'reference'")
     ap.add_argument("--name", default="pmef-reference-identity", help="implementationName for the report")
     ap.add_argument("--version", dest="impl_version", default="0.10.0", help="implementationVersion for the report")
-    ap.add_argument("--domains", default="piping,equipment,ei,steel", help="claimed domains (comma-separated)")
+    ap.add_argument("--domains", default="piping,equipment,ei,steel,hvac", help="claimed domains (comma-separated)")
     args = ap.parse_args(argv)
 
     manifest = json.loads((CONF / "manifest.json").read_text(encoding="utf-8"))
