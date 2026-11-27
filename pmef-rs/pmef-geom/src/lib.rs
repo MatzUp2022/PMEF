@@ -665,7 +665,7 @@ pub fn primitive_aabb(
                         s.include_point(origin + Vec3::new(d[0], d[1], d[2]) * up);
                         inflate(s, env_r)
                     }
-                    None => inflate(Aabb::from_point(origin), up.max(env_r)),
+                    None => inflate(Aabb::from_point(origin), up + env_r),
                 });
             }
             b
@@ -961,6 +961,12 @@ mod tests {
         let b = primitive_aabb(&PrimitiveType::ValveBody, Vec3::zero(), &p);
         for d in [[1.0, 0.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, -1.0]] {
             assert!(b.contains_point(Vec3::new(d[0], d[1], d[2]) * 400.0));
+        }
+        // must enclose the envelope of every directed actuator (up + env_r)
+        for d in [[0.0, 0.0, 1.0], [0.0, -1.0, 0.0], [1.0, 0.0, 0.0]] {
+            let q = PrimitiveParams { actuator_axis: Some(d), ..p.clone() };
+            let directed = primitive_aabb(&PrimitiveType::ValveBody, Vec3::zero(), &q);
+            assert!(b.contains_point(directed.min) && b.contains_point(directed.max), "direction {d:?}");
         }
     }
 
