@@ -11,6 +11,18 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Changed — E3D attachment points and the dished-head geometry rule (#53)
+
+- **`catalogs/native-types-e3d.json`:** E3D `ATTA` (attachment point on a branch) maps to
+  `pmef:PipeSupport` / `PIPE_SUPPORT` instead of falling back to `GenericPipingComponent/SPECIAL`
+  with a warning. Found in the Huldra test case: 4,358 attachments, about 75 % tagged as pipe
+  supports. 39 entries.
+- **`scripts/check-geometry.py`:** the rule "DISH must sit on a cylinder end face" now applies only
+  to `pmef:Vessel`, `Tank`, `Column`, `Reactor` and `HeatExchanger`. Catalogue bodies of piping
+  components use dishes differently (E3D valve bodies: two dishes back to back across the bonnet),
+  which produced false errors. The negative fixture gains such a valve (`VALV-DISH`), which must
+  stay clean.
+
 ### Added — CAEX XML serialisation (AutomationML)
 
 - **`pmef-io::caex`** (feature `caex`, on by default): `write_caex` / `read_caex` implement the
