@@ -40,6 +40,10 @@ pub struct TraySpec {
     /// Existing fill [% of width × height].
     #[serde(default)]
     pub fill: f64,
+    /// Read from a `pmef:CableTrayFitting`: never named as the cable's `cableTrayId`
+    /// (spec 02 §6.7 references runs only).
+    #[serde(skip)]
+    pub fitting: bool,
 }
 fn d_tray_bend() -> f64 {
     300.0
@@ -157,6 +161,8 @@ pub fn trays_from_pmef(
         Some([a[0].as_f64()?, a[1].as_f64()?, a[2].as_f64()?])
     };
     let num = |v: &Value| v.as_f64().filter(|x| *x > 0.0);
+    // Bend radii may be 0 (sharp junction): only negative or missing values are absent.
+    let radius = |v: &Value| v.as_f64().filter(|x| *x >= 0.0);
     let id_of = |o: &Value| o["@id"].as_str().unwrap_or_default().to_string();
     let classes_for = |o: &Value, id: &str| -> Vec<String> {
         for k in [id, o["trayMark"].as_str().unwrap_or(""), o["fittingMark"].as_str().unwrap_or("")] {
@@ -202,7 +208,7 @@ pub fn trays_from_pmef(
         let bend = fittings
             .iter()
             .filter(|f| joins(f, &id))
-            .filter_map(|f| num(&f["bendRadius"]))
+            .filter_map(|f| radius(&f["bendRadius"]))
             .fold(f64::INFINITY, f64::min);
         size_of_run.insert(id.clone(), (w.unwrap(), h.unwrap()));
         trays.push(TraySpec {
@@ -213,6 +219,7 @@ pub fn trays_from_pmef(
             height: h.unwrap(),
             bend_radius: if bend.is_finite() { bend } else { d_tray_bend() },
             fill: o["fillLevel"].as_f64().unwrap_or(0.0),
+            fitting: false,
         });
     }
     for f in &fittings {
@@ -230,15 +237,16 @@ pub fn trays_from_pmef(
             continue;
         }
         let joined = runs.iter().map(|r| id_of(r)).find(|r| joins(f, r)).and_then(|r| size_of_run.get(&r).copied());
-        let size = |p: Option<&Value>, k: &str, i: usize| {
+        // Fitting value, else the given ports' (smallest), else the joined run's.
+        let size = |ps: &[&Value], k: &str, i: usize| {
             num(&f[k])
-                .or_else(|| p.and_then(|p| num(&p[k])))
+                .or_else(|| ps.iter().filter_map(|p| num(&p[k])).reduce(f64::min))
                 .or_else(|| joined.map(|s| if i == 0 { s.0 } else { s.1 }))
         };
-        let bend = num(&f["bendRadius"]).unwrap_or_else(d_tray_bend);
+        let bend = radius(&f["bendRadius"]).unwrap_or_else(d_tray_bend);
         let fill = f["fillLevel"].as_f64().unwrap_or(0.0);
-        let mk = |tid: String, pts: Vec<P3>, p: Option<&Value>| -> Result<TraySpec, SkippedTray> {
-            match (size(p, "width", 0), size(p, "height", 1)) {
+        let mk = |tid: String, pts: Vec<P3>, ps: &[&Value]| -> Result<TraySpec, SkippedTray> {
+            match (size(ps, "width", 0), size(ps, "height", 1)) {
                 (Some(width), Some(height)) => Ok(TraySpec {
                     classes: classes_for(f, &id),
                     id: tid,
@@ -247,16 +255,17 @@ pub fn trays_from_pmef(
                     height,
                     bend_radius: bend,
                     fill,
+                    fitting: true,
                 }),
                 _ => Err(SkippedTray { id: tid, reason: "width or height missing".into() }),
             }
         };
         let made: Vec<_> = if ports.len() == 2 {
-            vec![mk(id.clone(), vec![ports[0].1, ports[1].1], None)]
+            vec![mk(id.clone(), vec![ports[0].1, ports[1].1], &[ports[0].2, ports[1].2])]
         } else {
             let n = ports.len() as f64;
             let c = [0, 1, 2].map(|i| ports.iter().map(|p| p.1[i]).sum::<f64>() / n);
-            ports.iter().map(|(pid, p, pv)| mk(format!("{id}#{pid}"), vec![c, *p], Some(pv))).collect()
+            ports.iter().map(|(pid, p, pv)| mk(format!("{id}#{pid}"), vec![c, *p], &[*pv])).collect()
         };
         for m in made {
             match m {
@@ -280,7 +289,7 @@ pub struct RoutedCable {
     pub points: Vec<P3>,
     /// Trays used, in order.
     pub trays: Vec<String>,
-    /// Tray carrying the longest part of the cable.
+    /// Tray run carrying the longest part of the cable (scene fittings are never chosen).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub main_tray: Option<String>,
     pub length_mm: f64,
@@ -548,8 +557,10 @@ fn route_cable(
     res.ok = true;
     res.points = nodes.iter().map(|n| g.pts[*n]).collect();
     res.trays = per_tray.iter().map(|(t, _)| trays[*t].id.clone()).collect();
+    // The run carrying the longest part (fittings are never `cableTrayId`, spec 02 §6.7).
     res.main_tray = per_tray
         .iter()
+        .filter(|(t, _)| !trays[*t].fitting)
         .max_by(|a, b| a.1.total_cmp(&b.1))
         .map(|(t, _)| trays[*t].id.clone());
     res

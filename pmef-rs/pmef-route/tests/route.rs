@@ -1050,3 +1050,49 @@ fn scene_trays_keep_segregation_bend_radius_and_overrides() {
     assert!(!out.ok());
     assert!(!out.scene_trays.contains(&"urn:pmef:obj:t:CT-A".to_string()));
 }
+
+#[test]
+fn scene_fittings_zero_radius_port_sizes_and_main_run() {
+    // Short run CT-A → long two-port fitting CT-F (sizes only on its ports) → short run CT-B.
+    let u = "urn:pmef:unit:t:U1";
+    let scene = |bend: f64| -> String {
+        [
+            json!({"@type": "pmef:CableTrayRun", "@id": "urn:pmef:obj:t:CT-A", "isPartOf": u, "trayMark": "CT-A",
+                   "width": 300, "height": 100, "startPoint": [0, 0, 3000], "endPoint": [1000, 0, 3000]}),
+            json!({"@type": "pmef:CableTrayFitting", "@id": "urn:pmef:obj:t:CT-F", "isPartOf": u, "fittingMark": "CT-F",
+                   "fittingType": "HORIZONTAL_BEND", "bendRadius": bend,
+                   "ports": [{"portId": "P1", "coordinate": [1000, 0, 3000], "width": 300, "height": 100},
+                             {"portId": "P2", "coordinate": [6000, 5000, 3000], "width": 300, "height": 100}]}),
+            json!({"@type": "pmef:CableTrayRun", "@id": "urn:pmef:obj:t:CT-B", "isPartOf": u, "trayMark": "CT-B",
+                   "width": 300, "height": 100, "startPoint": [6000, 5000, 3000], "endPoint": [7000, 5000, 3000]}),
+        ]
+        .iter()
+        .map(|o| o.to_string() + "\n")
+        .collect()
+    };
+    let problem = || -> RouteProblem {
+        serde_json::from_value(json!({
+            "project": "t", "revisionId": "r2026-11-27-001", "parent": u, "pmefScene": ["trays.ndjson"],
+            // Short drops: the cable must enter at CT-A and leave at CT-B.
+            "cableSettings": {"traysFromScene": true, "maxDrop": 600},
+            "cables": [{"id": "C-1", "class": "power", "cableType": "POWER_LV", "diameter": 20, "minBendRadius": 150,
+                        "from": {"point": [0, -500, 3000]}, "to": {"point": [7000, 5500, 3000]}}]
+        }))
+        .unwrap()
+    };
+    let s300 = scene(300.0);
+    let read = |f: &str| if f == "trays.ndjson" { Ok(s300.clone()) } else { Err(format!("no {f}")) };
+    let out = pmef_route::run(problem(), None, &read).unwrap();
+    assert!(out.ok(), "{:?}", out.cables);
+    // The fitting has no top-level size: its ports give it, so it is not skipped.
+    assert!(out.skipped_trays.is_empty(), "{:?}", out.skipped_trays);
+    assert!(out.cables[0].trays.contains(&"urn:pmef:obj:t:CT-F".to_string()));
+    // The fitting carries the longest part, but cableTrayId names a run.
+    let ct = out.objects[0]["cableTrayId"].as_str().unwrap();
+    assert!(ct == "urn:pmef:obj:t:CT-A" || ct == "urn:pmef:obj:t:CT-B", "{ct}");
+    // bendRadius 0 is a sharp junction, not "missing": the cable (150 mm) may not turn there.
+    let s0 = scene(0.0);
+    let read0 = |f: &str| if f == "trays.ndjson" { Ok(s0.clone()) } else { Err(format!("no {f}")) };
+    let o0 = pmef_route::run(problem(), None, &read0).unwrap();
+    assert!(!o0.ok(), "{:?}", o0.cables);
+}

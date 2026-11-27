@@ -393,8 +393,7 @@ pub fn cables_to_pmef(problem: &RouteProblem, cables: &[crate::cable::RoutedCabl
                 o[format!("{k}Terminal")] = json!(t);
             }
         }
-        // A branch of a tee/cross read from the scene is `<fitting @id>#<portId>`.
-        if let Some(t) = pmef_id(&c.main_tray.as_ref().map(|t| t.split('#').next().unwrap_or(t).to_string())) {
+        if let Some(t) = pmef_id(&c.main_tray) {
             o["cableTrayId"] = json!(t);
         }
         o["revision"] = json!({
