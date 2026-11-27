@@ -306,11 +306,34 @@ impl<W: Write + Seek> PmefxWriter<W> {
     /// Adds a mesh level of detail (glTF binary) for object `id`. Levels are kept ordered
     /// coarse → fine; each level may occur once per object.
     pub fn add_lod(&mut self, id: &str, lod: Lod, path: &str, glb_bytes: &[u8], stats: LodStats) -> Result<(), PmefxError> {
+        self.add_lod_at(id, lod, path, glb_bytes, stats, None)
+    }
+
+    /// [`Self::add_lod`] for a mesh written relative to `meshOrigin + offset` (RFC-0017).
+    pub fn add_lod_at(&mut self, id: &str, lod: Lod, path: &str, glb_bytes: &[u8], stats: LodStats, offset: Option<Point3>) -> Result<(), PmefxError> {
         if self.object_mut(id)?.lods.iter().any(|l| l.lod == lod) {
             return invalid(format!("{id}: duplicate level {}", lod.as_str()));
         }
         glb::parse_glb_json(glb_bytes).map_err(|e| PmefxError::Invalid(format!("{path}: {e}")))?;
         self.write_entry(path, FileKind::Gltf, glb_bytes, None)?;
+        self.push_lod(id, lod, path, stats, offset)
+    }
+
+    /// Adds a level of detail for object `id` that uses a mesh file already in the package
+    /// (written by [`Self::add_lod`]/[`Self::add_lod_at`] for another object), placed with
+    /// its own `offset` (RFC-0017). Repeated shapes are stored once this way.
+    pub fn reuse_lod(&mut self, id: &str, lod: Lod, path: &str, stats: LodStats, offset: Option<Point3>) -> Result<(), PmefxError> {
+        if !self.files.iter().any(|f| f.path == path && f.kind == FileKind::Gltf) {
+            return invalid(format!("{id}: {path} is not a glTF file of the package"));
+        }
+        if self.object_mut(id)?.lods.iter().any(|l| l.lod == lod) {
+            return invalid(format!("{id}: duplicate level {}", lod.as_str()));
+        }
+        self.push_lod(id, lod, path, stats, offset)
+    }
+
+    fn push_lod(&mut self, id: &str, lod: Lod, path: &str, stats: LodStats, offset: Option<Point3>) -> Result<(), PmefxError> {
+        let size_bytes = self.files.iter().find(|f| f.path == path).and_then(|f| f.size_bytes);
         let o = self.object_mut(id)?;
         o.lods.push(LodRef {
             lod,
@@ -318,7 +341,8 @@ impl<W: Write + Seek> PmefxWriter<W> {
             triangles: stats.triangles,
             vertex_count: stats.vertex_count,
             error_mm: stats.error_mm,
-            size_bytes: Some(glb_bytes.len() as u64),
+            size_bytes,
+            offset: offset.filter(|p| *p != Point3::default()),
         });
         o.lods.sort_by_key(|l| l.lod);
         Ok(())

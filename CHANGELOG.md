@@ -11,6 +11,15 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added — PMEFX shared mesh files (RFC-0017)
+
+- Object index `lods[].offset` (`{x, y, z}` mm, optional): the mesh's vertices are relative to
+  `meshOrigin + offset`, so several objects can reference one mesh file (repeated fittings,
+  flanges, supports stored once). Spec 03 §3.5/§3.6, schema `pmefx-manifest` (`ObjectEntry`).
+- `pmef-io::pmefx`: `LodRef::offset`, `LodRef::mesh_origin`, `PmefxWriter::add_lod_at` and
+  `reuse_lod`; test `shared_mesh_files_are_placed_by_offset`. Packages without `offset` are
+  unchanged.
+
 ### Changed — cable lengths with bend arcs (`pmef-route`)
 
 - Corners on tray runs count as arcs at the centreline radius (tray `bendRadius` + width/2):

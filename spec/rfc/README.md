@@ -25,6 +25,7 @@ Status values (issue template): `DRAFT` → `REVIEW` → `APPROVED` / `REJECTED`
 | [0014](0014-generic-duct-component.md) | Generic duct component, duct bends without angle, E3D HVAC type catalog | 0.10.0 | `DRAFT` | [#70](https://github.com/MatzUp2022/PMEF/issues/70) | Typed silencer/grille data (WG-HVAC) |
 | [0015](0015-cable-tray-route-ports.md) | Cable tray route, ports and source data | 0.10.0 | `DRAFT` | [#71](https://github.com/MatzUp2022/PMEF/issues/71) | Tray supports and network nodes (WG-E&I) |
 | [0016](0016-pipe-supports-outside-segments.md) | Pipe supports outside piping segments and support assemblies | 0.10.0 | `DRAFT` | [#72](https://github.com/MatzUp2022/PMEF/issues/72) | Support loads per part vs. per assembly (WG-Piping) |
+| [0017](0017-pmefx-shared-mesh-offset.md) | PMEFX shared mesh files with a per-level offset | 0.10.0 | `DRAFT` | — | Manifest feature list; full transforms (WG-Serialisation) |
 
 RFCs 0001–0003 are fully implemented in this repository (schemas, spec text, Rust reference
 implementation, examples, tests in CI); each RFC's *Review Status* section lists the evidence.

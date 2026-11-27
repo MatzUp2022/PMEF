@@ -231,6 +231,24 @@ pub struct LodRef {
     pub error_mm: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub size_bytes: Option<u64>,
+    /// Shift of this mesh against `manifest.meshOrigin` [mm] (RFC-0017): the mesh's vertices
+    /// are relative to `meshOrigin + offset`. Lets several objects share one mesh file
+    /// (the same fitting at many places). Absent = no shift.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub offset: Option<Point3>,
+}
+
+impl LodRef {
+    /// Origin to read this level's mesh with ([`super::glb::read_mesh_glb`]):
+    /// the package's `meshOrigin` plus the level's `offset`.
+    pub fn mesh_origin(&self, package_origin: Point3) -> Point3 {
+        let o = self.offset.unwrap_or_default();
+        Point3 {
+            x: package_origin.x + o.x,
+            y: package_origin.y + o.y,
+            z: package_origin.z + o.z,
+        }
+    }
 }
 
 /// Exact geometry of an object.
