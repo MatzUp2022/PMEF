@@ -21,6 +21,7 @@ Status values (issue template): `DRAFT` → `REVIEW` → `APPROVED` / `REJECTED`
 | [0010](0010-review-comment-issue-ref.md) | Review comment and issue reference (follow-up of 0001) | 0.10.0 | `DRAFT` | [#44](https://github.com/MatzUp2022/PMEF/issues/44) | `issueRef` single URI vs. array (WG-Piping/WG-Steel) |
 | [0011](0011-catalog-snapping-v2.md) | Catalog snapping version 2 `pmef-snap/2` (follow-up of 0002) | 0.10.0 | `DRAFT` | [#45](https://github.com/MatzUp2022/PMEF/issues/45) | Inch-only catalogs; olets/caps/valves (WG-Catalogs, WG-Piping) |
 | [0012](0012-placeholder-custom-values.md) | Placeholder and custom values (`UNSPECIFIED`, `CUSTOM`, `placeholders`) | 0.10.0 | `DRAFT` | — | Extend `placeholders` to piping, equipment, steel (WG-Adapters) |
+| [0014](0014-generic-duct-component.md) | Generic duct component, duct bends without angle, E3D HVAC type catalog | 0.10.0 | `DRAFT` | [#55](https://github.com/MatzUp2022/PMEF/issues/55) | Typed silencer/grille data (WG-HVAC) |
 
 RFCs 0001–0003 are fully implemented in this repository (schemas, spec text, Rust reference
 implementation, examples, tests in CI); each RFC's *Review Status* section lists the evidence.

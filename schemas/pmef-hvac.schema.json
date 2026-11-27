@@ -226,7 +226,14 @@
             "turningVanes": { "type": "boolean", "description": "Guide/turning vanes fitted" },
             "bendPlane":    { "type": "string", "enum": ["HARD","EASY"], "description": "Rectangular ducts: bend across the height (HARD) or the width (EASY)" }
           },
-          "required": ["angle","ports"]
+          "required": ["ports"],
+          "anyOf": [
+            { "required": ["angle"] },
+            {
+              "description": "RFC-0014: without angle, two ports with direction define it (angle = 180° − angle between the outward directions)",
+              "properties": { "ports": { "minItems": 2, "maxItems": 2, "items": { "required": ["direction"] } } }
+            }
+          ]
         }
       ]
     },
@@ -316,6 +323,27 @@
       ]
     },
 
+    "GenericDuctComponent": {
+      "title": "Generic Duct Component",
+      "description": "In-line duct component without a specific PMEF type (RFC-0014, spec 02 §11): end caps, silencers, splitters, grilles, cowls, offsets and tool-specific parts. componentClass classifies it; nativeType keeps the authoring tool's element type. Adapters use it instead of dropping a component.",
+      "allOf": [
+        { "$ref": "#/$defs/DuctComponent" },
+        {
+          "properties": {
+            "@type":          { "const": "pmef:GenericDuctComponent" },
+            "componentClass": {
+              "type": "string",
+              "enum": ["END_CAP","SILENCER","SPLITTER","GRILLE","COWL","OFFSET","FLEXIBLE_CONNECTOR","SPECIAL"],
+              "description": "END_CAP: closed duct end; SILENCER: sound attenuator; SPLITTER: flow splitter / vane; GRILLE: mesh, grille or louvre in the duct; COWL: weather cowl / roof hood; OFFSET: offset (S-bend) piece; FLEXIBLE_CONNECTOR: canvas/flexible connection; SPECIAL: anything else"
+            },
+            "nativeType":     { "type": "string", "minLength": 1, "description": "Element type in the source tool as <tool>:<type>, e.g. 'E3D:SILE', 'E3D:PCOM'" },
+            "length":         { "type": "number", "minimum": 0, "description": "Length along the duct axis [mm]" }
+          },
+          "required": ["componentClass","ports"]
+        }
+      ]
+    },
+
     "DuctTestPort": {
       "title": "Duct Test Port",
       "description": "Measuring socket (Messstutzen) for pressure, flow or temperature measurements, mounted on a host duct component.",
@@ -338,6 +366,7 @@
   },
 
   "oneOf": [
+    { "$ref": "#/$defs/GenericDuctComponent" },
     { "$ref": "#/$defs/DuctNetworkSystem" },
     { "$ref": "#/$defs/DuctSegment" },
     { "$ref": "#/$defs/Duct" },

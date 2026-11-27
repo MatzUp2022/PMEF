@@ -120,6 +120,15 @@ def check(objs):
             prim = geom.get("primitive") or {}
             if prim.get("type") == "CIRC_TORUS":
                 issues += check_torus(oid, prim, p1, p2)
+    for o in objs:  # duct bends: angle consistent with the port directions (RFC-0014)
+        if o.get("@type") != "pmef:DuctBend":
+            continue
+        dirs = [p.get("direction") for p in o.get("ports") or []]
+        if len(dirs) == 2 and all(dirs) and "angle" in o and norm(dirs[0]) > 0 and norm(dirs[1]) > 0:
+            c = max(-1.0, min(1.0, dot(dirs[0], dirs[1]) / (norm(dirs[0]) * norm(dirs[1]))))
+            bend = 180.0 - math.degrees(math.acos(c))
+            if abs(bend - o["angle"]) > 1.0:
+                issues.append(f"{o['@id']}: angle {o['angle']}° but port directions give {bend:.1f}°")
     issues += check_equipment(objs, by_id)
     issues += check_steel(objs, by_id)
     for o in objs:

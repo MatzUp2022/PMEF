@@ -560,6 +560,46 @@
       "expect": "invalid"
     },
     {
+      "id": "HVAC-U-014",
+      "name": "GenericDuctComponent (silencer) with nativeType — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/HVAC-U-014.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "HVAC-U-015",
+      "name": "GenericDuctComponent with unknown componentClass — rejected",
+      "category": "negative",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/HVAC-U-015.ndjson",
+      "expect": "invalid"
+    },
+    {
+      "id": "HVAC-U-016",
+      "name": "DuctBend without angle, angle from port directions — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/HVAC-U-016.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "HVAC-U-017",
+      "name": "DuctBend without angle and without port directions — rejected",
+      "category": "negative",
+      "level": 2,
+      "domain": "hvac",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/HVAC-U-017.ndjson",
+      "expect": "invalid"
+    },
+    {
       "id": "STEEL-U-001",
       "name": "SteelSystem — valid",
       "category": "unit",

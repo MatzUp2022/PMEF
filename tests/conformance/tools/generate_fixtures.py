@@ -28,7 +28,7 @@ REV = {"revisionId": "r2026-10-31-001", "changeState": "SHARED", "authoringTool"
 
 
 RFC_EXAMPLES = {"asbuilt-recognition.ndjson", "pump-skid-auto-routed.ndjson", "hvac-damper-placeholder.ndjson",
-                "piping-valve-placeholder.ndjson"}  # 0.10.0 feature examples, used only where named
+                "piping-valve-placeholder.ndjson", "hvac-generic-components.ndjson"}  # 0.10.0 feature examples, used only where named
 
 
 def _load_examples(names: set[str] | None = None) -> list[dict]:
@@ -45,6 +45,7 @@ def _load_examples(names: set[str] | None = None) -> list[dict]:
 
 EXAMPLES = _load_examples()
 ASBUILT = _load_examples({"asbuilt-recognition.ndjson"})
+HVACGEN = _load_examples({"hvac-generic-components.ndjson"})
 
 
 def ex(type_: str, pred=lambda o: True, source: list[dict] | None = None) -> dict:
@@ -197,6 +198,15 @@ UNIT = [
      [without(ex("pmef:DuctNetworkSystem"), "airType")]),
     ("HVAC-U-013", "DuctAccessDoor without hostId — rejected", 2, "hvac", "CL1-02", "invalid",
      [without(ex("pmef:DuctAccessDoor"), "hostId")]),
+    # RFC-0014
+    ("HVAC-U-014", "GenericDuctComponent (silencer) with nativeType — valid", 2, "hvac", "CL2-01", "valid",
+     [ex("pmef:GenericDuctComponent", source=HVACGEN)]),
+    ("HVAC-U-015", "GenericDuctComponent with unknown componentClass — rejected", 2, "hvac", "CL1-02", "invalid",
+     [with_(ex("pmef:GenericDuctComponent", source=HVACGEN), ("componentClass",), "WIDGET")]),
+    ("HVAC-U-016", "DuctBend without angle, angle from port directions — valid", 2, "hvac", "CL2-01", "valid",
+     [ex("pmef:DuctBend", source=HVACGEN)]),
+    ("HVAC-U-017", "DuctBend without angle and without port directions — rejected", 2, "hvac", "CL1-02", "invalid",
+     [without(ex("pmef:DuctBend", source=HVACGEN), "ports", 1, "direction")]),
     # Structural steel
     ("STEEL-U-001", "SteelSystem — valid", 2, "steel", "CL2-01", "valid",
      [{"@type": "pmef:SteelSystem", "@id": oid("obj", "SS-1"), "pmefVersion": V, "isPartOf": oid("unit", "U-1"),

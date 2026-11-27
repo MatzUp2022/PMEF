@@ -1,6 +1,7 @@
-✗ equipment-steel-negative.ndjson (22 issue(s))
+✗ equipment-steel-negative.ndjson (23 issue(s))
      urn:pmef:obj:geomtest:ELB-SENSE: CIRC_TORUS ends at [4700.0, 0.0, 300.0], not at the other port [5300.0, 0.0, 300.0] (axis/startDir sense, spec 04 right-hand rule)
      urn:pmef:obj:geomtest:ELB-NOSTART: CIRC_TORUS ends at [4700.0, 0.0, 300.0], not at the other port [5300.0, 0.0, 300.0] (axis/startDir sense, spec 04 right-hand rule)
+     urn:pmef:obj:geomtest:DB-ANGLE: angle 45.0° but port directions give 90.0°
      urn:pmef:obj:geomtest:V-OK: DISH at [0.0, 0.0, 0.0] does not sit on a cylinder end face (spec 04: DISH center = knuckle circle, axis outward)
      urn:pmef:obj:geomtest:V-OK: DISH at [0.0, 0.0, 0.0] does not sit on a cylinder end face (spec 04: DISH center = knuckle circle, axis outward)
      urn:pmef:obj:geomtest:V-OK#N1: nozzle face is 1624 mm away from the equipment body

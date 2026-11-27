@@ -30,7 +30,8 @@
 ✗ cable-types-en.json:A: duplicate designation
 ✗ cable-types-en.json:A: outer diameter 10 mm cannot hold 380 mm² of conductor
 ✗ native-types-broken.json:VALV-GT: shadowed by an earlier entry for VALV without SKEY condition
-✗ native-types-broken.json:PCOM: pmefType pmef:Gizmo is not a piping component type
+✗ native-types-broken.json:PCOM: pmefType pmef:Gizmo is not a piping or duct component type
 ✗ native-types-broken.json:PCOM: duplicate catalogId
 ✗ native-types-broken.json:PCOM: componentClass WIDGET is not in PipingComponentSpec
-✗ catalogs: 35 inconsistencies
+✗ native-types-broken.json:SILE: componentClass VALVE_GATE is not in GenericDuctComponent
+✗ catalogs: 36 inconsistencies

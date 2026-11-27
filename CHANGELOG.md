@@ -11,6 +11,19 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added — generic duct component, duct bends without angle (RFC-0014, #55)
+
+- **`pmef:GenericDuctComponent`** with `componentClass` (`END_CAP`, `SILENCER`, `SPLITTER`,
+  `GRILLE`, `COWL`, `OFFSET`, `FLEXIBLE_CONNECTOR`, `SPECIAL`), `nativeType`, `length`: HVAC parts
+  without a specific type are kept instead of dropped (spec 02 §11.5).
+- **`DuctBend.angle` optional** when both ports carry `direction` (angle from the directions);
+  `check-geometry.py` checks that a given angle agrees within 1°. Rust: `angle: Option<f64>`,
+  `DuctBend::bend_angle()`.
+- **`catalogs/native-types-e3d-hvac.json`**: E3D HVAC keywords (`CAP`, `SPLR`, `SILE`, `MESH`,
+  `OFST`, `COWL`, `THRE`, `PCOM`, `BRCO`); `check-catalogs.py` checks duct classes.
+- Conventions for `airType` from system names and derived `DuctBranch` ports (spec 02 §11.1,
+  §11.5). Example `examples/hvac-generic-components.ndjson`; conformance HVAC-U-014–017.
+
 ### Changed — routing obstacles from `pmef-geom`
 
 - **`pmef_geom::schema_primitive_aabb`**: conservative bounds of a primitive given as schema JSON
