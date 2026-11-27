@@ -1,8 +1,11 @@
 //! PMEF geometry: parametric primitives, bounding boxes, and clash detection.
 //!
 //! This crate provides the core geometric types used by the PMEF specification,
-//! including 3D vectors, axis-aligned bounding boxes, and the 15 parametric
-//! primitive types defined in PMEF-SPEC-04.
+//! including 3D vectors, axis-aligned bounding boxes, the 15 parametric
+//! primitive types defined in PMEF-SPEC-04 and the schema compound types
+//! `STEEL_PROFILE`, `VALVE_BODY` and `CABLE_TRAY`. `COMPOSITE` is bounded by
+//! [`aabb_union`] of its children; `MESH_REF` carries no extent in the schema,
+//! so its bounds come from the referenced mesh (e.g. PMEFX bounding-box LODs).
 
 // ---------------------------------------------------------------------------
 // Vec3
@@ -195,7 +198,8 @@ impl Aabb {
 // PrimitiveType — the 15 PMEF parametric primitives
 // ---------------------------------------------------------------------------
 
-/// The 15 parametric primitive types defined in PMEF-SPEC-04 §4.2.
+/// The 15 parametric primitive types defined in PMEF-SPEC-04 §4.2, plus the
+/// schema compound types `STEEL_PROFILE`, `VALVE_BODY` and `CABLE_TRAY`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PrimitiveType {
     /// Right circular cylinder (pipe runs, vessel shells, nozzle barrels).
@@ -228,7 +232,30 @@ pub enum PrimitiveType {
     Extrusion,
     /// Surface of revolution (flanges, torispherical heads).
     Revolution,
+    /// Schema `STEEL_PROFILE`: member from `origin` (startPt) to `end_point`
+    /// (endPt); `profile_max_r` is the half-diagonal of the cross-section,
+    /// looked up by the caller from the profile catalog.
+    SteelProfile,
+    /// Schema `VALVE_BODY`: `origin` is the centreline midpoint, `axis` the flow
+    /// direction, `length` the face-to-face, `radius` half the bore (boreD / 2).
+    /// The body envelope radius is `flange_od / 2` when given, else
+    /// [`VALVE_ENVELOPE_FACTOR`] × boreD (a heuristic: the schema has no flange OD,
+    /// so only the `flange_od` variant is guaranteed to enclose).
+    /// `height` (bodyHeight) and `actuator_height` extend along `actuator_axis`,
+    /// or in every direction when it is not given.
+    ValveBody,
+    /// Schema `CABLE_TRAY`: polyline `points` (centreline, ≥ 2) with `width` and
+    /// `height` of the cross-section; bounded as a capsule of the half-diagonal.
+    CableTray,
 }
+
+/// Envelope radius of a `VALVE_BODY` without `flange_od`, as a multiple of boreD.
+///
+/// A heuristic, because the schema carries no flange OD: flange OD / 2 ≤ 3.5 × DN
+/// holds for every entry of `catalogs/flange-dimensions*.json` except DN 15 in ASME
+/// Class 900–2500 (up to 4.45 × DN); boreD can be smaller than DN in high classes.
+/// Pass `flange_od` for a guaranteed enclosure.
+pub const VALVE_ENVELOPE_FACTOR: f64 = 3.5;
 
 // ---------------------------------------------------------------------------
 // PrimitiveParams — generic parameter bag for AABB computation
@@ -297,6 +324,16 @@ pub struct PrimitiveParams {
     // Axis direction (unit vector). Defaults to Z-up [0,0,1].
     /// Axis direction for oriented primitives.
     pub axis: Option<[f64; 3]>,
+
+    // Schema compound types
+    /// End point of a `STEEL_PROFILE` member (startPt is `origin`).
+    pub end_point: Option<[f64; 3]>,
+    /// Centreline waypoints of a `CABLE_TRAY` (absolute coordinates; `origin` is ignored).
+    pub points: Option<Vec<[f64; 3]>>,
+    /// Direction of bonnet / actuator of a `VALVE_BODY` (unit vector).
+    pub actuator_axis: Option<[f64; 3]>,
+    /// Actuator height above the centreline of a `VALVE_BODY`.
+    pub actuator_height: Option<f64>,
 }
 
 // ---------------------------------------------------------------------------
@@ -593,7 +630,72 @@ pub fn primitive_aabb(
             );
             cylinder_aabb_inner(start, &axis, max_r, total_z)
         }
+
+        // ---------------------------------------------------------------
+        // STEEL_PROFILE: segment startPt→endPt inflated by the section's
+        //                half-diagonal (any roll angle).
+        // ---------------------------------------------------------------
+        PrimitiveType::SteelProfile => {
+            let [x, y, z] = params.end_point.expect("SteelProfile requires end_point");
+            let r = params.profile_max_r.expect("SteelProfile requires profile_max_r");
+            let mut b = Aabb::from_point(origin);
+            b.include_point(Vec3::new(x, y, z));
+            inflate(b, r)
+        }
+
+        // ---------------------------------------------------------------
+        // VALVE_BODY: flow-axis cylinder (face-to-face, envelope radius)
+        //             plus bonnet/actuator extent.
+        // ---------------------------------------------------------------
+        PrimitiveType::ValveBody => {
+            let bore_r = params.radius.expect("ValveBody requires radius (boreD / 2)");
+            let ftf = params.length.expect("ValveBody requires length (faceToFace)");
+            let env_r = params
+                .flange_od
+                .map_or(2.0 * bore_r * VALVE_ENVELOPE_FACTOR, |od| od * 0.5)
+                .max(bore_r);
+            let a = Vec3::new(axis[0], axis[1], axis[2]);
+            let start = origin - a * (ftf * 0.5);
+            let mut b = cylinder_aabb_inner(start, &axis, env_r, ftf);
+            let up = params.height.unwrap_or(0.0).max(params.actuator_height.unwrap_or(0.0));
+            if up > 0.0 {
+                b = b.union(&match params.actuator_axis {
+                    Some(d) => {
+                        let mut s = Aabb::from_point(origin);
+                        s.include_point(origin + Vec3::new(d[0], d[1], d[2]) * up);
+                        inflate(s, env_r)
+                    }
+                    None => inflate(Aabb::from_point(origin), up + env_r),
+                });
+            }
+            b
+        }
+
+        // ---------------------------------------------------------------
+        // CABLE_TRAY: polyline capsule of the cross-section half-diagonal
+        // ---------------------------------------------------------------
+        PrimitiveType::CableTray => {
+            let pts = params.points.as_ref().expect("CableTray requires points");
+            assert!(pts.len() >= 2, "CableTray requires at least 2 points");
+            let w = params.width.expect("CableTray requires width");
+            let h = params.height.unwrap_or(0.0);
+            let mut b = Aabb::from_point(Vec3::new(pts[0][0], pts[0][1], pts[0][2]));
+            for p in &pts[1..] {
+                b.include_point(Vec3::new(p[0], p[1], p[2]));
+            }
+            inflate(b, (w * w + h * h).sqrt() * 0.5)
+        }
     }
+}
+
+/// Smallest AABB enclosing all given boxes (bounds of a `COMPOSITE` from the
+/// AABBs of its children). `None` for an empty input.
+pub fn aabb_union<I: IntoIterator<Item = Aabb>>(boxes: I) -> Option<Aabb> {
+    boxes.into_iter().reduce(|a, b| a.union(&b))
+}
+
+fn inflate(b: Aabb, r: f64) -> Aabb {
+    Aabb::new(b.min - Vec3::new(r, r, r), b.max + Vec3::new(r, r, r))
 }
 
 /// Legacy convenience wrapper: compute an AABB for a cylinder from explicit
@@ -812,6 +914,92 @@ mod tests {
     }
 
     // -- Intersects --------------------------------------------------------
+
+    #[test]
+    fn steel_profile_aabb_contains_all_rolled_corners() {
+        // HEB300: 300 x 300 → half-diagonal 212.13; beam along X, 6 m
+        let r = (300.0f64.powi(2) * 2.0).sqrt() / 2.0;
+        let p = PrimitiveParams { end_point: Some([6000.0, 0.0, 0.0]), profile_max_r: Some(r), ..Default::default() };
+        let b = primitive_aabb(&PrimitiveType::SteelProfile, Vec3::zero(), &p);
+        for deg in (0..360).step_by(15) {
+            let t = (deg as f64).to_radians();
+            for (u, v) in [(150.0, 150.0), (150.0, -150.0), (-150.0, 150.0), (-150.0, -150.0)] {
+                let (y, z) = (u * t.cos() - v * t.sin(), u * t.sin() + v * t.cos());
+                for x in [0.0, 6000.0] {
+                    assert!(b.contains_point(Vec3::new(x, y, z)), "corner at roll {deg}°");
+                }
+            }
+        }
+        assert!(approx_eq(b.max.x, 6000.0 + r) && approx_eq(b.min.y, -r));
+    }
+
+    #[test]
+    fn valve_body_aabb_flow_axis_and_actuator() {
+        // DN100 gate valve along X, ftf 229, flange OD 229, actuator 600 up (Z)
+        let p = PrimitiveParams {
+            radius: Some(50.0),
+            length: Some(229.0),
+            flange_od: Some(229.0),
+            axis: Some([1.0, 0.0, 0.0]),
+            actuator_axis: Some([0.0, 0.0, 1.0]),
+            actuator_height: Some(600.0),
+            ..Default::default()
+        };
+        let b = primitive_aabb(&PrimitiveType::ValveBody, Vec3::new(1000.0, 0.0, 0.0), &p);
+        assert!(approx_eq(b.min.x, 1000.0 - 114.5) && approx_eq(b.max.x, 1000.0 + 114.5));
+        assert!(approx_eq(b.min.z, -114.5) && approx_eq(b.max.z, 600.0 + 114.5));
+        assert!(approx_eq(b.max.y, 114.5));
+        // without flange OD the heuristic envelope (VALVE_ENVELOPE_FACTOR × boreD) applies
+        let q = PrimitiveParams { flange_od: None, actuator_height: None, ..p };
+        let b = primitive_aabb(&PrimitiveType::ValveBody, Vec3::zero(), &q);
+        assert!(approx_eq(b.max.y, 100.0 * VALVE_ENVELOPE_FACTOR));
+    }
+
+    #[test]
+    fn valve_body_without_actuator_direction_bounds_all_directions() {
+        let p = PrimitiveParams { radius: Some(25.0), length: Some(100.0), height: Some(400.0), ..Default::default() };
+        let b = primitive_aabb(&PrimitiveType::ValveBody, Vec3::zero(), &p);
+        for d in [[1.0, 0.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, -1.0]] {
+            assert!(b.contains_point(Vec3::new(d[0], d[1], d[2]) * 400.0));
+        }
+        // must enclose the envelope of every directed actuator (up + env_r)
+        for d in [[0.0, 0.0, 1.0], [0.0, -1.0, 0.0], [1.0, 0.0, 0.0]] {
+            let q = PrimitiveParams { actuator_axis: Some(d), ..p.clone() };
+            let directed = primitive_aabb(&PrimitiveType::ValveBody, Vec3::zero(), &q);
+            assert!(b.contains_point(directed.min) && b.contains_point(directed.max), "direction {d:?}");
+        }
+    }
+
+    #[test]
+    fn cable_tray_aabb_polyline() {
+        let p = PrimitiveParams {
+            points: Some(vec![[0.0, 0.0, 3000.0], [5000.0, 0.0, 3000.0], [5000.0, 2000.0, 3000.0]]),
+            width: Some(600.0),
+            height: Some(100.0),
+            ..Default::default()
+        };
+        let b = primitive_aabb(&PrimitiveType::CableTray, Vec3::zero(), &p);
+        let r = (600.0f64 * 600.0 + 100.0 * 100.0).sqrt() / 2.0;
+        assert!(approx_eq(b.min.x, -r) && approx_eq(b.max.x, 5000.0 + r));
+        assert!(approx_eq(b.max.y, 2000.0 + r) && approx_eq(b.max.z, 3000.0 + r));
+    }
+
+    #[test]
+    fn composite_union() {
+        let shell = primitive_aabb(
+            &PrimitiveType::Cylinder,
+            Vec3::zero(),
+            &PrimitiveParams { radius: Some(500.0), height: Some(3000.0), ..Default::default() },
+        );
+        let head = primitive_aabb(
+            &PrimitiveType::EllipticalHead,
+            Vec3::new(0.0, 0.0, 3000.0),
+            &PrimitiveParams { radius: Some(500.0), ..Default::default() },
+        );
+        let b = aabb_union([shell, head]).unwrap();
+        assert!(approx_eq(b.max.z, 3250.0) && approx_eq(b.min.x, -500.0));
+        assert!(aabb_union(std::iter::empty()).is_none());
+    }
 
     #[test]
     fn aabb_intersects() {
