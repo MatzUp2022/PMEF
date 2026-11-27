@@ -393,6 +393,32 @@ def check_cables():
             bad(w, f"outer diameter {od} mm cannot hold {core_area:g} mm² of conductor")
 
 
+def check_native_types():
+    """NATIVE_TYPE_MAPPING: componentClass is a PMEF class, pmefType a piping type, and no
+    entry is shadowed by an earlier unconditional entry of the same nativeType."""
+    props = json.loads((ROOT / "schemas/pmef-property-sets.schema.json").read_text(encoding="utf-8"))
+    classes = set(props["$defs"]["PipingComponentSpec"]["properties"]["componentClass"]["enum"])
+    piping = json.loads((ROOT / "schemas/pmef-piping-component.schema.json").read_text(encoding="utf-8"))
+    types = {d["allOf"][1]["properties"]["@type"]["const"] for d in piping["$defs"].values()
+             if "allOf" in d and len(d["allOf"]) > 1 and "@type" in d["allOf"][1].get("properties", {})}
+    for f in sorted(CAT.glob("native-types-*.json")):
+        generic, ids = set(), set()
+        for e in load(f.name)["entries"]:
+            w = f"{f.name}:{e['catalogId']}"
+            checked[f.name] = checked.get(f.name, 0) + 1
+            if e["catalogId"] in ids:
+                bad(w, "duplicate catalogId")
+            ids.add(e["catalogId"])
+            if e["pmefType"] not in types:
+                bad(w, f"pmefType {e['pmefType']} is not a piping component type")
+            if e.get("componentClass") and e["componentClass"] not in classes:
+                bad(w, f"componentClass {e['componentClass']} is not in PipingComponentSpec")
+            if e["nativeType"] in generic:
+                bad(w, f"shadowed by an earlier entry for {e['nativeType']} without SKEY condition")
+            if "skeyPrefix" not in e and "skeyContains" not in e:
+                generic.add(e["nativeType"])
+
+
 def main():
     global CAT
     if "--dir" in sys.argv:
@@ -404,6 +430,7 @@ def main():
     check_ducts()
     check_supports()
     check_cables()
+    check_native_types()
     if "--verbose" in sys.argv:
         for k, v in sorted(checked.items()):
             print(f"  {k}: {v} checks")

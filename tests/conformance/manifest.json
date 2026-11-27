@@ -170,6 +170,26 @@
       "expect": "valid"
     },
     {
+      "id": "PIPE-U-017",
+      "name": "GenericPipingComponent with nativeType — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "piping",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/PIPE-U-017.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "PIPE-U-018",
+      "name": "GenericPipingComponent with unknown componentClass — rejected",
+      "category": "negative",
+      "level": 2,
+      "domain": "piping",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/PIPE-U-018.ndjson",
+      "expect": "invalid"
+    },
+    {
       "id": "EQUIP-U-001",
       "name": "Vessel with VesselDesign — valid",
       "category": "unit",

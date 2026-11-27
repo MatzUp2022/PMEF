@@ -146,6 +146,7 @@ The matrix below lists all normatively defined PMEF entity types and their requi
 | `pmef:Flange` (all 9 types) | ✅ | ✅ | ✅ |
 | `pmef:Valve` | ✅ | ✅ | ✅ |
 | `pmef:Olet` | 🟡 | ✅ | ✅ |
+| `pmef:GenericPipingComponent` | ❌ | ✅ | ✅ |
 | `pmef:Gasket` | 🟡 | ✅ | ✅ |
 | `pmef:Weld` + `WeldSpec` | 🟡 | ✅ | ✅ |
 | `pmef:PipeSupport` + `SupportSpec` | 🟡 | ✅ | ✅ |
@@ -357,7 +358,8 @@ EQUIP-U-006, EQUIP-U-009, EQUIP-U-011, EQUIP-U-012, RT-001,
 RT-002, RT-003, RT-004, RT-005, RT-006, RT-007, RT-013, RT-017
 
 **Level 2 (adds):**
-PIPE-U-008, PIPE-U-009, PIPE-U-010, PIPE-U-016, EQUIP-U-005,
+PIPE-U-008, PIPE-U-009, PIPE-U-010, PIPE-U-016, PIPE-U-017,
+PIPE-U-018, EQUIP-U-005,
 EQUIP-U-007, EQUIP-U-008, EQUIP-U-010, EI-U-001 through
 EI-U-008, STEEL-U-001 through STEEL-U-006, REL-U-001 through
 REL-U-008, GEOM-U-001 through GEOM-U-008, RT-008 through

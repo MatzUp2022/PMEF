@@ -58,6 +58,7 @@ fn registry() -> BTreeMap<&'static str, RoundTrip> {
     m.insert("pmef:Weld", rt::<core::Weld>);
     m.insert("pmef:PipeSupport", rt::<core::PipeSupport>);
     m.insert("pmef:Spool", rt::<core::Spool>);
+    m.insert("pmef:GenericPipingComponent", rt::<core::GenericPipingComponent>);
     m.insert("pmef:Pump", rt::<core::Pump>);
     m.insert("pmef:Vessel", rt::<core::Vessel>);
     m.insert("pmef:Tank", rt::<core::Tank>);

@@ -349,14 +349,15 @@ fn is_element_keyword(kw: &str) -> bool {
     matches!(kw, "SITE" | "ZONE" | "PIPE" | "BRAN" | "EQUI" | "STRU" | "SREF" | "CTRAY")
 }
 
-/// Returns true if this keyword starts a piping component element.
+/// Returns true if this keyword starts a piping component element: the built-in
+/// keywords plus every element type of the native type catalog (TUBI, COUP, INST, ...).
 fn is_component_type(kw: &str) -> bool {
     matches!(kw,
         "ELBOW" | "TEE" | "REDU" | "FLAN" | "VALV" | "GASK" |
         "WELD"  | "PSUP" | "NOZZ" | "STPIPE" | "STRAIG" |
         // Equipment design primitives (geometry, see crate::primitives)
         "BOX" | "CYLI" | "CONE" | "SNOU" | "DISH" | "PYRA" | "RTOR"
-    )
+    ) || crate::mapping::is_native_piping_type(kw)
 }
 
 /// Parse a PML attribute value string.

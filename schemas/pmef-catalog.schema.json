@@ -34,7 +34,8 @@
         "PIPE_STRESS_MAPPING",
         "DUCT_DIMENSIONS",
         "PIPE_SUPPORT_TYPES",
-        "CABLE_TYPES"
+        "CABLE_TYPES",
+        "NATIVE_TYPE_MAPPING"
       ],
       "description": "Catalog domain type. Determines the required fields of each entry."
     },
@@ -233,6 +234,21 @@
           "entries": {
             "minItems": 1,
             "items": { "$ref": "#/$defs/cableTypeEntry" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "catalogType": { "const": "NATIVE_TYPE_MAPPING" } }
+      },
+      "then": {
+        "required": ["sourceSystem"],
+        "properties": {
+          "sourceSystem": { "type": "string", "minLength": 1, "description": "Authoring tool, same value as HasEquivalentIn.targetSystem, e.g. 'AVEVA_E3D'." },
+          "entries": {
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/nativeTypeEntry" }
           }
         }
       }
@@ -522,6 +538,22 @@
         "outerDiameter_mm": { "type": "number", "exclusiveMinimum": 0, "description": "Typical outer diameter [mm]; manufacturer data governs." },
         "minBendRadiusFactor": { "type": "number", "exclusiveMinimum": 0, "description": "Minimum bending radius as a multiple of the outer diameter (fixed installation)." },
         "standard": { "type": "string", "description": "Product standard, e.g. 'VDE 0276-603'." }
+      },
+      "additionalProperties": false
+    },
+    "nativeTypeEntry": {
+      "type": "object",
+      "title": "Native Type Mapping Entry",
+      "description": "Maps an authoring-tool element type (optionally refined by its SKEY) to a PMEF @type and componentClass. The first entry whose conditions hold wins.",
+      "required": ["catalogId", "nativeType", "pmefType"],
+      "properties": {
+        "catalogId": { "$ref": "#/$defs/catalogRef" },
+        "nativeType": { "type": "string", "minLength": 1, "description": "Element type keyword in the source tool, e.g. 'VALV', 'PCOM'." },
+        "skeyPrefix": { "type": "string", "minLength": 1, "description": "Condition: the SKEY starts with this text (case-insensitive)." },
+        "skeyContains": { "type": "string", "minLength": 1, "description": "Condition: the SKEY contains this text (case-insensitive)." },
+        "pmefType": { "type": "string", "pattern": "^pmef:[A-Z][A-Za-z]+$", "description": "PMEF @type, e.g. 'pmef:Valve'." },
+        "componentClass": { "type": "string", "description": "PipingComponentSpec.componentClass value (pmef-property-sets)." },
+        "note": { "type": "string" }
       },
       "additionalProperties": false
     }

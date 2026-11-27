@@ -34,6 +34,7 @@ pub enum PmefEntityType {
     Weld,
     PipeSupport,
     Spool,
+    GenericPipingComponent,
     // Equipment
     Vessel,
     Tank,
@@ -106,6 +107,7 @@ impl PmefEntityType {
             "pmef:Weld"                  => Self::Weld,
             "pmef:PipeSupport"           => Self::PipeSupport,
             "pmef:Spool"                 => Self::Spool,
+            "pmef:GenericPipingComponent" => Self::GenericPipingComponent,
             "pmef:Vessel"                => Self::Vessel,
             "pmef:Tank"                  => Self::Tank,
             "pmef:Pump"                  => Self::Pump,
@@ -171,6 +173,7 @@ impl PmefEntityType {
             Self::Weld                  => "pmef:Weld",
             Self::PipeSupport           => "pmef:PipeSupport",
             Self::Spool                 => "pmef:Spool",
+            Self::GenericPipingComponent => "pmef:GenericPipingComponent",
             Self::Vessel                => "pmef:Vessel",
             Self::Tank                  => "pmef:Tank",
             Self::Pump                  => "pmef:Pump",

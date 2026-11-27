@@ -16,6 +16,7 @@ tracing.workspace    = true
 pmef-core.workspace  = true
 pmef-io.workspace    = true
 pmef-validate.workspace = true
+pmef-catalogs = { path = "../pmef-catalogs" }
 
 # For E3D database address parsing
 regex     = "1"

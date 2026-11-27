@@ -2,7 +2,7 @@
 //!
 //! PMEF is the single home of engineering catalogs in the ecosystem (`docs/ECOSYSTEM.md`):
 //! piping classes, flange, pipe and duct dimensions, materials, steel profiles, pipe support
-//! types and cable types. Other repositories
+//! types, cable types and native element type mappings for adapters. Other repositories
 //! (e.g. DEXPI-Manager `pipe-class-engine`) read them through this crate instead of keeping
 //! their own copies of the tables. The JSON files in `catalogs/` stay the source of truth; this
 //! crate only embeds them at compile time.
@@ -43,6 +43,10 @@ const CATALOGS: &[(&str, &str)] = &[
     (
         "materials-en",
         include_str!("../../../catalogs/materials-en.json"),
+    ),
+    (
+        "native-types-e3d",
+        include_str!("../../../catalogs/native-types-e3d.json"),
     ),
     (
         "pipe-dimensions",
@@ -298,3 +302,47 @@ pub fn cable_types() -> Vec<CableType> {
 pub fn cable_type(designation: &str) -> Option<CableType> {
     cable_types().into_iter().find(|c| c.designation == designation)
 }
+/// One entry of a `NATIVE_TYPE_MAPPING` catalog (e.g. `native-types-e3d`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NativeTypeMapping {
+    /// Entry identifier.
+    pub catalog_id: String,
+    /// Element type keyword in the source tool, e.g. `VALV`.
+    pub native_type: String,
+    /// Condition: SKEY starts with this text (case-insensitive).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub skey_prefix: Option<String>,
+    /// Condition: SKEY contains this text (case-insensitive).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub skey_contains: Option<String>,
+    /// PMEF `@type`.
+    pub pmef_type: String,
+    /// `componentSpec.componentClass`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub component_class: Option<String>,
+    /// Free-text note.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub note: Option<String>,
+}
+
+impl NativeTypeMapping {
+    /// True if this entry maps element type `keyword` with this SKEY.
+    pub fn applies(&self, keyword: &str, skey: Option<&str>) -> bool {
+        let skey = skey.unwrap_or("").trim().to_uppercase();
+        self.native_type.eq_ignore_ascii_case(keyword)
+            && self.skey_prefix.as_ref().is_none_or(|p| skey.starts_with(&p.to_uppercase()))
+            && self.skey_contains.as_ref().is_none_or(|c| skey.contains(&c.to_uppercase()))
+    }
+}
+
+/// All entries of a native type mapping catalog, in file order.
+pub fn native_types(catalog: &str) -> Vec<NativeTypeMapping> {
+    entries(catalog)
+}
+
+/// The first entry of `catalog` that maps element type `keyword` with this SKEY.
+pub fn native_type(catalog: &str, keyword: &str, skey: Option<&str>) -> Option<NativeTypeMapping> {
+    native_types(catalog).into_iter().find(|m| m.applies(keyword, skey))
+}
+

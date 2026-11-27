@@ -25,6 +25,7 @@ All catalogs are licensed under **CC0 1.0 Universal** (public domain).
 | `duct-dimensions-en.json` | Nominal duct sizes: round diameters and rectangular side lengths | EN 1506, EN 1505 | 36 |
 | `pipe-supports-generic.json` | Generic pipe support assemblies (shoes, guides, stops, hangers, springs) — synthetic, no load ratings | — | 12 |
 | `cable-types-en.json` | Common power, control, instrument and bus cable types | IEC 60502-1, VDE 0276-603, EN 50525 | 13 |
+| `native-types-e3d.json` | AVEVA E3D / PDMS element type (+ SKEY) → PMEF `@type` and `componentClass` | — | 38 |
 | `rdl-uri-map.json` | PCA-RDL URI cross-reference for catalog entries | ISO 15926-4 | — |
 | `caesarII-cii-mapping.json` | PMEF ↔ CAESAR II field mapping | — | — |
 
@@ -36,7 +37,7 @@ Each catalog file follows a common JSON structure:
 {
   "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
   "catalogId": "<id>",
-  "catalogType": "STEEL_PROFILES | PIPING_CLASS | PIPE_DIMENSIONS | FLANGE_DIMENSIONS | MATERIAL_GRADES | INSTRUMENT_CATALOG | RDL_MAPPING | PIPE_STRESS_MAPPING | DUCT_DIMENSIONS | PIPE_SUPPORT_TYPES | CABLE_TYPES",
+  "catalogType": "STEEL_PROFILES | PIPING_CLASS | PIPE_DIMENSIONS | FLANGE_DIMENSIONS | MATERIAL_GRADES | INSTRUMENT_CATALOG | RDL_MAPPING | PIPE_STRESS_MAPPING | DUCT_DIMENSIONS | PIPE_SUPPORT_TYPES | CABLE_TYPES | NATIVE_TYPE_MAPPING",
   "standard": "<applicable standard>",
   "version": "<version string>",
   "description": "<human-readable description>",

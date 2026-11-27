@@ -56,7 +56,7 @@ pub use hvac::{
 };
 pub use plant::{Area, FileHeader, Plant, Unit};
 pub use piping::{
-    Elbow, Flange, Gasket, Olet, Pipe, PipeSupport, PipingNetworkSystem,
+    Elbow, Flange, Gasket, GenericPipingComponent, Olet, Pipe, PipeSupport, PipingNetworkSystem,
     PipingSegment, Reducer, Spool, Tee, Valve, Weld,
 };
 pub use relationships::{

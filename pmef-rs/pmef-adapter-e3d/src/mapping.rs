@@ -1,53 +1,41 @@
 //! AVEVA E3D → PMEF field mapping tables.
 
 use std::collections::HashMap;
+use std::sync::OnceLock;
 
 // ── Component type mapping ────────────────────────────────────────────────────
 
-/// Map an E3D element type + SKEY to (PMEF @type, componentClass, skey_8char).
+/// Catalog that maps E3D element types to PMEF (`catalogs/native-types-e3d.json`).
+pub const NATIVE_TYPES_CATALOG: &str = "native-types-e3d";
+
+fn native_types() -> &'static [pmef_catalogs::NativeTypeMapping] {
+    static TYPES: OnceLock<Vec<pmef_catalogs::NativeTypeMapping>> = OnceLock::new();
+    TYPES.get_or_init(|| pmef_catalogs::native_types(NATIVE_TYPES_CATALOG))
+}
+
+/// True if `keyword` is a piping element type listed in [`NATIVE_TYPES_CATALOG`].
+pub fn is_native_piping_type(keyword: &str) -> bool {
+    native_types().iter().any(|m| m.native_type.eq_ignore_ascii_case(keyword))
+}
+
+/// Map an E3D element type + SKEY to (PMEF @type, componentClass, listed).
 ///
-/// E3D uses two-level identification:
-/// - The PML element keyword (ELBOW, VALV, FLAN, etc.)
-/// - The 8-character specification key (SKEY) from the E3D pipe spec
+/// E3D uses two-level identification: the PML element keyword (ELBO, VALV, FLAN, ...)
+/// and the 8-character specification key (SKEY). The mapping is data, not code: the
+/// first matching entry of [`NATIVE_TYPES_CATALOG`] wins. An element type that is not
+/// listed maps to `pmef:GenericPipingComponent` / `SPECIAL` with `listed = false`, so
+/// the caller can warn instead of dropping or mislabelling the component.
 pub fn e3d_element_to_pmef(
     element_keyword: &str,
     skey: Option<&str>,
-) -> (&'static str, &'static str) {
-    let skey_prefix = skey.and_then(|s| s.get(..2)).unwrap_or("");
-    match element_keyword.to_uppercase().as_str() {
-        "STPIPE" | "STRAIG" | "PIPE_COMP" => ("pmef:Pipe",        "PIPE"),
-        "ELBOW"  => ("pmef:Elbow",      "ELBOW"),
-        "TEE"    => ("pmef:Tee",        "TEE"),
-        "REDU"   => {
-            let is_ecc = skey.map(|s| s.to_uppercase().contains("EC")).unwrap_or(false);
-            if is_ecc { ("pmef:Reducer", "REDUCER_ECCENTRIC") }
-            else      { ("pmef:Reducer", "REDUCER_CONCENTRIC") }
-        },
-        "FLAN"   => {
-            match skey_prefix.to_uppercase().as_str() {
-                "BL" | "FL" if skey.map(|s| s.contains("BL")).unwrap_or(false)
-                             => ("pmef:Flange", "BLIND_FLANGE"),
-                _            => ("pmef:Flange", "FLANGE"),
-            }
-        },
-        "VALV"   => {
-            match skey_prefix.to_uppercase().as_str() {
-                "GT" => ("pmef:Valve", "VALVE_GATE"),
-                "GL" => ("pmef:Valve", "VALVE_GLOBE"),
-                "BL" => ("pmef:Valve", "VALVE_BALL"),
-                "BF" => ("pmef:Valve", "VALVE_BUTTERFLY"),
-                "CK" => ("pmef:Valve", "VALVE_CHECK"),
-                "SV" => ("pmef:Valve", "VALVE_RELIEF"),
-                "NL" => ("pmef:Valve", "VALVE_NEEDLE"),
-                _    => ("pmef:Valve", "VALVE_GATE"),
-            }
-        },
-        "GASK"   => ("pmef:Gasket",     "GASKET"),
-        "WELD"   => ("pmef:Weld",       "WELD_BUTT"),
-        "PSUP"   => ("pmef:PipeSupport","PIPE_SUPPORT"),
-        "OLET" | "WOLP" | "SOLP"
-                 => ("pmef:Olet",       "OLET_WELDOLET"),
-        _        => ("pmef:Pipe",       "PIPE"),  // fallback
+) -> (&'static str, &'static str, bool) {
+    match native_types().iter().find(|m| m.applies(element_keyword, skey)) {
+        Some(m) => (
+            m.pmef_type.as_str(),
+            m.component_class.as_deref().unwrap_or("SPECIAL"),
+            true,
+        ),
+        None => ("pmef:GenericPipingComponent", "SPECIAL", false),
     }
 }
 
@@ -150,25 +138,29 @@ mod tests {
 
     #[test]
     fn test_e3d_element_to_pmef() {
-        let (t, c) = e3d_element_to_pmef("ELBOW", Some("ELBWLR90"));
-        assert_eq!(t, "pmef:Elbow");
-        assert_eq!(c, "ELBOW");
-
-        let (t, c) = e3d_element_to_pmef("VALV", Some("GTBWFLFL"));
-        assert_eq!(t, "pmef:Valve");
-        assert_eq!(c, "VALVE_GATE");
-
-        let (t, c) = e3d_element_to_pmef("VALV", Some("BLBWFLFL"));
-        assert_eq!(t, "pmef:Valve");
-        assert_eq!(c, "VALVE_BALL");
-
-        let (t, c) = e3d_element_to_pmef("FLAN", Some("FLBLRF  "));
-        assert_eq!(t, "pmef:Flange");
-        assert_eq!(c, "BLIND_FLANGE");
-
-        let (t, c) = e3d_element_to_pmef("REDU", Some("RDCWECCT"));
-        assert_eq!(t, "pmef:Reducer");
-        assert_eq!(c, "REDUCER_ECCENTRIC");
+        let cases = [
+            ("ELBOW", Some("ELBWLR90"), "pmef:Elbow", "ELBOW"),
+            ("ELBO", None, "pmef:Elbow", "ELBOW"),
+            ("VALV", Some("GTBWFLFL"), "pmef:Valve", "VALVE_GATE"),
+            ("VALV", Some("BLBWFLFL"), "pmef:Valve", "VALVE_BALL"),
+            ("VALV", Some("XXBWFLFL"), "pmef:Valve", "VALVE_UNSPECIFIED"),
+            ("FLAN", Some("FLBLRF  "), "pmef:Flange", "BLIND_FLANGE"),
+            ("FLAN", Some("FLWNRF  "), "pmef:Flange", "FLANGE"),
+            ("REDU", Some("RDCWECCT"), "pmef:Reducer", "REDUCER_ECCENTRIC"),
+            ("TUBI", None, "pmef:Pipe", "PIPE"),
+            ("COUP", None, "pmef:GenericPipingComponent", "COUPLING"),
+            ("INST", None, "pmef:GenericPipingComponent", "INLINE_INSTRUMENT"),
+            ("CLOS", None, "pmef:GenericPipingComponent", "CLOSURE"),
+            ("PCOM", Some("ANY"), "pmef:GenericPipingComponent", "SPECIAL"),
+        ];
+        for (kw, skey, t, c) in cases {
+            assert_eq!(e3d_element_to_pmef(kw, skey), (t, c, true), "{kw} {skey:?}");
+        }
+        assert_eq!(
+            e3d_element_to_pmef("XYZZ", None),
+            ("pmef:GenericPipingComponent", "SPECIAL", false)
+        );
+        assert!(is_native_piping_type("tubi") && !is_native_piping_type("XYZZ"));
     }
 
     #[test]

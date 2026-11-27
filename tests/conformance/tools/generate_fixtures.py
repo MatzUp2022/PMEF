@@ -133,6 +133,10 @@ UNIT = [
      [without(PIPE, "componentSpec")]),
     ("PIPE-U-016", "PipeSupport with SupportSpec — valid", 2, "piping", "CL2-01", "valid",
      [ex("pmef:PipeSupport", lambda o: "supportSpec" in o)]),
+    ("PIPE-U-017", "GenericPipingComponent with nativeType — valid", 2, "piping", "CL2-01", "valid",
+     [ex("pmef:GenericPipingComponent")]),
+    ("PIPE-U-018", "GenericPipingComponent with unknown componentClass — rejected", 2, "piping", "CL1-02",
+     "invalid", [with_(ex("pmef:GenericPipingComponent"), ("componentSpec", "componentClass"), "WIDGET")]),
     # Equipment
     ("EQUIP-U-001", "Vessel with VesselDesign — valid", 1, "equipment", "CL1-07", "valid", [VESSEL]),
     ("EQUIP-U-002", "Tank — valid", 1, "equipment", "CL1-07", "valid", [equip("pmef:Tank", "T-1", "STORAGE_TANK")]),
