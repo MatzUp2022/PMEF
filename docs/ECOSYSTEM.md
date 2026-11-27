@@ -16,12 +16,15 @@ Engines       DEXPI-Manager   PlantView   cad-engine   EngineeringAI
               eng-calc → piping-solver, structural-solver   electrical
                    |  Cargo-Crates (Git-Tags)
 Kern          PMEF (Informationsmodell, Kataloge)    cad-kernel (exakte Geometrie)
+
+Querschnitt   design-system (Tokens, UI-Bausteine, App-Shell) → alle Oberflächen
 ```
 
 - Abhängigkeiten zeigen **nur nach unten**. Keine Schicht ruft eine höhere auf.
 - Engines kennen einander nur über Daten (PMEF, DEXPI) mit stabilen `@id`s, nicht über interne Typen.
 - Rust-Crates werden per Git-Abhängigkeit mit festem Tag eingebunden (Muster: PlantView → PMEF).
 - Plattformen binden Engines als vendorte WASM-Pakete ein (Muster: ProDocAimAi ADR 0042).
+- `design-system` hängt von keinem anderen Repository ab; alle Oberflächen dürfen es nutzen.
 
 ## Verantwortungsmatrix
 
@@ -40,6 +43,7 @@ Kern          PMEF (Informationsmodell, Kataloge)    cad-kernel (exakte Geometri
 | piping-solver | Rohrstatik: Balken-FE für Rohrleitungen mit Bögen, Halterungen, Federn; Nachweise ASME B31.3 und EN 13480 | Lastfall-Verwaltung und PMEF-Anbindung (→ eng-calc), Stahlbau (→ structural-solver) | Crate, nutzt `eng-calc` |
 | structural-solver | Stabwerk-FE für Stahlbau, Nachweise EC3 (EN 1993) | Lastfall-Verwaltung und PMEF-Anbindung (→ eng-calc), Rohrleitungen (→ piping-solver) | Crate, nutzt `eng-calc` |
 | electrical | Schaltplan-Modell (Einlinienschaltbild), Kabelberechnung (Querschnitt, Spannungsfall, Kurzschluss nach IEC 60364/60909), Klemmenpläne | Kabel- und Trassenobjekte im 3D-Modell (→ PMEF), Kabelliste/-verfolgung im Projekt (→ ProDocAimAi) | Crate(s), WASM |
+| design-system | Design-Tokens (Farben, Typografie, Abstände, Themes „Hell · Register“ und „Dunkel · Modell“), CSS-Bausteine, später React-Komponenten und App-Shell mit App-Umschalter, Bedienmuster (Befehlspalette, Befehlszeile, Maus-Presets), Token-Export für native Oberflächen (Rust) | Fachlogik, Datenzugriff, App-Screens (bleiben in den Apps), Rendering (→ cad-engine, PlantView) | npm `@matzup/tokens`, `@matzup/css`, später `@matzup/ui`, `@matzup/shell`; Rust-Datei der Tokens |
 
 ## Getroffene Entscheidungen (2026-11-21)
 
@@ -50,7 +54,8 @@ Kern          PMEF (Informationsmodell, Kataloge)    cad-kernel (exakte Geometri
 4. **Rust-Verteilung** zunächst per Git-Abhängigkeit mit Tags; private Registry erst ab mehr als
    drei Konsumenten.
 5. **ProDocAimAi ↔ ProcessHubAi** teilen Code weiterhin per Kopie (ProcessHubAi CLAUDE.md §7a); ein
-   gemeinsames Paket erst, wenn ein drittes TS-Produkt es braucht.
+   gemeinsames Paket erst, wenn ein drittes TS-Produkt es braucht. *Für UI-Bausteine am 2026-11-26
+   abgelöst durch Entscheidung 5 unten; für Fach- und Auth-Code gilt die Kopie-Regel weiter.*
 6. **Auto-Routing** (2026-11-25): Der Graph- und Regel-Kernel für automatisches Routing von
    Rohrleitungen (später Kabel) ist das Crate `pmef-route` in PMEF, weil er Rohrklassen, Rohrmaße und
    das PMEF-Modell braucht. Engines und Plattformen binden ihn wie `pmef-core` ein; Viewer zeigen
@@ -70,6 +75,17 @@ Kern          PMEF (Informationsmodell, Kataloge)    cad-kernel (exakte Geometri
 4. **Elektro-Engine** (Einlinienschaltbild, Kabelberechnung, Klemmenpläne) entsteht im neuen
    Engine-Repository **electrical**. Kabel- und Trassenobjekte bleiben in PMEF. Die eingefrorenen
    Elektro-Module in PlantView und DEXPI-Manager werden danach abgelöst (Freigabe je Modul).
+5. **Einheitliches Design System:** Alle Oberflächen des Ökosystems folgen einem Design System aus dem
+   Repository **design-system** (ADR `design-system/docs/adr/0001`). Web-Stack für Oberflächen:
+   React 19, TypeScript, Tailwind 4, Radix-Primitive nach shadcn-Muster; Desktop über Tauri 2.
+   UI-Bausteine werden als versionierte Pakete geteilt (`@matzup/tokens`, `@matzup/css`, später
+   `@matzup/ui`, `@matzup/shell`), nicht mehr per Kopie. Native Oberflächen (cad-engine, cad-studio)
+   übernehmen die Tokens über die generierte Rust-Datei; ob die Bedienpanels von cad-studio in eine
+   Tauri-Oberfläche wandern, wird nach dem Test des Prototyps (PlantView
+   `prototypes/model-workspace`) mit CAD-Anwendern entschieden. Umstellung in dieser Reihenfolge:
+   ProcessHubAi (Pilot), ProDocAimAi, PlantView, DEXPI-Manager (nur P&ID-/PFD-Seiten), EngineeringAI
+   (Review-Oberfläche). Bis zur Umstellung bleiben die repo-eigenen Bibliotheken gültig, werden aber
+   nur noch für Fehler und laufende Arbeiten erweitert.
 
 ## Eingefroren (nur Bugfixes, kein Ausbau)
 
