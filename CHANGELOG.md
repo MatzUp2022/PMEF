@@ -11,6 +11,17 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added — CAEX XML serialisation (AutomationML)
+
+- **`pmef-io::caex`** (feature `caex`, on by default): `write_caex` / `read_caex` implement the
+  CAEX 3.0 secondary serialisation of spec 03 §4 (AutomationML 2.10). Lossless round trip for all
+  `examples/*.ndjson`; foreign AutomationML files are read as far as they map.
+- **`pmef convert <file.ndjson> --to aml`** and **`pmef convert <in.aml> --to pmef`** (no `--base`
+  needed for AML).
+- Spec 03 §4.3 describes the encoding of objects, arrays, `null`, `isPartOf` and relationships;
+  §4.4 flags the unit-suffix rule as an open point (names stay unchanged in the reference
+  implementation).
+
 ### Added — RFC-0012 placeholder and custom values
 
 - **`placeholders`** on duct components and **`$defs/Placeholder`** (`path`, `reason`, `note`,
