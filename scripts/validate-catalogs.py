@@ -2,7 +2,7 @@
 """
 validate-catalogs.py — Validate all PMEF open catalog files.
 
-For each JSON file in catalogs/:
+For each JSON file in catalogs/ and examples/catalogs/ (project catalogs, RFC-0013):
 1. Parse as JSON
 2. Validate against schemas/pmef-catalog.schema.json (which refines the shape
    of each entry based on the catalog's 'catalogType')
@@ -89,7 +89,7 @@ def main() -> None:
             sys.exit(1)
         files = [args.file]
     else:
-        files = sorted(CATALOGS_DIR.glob("*.json"))
+        files = sorted(CATALOGS_DIR.glob("*.json")) + sorted((ROOT / "examples" / "catalogs").glob("*.json"))
     if not files:
         print(f"No catalog files found in {CATALOGS_DIR}")
         sys.exit(0)

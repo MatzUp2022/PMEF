@@ -109,8 +109,20 @@ pub enum E3dElementType {
     PipeSupport,
     /// Cable tray (CTRAY).
     CableTray,
-    /// Structural member (SREF / STRU).
+    /// Structure (STRU / SREF): top-level steel system.
     Structure,
+    /// Framework below a structure (FRMW).
+    Framework,
+    /// Sub-framework below a framework (SBFR).
+    SubFramework,
+    /// Steel section / member (SCTN): POSS, POSE, BANG, SPRE.
+    Section,
+    /// Steel panel / plate (PANE) with one PLOO.
+    Panel,
+    /// Panel loop (PLOO): HEIG = thickness, PAVE children = contour.
+    PanelLoop,
+    /// Panel loop vertex (PAVE): POS.
+    PanelVertex,
     /// Equipment design primitive: box (BOX).
     PrimBox,
     /// Equipment design primitive: cylinder (CYLI).
@@ -149,6 +161,12 @@ impl E3dElementType {
             "PSUP"  => Self::PipeSupport,
             "CTRAY" => Self::CableTray,
             "STRU" | "SREF" => Self::Structure,
+            "FRMW"  => Self::Framework,
+            "SBFR"  => Self::SubFramework,
+            "SCTN"  => Self::Section,
+            "PANE"  => Self::Panel,
+            "PLOO"  => Self::PanelLoop,
+            "PAVE"  => Self::PanelVertex,
             "BOX"   => Self::PrimBox,
             "CYLI"  => Self::PrimCylinder,
             "CONE"  => Self::PrimCone,
@@ -180,6 +198,12 @@ impl E3dElementType {
             Self::PipeSupport => "PSUP",
             Self::CableTray => "CTRAY",
             Self::Structure => "STRU",
+            Self::Framework => "FRMW",
+            Self::SubFramework => "SBFR",
+            Self::Section => "SCTN",
+            Self::Panel => "PANE",
+            Self::PanelLoop => "PLOO",
+            Self::PanelVertex => "PAVE",
             Self::PrimBox => "BOX",
             Self::PrimCylinder => "CYLI",
             Self::PrimCone => "CONE",
@@ -207,7 +231,9 @@ impl E3dElementType {
             Self::PipeSupport => Some("pmef:PipeSupport"),
             Self::Equipment   => Some("pmef:GenericEquipment"),
             Self::Nozzle      => None, // embedded in equipment
-            Self::Structure   => Some("pmef:SteelMember"),
+            Self::Structure | Self::Framework | Self::SubFramework => Some("pmef:SteelSystem"),
+            Self::Section     => Some("pmef:SteelMember"),
+            Self::Panel       => Some("pmef:SteelPlate"),
             _                 => None,
         }
     }
@@ -356,7 +382,7 @@ pub fn parse_pml_text(text: &str) -> Result<Vec<PmlElement>, PmlError> {
 
 /// Returns true if this keyword starts a structural element (PIPE, EQUI, etc.).
 fn is_element_keyword(kw: &str) -> bool {
-    matches!(kw, "SITE" | "ZONE" | "PIPE" | "BRAN" | "EQUI" | "STRU" | "SREF" | "CTRAY")
+    matches!(kw, "SITE" | "ZONE" | "PIPE" | "BRAN" | "EQUI" | "STRU" | "SREF" | "FRMW" | "SBFR" | "CTRAY")
 }
 
 /// Returns true if this keyword starts a piping component element: the built-in
@@ -366,7 +392,9 @@ fn is_component_type(kw: &str) -> bool {
         "ELBOW" | "TEE" | "REDU" | "FLAN" | "VALV" | "GASK" |
         "WELD"  | "PSUP" | "NOZZ" | "STPIPE" | "STRAIG" |
         // Equipment design primitives (geometry, see crate::primitives)
-        "BOX" | "CYLI" | "CONE" | "SNOU" | "DISH" | "PYRA" | "RTOR"
+        "BOX" | "CYLI" | "CONE" | "SNOU" | "DISH" | "PYRA" | "RTOR" |
+        // Structural steel (see crate::steel)
+        "SCTN" | "PANE" | "PLOO" | "PAVE"
     ) || crate::mapping::is_native_piping_type(kw)
 }
 

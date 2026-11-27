@@ -1,0 +1,17 @@
+{
+  "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
+  "catalogId": "profiles-demo-project",
+  "catalogType": "STEEL_PROFILES",
+  "scope": "PROJECT",
+  "version": "1",
+  "description": "Synthetic project profile catalog for examples/steel-platform-plates.ndjson (RFC-0013): profiles that are not in a shared catalog, shipped with the package (PMEFX catalogs/). Dimensions in mm, mass in kg/m. CC0.",
+  "units": { "length": "mm", "mass_per_length": "kg/m" },
+  "families": {
+    "BULB_FLAT": "Bulb flat (project designation, dimensions from the project)",
+    "WELDED_TEE": "Tee welded from plates: h × b × tw × tf"
+  },
+  "entries": [
+    { "catalogId": "DEMO:HP200x10", "family": "BULB_FLAT", "h_mm": 200, "b_mm": 10, "bulb_mm": 32, "mass_kg_m": 19.6 },
+    { "catalogId": "DEMO:TG580x150x10x15", "family": "WELDED_TEE", "h_mm": 580, "b_mm": 150, "tw_mm": 10, "tf_mm": 15, "mass_kg_m": 62.0 }
+  ]
+}

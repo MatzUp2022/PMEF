@@ -289,9 +289,12 @@ Adapters for Siemens TIA Portal **MUST**:
 
 Native profile designations **MUST** be mapped to PMEF profile
 IDs (`<standard>:<designation>`). The adapter **MUST** maintain a
-profile mapping table. When a profile cannot be mapped, the
-adapter **MUST** use `"CUSTOM:<native-designation>"` and record
-the native name in `customAttributes.nativeProfileName`.
+profile mapping table. When a profile is not in a shared catalog, the adapter **MUST** use the
+project prefix, `"<PROJECT>:<native-designation>"` (project code in upper case, e.g.
+`HULDRA:HP260x10`), record the native name in `customAttributes.nativeProfileName`, and
+**SHOULD** ship a project profile catalog that defines it (spec 02 §7.1,
+[RFC-0013](rfc/0013-steel-plates-project-profiles.md)). Readers **MUST** still accept the former
+`"CUSTOM:<native-designation>"` form.
 
 ### 7.3 CIS/2 Adapters
 
@@ -320,6 +323,9 @@ data and geometry. The adapter **MUST NOT** parse AVEVA's binary RVM format (see
 | Any piping component | Element type + SKEY | `catalogs/native-types-e3d.json` (first match wins); unlisted types → `pmef:GenericPipingComponent` / `SPECIAL` with `nativeType` and a warning ([RFC-0009](rfc/0009-generic-piping-component.md)) |
 | `EquipmentObject` | EQUI elements | PML tag + design primitives (BOX, CYLI, CONE, SNOU, DISH, PYRA, RTOR) → `pmef:ParametricGeometry` |
 | `Nozzle` | NOZZ elements | PML coordinates + direction |
+| `pmef:SteelSystem` | STRU → FRMW → SBFR | `systemLevel` `STRUCTURE`/`FRAMEWORK`/`SUBFRAMEWORK`, each `isPartOf` its parent ([RFC-0013](rfc/0013-steel-plates-project-profiles.md)) |
+| `pmef:SteelMember` | SCTN | `POSS`/`POSE` → `startPoint`/`endPoint`, `BANG` → `rollAngle`, `SPRE` → `profileId` (§7.2), `GTYP` → `memberType`; a SCTN without `POSS`/`POSE` or `SPRE` is skipped with a warning |
+| `pmef:SteelPlate` | PANE with PLOO/PAVE | vertices (`PAVE POS`) → `origin` (first vertex), `normal` (Newell), `refDirection` (first edge), `outline`; `PLOO HEIG` → `thickness`; `PURP` → `plateType` (`GRAT*` GRATING, `CHEQ*`/`TREAD*` CHEQUERED, `PAN*`/`CLAD*`/`WALL*` PANEL, else PLATE) |
 | `PipingDesignConditions` | Line attributes (TEMP, PRES) | PML |
 | `PipingSpecification` | SPEC and BORESIZE | PML |
 

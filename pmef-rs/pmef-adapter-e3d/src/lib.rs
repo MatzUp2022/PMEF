@@ -55,6 +55,7 @@ pub mod branch;
 pub mod mapping;
 pub mod pml;
 pub mod primitives;
+pub mod steel;
 
 pub use mapping::{
     classify_elbow_radius, e3d_dtyp_to_pmef, e3d_element_to_pmef,
@@ -158,6 +159,8 @@ pub struct E3DAdapter {
     fallback_ids: std::collections::HashSet<String>,
     /// Nozzle DB address → (line `@id`, port id) of the branch end connected to it.
     nozzle_links: HashMap<String, (String, String)>,
+    /// Steel `@id` → E3D DB address it was issued for (collision check across structures).
+    steel_ids: HashMap<String, String>,
 }
 
 impl E3DAdapter {
@@ -172,6 +175,7 @@ impl E3DAdapter {
             branch_ends: HashMap::new(),
             fallback_ids: std::collections::HashSet::new(),
             nozzle_links: HashMap::new(),
+            steel_ids: HashMap::new(),
         }
     }
 
@@ -219,7 +223,7 @@ impl E3DAdapter {
             for e in elems {
                 match e.element_type {
                     E3dElementType::Site | E3dElementType::Zone => collect(&e.children, out, skipped),
-                    E3dElementType::Equipment | E3dElementType::Pipe => out.push(e),
+                    E3dElementType::Equipment | E3dElementType::Pipe | E3dElementType::Structure => out.push(e),
                     _ => *skipped += 1,
                 }
             }
@@ -243,6 +247,7 @@ impl E3DAdapter {
         for elem in flat {
             let objs = match elem.element_type {
                 E3dElementType::Equipment => self.map_equipment(elem),
+                E3dElementType::Structure => self.map_structure(elem),
                 _ => lines.next().unwrap_or_default(),
             };
             for mut obj in objs {
@@ -337,6 +342,28 @@ impl E3DAdapter {
             "isPartOf": format!("urn:pmef:plant:{}:{project_id}", self.config.project_code),
             "revision": { "revisionId": "r2026-01-01-001", "changeState": "SHARED" }
         })
+    }
+
+    // ── Structural steel (STRU → FRMW → SBFR, SCTN, PANE) ────────────────────
+
+    fn map_structure(&mut self, stru: &PmlElement) -> Vec<serde_json::Value> {
+        let mut mapper = steel::SteelMapper {
+            project_code: &self.config.project_code,
+            unit_id: format!("urn:pmef:unit:{0}:{0}-U01", self.config.project_code),
+            cs: self.config.coordinate_system,
+            warnings: Vec::new(),
+            issued: std::cell::RefCell::new(std::mem::take(&mut self.steel_ids)),
+        };
+        let mut out = Vec::new();
+        let unit = mapper.unit_id.clone();
+        mapper.map_system(stru, &unit, &mut out);
+        self.steel_ids = mapper.issued.take();
+        for w in &mapper.warnings {
+            tracing::warn!("E3D steel: {w}");
+        }
+        let warnings = std::mem::take(&mut mapper.warnings);
+        self.warnings.extend(warnings);
+        out
     }
 
     // ── Equipment mapping ─────────────────────────────────────────────────────

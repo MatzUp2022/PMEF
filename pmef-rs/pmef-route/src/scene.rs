@@ -233,6 +233,17 @@ impl Scene {
                 }
                 continue;
             }
+            if o["@type"] == "pmef:SteelPlate" {
+                // RFC-0013: outline in the plane (x = refDirection, y = normal × x), extruded by
+                // thickness along +normal. Box over all corners; structural like members.
+                if let Some(b) = plate_box(o, &p3) {
+                    self.push(id.into(), ObstacleKind::Hard, 0.0, Shape::Box(b));
+                    if let Some(last) = self.obstacles.last_mut() {
+                        last.structural = true;
+                    }
+                }
+                continue;
+            }
             if let (Some(a), Some(b)) = (p3(&o["startPoint"]), p3(&o["endPoint"])) {
                 // Steel member: centreline grown by the rolled section (pmef_geom::member_aabb);
                 // unknown profiles get 250 mm.
@@ -301,6 +312,29 @@ impl Scene {
             }
         }
     }
+}
+
+/// World-space box of a `pmef:SteelPlate` (outline extruded by `thickness` along +`normal`).
+fn plate_box(o: &Value, p3: &dyn Fn(&Value) -> Option<P3>) -> Option<Aabb> {
+    let org = p3(&o["origin"])?;
+    let unit = |v: P3| -> Option<P3> {
+        let l = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
+        (l > 1e-12).then(|| [v[0] / l, v[1] / l, v[2] / l])
+    };
+    let n = unit(p3(&o["normal"])?)?;
+    let x = unit(p3(&o["refDirection"])?)?;
+    let y = [n[1] * x[2] - n[2] * x[1], n[2] * x[0] - n[0] * x[2], n[0] * x[1] - n[1] * x[0]];
+    let t = o["thickness"].as_f64().unwrap_or(0.0);
+    let mut b: Option<Aabb> = None;
+    for q in o["outline"].as_array()? {
+        let (u, v) = (q.get(0)?.as_f64()?, q.get(1)?.as_f64()?);
+        for h in [0.0, t] {
+            let p = [0, 1, 2].map(|i| org[i] + u * x[i] + v * y[i] + h * n[i]);
+            let c = Aabb::from_points(p, p);
+            b = Some(b.map_or(c, |a| a.union(&c)));
+        }
+    }
+    b
 }
 
 /// Conservative box of a PMEF parametric primitive (spec 04); `None` for unsupported types
@@ -394,6 +428,20 @@ pub fn parse_obj(text: &str) -> Result<Vec<Tri>, (usize, String)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn steel_plates_are_structural_obstacles() {
+        // deck 4000 × 2000 at z = 3000, 10 mm thick, outline in the plane (x = refDirection)
+        let plate = serde_json::json!({"@type": "pmef:SteelPlate", "@id": "urn:pmef:obj:t:PL-1",
+            "origin": [1000.0, 500.0, 3000.0], "normal": [0, 0, 1], "refDirection": [1, 0, 0],
+            "outline": [[0, 0], [4000, 0], [4000, 2000], [0, 2000]], "thickness": 10.0});
+        let mut sc = Scene::default();
+        sc.add_pmef(&[plate], &[]);
+        let o = &sc.obstacles[0];
+        assert!(o.structural);
+        assert_eq!(o.bounds.min, [1000.0, 500.0, 3000.0]);
+        assert_eq!(o.bounds.max, [5000.0, 2500.0, 3010.0]);
+    }
 
     #[test]
     fn obj_quad() {

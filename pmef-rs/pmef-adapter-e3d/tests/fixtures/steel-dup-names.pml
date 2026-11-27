@@ -1,0 +1,15 @@
+! Synthetic E3D PML export (CC0): two structures with frameworks of the same last name.
+STRU /SITE01/STR-A
+  FRMW /SITE01/STR-A/FRAME
+    SCTN /SITE01/STR-A/FRAME/B-1
+      GTYP BEAM
+      SPRE /ESHUL-PRF/HEA200
+      POSS 0.0 0.0 3000.0
+      POSE 4000.0 0.0 3000.0
+STRU /SITE01/STR-B
+  FRMW /SITE01/STR-B/FRAME
+    SCTN /SITE01/STR-B/FRAME/B-2
+      GTYP BEAM
+      SPRE /ESHUL-PRF/HEA200
+      POSS 0.0 5000.0 3000.0
+      POSE 4000.0 5000.0 3000.0

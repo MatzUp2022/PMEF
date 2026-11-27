@@ -21,6 +21,7 @@ Status values (issue template): `DRAFT` → `REVIEW` → `APPROVED` / `REJECTED`
 | [0010](0010-review-comment-issue-ref.md) | Review comment and issue reference (follow-up of 0001) | 0.10.0 | `DRAFT` | [#44](https://github.com/MatzUp2022/PMEF/issues/44) | `issueRef` single URI vs. array (WG-Piping/WG-Steel) |
 | [0011](0011-catalog-snapping-v2.md) | Catalog snapping version 2 `pmef-snap/2` (follow-up of 0002) | 0.10.0 | `DRAFT` | [#45](https://github.com/MatzUp2022/PMEF/issues/45) | Inch-only catalogs; olets/caps/valves (WG-Catalogs, WG-Piping) |
 | [0012](0012-placeholder-custom-values.md) | Placeholder and custom values (`UNSPECIFIED`, `CUSTOM`, `placeholders`) | 0.10.0 | `DRAFT` | — | Extend `placeholders` to piping, equipment, steel (WG-Adapters) |
+| [0013](0013-steel-plates-project-profiles.md) | Steel plates, project profiles, nested steel systems, reserved volumes | 0.10.0 | `DRAFT` | [#54](https://github.com/MatzUp2022/PMEF/issues/54) | Grating catalogs (WG-Steel) |
 | [0015](0015-cable-tray-route-ports.md) | Cable tray route, ports and source data | 0.10.0 | `DRAFT` | [#56](https://github.com/MatzUp2022/PMEF/issues/56) | Tray supports and network nodes (WG-E&I) |
 | [0016](0016-pipe-supports-outside-segments.md) | Pipe supports outside piping segments and support assemblies | 0.10.0 | `DRAFT` | [#53](https://github.com/MatzUp2022/PMEF/issues/53) | Support loads per part vs. per assembly (WG-Piping) |
 

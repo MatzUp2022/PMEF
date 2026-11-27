@@ -67,6 +67,7 @@ pub enum PmefEntityType {
     // Steel
     SteelSystem,
     SteelMember,
+    SteelPlate,
     SteelNode,
     SteelConnection,
     // Geometry
@@ -136,6 +137,7 @@ impl PmefEntityType {
             "pmef:DuctTestPort"       => Self::DuctTestPort,
             "pmef:SteelSystem"           => Self::SteelSystem,
             "pmef:SteelMember"           => Self::SteelMember,
+            "pmef:SteelPlate"            => Self::SteelPlate,
             "pmef:SteelNode"             => Self::SteelNode,
             "pmef:SteelConnection"       => Self::SteelConnection,
             "pmef:ParametricGeometry"    => Self::ParametricGeometry,
@@ -202,6 +204,7 @@ impl PmefEntityType {
             Self::DuctTestPort          => "pmef:DuctTestPort",
             Self::SteelSystem           => "pmef:SteelSystem",
             Self::SteelMember           => "pmef:SteelMember",
+            Self::SteelPlate            => "pmef:SteelPlate",
             Self::SteelNode             => "pmef:SteelNode",
             Self::SteelConnection       => "pmef:SteelConnection",
             Self::ParametricGeometry    => "pmef:ParametricGeometry",
