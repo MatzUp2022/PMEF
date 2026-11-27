@@ -1,0 +1,48 @@
+name: macOS
+
+# Nur auf manuelle Anforderung: Actions -> macOS -> Run workflow.
+# Läuft GitHub-gehostet (für öffentliche Repos ohne Minutenverbrauch).
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: "macos-latest = Apple Silicon, macos-15-intel = Intel"
+        type: choice
+        options: [macos-latest, macos-15-intel]
+        default: macos-latest
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+defaults:
+  run:
+    working-directory: pmef-rs
+
+jobs:
+  test:
+    name: Build and test (${{ inputs.runner }})
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: pmef-rs
+
+      - name: Build workspace
+        run: cargo build --workspace --all-targets
+
+      - name: Test workspace
+        run: cargo test --workspace --no-fail-fast
+
+      - name: Clippy (informativ, wie rust.yml)
+        continue-on-error: true
+        run: cargo clippy --workspace --all-targets
