@@ -11,6 +11,19 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added — cable tray route, ports and source data (RFC-0015, #56)
+
+- **`CableTrayRun`**: optional centreline (`startPoint`/`endPoint` or `path` polyline, tray-bottom
+  centre), `ports` (new `TrayPort`: coordinate, direction, width, height, `connectedTo`),
+  `nativeType`, `customAttributes`, `placeholders` (RFC-0012). The E&I tray run is no longer frozen.
+- **`CableTrayFitting`**: optional `ports`, `nativeType`, `customAttributes`, `placeholders`.
+- Spec 02 §6.8: route and port rules, convention for `trayType` derived from zone/spec names.
+- `scripts/check-geometry.py`: path vs start/end, ports at centreline ends and pointing outward,
+  port width, fitting ports vs `connectedTrayIds`, bend angle vs port directions.
+- Rust `pmef-core`: `TrayPort`, `CableTrayRun::centreline()`/`length_mm()`; `trayType`, `width`,
+  `height` optional as in the schema.
+- Example `examples/cable-tray-route.ndjson`; conformance `EI-U-011` … `EI-U-014`.
+
 ### Changed — routing obstacles from `pmef-geom`
 
 - **`pmef_geom::schema_primitive_aabb`**: conservative bounds of a primitive given as schema JSON

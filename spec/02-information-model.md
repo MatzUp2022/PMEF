@@ -344,7 +344,9 @@ carries `UNSPECIFIED`/`CUSTOM`, and on piping components (`PipingComponent`). Th
 is a component class: a valve of unknown type is `componentClass: VALVE_UNSPECIFIED` (RFC-0009)
 and **SHOULD** be listed with `path` `/componentSpec/componentClass` (`SOURCE_MISSING`, or
 `NOT_IN_ENUM` with the real type in `note` when it is outside the list). Existing data without
-the entry stays valid. Other domains follow the same pattern when they need it.
+the entry stays valid. Since RFC-0015 cable tray runs and fittings (`CableTrayRun`,
+`CableTrayFitting`) carry `placeholders` too, typically for a `height` that the source does not
+give (§6.8). Other domains follow the same pattern when they need it.
 
 ## 3 Plant Hierarchy
 
@@ -605,7 +607,47 @@ A `CableObject` names the tray run it is laid on with `cableTrayId`. Fittings ar
 referenced from the cable: the path through a fitting follows from its `connectedTrayIds`.
 A routing tool that lays a cable over several runs **SHOULD** check every fitting on the
 path against the cable's minimum bend radius (outer diameter × `minBendRadiusFactor` of
-the `CABLE_TYPES` entry).
+the `CABLE_TYPES` entry). The cable length on a run follows from the run's centreline (§6.8).
+
+### 6.8 CableTrayRun: Route, Ports and Source Data
+
+Since 0.10 (RFC-0015) a `CableTrayRun` carries its route independently of any geometry
+representation. All coordinates are the **centre of the tray bottom** [mm].
+
+- **Centreline.** A straight run gives `startPoint` and `endPoint`; a run that is not straight
+  gives `path`, a polyline of at least two points. When both are given, `startPoint` **MUST**
+  equal the first and `endPoint` the last `path` point. Consumers take the centreline from
+  `path`, else from `startPoint`/`endPoint`, else from the port coordinates; its length is the
+  run length used for cable routing (§6.7).
+- **Ports.** `ports` lists the connection ends (`TrayPort`: `portId`, `coordinate`, optional
+  `direction`, `width`, `height`, `connectedTo`), as `DuctPort` does for ducts (§11) but with a
+  rectangular width × height section only. A run's port **MUST** lie at an end of its
+  centreline and its `direction` **MUST** point away from the run (§2.6). A fitting has one port
+  per end (bend 2, tee 3, cross 4, end piece 1). Joined ends share the port coordinate.
+- **Fittings.** When a `CableTrayFitting` has `ports`, the `connectedTo` targets of its ports
+  and its `connectedTrayIds` **MUST** name the same objects. For bends the angle derived from the
+  two port directions (180° − angle between them) **SHOULD** equal `angle` (tolerance 1°).
+  `scripts/check-geometry.py` checks these rules.
+- **Source data.** `nativeType` is the element type in the source tool as `<tool>:<type>`
+  (`E3D:PIPE` for a tray modelled as a pipe in a tray zone, `E3D:ELBO` for its bend).
+  `customAttributes` carries source attributes without a PMEF field (spec, source name, zone);
+  the source reference itself belongs in `provenance.sourceRef` (RFC-0001).
+- **Unknown values.** `width`, `height` and `trayType` are optional. A value written as a
+  stand-in (e.g. a class-default `height` because the facet geometry does not show it) is listed
+  in `placeholders` (§2.10).
+
+#### `trayType` from source conventions
+
+`trayType` is a closed enumeration (`LADDER`, `SOLID_BOTTOM`, `PERFORATED`, `WIRE_MESH`,
+`CONDUIT`, `DUCT`, `UNDERGROUND`). Source tools often encode the type only in project naming
+(zone or specification names such as `…LADDER…`, `…KK…`). Such a mapping is project-specific:
+
+1. The exporter **MUST** record the source of the decision, at least the zone or specification
+   name in `customAttributes` (e.g. `zone`, `e3dSpec`).
+2. When the type is derived from a naming rule rather than from an explicit attribute, the
+   exporter **SHOULD** list `/trayType` in `placeholders` with reason `TO_BE_CONFIRMED` and
+   the rule in `note`.
+3. When no rule applies, `trayType` is omitted; it is never guessed.
 
 ### 6.5 MTPModule
 

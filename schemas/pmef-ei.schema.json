@@ -258,6 +258,22 @@
       "additionalProperties": false
     },
 
+    "TrayPort": {
+      "title": "Cable Tray Port",
+      "description": "Connection end of a cable tray run or fitting (RFC-0015): centre of the tray bottom at the end, outward direction and cross-section.",
+      "type": "object",
+      "required": ["portId","coordinate"],
+      "properties": {
+        "portId":      { "type": "string", "description": "e.g. 'P1', 'P2', 'BRANCH'" },
+        "coordinate":  { "$ref": "pmef-base.schema.json#/$defs/Coordinate3D", "description": "Centre of the tray bottom at this end [mm]" },
+        "direction":   { "$ref": "pmef-base.schema.json#/$defs/UnitVector3D", "description": "Pointing away from the run/fitting" },
+        "width":       { "type": "number", "exclusiveMinimum": 0, "description": "Tray width at this end [mm]" },
+        "height":      { "type": "number", "exclusiveMinimum": 0, "description": "Side-rail height at this end [mm]" },
+        "connectedTo": { "oneOf": [{ "$ref": "pmef-base.schema.json#/$defs/PmefId" }, { "type": "null" }], "description": "Run or fitting joined at this end" }
+      },
+      "additionalProperties": false
+    },
+
     "CableTrayRun": {
       "title": "Cable Tray / Conduit Run",
       "description": "A physical cable tray, conduit, or cable duct routing segment. The geometry is stored via CableTrayPrimitive.",
@@ -276,6 +292,28 @@
         "fillLevel":{ "type": "number", "description": "Current fill percentage [%]", "minimum": 0, "maximum": 100 },
         "reserveCapacity": { "type": "number", "description": "Reserved fill [%]", "minimum": 0, "maximum": 100 },
         "structuralSupportId": { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Steel member or civil structure supporting this tray" },
+        "startPoint": { "$ref": "pmef-base.schema.json#/$defs/Coordinate3D", "description": "Centreline start, bottom of the tray (RFC-0015) [mm]" },
+        "endPoint":   { "$ref": "pmef-base.schema.json#/$defs/Coordinate3D", "description": "Centreline end, bottom of the tray (RFC-0015) [mm]" },
+        "path": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "pmef-base.schema.json#/$defs/Coordinate3D" },
+          "description": "Centreline polyline (bottom of the tray) for runs that are not straight (RFC-0015) [mm]; first and last point MUST equal startPoint/endPoint when those are given"
+        },
+        "ports": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/TrayPort" },
+          "minItems": 1,
+          "description": "Connection ends (RFC-0015); a fitting and the run it joins share the port coordinate"
+        },
+        "nativeType": { "type": "string", "minLength": 1, "description": "Element type in the source tool as <tool>:<type>, e.g. 'E3D:BRAN' (RFC-0015)" },
+        "placeholders": {
+          "type": "array",
+          "description": "Fields holding stand-in values to be replaced in a later revision (RFC-0012, RFC-0015)",
+          "items": { "$ref": "pmef-base.schema.json#/$defs/Placeholder" },
+          "minItems": 1
+        },
+        "customAttributes": { "type": "object", "additionalProperties": { "type": ["string","number","boolean","null"] } },
         "geometry": { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
         "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
         "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
@@ -314,6 +352,20 @@
           "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
           "minItems": 1
         },
+        "ports": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/TrayPort" },
+          "minItems": 1,
+          "description": "Connection ends (RFC-0015); a fitting and the run it joins share the port coordinate"
+        },
+        "nativeType": { "type": "string", "minLength": 1, "description": "Element type in the source tool as <tool>:<type>, e.g. 'E3D:BRAN' (RFC-0015)" },
+        "placeholders": {
+          "type": "array",
+          "description": "Fields holding stand-in values to be replaced in a later revision (RFC-0012, RFC-0015)",
+          "items": { "$ref": "pmef-base.schema.json#/$defs/Placeholder" },
+          "minItems": 1
+        },
+        "customAttributes": { "type": "object", "additionalProperties": { "type": ["string","number","boolean","null"] } },
         "catalogRef": { "$ref": "pmef-base.schema.json#/$defs/CatalogReference" },
         "geometry":   { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
         "revision":   { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
