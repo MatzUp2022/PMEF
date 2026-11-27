@@ -121,6 +121,10 @@ pub enum E3dElementType {
     PrimSnout,
     /// Equipment design primitive: dish / vessel head (DISH).
     PrimDish,
+    /// Equipment design primitive: pyramid / rectangular frustum (PYRA).
+    PrimPyramid,
+    /// Equipment design primitive: rectangular torus (RTOR).
+    PrimRectTorus,
     /// Unknown element type.
     Unknown(String),
 }
@@ -150,6 +154,8 @@ impl E3dElementType {
             "CONE"  => Self::PrimCone,
             "SNOU"  => Self::PrimSnout,
             "DISH"  => Self::PrimDish,
+            "PYRA"  => Self::PrimPyramid,
+            "RTOR"  => Self::PrimRectTorus,
             other   => Self::Unknown(other.to_owned()),
         }
     }
@@ -179,6 +185,8 @@ impl E3dElementType {
             Self::PrimCone => "CONE",
             Self::PrimSnout => "SNOU",
             Self::PrimDish => "DISH",
+            Self::PrimPyramid => "PYRA",
+            Self::PrimRectTorus => "RTOR",
             Self::Unknown(k) => k,
         }
     }
@@ -347,7 +355,7 @@ fn is_component_type(kw: &str) -> bool {
         "ELBOW" | "TEE" | "REDU" | "FLAN" | "VALV" | "GASK" |
         "WELD"  | "PSUP" | "NOZZ" | "STPIPE" | "STRAIG" |
         // Equipment design primitives (geometry, see crate::primitives)
-        "BOX" | "CYLI" | "CONE" | "SNOU" | "DISH"
+        "BOX" | "CYLI" | "CONE" | "SNOU" | "DISH" | "PYRA" | "RTOR"
     )
 }
 

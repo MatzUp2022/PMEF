@@ -1,0 +1,1 @@
+{"@type":"pmef:ParametricGeometry","@id":"urn:pmef:geom:conf:G-12","ownerRef":"urn:pmef:obj:conf:OWNER-1","lod":"LOD2_MEDIUM","primitive":{"type":"DISH","center":[0,0,0],"axis":[0,0,1],"shellRadius":400.0,"dishType":"SPHERICAL_CAP"},"revision":{"revisionId":"r2026-10-31-001","changeState":"SHARED","authoringTool":"PMEF conformance fixtures"}}

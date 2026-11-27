@@ -350,6 +350,17 @@ pub fn primitive_box(p: &Value) -> Option<Aabb> {
         }
         "SPHERE" => Some(Aabb::from_points(c, c).inflate(f("radius")?)),
         "CIRC_TORUS" => Some(Aabb::from_points(c, c).inflate(f("torusRadius")? + f("tubeRadius")?)),
+        "RECT_TORUS" => {
+            Some(Aabb::from_points(c, c).inflate(f("outerRadius")?.hypot(f("height")? / 2.0)))
+        }
+        // Bounded by the half-diagonal of the larger face plus the top offset (local frame
+        // per spec 04 §4.3 is not needed for a conservative box).
+        "PYRAMID" => {
+            let bottom = f("bottomX")?.hypot(f("bottomY")?) / 2.0;
+            let top = f("topX")?.hypot(f("topY")?) / 2.0
+                + f("offsetX").unwrap_or(0.0).hypot(f("offsetY").unwrap_or(0.0));
+            Some(swept(bottom.max(top), f("height")?))
+        }
         "BOX" => {
             let h = [
                 f("xLen").or(f("length"))?,
@@ -449,5 +460,17 @@ mod tests {
     fn obj_quad() {
         let t = parse_obj("v 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\nf 1 2 3 4\n").unwrap();
         assert_eq!(t.len(), 2);
+    }
+
+    #[test]
+    fn pyramid_and_rect_torus_boxes() {
+        let pyr = serde_json::json!({"type": "PYRAMID", "center": [0, 0, 0], "axis": [0, 0, 1],
+            "bottomX": 600, "bottomY": 800, "topX": 0, "topY": 0, "height": 300});
+        let b = primitive_box(&pyr).unwrap();
+        assert_eq!((b.min[0], b.max[0], b.min[2], b.max[2]), (-500.0, 500.0, 0.0, 300.0));
+        let tor = serde_json::json!({"type": "RECT_TORUS", "center": [0, 0, 0], "axis": [0, 0, 1],
+            "startDir": [1, 0, 0], "innerRadius": 300, "outerRadius": 400, "height": 600, "angleDeg": 90});
+        let b = primitive_box(&tor).unwrap();
+        assert_eq!(b.max[0], 500.0);
     }
 }

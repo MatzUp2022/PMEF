@@ -206,6 +206,8 @@ The matrix below lists all normatively defined PMEF entity types and their requi
 | `DISH` | ❌ | ✅ | ✅ |
 | `CIRC_TORUS` | 🟡 | ✅ | ✅ |
 | `SNOUT` | ❌ | ✅ | ✅ |
+| `PYRAMID` | ❌ | ✅ | ✅ |
+| `RECT_TORUS` | ❌ | ✅ | ✅ |
 | `BOX` | 🟡 | ✅ | ✅ |
 | `EXTRUSION` | ❌ | ✅ | ✅ |
 | `REVOLUTION` | ❌ | ✅ | ✅ |

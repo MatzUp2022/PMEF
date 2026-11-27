@@ -237,6 +237,22 @@ UNIT = [
                     "length": 150.0, "offsetX": 10.0})]),
     ("GEOM-U-008", "CYLINDER with radius 0 — rejected", 2, "geometry", "CL1-02", "invalid",
      [geom("G-8", with_(CYL, ("radius",), 0))]),
+    ("GEOM-U-009", "PYRAMID — valid", 2, "geometry", "CL2-03", "valid",
+     [ex("pmef:ParametricGeometry", lambda o: "PYRAMID" in json.dumps(o))]),
+    ("GEOM-U-010", "RECT_TORUS — valid", 2, "geometry", "CL2-03", "valid",
+     [geom("G-10", {"type": "RECT_TORUS", "center": [0, 0, 0], "axis": [0, 0, 1], "startDir": [1, 0, 0],
+                    "innerRadius": 800.0, "outerRadius": 900.0, "height": 100.0, "angleDeg": 90.0})]),
+    ("GEOM-U-011", "DISH SPHERICAL_CAP and sheared SNOUT — valid", 2, "geometry", "CL2-03", "valid",
+     [geom("G-11a", {"type": "DISH", "center": [0, 0, 0], "axis": [0, 0, 1], "shellRadius": 400.0,
+                     "dishType": "SPHERICAL_CAP", "depth": 100.0}),
+      geom("G-11b", {"type": "SNOUT", "center": [0, 0, 0], "axis": [0, 0, 1], "refDirection": [0, 1, 0],
+                     "r1": 100.0, "r2": 100.0, "length": 300.0, "bottomShearX": 15.0, "topShearY": -10.0})]),
+    ("GEOM-U-012", "SPHERICAL_CAP without depth — rejected", 2, "geometry", "CL1-02", "invalid",
+     [geom("G-12", {"type": "DISH", "center": [0, 0, 0], "axis": [0, 0, 1], "shellRadius": 400.0,
+                    "dishType": "SPHERICAL_CAP"})]),
+    ("GEOM-U-013", "RECT_TORUS without startDir — rejected", 2, "geometry", "CL1-02", "invalid",
+     [geom("G-13", {"type": "RECT_TORUS", "center": [0, 0, 0], "axis": [0, 0, 1],
+                    "innerRadius": 800.0, "outerRadius": 900.0, "height": 100.0, "angleDeg": 90.0})]),
 ]
 
 # ── integration and round-trip tests (evaluated by the runner) ──────────────

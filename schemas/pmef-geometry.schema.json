@@ -70,6 +70,12 @@
           "$ref": "#/$defs/Snout"
         },
         {
+          "$ref": "#/$defs/Pyramid"
+        },
+        {
+          "$ref": "#/$defs/RectTorus"
+        },
+        {
           "$ref": "#/$defs/Box"
         },
         {
@@ -255,8 +261,10 @@
             "ELLIPTICAL_2:1",
             "TORISPHERICAL",
             "FLAT",
-            "CONICAL"
-          ]
+            "CONICAL",
+            "SPHERICAL_CAP"
+          ],
+          "description": "SPHERICAL_CAP: a segment of a sphere without knuckle. shellRadius = base circle radius, depth = cap height (required, 0 < depth <= shellRadius); sphere radius = (shellRadius^2 + depth^2) / (2 * depth)."
         },
         "depth": {
           "type": "number",
@@ -284,6 +292,12 @@
           "description": "Half-apex angle [degrees] for conical heads"
         }
       },
+      "allOf": [
+        {
+          "if": { "properties": { "dishType": { "const": "SPHERICAL_CAP" } }, "required": ["dishType"] },
+          "then": { "required": ["depth"], "properties": { "depth": { "exclusiveMinimum": 0 } } }
+        }
+      ],
       "additionalProperties": false
     },
     "CircTorus": {
@@ -386,6 +400,160 @@
           "type": "number",
           "description": "Lateral offset of r2 centre in local Y [mm]",
           "default": 0
+        },
+        "refDirection": {
+          "$ref": "pmef-base.schema.json#/$defs/UnitVector3D",
+          "description": "Local X direction (perpendicular to axis). Default per spec 04 §4.3."
+        },
+        "bottomShearX": {
+          "type": "number",
+          "description": "Shear of the r1 face in local X [degrees]: a point at local (x, y) on the r1 face is moved along the axis by x * tan(bottomShearX)",
+          "exclusiveMinimum": -90,
+          "exclusiveMaximum": 90,
+          "default": 0
+        },
+        "bottomShearY": {
+          "type": "number",
+          "description": "Shear of the r1 face in local Y [degrees]: a point at local (x, y) on the r1 face is moved along the axis by y * tan(bottomShearY)",
+          "exclusiveMinimum": -90,
+          "exclusiveMaximum": 90,
+          "default": 0
+        },
+        "topShearX": {
+          "type": "number",
+          "description": "Shear of the r2 face in local X [degrees]: a point at local (x, y) on the r2 face is moved along the axis by x * tan(topShearX)",
+          "exclusiveMinimum": -90,
+          "exclusiveMaximum": 90,
+          "default": 0
+        },
+        "topShearY": {
+          "type": "number",
+          "description": "Shear of the r2 face in local Y [degrees]: a point at local (x, y) on the r2 face is moved along the axis by y * tan(topShearY)",
+          "exclusiveMinimum": -90,
+          "exclusiveMaximum": 90,
+          "default": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "Pyramid": {
+      "title": "Pyramid (rectangular frustum)",
+      "description": "Rectangular frustum with optional top offset. Used for: valve actuators, hoppers, bunkers, steel base plates. Local frame per spec 04 §4.3.",
+      "type": "object",
+      "required": [
+        "type",
+        "center",
+        "axis",
+        "bottomX",
+        "bottomY",
+        "topX",
+        "topY",
+        "height"
+      ],
+      "properties": {
+        "type": {
+          "const": "PYRAMID"
+        },
+        "center": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D",
+          "description": "Centre of the bottom face [mm]"
+        },
+        "axis": {
+          "$ref": "pmef-base.schema.json#/$defs/UnitVector3D",
+          "description": "Direction from the bottom face to the top face"
+        },
+        "refDirection": {
+          "$ref": "pmef-base.schema.json#/$defs/UnitVector3D",
+          "description": "Local X direction (perpendicular to axis). Default per spec 04 §4.3."
+        },
+        "bottomX": {
+          "type": "number",
+          "description": "Bottom face length in local X [mm]",
+          "minimum": 0
+        },
+        "bottomY": {
+          "type": "number",
+          "description": "Bottom face length in local Y [mm]",
+          "minimum": 0
+        },
+        "topX": {
+          "type": "number",
+          "description": "Top face length in local X [mm]",
+          "minimum": 0
+        },
+        "topY": {
+          "type": "number",
+          "description": "Top face length in local Y [mm]",
+          "minimum": 0
+        },
+        "offsetX": {
+          "type": "number",
+          "description": "Offset of the top face centre in local X [mm]",
+          "default": 0
+        },
+        "offsetY": {
+          "type": "number",
+          "description": "Offset of the top face centre in local Y [mm]",
+          "default": 0
+        },
+        "height": {
+          "type": "number",
+          "description": "Distance between bottom and top face along axis [mm]",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "RectTorus": {
+      "title": "Rectangular Torus Segment",
+      "description": "Section of a torus with rectangular cross-section. Used for: duct and tray bends, ring girders, curved platforms.",
+      "type": "object",
+      "required": [
+        "type",
+        "center",
+        "axis",
+        "startDir",
+        "innerRadius",
+        "outerRadius",
+        "height",
+        "angleDeg"
+      ],
+      "properties": {
+        "type": {
+          "const": "RECT_TORUS"
+        },
+        "center": {
+          "$ref": "pmef-base.schema.json#/$defs/Coordinate3D",
+          "description": "Centre of the arc on the axis of revolution, at mid-height [mm]"
+        },
+        "axis": {
+          "$ref": "pmef-base.schema.json#/$defs/UnitVector3D",
+          "description": "Axis of revolution (right-hand rule gives the sweep direction)"
+        },
+        "startDir": {
+          "$ref": "pmef-base.schema.json#/$defs/UnitVector3D",
+          "description": "Unit vector from center toward the start face (perpendicular to axis)"
+        },
+        "innerRadius": {
+          "type": "number",
+          "description": "Inner radius of the cross-section [mm]",
+          "minimum": 0
+        },
+        "outerRadius": {
+          "type": "number",
+          "description": "Outer radius of the cross-section [mm], > innerRadius",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "description": "Extent of the cross-section along axis, centred on center [mm]",
+          "exclusiveMinimum": 0
+        },
+        "angleDeg": {
+          "type": "number",
+          "description": "Sweep angle [degrees]",
+          "exclusiveMinimum": 0,
+          "maximum": 360
         }
       },
       "additionalProperties": false
