@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | `REVIEW` — reference implementations and test vectors verified 2026-11-01; awaiting WG review and TSC sign-off |
+| **Status** | `APPROVED` — 2026-12-01, proposed resolutions of the open questions adopted (see *Resolution*) |
 | **Discussion** | [#7](https://github.com/MatzUp2022/PMEF/issues/7) — opened 2026-11-01, 30-day period until 2026-12-01 |
 | **Target version** | 0.10.0 (new optional `catalogSnap` fields; no breaking change) |
 | **Depends on** | [RFC-0001](0001-provenance-asbuilt.md) (`asBuilt.catalogSnap`) |
@@ -149,13 +149,14 @@ Additive only. Snaps without `algorithm` (manual or tool-specific) stay valid.
 1. ~~Catalog data quality~~ — resolved: `profiles-en` 2024.2 corrected the HEA series (vector
    SNAP-017); all other catalogs were checked against references and corrected on 2026-11-01
    (`docs/AUDIT.md` P3.12), guarded in CI by `scripts/check-catalogs.py`.
-2. **Kinds for fittings, flanges, hollow sections and angles** — *Proposed resolution:* out of
-   scope for `pmef-snap/1`; a follow-up RFC defines `pmef-snap/2`. The `algorithm` identifier
-   keeps `/1` results reproducible. *Decision: WG-Catalogs.*
-3. **Configurable ambiguity margin per project?** — *Proposed resolution:* no. The margin (0.1)
-   is part of the algorithm identity: a snap tagged `pmef-snap/1` must be reproducible from the
-   catalog and the measurement alone. A different margin needs a new algorithm identifier.
-   *Decision: WG-Catalogs.*
+2. ~~**Kinds for fittings, flanges, hollow sections and angles**~~ — **resolved (WG-Catalogs,
+   2026-12-01):** as proposed; follow-up [RFC-0011](0011-catalog-snapping-v2.md). *Proposed
+   resolution:* out of scope for `pmef-snap/1`; a follow-up RFC defines `pmef-snap/2`. The
+   `algorithm` identifier keeps `/1` results reproducible. *Decision: WG-Catalogs.*
+3. ~~**Configurable ambiguity margin per project?**~~ — **resolved (WG-Catalogs, 2026-12-01):** as
+   proposed. *Proposed resolution:* no. The margin (0.1) is part of the algorithm identity: a snap
+   tagged `pmef-snap/1` must be reproducible from the catalog and the measurement alone. A different
+   margin needs a new algorithm identifier. *Decision: WG-Catalogs.*
 
 ## Review Status (2026-11-01)
 
@@ -172,6 +173,18 @@ Verified against the repository state:
 
 Approval needed from: WG-Catalogs, WG-Piping, WG-Steel, WG-Geometry; TSC sign-off after the
 30-day discussion period. Decisions needed: open questions 2 and 3.
+
+## Resolution (2026-12-01)
+
+This status takes effect when this change is merged, which happens after the 30-day discussion
+period ends on 2026-12-01 without blocking objections (GOVERNANCE.md).
+
+1. `pmef-snap/1` stays limited to pipes and I-sections. Fittings, flanges, hollow sections and
+   angles are specified as `pmef-snap/2` in [RFC-0011](0011-catalog-snapping-v2.md).
+2. The ambiguity margin (0.1) is part of the algorithm identity and is not configurable per
+   project; another margin needs another `algorithm` identifier.
+
+No change to schemas, Rust code, vectors or examples.
 
 ## References
 
