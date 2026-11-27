@@ -337,8 +337,8 @@ Each entry of `lods`:
 
 `lods` **MUST** be ordered coarse to fine, and each level **MUST** occur at most once per
 object. Several entries, of one or of different objects, **MAY** reference the same `path`;
-the file is listed once in `files`. This stores repeated shapes once (RFC-0017). Readers that find no `errorMm` **SHOULD** fall back to the projected size of the
-object's bounding sphere.
+the file is listed once in `files`. This stores repeated shapes once (RFC-0017). Readers that
+find no `errorMm` **SHOULD** fall back to the projected size of the object's bounding sphere.
 
 Example line:
 

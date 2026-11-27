@@ -170,6 +170,8 @@ pub struct PmefxWriter<W: Write + Seek> {
     zip: ZipWriter<W>,
     files: Vec<FileEntry>,
     paths: BTreeSet<String>,
+    /// Size of each glTF file by path, for levels that reuse it (RFC-0017).
+    gltf_sizes: BTreeMap<String, u64>,
     objects: BTreeMap<String, ObjectEntry>,
     main_file: Option<String>,
     package_id: Option<String>,
@@ -183,6 +185,7 @@ impl<W: Write + Seek> PmefxWriter<W> {
             zip: ZipWriter::new(inner),
             files: Vec::new(),
             paths: BTreeSet::new(),
+            gltf_sizes: BTreeMap::new(),
             objects: BTreeMap::new(),
             main_file: None,
             package_id: None,
@@ -316,24 +319,26 @@ impl<W: Write + Seek> PmefxWriter<W> {
         }
         glb::parse_glb_json(glb_bytes).map_err(|e| PmefxError::Invalid(format!("{path}: {e}")))?;
         self.write_entry(path, FileKind::Gltf, glb_bytes, None)?;
-        self.push_lod(id, lod, path, stats, offset)
+        let size = glb_bytes.len() as u64;
+        self.gltf_sizes.insert(path.to_string(), size);
+        self.push_lod(id, lod, path, stats, offset, size)
     }
 
     /// Adds a level of detail for object `id` that uses a mesh file already in the package
     /// (written by [`Self::add_lod`]/[`Self::add_lod_at`] for another object), placed with
     /// its own `offset` (RFC-0017). Repeated shapes are stored once this way.
     pub fn reuse_lod(&mut self, id: &str, lod: Lod, path: &str, stats: LodStats, offset: Option<Point3>) -> Result<(), PmefxError> {
-        if !self.files.iter().any(|f| f.path == path && f.kind == FileKind::Gltf) {
+        let Some(&size) = self.gltf_sizes.get(path) else {
             return invalid(format!("{id}: {path} is not a glTF file of the package"));
-        }
+        };
         if self.object_mut(id)?.lods.iter().any(|l| l.lod == lod) {
             return invalid(format!("{id}: duplicate level {}", lod.as_str()));
         }
-        self.push_lod(id, lod, path, stats, offset)
+        self.push_lod(id, lod, path, stats, offset, size)
     }
 
-    fn push_lod(&mut self, id: &str, lod: Lod, path: &str, stats: LodStats, offset: Option<Point3>) -> Result<(), PmefxError> {
-        let size_bytes = self.files.iter().find(|f| f.path == path).and_then(|f| f.size_bytes);
+    #[allow(clippy::too_many_arguments)]
+    fn push_lod(&mut self, id: &str, lod: Lod, path: &str, stats: LodStats, offset: Option<Point3>, size: u64) -> Result<(), PmefxError> {
         let o = self.object_mut(id)?;
         o.lods.push(LodRef {
             lod,
@@ -341,7 +346,7 @@ impl<W: Write + Seek> PmefxWriter<W> {
             triangles: stats.triangles,
             vertex_count: stats.vertex_count,
             error_mm: stats.error_mm,
-            size_bytes,
+            size_bytes: Some(size),
             offset: offset.filter(|p| *p != Point3::default()),
         });
         o.lods.sort_by_key(|l| l.lod);
