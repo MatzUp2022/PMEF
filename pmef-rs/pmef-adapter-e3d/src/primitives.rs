@@ -15,10 +15,13 @@
 //! | `CONE`  | `POS` (centre), `AXIS` (bottom → top), `DBOT` `DTOP` `HEIG` | `CONE` |
 //! | `SNOU`  | `POS` (centre), `AXIS` (bottom → top), `DBOT` `DTOP` `HEIG`, optional `XOFF` `YOFF` | `SNOUT` |
 //! | `DISH`  | `POS` (centre of base circle), `AXIS` (outward), `DIAM` `HEIG`, optional `RADI` (knuckle) | `DISH` |
+//! | `PYRA`  | `POS` (centre), `AXIS` (bottom → top), optional `XDIR`, `XBOT` `YBOT` `XTOP` `YTOP` `HEIG`, optional `XOFF` `YOFF` | `PYRAMID` |
+//! | `RTOR`  | `POS` (torus centre), `AXIS` (sweep normal), `XDIR` (towards start face), `RINS` `ROUT` `HEIG` `ANGL` | `RECT_TORUS` |
 //!
 //! `AXIS` is the primitive's height axis as a direction vector in world
-//! coordinates (default `0 0 1`). The PML script obtains it from the
-//! element's orientation; the adapter never derives geometry from binary files.
+//! coordinates (default `0 0 1`); `XDIR` is the element's local X axis in world
+//! coordinates. The PML script obtains both from the element's orientation; the
+//! adapter never derives geometry from binary files.
 
 use crate::pml::{E3dElementType, PmlElement};
 use crate::E3DCoordinateSystem;
@@ -80,6 +83,8 @@ pub fn is_primitive(t: &E3dElementType) -> bool {
             | E3dElementType::PrimCone
             | E3dElementType::PrimSnout
             | E3dElementType::PrimDish
+            | E3dElementType::PrimPyramid
+            | E3dElementType::PrimRectTorus
     )
 }
 
@@ -149,6 +154,33 @@ fn map_primitive(p: &PmlElement, cs: E3DCoordinateSystem) -> Mapped {
             }
             v
         }
+        E3dElementType::PrimPyramid => {
+            let h = pos_dim(p, "HEIG")?;
+            let dims = [non_neg(p, "XBOT")?, non_neg(p, "YBOT")?, non_neg(p, "XTOP")?, non_neg(p, "YTOP")?];
+            if dims[0] * dims[1] == 0.0 && dims[2] * dims[3] == 0.0 {
+                return Err("neither the bottom nor the top face has an area".into());
+            }
+            let mut v = json!({ "type": "PYRAMID", "center": arr(offset(pos, axis, -h / 2.0)),
+                                "axis": arr(axis), "bottomX": dims[0], "bottomY": dims[1],
+                                "topX": dims[2], "topY": dims[3],
+                                "offsetX": p.attr_f64("XOFF").unwrap_or(0.0),
+                                "offsetY": p.attr_f64("YOFF").unwrap_or(0.0), "height": h });
+            if let Some(x) = x_dir(p, cs) {
+                v["refDirection"] = arr(x);
+            }
+            v
+        }
+        E3dElementType::PrimRectTorus => {
+            let (rin, rout) = (non_neg(p, "RINS")?, pos_dim(p, "ROUT")?);
+            if rout <= rin {
+                return Err(format!("ROUT {rout} must exceed RINS {rin}"));
+            }
+            let start = x_dir(p, cs).ok_or("missing XDIR (direction towards the start face)")?;
+            let angle = pos_dim(p, "ANGL")?;
+            json!({ "type": "RECT_TORUS", "center": arr(pos), "axis": arr(axis), "startDir": arr(start),
+                    "innerRadius": rin, "outerRadius": rout, "height": pos_dim(p, "HEIG")?,
+                    "angleDeg": angle.min(360.0) })
+        }
         _ => return Err(format!("not a design primitive: {:?}", p.element_type)),
     };
     Ok((prim, notes))
@@ -168,6 +200,12 @@ fn non_neg(p: &PmlElement, key: &'static str) -> Result<f64, String> {
         Some(v) => Err(format!("{key} must be >= 0, got {v}")),
         None => Err(format!("missing {key}")),
     }
+}
+
+/// `XDIR` (local X in world coordinates), made perpendicular to `AXIS`.
+fn x_dir(p: &PmlElement, cs: E3DCoordinateSystem) -> Option<(f64, f64, f64)> {
+    let x = p.attr("XDIR").and_then(|v| v.as_vec3())?;
+    normalise(cs.to_pmef(x.0, x.1, x.2))
 }
 
 fn normalise(v: (f64, f64, f64)) -> Option<(f64, f64, f64)> {
@@ -265,6 +303,40 @@ mod tests {
         let p = equipment_geometry(&e, E3DCoordinateSystem::XEastYUpZSouth).primitive.unwrap();
         assert_eq!(p["axis"], json!([0.0, 0.0, 1.0]));
         assert_eq!(p["center"], json!([0.0, 0.0, 0.0]));
+    }
+
+    #[test]
+    fn pyramid_and_rect_torus() {
+        let e = equi(
+            "  PYRA\n    NAME actuator\n    POS 0.0 0.0 100.0\n    XDIR 0.0 1.0 0.0\n    XBOT 300\n    YBOT 200\n    XTOP 0\n    YTOP 0\n    HEIG 200\n    XOFF 10\n\
+             \x20 RTOR\n    POS 0.0 0.0 0.0\n    XDIR 1.0 0.0 0.0\n    RINS 800\n    ROUT 900\n    HEIG 100\n    ANGL 90\n",
+        );
+        let g = equipment_geometry(&e, Z_UP);
+        assert!(g.issues.is_empty(), "{:?}", g.issues);
+        let c = g.primitive.unwrap()["children"].as_array().unwrap().clone();
+        let pyr = &c[0]["primitive"];
+        assert_eq!(pyr["type"], "PYRAMID");
+        assert_eq!(pyr["center"], json!([0.0, 0.0, 0.0]));
+        assert_eq!(pyr["refDirection"], json!([0.0, 1.0, 0.0]));
+        assert_eq!(pyr["bottomX"], 300.0);
+        assert_eq!(pyr["offsetX"], 10.0);
+        let tor = &c[1]["primitive"];
+        assert_eq!(tor["type"], "RECT_TORUS");
+        assert_eq!(tor["startDir"], json!([1.0, 0.0, 0.0]));
+        assert_eq!(tor["outerRadius"], 900.0);
+        assert_eq!(tor["angleDeg"], 90.0);
+    }
+
+    #[test]
+    fn degenerate_pyramid_and_torus_are_reported() {
+        let e = equi(
+            "  PYRA\n    POS 0.0 0.0 0.0\n    XBOT 300\n    YBOT 0\n    XTOP 0\n    YTOP 0\n    HEIG 10\n\
+             \x20 RTOR\n    POS 0.0 0.0 0.0\n    RINS 800\n    ROUT 900\n    HEIG 100\n    ANGL 90\n",
+        );
+        let g = equipment_geometry(&e, Z_UP);
+        assert!(g.primitive.is_none());
+        assert!(g.issues[0].contains("area"), "{:?}", g.issues);
+        assert!(g.issues[1].contains("XDIR"), "{:?}", g.issues);
     }
 
     #[test]

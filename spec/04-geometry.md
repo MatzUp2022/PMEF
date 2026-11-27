@@ -143,7 +143,7 @@ The `pmef:ParametricGeometry` object is a first-class NDJSON object that links a
 
 ### 4.2 Primitive Types
 
-The following 15 primitive types are defined:
+The following 17 primitive types are defined:
 
 #### CYLINDER
 
@@ -199,7 +199,7 @@ Vessel dished head. Used for pressure vessel heads, tank domes.
 | `center` | Coordinate3D | Centre of the knuckle circle (shell-to-head junction) [mm] |
 | `axis` | UnitVector3D | Points outward from the vessel |
 | `shellRadius` | number | Shell inside radius [mm], > 0 |
-| `dishType` | enum | `HEMISPHERICAL`, `ELLIPTICAL_2:1`, `TORISPHERICAL`, `FLAT`, `CONICAL` |
+| `dishType` | enum | `HEMISPHERICAL`, `ELLIPTICAL_2:1`, `TORISPHERICAL`, `FLAT`, `CONICAL`, `SPHERICAL_CAP` |
 | `depth` | number | Overall head depth (tangent to crown) [mm] |
 | `knuckleRadius` | number \| null | Knuckle radius [mm] for torispherical heads |
 | `crownRadius` | number \| null | Crown radius [mm] for torispherical heads |
@@ -208,6 +208,12 @@ Vessel dished head. Used for pressure vessel heads, tank domes.
 For `ELLIPTICAL_2:1` heads, `depth = shellRadius / 2` (implied;
 may be provided explicitly). For `HEMISPHERICAL`,
 `depth = shellRadius`.
+
+A `SPHERICAL_CAP` is a segment of a sphere without knuckle (shallow domes, end caps). Its
+`shellRadius` is the radius of the base circle and `depth` (required) is the cap height,
+0 < `depth` ≤ `shellRadius`. The sphere radius follows as
+`(shellRadius² + depth²) / (2 · depth)`; `knuckleRadius` and `crownRadius` are not used.
+A cap **MUST NOT** be written as `TORISPHERICAL` with `knuckleRadius` 0.
 
 #### CIRC_TORUS
 
@@ -245,10 +251,53 @@ Eccentric frustum with lateral offset. Used for eccentric reducers, off-centre n
 | `length` | number | Axial length [mm] |
 | `offsetX` | number | Lateral offset of r2 centre in local X [mm]. Default 0. |
 | `offsetY` | number | Lateral offset of r2 centre in local Y [mm]. Default 0. |
+| `refDirection` | UnitVector3D | Local X direction (§4.3). Optional. |
+| `bottomShearX`, `bottomShearY` | number | Shear of the r1 face [°], ∈ (−90°, 90°). Default 0. |
+| `topShearX`, `topShearY` | number | Shear of the r2 face [°], ∈ (−90°, 90°). Default 0. |
 
 The total lateral offset vector `(offsetX, offsetY)` expresses
 how the r2 circle centre is shifted relative to the r1 circle
 centre.
+
+Shear tilts an end face: a point at local `(x, y)` on the r1 circle is moved along `axis` by
+`x · tan(bottomShearX) + y · tan(bottomShearY)`, a point on the r2 circle by
+`x · tan(topShearX) + y · tan(topShearY)`, where `(x, y)` is measured from the respective face
+centre. Without shear both faces are perpendicular to `axis`.
+
+#### PYRAMID
+
+Rectangular frustum (a pyramid if the top face has zero size). Used for valve actuators,
+hoppers, bunkers and base plates.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | const | `"PYRAMID"` |
+| `center` | Coordinate3D | Centre of the bottom face [mm] |
+| `axis` | UnitVector3D | Direction from the bottom face to the top face |
+| `refDirection` | UnitVector3D | Local X direction (§4.3). Optional. |
+| `bottomX`, `bottomY` | number | Bottom face size in local X / Y [mm], ≥ 0 |
+| `topX`, `topY` | number | Top face size in local X / Y [mm], ≥ 0 |
+| `offsetX`, `offsetY` | number | Offset of the top face centre in local X / Y [mm]. Default 0. |
+| `height` | number | Distance between the faces along `axis` [mm], > 0 |
+
+**Constraint:** at least one face has a non-zero area (`bottomX · bottomY > 0` or
+`topX · topY > 0`).
+
+#### RECT_TORUS
+
+Torus segment with rectangular cross-section. Used for duct and tray bends, ring girders and
+curved platforms.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | const | `"RECT_TORUS"` |
+| `center` | Coordinate3D | Centre of the arc on the axis of revolution, at mid-height [mm] |
+| `axis` | UnitVector3D | Axis of revolution; the sweep follows the right-hand rule (as CIRC_TORUS) |
+| `startDir` | UnitVector3D | Unit vector from `center` toward the start face, perpendicular to `axis` |
+| `innerRadius` | number | Inner radius of the cross-section [mm], ≥ 0 |
+| `outerRadius` | number | Outer radius of the cross-section [mm], > `innerRadius` |
+| `height` | number | Extent of the cross-section along `axis`, centred on `center` [mm], > 0 |
+| `angleDeg` | number | Sweep angle [°], ∈ (0°, 360°] |
 
 #### BOX
 
@@ -373,6 +422,17 @@ A named collection of primitives forming a compound shape.
 |-------|------|-------------|
 | `type` | const | `"COMPOSITE"` |
 | `children` | array | Array of `{partName: string, primitive: AnyPrimitive}` objects. Minimum 1 child. |
+
+### 4.3 Local Frame of Axis-Oriented Primitives
+
+SNOUT and PYRAMID place offsets, shear and face sizes in a local frame. Local Z is `axis`.
+Local X is `refDirection` projected onto the plane perpendicular to `axis` and normalised. If
+`refDirection` is absent, local X is the projection of the project X axis `[1,0,0]`; if
+`axis` is parallel to project X (|`axis` · X| > 0.999), the project Y axis `[0,1,0]` is used
+instead. Local Y = local Z × local X (right-handed).
+
+An adapter that maps a primitive with its own rotation (e.g. AVEVA E3D `PYRA` with `ORI`)
+**MUST** write `refDirection` whenever the source local X differs from this default.
 
 ---
 

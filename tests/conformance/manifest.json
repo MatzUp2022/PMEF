@@ -740,6 +740,56 @@
       "expect": "invalid"
     },
     {
+      "id": "GEOM-U-009",
+      "name": "PYRAMID — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "geometry",
+      "requirement": "CL2-03",
+      "fixture": "fixtures/unit/GEOM-U-009.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "GEOM-U-010",
+      "name": "RECT_TORUS — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "geometry",
+      "requirement": "CL2-03",
+      "fixture": "fixtures/unit/GEOM-U-010.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "GEOM-U-011",
+      "name": "DISH SPHERICAL_CAP and sheared SNOUT — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "geometry",
+      "requirement": "CL2-03",
+      "fixture": "fixtures/unit/GEOM-U-011.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "GEOM-U-012",
+      "name": "SPHERICAL_CAP without depth — rejected",
+      "category": "negative",
+      "level": 2,
+      "domain": "geometry",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/GEOM-U-012.ndjson",
+      "expect": "invalid"
+    },
+    {
+      "id": "GEOM-U-013",
+      "name": "RECT_TORUS without startDir — rejected",
+      "category": "negative",
+      "level": 2,
+      "domain": "geometry",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/GEOM-U-013.ndjson",
+      "expect": "invalid"
+    },
+    {
       "id": "INTG-001",
       "name": "Exactly one FileHeader, written as the first object",
       "category": "integration",

@@ -253,6 +253,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **Primitives `PYRAMID` and `RECT_TORUS`, `DISH.dishType = SPHERICAL_CAP`, `SNOUT` shear**
+  ([RFC-0007](spec/rfc/0007-pyramid-rect-torus-spherical-cap.md), spec 04 §4.2–§4.3). New
+  optional `refDirection` on SNOUT and PYRAMID; spec 04 §4.3 now defines the local frame that
+  SNOUT offsets always referred to. `pmef-adapter-e3d` maps PML `PYRA`/`RTOR`; `pmef-route`
+  bounds both types; `check-geometry.py` rule 12 (face area, radii, cap depth, knuckle > 0).
+  Example `compressor-train.ndjson` (governor housing), conformance tests `GEOM-U-009…013`.
+  Found by mapping an E3D offshore model (actuators, caps written as knuckle-0 torispheres).
 - **HVAC duct domain** `pmef-hvac.schema.json` ([RFC-0006](spec/rfc/0006-hvac-ducts-tray-fittings-catalogs.md),
   spec 02 §11): `DuctNetworkSystem`, `DuctSegment`, `Duct`, `DuctBend`, `DuctTransition`,
   `DuctBranch`, `DuctDamper`, `DuctAccessDoor`, `DuctTestPort`. Cross-sections ROUND, SQUARE,

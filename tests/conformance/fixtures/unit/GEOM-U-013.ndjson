@@ -1,0 +1,1 @@
+{"@type":"pmef:ParametricGeometry","@id":"urn:pmef:geom:conf:G-13","ownerRef":"urn:pmef:obj:conf:OWNER-1","lod":"LOD2_MEDIUM","primitive":{"type":"RECT_TORUS","center":[0,0,0],"axis":[0,0,1],"innerRadius":800.0,"outerRadius":900.0,"height":100.0,"angleDeg":90.0},"revision":{"revisionId":"r2026-10-31-001","changeState":"SHARED","authoringTool":"PMEF conformance fixtures"}}

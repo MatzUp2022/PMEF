@@ -26,6 +26,11 @@ Equipment (spec 02 §5.2, spec 04 primitives)
      (port without `connectedTo`, or pointing back at the equipment) of that line at its face
      coordinate, with anti-parallel direction.
 
+Primitives (spec 04 §4.2), also inside COMPOSITE
+ 12. PYRAMID has a face with non-zero area; RECT_TORUS outerRadius > innerRadius; DISH
+     SPHERICAL_CAP has 0 < depth <= shellRadius; TORISPHERICAL has knuckleRadius > 0 (a cap
+     is SPHERICAL_CAP, not a torisphere with knuckle 0).
+
 Structural steel (spec 02 §7)
   9. Members have non-zero length; `length`, if given, equals the start/end distance.
  10. `profileId` resolves in catalogs/profiles-*.json (exactness comes from catalog snapping).
@@ -117,7 +122,26 @@ def check(objs):
                 issues += check_torus(oid, prim, p1, p2)
     issues += check_equipment(objs, by_id)
     issues += check_steel(objs, by_id)
+    for o in objs:
+        if o.get("@type") == "pmef:ParametricGeometry":
+            issues += check_primitive(o.get("@id"), o.get("primitive") or {})
     return issues
+
+
+def check_primitive(gid, prim):
+    t, f = prim.get("type"), lambda k: prim.get(k) or 0.0
+    if t == "COMPOSITE":
+        return [i for c in prim.get("children", [])
+                for i in check_primitive(f"{gid}/{c.get('partName')}", c.get("primitive") or {})]
+    if t == "PYRAMID" and f("bottomX") * f("bottomY") <= 0 and f("topX") * f("topY") <= 0:
+        return [f"{gid}: PYRAMID has no face with non-zero area"]
+    if t == "RECT_TORUS" and f("outerRadius") <= f("innerRadius"):
+        return [f"{gid}: RECT_TORUS outerRadius {f('outerRadius')} must exceed innerRadius {f('innerRadius')}"]
+    if t == "DISH" and prim.get("dishType") == "SPHERICAL_CAP" and not 0 < f("depth") <= f("shellRadius") + TOL:
+        return [f"{gid}: SPHERICAL_CAP depth {f('depth')} must be in (0, shellRadius {f('shellRadius')}]"]
+    if t == "DISH" and prim.get("dishType") == "TORISPHERICAL" and f("knuckleRadius") <= 0:
+        return [f"{gid}: TORISPHERICAL needs knuckleRadius > 0 (use SPHERICAL_CAP for a cap, spec 04)"]
+    return []
 
 
 # ── equipment ─────────────────────────────────────────────────────────────────

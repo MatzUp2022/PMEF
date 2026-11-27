@@ -166,7 +166,7 @@ All unit conversions are the adapter's responsibility. PMEF always stores in the
 
 **Decision:** The reference implementation does not read AVEVA's binary RVM (Review Model)
 format. `pmef-adapter-e3d` takes all data — including equipment geometry — from the PML
-export: E3D design primitives (BOX, CYLI, CONE, SNOU, DISH) are written by the PML script
+export: E3D design primitives (BOX, CYLI, CONE, SNOU, DISH, PYRA, RTOR) are written by the PML script
 and mapped to `pmef:ParametricGeometry`. The former `rvm.rs` parser was removed.
 
 **Rationale:**
