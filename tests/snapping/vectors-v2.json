@@ -53,7 +53,7 @@
         "catalogSnap": {
           "catalogRef": {
             "catalogId": "profiles-en",
-            "catalogVersion": "2024.3",
+            "catalogVersion": "2024.4",
             "entryId": "EN:HEA300"
           },
           "snappedSize": "HEA 300",
@@ -93,7 +93,7 @@
         "catalogSnap": {
           "catalogRef": {
             "catalogId": "profiles-en",
-            "catalogVersion": "2024.3",
+            "catalogVersion": "2024.4",
             "entryId": "EN:UPE200"
           },
           "snappedSize": "UPE 200",
@@ -144,7 +144,7 @@
         "catalogSnap": {
           "catalogRef": {
             "catalogId": "profiles-en",
-            "catalogVersion": "2024.3",
+            "catalogVersion": "2024.4",
             "entryId": "EN:RHS100x60x5"
           },
           "snappedSize": "RHS100x60x5",
@@ -192,7 +192,7 @@
         "catalogSnap": {
           "catalogRef": {
             "catalogId": "profiles-en",
-            "catalogVersion": "2024.3",
+            "catalogVersion": "2024.4",
             "entryId": "EN:SHS100x4"
           },
           "snappedSize": "SHS100x4",
@@ -292,7 +292,7 @@
         "catalogSnap": {
           "catalogRef": {
             "catalogId": "profiles-en",
-            "catalogVersion": "2024.3",
+            "catalogVersion": "2024.4",
             "entryId": "EN:L80x8"
           },
           "snappedSize": "L80x8",

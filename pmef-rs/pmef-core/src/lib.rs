@@ -16,7 +16,7 @@
 //! ├── equipment/     — EquipmentObject subtypes, Nozzle
 //! ├── ei/            — InstrumentObject, PLCObject, CableObject, …
 //! ├── hvac/          — DuctNetworkSystem, duct components (RFC-0006)
-//! ├── steel/         — SteelMember, SteelNode, SteelConnection
+//! ├── steel/         — SteelMember, SteelPlate, SteelNode, SteelConnection
 //! ├── relationships/ — typed relationship objects
 //! └── traits/        — PmefObject, PmefVisitor, Adapter
 //! ```
@@ -70,7 +70,7 @@ pub use provenance::{
     ReviewState, ReviewStatus, SnapCandidate, SourceType,
 };
 pub use revision::{ChangeState, RevisionMetadata};
-pub use steel::{SteelConnection, SteelMember, SteelNode, SteelSystem};
+pub use steel::{SteelConnection, SteelMember, SteelNode, SteelPlate, SteelSystem};
 pub use traits::{PmefAdapter, PmefEntity, PmefEntityType, PmefVisitor};
 pub use types::{
     Coordinate3D, Iec81346Designation, PmefId, PmefVersion, RdlUri, UnitVector3D,
