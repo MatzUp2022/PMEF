@@ -154,6 +154,10 @@ UNIT = [
      [without(VESSEL, "equipmentBasic")]),
     ("EQUIP-U-012", "Nozzle without coordinate — rejected", 1, "equipment", "CL1-02", "invalid",
      [without(ex("pmef:Pump", lambda o: bool(o.get("nozzles"))), "nozzles", 0, "coordinate")]),
+    ("EQUIP-U-013", "mesh_ref with glTF node fragment and meshFrame — valid", 2, "equipment", "CL2-03", "valid",
+     [ex("pmef:Compressor", lambda o: "meshFrame" in json.dumps(o))]),
+    ("EQUIP-U-014", "mesh_ref with unknown fragment selector — rejected", 2, "equipment", "CL1-02", "invalid",
+     [with_(ex("pmef:Compressor"), ("geometry", "ref"), "meshes/K-101-vendor.glb#mesh=3")]),
     # E&I
     ("EI-U-001", "InstrumentObject — valid", 2, "ei", "CL2-01", "valid", [INSTR]),
     ("EI-U-002", "InstrumentLoop — valid", 2, "ei", "CL2-01", "valid", [ex("pmef:InstrumentLoop")]),

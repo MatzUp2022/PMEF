@@ -186,8 +186,11 @@
         },
         "ref": {
           "type": "string",
-          "format": "uri",
-          "description": "URI to the geometry object: urn:pmef:geom:... for parametric, glTF feature ID, STEP file URI, or USD path"
+          "format": "uri-reference",
+          "description": "URI or package-relative path of the geometry: urn:pmef:geom:... for parametric; for mesh_ref <file>[#<fragment>] selecting a glTF node (spec 04 §2.3); STEP file URI; USD path"
+        },
+        "meshFrame": {
+          "$ref": "#/$defs/MeshFrame"
         },
         "boundingBox": {
           "type": "object",
@@ -232,6 +235,40 @@
             "LOD4_FABRICATION"
           ],
           "description": "Level of Detail / Level of Information"
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "mesh_ref" } }, "required": ["type"] },
+          "then": {
+            "properties": {
+              "ref": { "pattern": "^[^#]+(#(/nodes/[0-9]+|node=[^;]*|extras\\.[^=;]+=[^;]*)(;(/nodes/[0-9]+|node=[^;]*|extras\\.[^=;]+=[^;]*))*)?$" }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "MeshFrame": {
+      "title": "Mesh Frame",
+      "description": "Units, up axis and origin of the referenced mesh file (spec 04 §2.3). Absent: glTF convention per spec 04 §5.3 (metres, Y-up, origin at project 0,0,0).",
+      "type": "object",
+      "properties": {
+        "unit": {
+          "type": "string",
+          "enum": ["m", "mm"],
+          "description": "Length unit of the mesh coordinates",
+          "default": "m"
+        },
+        "upAxis": {
+          "type": "string",
+          "enum": ["Y", "Z"],
+          "description": "Mesh axis that points up. Y: mesh (x, y, z) is project (x, -z, y); Z: axes as in the project",
+          "default": "Y"
+        },
+        "origin": {
+          "$ref": "#/$defs/Coordinate3D",
+          "description": "Project coordinates [mm] of the mesh origin, added after unit and axis conversion"
         }
       },
       "additionalProperties": false

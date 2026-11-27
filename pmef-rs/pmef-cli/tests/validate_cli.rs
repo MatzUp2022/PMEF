@@ -105,3 +105,25 @@ fn stats_fails_on_unreadable_line() {
     let f = file("stats.ndjson", &[PLANT, "not json"]);
     assert_ne!(pmef(&["stats", &f]).0, 0);
 }
+
+#[test]
+fn check_resolves_mesh_ref_fragments_in_the_package() {
+    let gltf = r#"{"asset":{"version":"2.0"},"nodes":[{"name":"SITE"},{"name":"V-1","extras":{"RefNo":"16791/39427"}}]}"#;
+    let g = file("model.gltf", &[gltf]);
+    let equi = |id: &str, r: &str| format!(
+        r#"{{"@type":"pmef:Vessel","@id":"urn:pmef:obj:t:{id}","geometry":{{"type":"mesh_ref","ref":"{r}"}}}}"#);
+    let ok = equi("A", "model.gltf#/nodes/1;extras.RefNo=16791/39427");
+    let stale = equi("B", "model.gltf#/nodes/0;node=V-1");
+    let away = equi("C", "other.glb#/nodes/7");
+    let f = file("mesh.ndjson", &[HEADER, &ok, &stale, &away]);
+    let (code, r) = check(&["check", &f, "--json"]);
+    assert_eq!((code, status(&r, "meshRefsResolve")), (0, "PASS".into()), "{r}");
+    let notes = r["meshRefNotes"].to_string();
+    assert!(notes.contains("t:B") && notes.contains("stale") && notes.contains("other.glb"), "{notes}");
+
+    let bad = equi("D", "model.gltf#extras.RefNo=1/2");
+    let f = file("mesh-bad.ndjson", &[HEADER, &bad]);
+    let (code, r) = check(&["check", &f, "--json"]);
+    assert_eq!((code, status(&r, "meshRefsResolve")), (1, "FAIL".into()), "{r}");
+    assert!(std::path::Path::new(&g).exists());
+}
