@@ -289,7 +289,8 @@ No adapter implements the import direction (PMEF → tool), so "bidirectional" i
   1. T-section Iy/Iz (`profiles-en-extended`) are unverified (tapered legs, no reference at hand).
   2. Not covered by references: EN pipe walls (EN 10220 preferred series), materials,
      instruments; NPS ½ flange raised-face/hole values only from the inch table.
-  3. `boltDiameter_mm` in the piping classes is not checked (meaning differs per class).
+  3. ~~`boltDiameter_mm` in the piping classes is not checked~~ — done 2026-11-27: all classes
+     carry the bolt (from the flange catalogs), `check-catalogs.py` compares it.
 
 - **P3.10** ~~Schema naming defect `CompressorSpec.polytropic_efficiency`~~ — decided and done
   2026-11-01 ([RFC-0004](../spec/rfc/0004-polytropic-efficiency-camelcase.md)): new
