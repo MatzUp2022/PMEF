@@ -344,15 +344,18 @@ pub fn bend_arc(p1: P3, d1: P3, p2: P3, d2: P3) -> Option<Vec<P3>> {
     }
     let n = ((theta.to_degrees() / 5.0).ceil() as usize).max(2);
     let a = [p1[0] - centre[0], p1[1] - centre[1], p1[2] - centre[2]];
-    Some(
-        (0..=n)
-            .map(|k| {
-                let phi = theta * k as f64 / n as f64;
-                // Rotate a towards u1 (the travel direction) by phi in the plane (a, u1).
-                [0, 1, 2].map(|i| centre[i] + a[i] * phi.cos() + r * u1[i] * phi.sin())
-            })
-            .collect(),
-    )
+    let mut pts: Vec<P3> = (0..=n)
+        .map(|k| {
+            let phi = theta * k as f64 / n as f64;
+            // Rotate a towards u1 (the travel direction) by phi in the plane (a, u1).
+            [0, 1, 2].map(|i| centre[i] + a[i] * phi.cos() + r * u1[i] * phi.sin())
+        })
+        .collect();
+    // The ends are the port coordinates exactly, so that joined runs stay connected even when
+    // the ports are within the tolerance but not exactly on the arc.
+    pts[0] = p1;
+    pts[n] = p2;
+    Some(pts)
 }
 
 fn dist(a: P3, b: P3) -> f64 {
