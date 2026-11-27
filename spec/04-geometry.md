@@ -131,8 +131,9 @@ Values are percent-encoded where they contain `;`, `=`, `#` or `%`. Examples:
   to another node than the stable selectors, the stable match wins and the reader
   **SHOULD** warn.
 - The same syntax applies to `MESH_REF.meshUri` (§4.2).
-- `pmef check` resolves every fragment whose file lies in the package and fails on
-  unresolved or ambiguous selectors.
+- `pmef check` resolves every fragment whose glTF file (`.gltf`/`.glb`, or `meshFormat`
+  `GLTF`/`GLB`) lies in the package and fails on unresolved or ambiguous selectors. `<file>`
+  is percent-decoded before lookup; files of other formats are not parsed.
 
 The optional `meshFrame` gives the frame of the mesh coordinates: `unit` (`m` or `mm`),
 `upAxis` (`Y`: mesh `(x, y, z)` is project `(x, −z, y)`; `Z`: axes as in the project) and

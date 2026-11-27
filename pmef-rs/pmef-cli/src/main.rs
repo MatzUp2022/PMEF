@@ -886,9 +886,11 @@ fn cmd_check(file: PathBuf, json_output: bool, output: Option<PathBuf>) -> Resul
 /// notes list stale indices and files that are not in the package.
 fn check_mesh_refs(file: &std::path::Path, objects: &[pmef_io::RawPmefObject]) -> (Vec<String>, Vec<String>) {
     use pmef_io::mesh_ref;
-    fn uris<'a>(prim: &'a serde_json::Value, out: &mut Vec<&'a str>) {
+    // (reference, declared mesh format); only glTF files are parsed and resolved.
+    fn uris<'a>(prim: &'a serde_json::Value, out: &mut Vec<(&'a str, Option<&'a str>)>) {
         if prim.get("type").and_then(|v| v.as_str()) == Some("MESH_REF") {
-            out.extend(prim.get("meshUri").and_then(|v| v.as_str()));
+            let format = prim.get("meshFormat").and_then(|v| v.as_str());
+            out.extend(prim.get("meshUri").and_then(|v| v.as_str()).map(|u| (u, format)));
         }
         for c in prim.get("children").and_then(|v| v.as_array()).into_iter().flatten() {
             if let Some(p) = c.get("primitive") {
@@ -903,12 +905,12 @@ fn check_mesh_refs(file: &std::path::Path, objects: &[pmef_io::RawPmefObject]) -
         let mut refs = Vec::new();
         let g = o.value.get("geometry");
         if g.and_then(|g| g.get("type")).and_then(|v| v.as_str()) == Some("mesh_ref") {
-            refs.extend(g.and_then(|g| g.get("ref")).and_then(|v| v.as_str()));
+            refs.extend(g.and_then(|g| g.get("ref")).and_then(|v| v.as_str()).map(|r| (r, None)));
         }
         if let Some(p) = o.value.get("primitive") {
             uris(p, &mut refs);
         }
-        for r in refs {
+        for (r, format) in refs {
             let parsed = match mesh_ref::parse(r) {
                 Ok(p) => p,
                 Err(e) => { failed.push(format!("{} -> {r}: {e}", o.id_str)); continue; }
@@ -916,6 +918,19 @@ fn check_mesh_refs(file: &std::path::Path, objects: &[pmef_io::RawPmefObject]) -
             // Only package-relative paths are checked; URIs with a scheme point elsewhere.
             let rel = parsed.path.strip_prefix("file:").unwrap_or(&parsed.path);
             if rel.contains("://") || rel.starts_with('/') || rel.contains(':') {
+                continue;
+            }
+            let rel = match mesh_ref::decode_path(rel) {
+                Ok(p) => p,
+                Err(e) => { failed.push(format!("{} -> {r}: {e}", o.id_str)); continue; }
+            };
+            let rel = rel.as_str();
+            // OBJ, STL, USD, STEP ... are not glTF: neither parsed nor resolved.
+            let gltf = match format {
+                Some(f) => f.eq_ignore_ascii_case("GLTF") || f.eq_ignore_ascii_case("GLB"),
+                None => mesh_ref::is_gltf_path(rel),
+            };
+            if !gltf {
                 continue;
             }
             let path = dir.join(rel);
