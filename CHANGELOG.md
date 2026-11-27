@@ -253,6 +253,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **E3D adapter: ports, connectivity and implicit tubes** (spec 05 §8.1). Arrive/leave/branch
+  p-points of the PML export (`APOS`/`LPOS`/`P3POS`, directions, bores, connection types)
+  become ports `P1`/`P2`/`P3` with `connectedTo` along the branch; gaps become generated
+  `pmef:Pipe` tubes (TUBI) with `pipeLength`; branch `HREF`/`TREF` link nozzles
+  (`connectedLineId`/`connectedPortId`) and tees of other branches. Components without
+  p-points fall back to one port `P0` without `connectedTo`. SITE/ZONE are now traversed.
+  Fixture `pmef-adapter-e3d/tests/fixtures/branch-ports.pml`.
 - **Generic piping component and native type catalog**
   ([RFC-0009](spec/rfc/0009-generic-piping-component.md), spec 02 §4.4).
   New `pmef:GenericPipingComponent` with `nativeType` (e.g. `E3D:PCOM`); new `componentClass`

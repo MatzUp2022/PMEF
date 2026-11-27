@@ -51,6 +51,7 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs, clippy::all)]
 
+pub mod branch;
 pub mod mapping;
 pub mod pml;
 pub mod primitives;
@@ -149,6 +150,10 @@ pub struct E3DAdapter {
     counters: HashMap<String, usize>,
     /// Problems found while mapping (e.g. skipped design primitives).
     warnings: Vec<String>,
+    /// Branch ends (HREF/TREF) of the mapped lines, with their line `@id`.
+    end_refs: Vec<(branch::EndRef, String)>,
+    /// Nozzle DB address → (line `@id`, port id) of the branch end connected to it.
+    nozzle_links: HashMap<String, (String, String)>,
 }
 
 impl E3DAdapter {
@@ -159,6 +164,8 @@ impl E3DAdapter {
             addr_to_id: HashMap::new(),
             counters: HashMap::new(),
             warnings: Vec::new(),
+            end_refs: Vec::new(),
+            nozzle_links: HashMap::new(),
         }
     }
 
@@ -200,36 +207,42 @@ impl E3DAdapter {
             .map_err(AdapterError::from)?;
         stats.objects_ok += 3;
 
-        // Walk PML elements
-        for elem in &elements {
-            match elem.element_type {
-                E3dElementType::Equipment => {
-                    let objs = self.map_equipment(elem);
-                    for obj in objs {
-                        writer.write_value(&obj)
-                            .map_err(AdapterError::from)?;
-                        stats.objects_ok += 1;
-                    }
+        // Walk PML elements (SITE/ZONE recursively). Lines are mapped first so that branch
+        // ends can be resolved (tees, other branches) and nozzles learn their line.
+        fn collect<'e>(elems: &'e [PmlElement], out: &mut Vec<&'e PmlElement>, skipped: &mut usize) {
+            for e in elems {
+                match e.element_type {
+                    E3dElementType::Site | E3dElementType::Zone => collect(&e.children, out, skipped),
+                    E3dElementType::Equipment | E3dElementType::Pipe => out.push(e),
+                    _ => *skipped += 1,
                 }
-                E3dElementType::Pipe => {
-                    let objs = self.map_pipe_line(elem);
-                    for mut obj in objs {
-                        drop_nulls(&mut obj);
-                        writer.write_value(&obj)
-                            .map_err(AdapterError::from)?;
-                        stats.objects_ok += 1;
-                    }
-                }
-                E3dElementType::Site | E3dElementType::Zone => {
-                    // Recurse into children
-                    for child in &elem.children {
-                        // (simplified: a full implementation recurses)
-                        tracing::debug!("Skipping zone/site child: {:?}", child.element_type);
-                    }
-                }
-                _ => {
-                    stats.objects_skipped += 1;
-                }
+            }
+        }
+        let mut flat = Vec::new();
+        let mut skipped = 0;
+        collect(&elements, &mut flat, &mut skipped);
+        stats.objects_skipped += skipped;
+        let nozzle_addrs: std::collections::HashSet<&str> = flat.iter()
+            .filter(|e| e.element_type == E3dElementType::Equipment)
+            .flat_map(|e| e.children.iter())
+            .filter(|c| c.element_type == E3dElementType::Nozzle)
+            .map(|c| c.db_address.as_str())
+            .collect();
+        let mut lines: Vec<Vec<serde_json::Value>> = flat.iter()
+            .filter(|e| e.element_type == E3dElementType::Pipe)
+            .map(|e| self.map_pipe_line(e))
+            .collect();
+        self.resolve_end_refs(&mut lines, &nozzle_addrs);
+        let mut lines = lines.into_iter();
+        for elem in flat {
+            let objs = match elem.element_type {
+                E3dElementType::Equipment => self.map_equipment(elem),
+                _ => lines.next().unwrap_or_default(),
+            };
+            for mut obj in objs {
+                drop_nulls(&mut obj);
+                writer.write_value(&obj).map_err(AdapterError::from)?;
+                stats.objects_ok += 1;
             }
         }
 
@@ -346,7 +359,10 @@ impl E3DAdapter {
                     "facingType": noz.attr_str("NFTYP").unwrap_or("RF"),
                     "coordinate": [px, py, pz],
                     "direction": [dx, dy, dz],
-                    "connectedLineId": noz.attr_str("CREF")
+                    // Line resolved from a branch HREF/TREF; else the raw CREF of the export.
+                    "connectedLineId": self.nozzle_links.get(&noz.db_address).map(|l| l.0.as_str())
+                        .or(noz.attr_str("CREF")),
+                    "connectedPortId": self.nozzle_links.get(&noz.db_address).map(|l| l.1.as_str())
                 })
             }).collect();
 
@@ -443,6 +459,57 @@ impl E3DAdapter {
         result
     }
 
+    // ── Branch end references ─────────────────────────────────────────────────
+
+    /// Resolve HREF/TREF of all branch ends: a nozzle gets `connectedLineId`/`connectedPortId`
+    /// (applied in [`Self::map_equipment`]); a component (tee, other branch end) is linked by
+    /// `connectedTo` both ways to its nearest free port. Anything else is a boundary.
+    fn resolve_end_refs(
+        &mut self,
+        lines: &mut [Vec<serde_json::Value>],
+        nozzles: &std::collections::HashSet<&str>,
+    ) {
+        let mut at: HashMap<String, (usize, usize)> = HashMap::new();
+        for (l, objs) in lines.iter().enumerate() {
+            for (o, obj) in objs.iter().enumerate() {
+                if let Some(id) = obj["@id"].as_str() {
+                    at.insert(id.to_owned(), (l, o));
+                }
+            }
+        }
+        for (r, line_id) in std::mem::take(&mut self.end_refs) {
+            if nozzles.contains(r.target.as_str()) {
+                self.nozzle_links.insert(r.target, (line_id, r.port));
+                continue;
+            }
+            let target = self.addr_to_id.get(&r.target).and_then(|id| at.get(id)).copied();
+            let (Some((tl, to)), Some(&(sl, so))) = (target, at.get(&r.component)) else {
+                self.warnings.push(format!("{} {}: {} is outside the export (open end)",
+                    r.component, r.port, r.target));
+                continue;
+            };
+            let ports = |v: &serde_json::Value| v["ports"].as_array().cloned().unwrap_or_default();
+            let coord = |p: &serde_json::Value| [0, 1, 2].map(|k| p["coordinate"][k].as_f64().unwrap_or(0.0));
+            let src_ports = ports(&lines[sl][so]);
+            let Some(si) = src_ports.iter().position(|p| p["portId"] == r.port.as_str()) else { continue };
+            let here = coord(&src_ports[si]);
+            let free = ports(&lines[tl][to]).iter().enumerate()
+                .filter(|(_, p)| p.get("connectedTo").is_none())
+                .map(|(i, p)| {
+                    let c = coord(p);
+                    (i, (0..3).map(|k| (c[k] - here[k]).powi(2)).sum::<f64>())
+                })
+                .min_by(|a, b| a.1.total_cmp(&b.1));
+            let Some((ti, _)) = free else {
+                self.warnings.push(format!("{} {}: {} has no free port", r.component, r.port, r.target));
+                continue;
+            };
+            let target_id = lines[tl][to]["@id"].clone();
+            lines[tl][to]["ports"][ti]["connectedTo"] = serde_json::Value::from(r.component.clone());
+            lines[sl][so]["ports"][si]["connectedTo"] = target_id;
+        }
+    }
+
     // ── Piping line mapping ───────────────────────────────────────────────────
 
     fn map_pipe_line(
@@ -477,7 +544,15 @@ impl E3DAdapter {
         let mut comp_ids: Vec<String> = Vec::new();
         let mut all_objs: Vec<serde_json::Value> = Vec::new();
 
+        let cs = self.config.coordinate_system;
+        let tube_template = serde_json::json!({
+            "pmefVersion": "0.9.0",
+            "isPartOf": seg_id,
+            "revision": { "revisionId": "r2026-01-01-001", "changeState": "SHARED",
+                          "authoringTool": "pmef-adapter-e3d 0.9.0" }
+        });
         for bran in &branches {
+            let mut mapped = Vec::new();
             for comp in &bran.children {
                 let keyword = comp.element_type.keyword();
                 let (pmef_type, comp_class, listed) =
@@ -489,13 +564,32 @@ impl E3DAdapter {
                         comp.db_address
                     );
                 }
+                mapped.push((comp, pmef_type, comp_class));
+            }
+            let mut items = Vec::new();
+            for (comp, pmef_type, comp_class) in mapped {
                 let short = &comp_class.chars().take(4).collect::<String>();
                 let comp_id = self.component_id(&line_clean, short);
-                comp_ids.push(comp_id.clone());
-
-                let obj = self.map_component(comp, pmef_type, comp_class, &comp_id, &seg_id);
+                self.addr_to_id.insert(comp.db_address.clone(), comp_id.clone());
+                let (obj, connected) = self.map_component(comp, pmef_type, comp_class, &comp_id, &seg_id);
+                items.push((obj, connected, pmef_type != "pmef:PipeSupport", comp.db_address.clone()));
+            }
+            let mut new_tube = || self.component_id(&line_clean, "TUBI");
+            let mut chain = branch::BranchChain::new(bran, cs, dn, tube_template.clone(), &mut new_tube);
+            for (obj, connected, inline, _) in &items {
+                chain.push(obj.clone(), *connected, *inline);
+            }
+            let (objs, refs) = chain.finish(bran, cs);
+            drop(new_tube);
+            self.end_refs.extend(refs.into_iter().map(|r| (r, line_id.clone())));
+            for obj in objs {
+                let id = obj["@id"].as_str().unwrap_or_default().to_owned();
+                let addr = items.iter().find(|i| i.0["@id"] == obj["@id"]).map(|i| i.3.clone());
+                comp_ids.push(id.clone());
                 all_objs.push(obj);
-                all_objs.push(self.make_has_equivalent_in(&comp_id, &comp.db_address));
+                if let Some(addr) = addr {
+                    all_objs.push(self.make_has_equivalent_in(&id, &addr));
+                }
             }
         }
 
@@ -566,13 +660,12 @@ impl E3DAdapter {
         comp_class: &str,
         comp_id: &str,
         seg_id: &str,
-    ) -> serde_json::Value {
+    ) -> (serde_json::Value, bool) {
         let skey = comp.attr_str("SKEY");
         let dn   = comp.attr_f64("BORE")
             .or_else(|| comp.attr_f64("RBOR"))
             .unwrap_or(100.0);
-        let pos  = comp.attr("POS").and_then(|v| v.as_vec3()).unwrap_or((0.,0.,0.));
-        let (px, py, pz) = self.config.coordinate_system.to_pmef(pos.0, pos.1, pos.2);
+        let (ports, connected) = branch::component_ports(comp, self.config.coordinate_system, dn);
 
         let mut obj = serde_json::json!({
             "@type": pmef_type,
@@ -584,12 +677,7 @@ impl E3DAdapter {
                 "skey": skey.unwrap_or(""),
                 "weight": comp.attr_f64("WGHT")
             },
-            "ports": [{
-                "portId": "P1",
-                "coordinate": [px, py, pz],
-                "nominalDiameter": dn,
-                "endType": "BW"
-            }],
+            "ports": ports,
             "revision": {
                 "revisionId": "r2026-01-01-001",
                 "changeState": "SHARED",
@@ -643,9 +731,15 @@ impl E3DAdapter {
                 obj["supportsMark"] = serde_json::Value::from(comp.local_name());
                 obj["supportSpec"]  = serde_json::json!({ "supportType": sup_type, "attachmentType": "WELDED" });
             }
+            "pmef:Pipe" if connected => {
+                let p = |i: usize| [0, 1, 2].map(|k| obj["ports"][i]["coordinate"][k].as_f64().unwrap_or(0.0));
+                let (a, l) = (p(0), p(1));
+                obj["pipeLength"] = serde_json::Value::from(
+                    (0..3).map(|k| (a[k] - l[k]).powi(2)).sum::<f64>().sqrt());
+            }
             _ => {}
         }
-        obj
+        (obj, connected)
     }
 }
 
