@@ -125,7 +125,11 @@ optional `@id`/terminal) drops from its end to the nearest point of an allowed t
 predecessor, so that the bend rule sees each direction change: the cable's bend radius must not
 exceed the smallest tray radius involved) and drops to its other end. Cables are routed largest
 first; each reserves its cross-section on every tray it uses, and no tray may exceed `maxFill`
-(default 40 % of width × height). Output: `pmef:CableObject` (`routeLength` in m, `cableType`,
+(default 40 % of width × height). Cable lengths take every corner on tray runs as an arc at the
+centreline radius (tray `bendRadius` + half the width, limited so that the arc stays on the
+adjoining segments), i.e. 2 R tan(θ/2) − R θ shorter than the sharp polyline (report
+`bendCorrectionMm`); the reported points stay the polyline. Output: `pmef:CableObject`
+(`routeLength` in m, `cableType`,
 `fromId`/`toId`, terminals, `cableTrayId` of the tray carrying the longest part when it is a
 PMEF `@id`), provenance `generated`; the report lists path, trays and the fill per tray.
 `cables[].trays` limits a cable to the trays it names; such cables are routed before the others.
@@ -142,8 +146,9 @@ joined run, and `bendRadius: 0` is a sharp junction. The `CableObject` always na
 carrying the longest part, never a fitting (spec 02 §6.7). PMEF has
 no segregation class on trays, so `cableSettings.trayClasses` gives them per `@id` or mark;
 an entry of `trays` with the same `id` replaces a scene tray. Objects without a route, width or
-height are listed in the report under `skippedTrays`, the used ones under `sceneTrays`. Lengths
-over bends use the chord between the ports. Example: `tests/route/cable-trays-scene-route.json`
+height are listed in the report under `skippedTrays`, the used ones under `sceneTrays`. A
+two-port fitting whose port directions define a tangent arc (bends) follows that arc, sampled
+every 5°; other fittings use the chord. Example: `tests/route/cable-trays-scene-route.json`
 on `examples/cable-tray-route.ndjson`.
 
 **Line lists** (stage 6, `line_list.rs`). `lineLists` names PMEF packages with lines to route,
@@ -267,8 +272,8 @@ already run (Clinic).
    supports on vertical runs.
 5. **Cables.** Done in stage 5: routing on tray networks with segregation, bend radius and fill
    limit; output as `pmef:CableObject`; trays read from PMEF `CableTrayRun`/`CableTrayFitting`
-   (`traysFromScene`, RFC-0015). Open: drops routed through the voxel graph instead of L1 distances,
-   tray sizing proposals when the fill limit is hit, cable lengths with tray-bend arcs.
+   (`traysFromScene`, RFC-0015); cable lengths with bend arcs. Open: drops routed through the
+   voxel graph instead of L1 distances, tray sizing proposals when the fill limit is hit.
 6. **Integration.** Done in stage 6: WASM binding `pmef-route-wasm` (CI builds it for
    `wasm32-unknown-unknown`) and P&ID line lists as input (`lineLists`, `dexpi-pmef` shape).
    Open, in the owning repos: the re-routing UI in PlantView (`mvcache-web`) and ProDocAimAi,

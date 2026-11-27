@@ -11,6 +11,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Changed — cable lengths with bend arcs (`pmef-route`)
+
+- Corners on tray runs count as arcs at the centreline radius (tray `bendRadius` + width/2):
+  `lengthMm`/`routeLength` are 2 R tan(θ/2) − R θ shorter per corner than the sharp polyline;
+  new report field `bendCorrectionMm`. Two-port scene bends follow their tangent arc
+  (`cable::bend_arc`, sampled every 5°) instead of the chord. Example W-301: 20.51 → 20.59 m.
+
 ### Added — cable routing on PMEF tray networks (RFC-0015 follow-up, #71)
 
 - **`pmef-route`**: `cableSettings.traysFromScene` reads the tray network from the

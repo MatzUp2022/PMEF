@@ -261,7 +261,12 @@ pub fn trays_from_pmef(
             }
         };
         let made: Vec<_> = if ports.len() == 2 {
-            vec![mk(id.clone(), vec![ports[0].1, ports[1].1], &[ports[0].2, ports[1].2])]
+            // A bend follows its arc when the port directions define one, else the chord.
+            let pts = p3(&ports[0].2["direction"])
+                .zip(p3(&ports[1].2["direction"]))
+                .and_then(|(d1, d2)| bend_arc(ports[0].1, d1, ports[1].1, d2))
+                .unwrap_or_else(|| vec![ports[0].1, ports[1].1]);
+            vec![mk(id.clone(), pts, &[ports[0].2, ports[1].2])]
         } else {
             let n = ports.len() as f64;
             let c = [0, 1, 2].map(|i| ports.iter().map(|p| p.1[i]).sum::<f64>() / n);
@@ -292,8 +297,11 @@ pub struct RoutedCable {
     /// Tray run carrying the longest part of the cable (scene fittings are never chosen).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub main_tray: Option<String>,
+    /// Cable length: tray path (corners as arcs) plus drops [mm].
     pub length_mm: f64,
     pub drop_mm: f64,
+    /// How much shorter the corners on tray runs make the path than the sharp polyline [mm].
+    pub bend_correction_mm: f64,
     #[serde(skip)]
     pub spec: Option<CableSpec>,
 }
@@ -306,6 +314,45 @@ pub struct TrayFill {
     /// [% of width × height]
     pub fill: f64,
     pub cables: Vec<String>,
+}
+
+/// Circular arc of a two-port bend: from `p1` (port direction `d1`, pointing out of the
+/// fitting) to `p2` (direction `d2`), tangent to both. `None` when the ports do not lie on such
+/// an arc (parallel directions, or the tangent lengths differ by more than 1 mm). Sampled at
+/// most every 5°.
+pub fn bend_arc(p1: P3, d1: P3, p2: P3, d2: P3) -> Option<Vec<P3>> {
+    let unit = |v: P3| {
+        let l = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
+        (l > 1e-12).then(|| [v[0] / l, v[1] / l, v[2] / l])
+    };
+    let dot = |a: P3, b: P3| a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    let (u1, u2) = (unit([-d1[0], -d1[1], -d1[2]])?, unit(d2)?); // travel directions at p1, p2
+    let theta = dot(u1, u2).clamp(-1.0, 1.0).acos();
+    if !(1e-3..std::f64::consts::PI - 1e-3).contains(&theta) {
+        return None;
+    }
+    // Normal towards the centre: the part of u2 perpendicular to u1.
+    let c = dot(u1, u2);
+    let m = unit([u2[0] - c * u1[0], u2[1] - c * u1[1], u2[2] - c * u1[2]])?;
+    // Chord = 2 R sin(θ/2); the chord must make θ/2 with u1 for a tangent arc.
+    let chord = [p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]];
+    let lc = dist(p1, p2);
+    let r = lc / (2.0 * (theta / 2.0).sin());
+    let centre = [0, 1, 2].map(|i| p1[i] + r * m[i]);
+    if (dist(centre, p2) - r).abs() > 1.0 || (dot(chord, u1) / lc - (theta / 2.0).cos()).abs() > 1e-3 {
+        return None;
+    }
+    let n = ((theta.to_degrees() / 5.0).ceil() as usize).max(2);
+    let a = [p1[0] - centre[0], p1[1] - centre[1], p1[2] - centre[2]];
+    Some(
+        (0..=n)
+            .map(|k| {
+                let phi = theta * k as f64 / n as f64;
+                // Rotate a towards u1 (the travel direction) by phi in the plane (a, u1).
+                [0, 1, 2].map(|i| centre[i] + a[i] * phi.cos() + r * u1[i] * phi.sin())
+            })
+            .collect(),
+    )
 }
 
 fn dist(a: P3, b: P3) -> f64 {
@@ -439,6 +486,7 @@ fn route_cable(
         main_tray: None,
         length_mm: 0.0,
         drop_mm: 0.0,
+        bend_correction_mm: 0.0,
         spec: Some(c.clone()),
     };
     let mut g = Graph {
@@ -536,11 +584,37 @@ fn route_cable(
     }
     nodes.reverse();
     let mut per_tray: Vec<(usize, f64)> = Vec::new();
-    for w in nodes.windows(2) {
+    // Corners on tray runs are taken at the centreline bend radius (tray bend radius + half
+    // the width): each corner shortens the path by 2 R tan(θ/2) − R θ. Scene fittings already
+    // carry their arc; drops and tee branches stay as they are.
+    let edge_tray = |a: usize, b: usize| g.adj[a].iter().find(|e| e.0 == b).and_then(|e| e.2);
+    let mut corner = vec![0.0; nodes.len()];
+    for i in 1..nodes.len().saturating_sub(1) {
+        let (a, n, b) = (nodes[i - 1], nodes[i], nodes[i + 1]);
+        let (Some(t1), Some(t2)) = (edge_tray(a, n), edge_tray(n, b)) else { continue };
+        if trays[t1].fitting || trays[t2].fitting {
+            continue;
+        }
+        let (d1, d2) = (dir(g.pts[a], g.pts[n]), dir(g.pts[n], g.pts[b]));
+        let theta = (0..3).map(|k| d1[k] * d2[k]).sum::<f64>().clamp(-1.0, 1.0).acos();
+        if !(1e-6..std::f64::consts::PI - 1e-3).contains(&theta) {
+            continue;
+        }
+        let rc = |t: usize| trays[t].bend_radius + trays[t].width / 2.0;
+        let half = (theta / 2.0).tan();
+        // The tangent points must stay on the neighbouring segments (half of each, so that
+        // consecutive corners do not overlap).
+        let room = dist(g.pts[a], g.pts[n]).min(dist(g.pts[n], g.pts[b])) / 2.0;
+        let r = rc(t1).min(rc(t2)).min(room / half);
+        corner[i] = 2.0 * r * half - r * theta;
+    }
+    res.bend_correction_mm = corner.iter().sum();
+    for (i, w) in nodes.windows(2).enumerate() {
         let e = g.adj[w[0]].iter().find(|e| e.0 == w[1]).unwrap();
         match e.2 {
             Some(t) => {
-                let l = dist(g.pts[w[0]], g.pts[w[1]]);
+                // Half of each corner's shortening is taken from either side.
+                let l = dist(g.pts[w[0]], g.pts[w[1]]) - corner[i] / 2.0 - corner[i + 1] / 2.0;
                 res.length_mm += l;
                 match per_tray.iter_mut().find(|x| x.0 == t) {
                     Some(x) => x.1 += l,
