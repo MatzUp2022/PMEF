@@ -253,6 +253,15 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **Generic piping component and native type catalog**
+  ([RFC-0009](spec/rfc/0009-generic-piping-component.md), spec 02 §4.4).
+  New `pmef:GenericPipingComponent` with `nativeType` (e.g. `E3D:PCOM`); new `componentClass`
+  values `VALVE_UNSPECIFIED`, `INLINE_INSTRUMENT`, `CLOSURE`; new catalog type
+  `NATIVE_TYPE_MAPPING` and `catalogs/native-types-e3d.json`. The E3D adapter maps element
+  types through the catalog instead of hard-coded rules: unknown types are kept as generic
+  components (before: `pmef:Pipe`), valves without a known SKEY prefix become
+  `VALVE_UNSPECIFIED` (before: `VALVE_GATE`). `pmef_catalogs::native_type`, check-catalogs
+  rules, example `heat-exchanger-station.ndjson` (CW-301-FE-001), tests `PIPE-U-017/018`.
 - **`mesh_ref` glTF node fragments and `meshFrame`**
   ([RFC-0008](spec/rfc/0008-mesh-ref-gltf-node-fragment.md), spec 04 §2.3).
   `ref = <file>#/nodes/<i>;node=<name>;extras.<key>=<value>` selects one glTF node; stable

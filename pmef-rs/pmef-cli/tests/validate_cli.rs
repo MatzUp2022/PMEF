@@ -126,4 +126,14 @@ fn check_resolves_mesh_ref_fragments_in_the_package() {
     let (code, r) = check(&["check", &f, "--json"]);
     assert_eq!((code, status(&r, "meshRefsResolve")), (1, "FAIL".into()), "{r}");
     assert!(std::path::Path::new(&g).exists());
+
+    // Non-glTF mesh files are not parsed; percent-encoded paths are decoded before lookup.
+    file("part.obj", &["v 0 0 0"]);
+    file("my model.gltf", &[gltf]);
+    let obj = equi("E", "part.obj");
+    let f = file("mesh-obj.ndjson", &[HEADER, &obj]);
+    assert_eq!(status(&check(&["check", &f, "--json"]).1, "meshRefsResolve"), "PASS");
+    let enc = equi("F", "my%20model.gltf#/nodes/9");
+    let f = file("mesh-enc.ndjson", &[HEADER, &enc]);
+    assert_eq!(status(&check(&["check", &f, "--json"]).1, "meshRefsResolve"), "FAIL");
 }

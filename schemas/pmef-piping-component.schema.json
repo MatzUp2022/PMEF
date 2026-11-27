@@ -170,6 +170,20 @@
       "additionalProperties": false
     },
 
+    "GenericPipingComponent": {
+      "title": "Generic Piping Component",
+      "description": "In-line piping component without a specific PMEF type (spec 02 §4.5). componentSpec.componentClass classifies it; nativeType keeps the authoring tool's element type. Adapters use it instead of dropping a component.",
+      "allOf": [
+        { "$ref": "#/$defs/PipingComponent" },
+        {
+          "properties": {
+            "@type":      { "const": "pmef:GenericPipingComponent" },
+            "nativeType": { "type": "string", "minLength": 1, "description": "Element type in the source tool as <tool>:<type>, e.g. 'E3D:PCOM', 'E3D:INST'" }
+          }
+        }
+      ]
+    },
+
     "Pipe": {
       "title": "Pipe (straight run)",
       "allOf": [
@@ -367,6 +381,7 @@
     { "$ref": "#/$defs/Gasket" },
     { "$ref": "#/$defs/Weld" },
     { "$ref": "#/$defs/PipeSupport" },
-    { "$ref": "#/$defs/Spool" }
+    { "$ref": "#/$defs/Spool" },
+    { "$ref": "#/$defs/GenericPipingComponent" }
   ]
 }

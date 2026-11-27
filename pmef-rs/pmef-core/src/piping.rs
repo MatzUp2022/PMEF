@@ -338,6 +338,12 @@ piping_component_base!(Reducer {
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ReducerType { Concentric, Eccentric }
 
+piping_component_base!(GenericPipingComponent {
+    /// Source tool element type as `<tool>:<type>`, e.g. `E3D:PCOM` (spec 02 §4.5).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    native_type: Option<String>,
+});
+
 piping_component_base!(Flange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     flange_type: Option<String>,

@@ -422,6 +422,7 @@ The following piping component subtypes are defined in v0.9:
 | `pmef:Gasket` | `gasketType`, `gasketMaterial` | |
 | `pmef:Weld` | `weldSpec` (`WeldSpec`), `connects[2]` | `connects` MUST have exactly 2 IDs |
 | `pmef:PipeSupport` | `supportSpec` (`SupportSpec`), `supportsMark` | 13 support types |
+| `pmef:GenericPipingComponent` | `nativeType` (e.g. `E3D:PCOM`) | Any in-line component without a specific subtype (coupling, union, in-line instrument, closure, …); classes in `componentClass` ([RFC-0009](rfc/0009-generic-piping-component.md)) |
 | `pmef:Spool` | `spoolMark`, `components[]`, `totalWeight` [kg] | Fabrication unit |
 
 ### 4.5 Topology Rules for Piping

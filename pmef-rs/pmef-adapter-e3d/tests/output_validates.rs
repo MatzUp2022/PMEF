@@ -37,8 +37,23 @@ async fn all_exported_objects_are_schema_valid() {
     assert!(failures.is_empty(), "{} schema error(s):\n{}", failures.len(), failures.join("\n"));
     for t in ["pmef:FileHeader", "pmef:Plant", "pmef:Unit", "pmef:Vessel", "pmef:Pump", "pmef:Tank",
               "pmef:PipingNetworkSystem", "pmef:PipingSegment", "pmef:Pipe", "pmef:Elbow", "pmef:Flange",
-              "pmef:Valve", "pmef:PipeSupport", "pmef:ParametricGeometry", "pmef:HasEquivalentIn"] {
+              "pmef:Valve", "pmef:GenericPipingComponent", "pmef:PipeSupport", "pmef:ParametricGeometry", "pmef:HasEquivalentIn"] {
         assert!(types.contains(t), "fixture should produce {t}; got {types:?}");
     }
+    // Finding 01: element types without a specific PMEF type are kept, with their E3D keyword.
+    let generic: Vec<(String, String)> = text
+        .lines()
+        .map(|l| serde_json::from_str::<serde_json::Value>(l).unwrap())
+        .filter(|o| o["@type"] == "pmef:GenericPipingComponent")
+        .map(|o| (o["nativeType"].as_str().unwrap().to_owned(),
+                  o["componentSpec"]["componentClass"].as_str().unwrap().to_owned()))
+        .collect();
+    assert_eq!(generic, [("E3D:COUP".into(), "COUPLING".into()),
+                         ("E3D:INST".into(), "INLINE_INSTRUMENT".into()),
+                         ("E3D:CLOS".into(), "CLOSURE".into()),
+                         ("E3D:XYZZ".into(), "SPECIAL".into())]);
+    let blind = text.lines().map(|l| serde_json::from_str::<serde_json::Value>(l).unwrap())
+        .find(|o| o["componentSpec"]["componentClass"] == "BLIND_FLANGE").expect("FBLI exported");
+    assert_eq!(blind["flangeType"], "BLIND");
     std::fs::remove_dir_all(dir).ok();
 }

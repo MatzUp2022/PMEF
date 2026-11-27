@@ -1,0 +1,13 @@
+{
+  "catalogId": "native-types-broken",
+  "catalogType": "NATIVE_TYPE_MAPPING",
+  "version": "test",
+  "sourceSystem": "TEST",
+  "description": "Broken native type mapping: unknown class, unknown type, shadowed entry, duplicate id.",
+  "entries": [
+    {"catalogId": "VALV", "nativeType": "VALV", "pmefType": "pmef:Valve", "componentClass": "VALVE_UNSPECIFIED"},
+    {"catalogId": "VALV-GT", "nativeType": "VALV", "skeyPrefix": "GT", "pmefType": "pmef:Valve", "componentClass": "VALVE_GATE"},
+    {"catalogId": "PCOM", "nativeType": "PCOM", "pmefType": "pmef:Gizmo", "componentClass": "SPECIAL"},
+    {"catalogId": "PCOM", "nativeType": "XCOM", "pmefType": "pmef:GenericPipingComponent", "componentClass": "WIDGET"}
+  ]
+}

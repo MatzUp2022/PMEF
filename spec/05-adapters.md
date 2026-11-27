@@ -317,6 +317,7 @@ data and geometry. The adapter **MUST NOT** parse AVEVA's binary RVM format (see
 | `pmef:Pipe` | PIPE elements | PML attributes (POS, BORE, …) |
 | `pmef:Elbow` | ELBOW elements | PML attributes (ANGL, RADI, …) |
 | `pmef:Valve` | VALV elements | PML tag attributes |
+| Any piping component | Element type + SKEY | `catalogs/native-types-e3d.json` (first match wins); unlisted types → `pmef:GenericPipingComponent` / `SPECIAL` with `nativeType` and a warning ([RFC-0009](rfc/0009-generic-piping-component.md)) |
 | `EquipmentObject` | EQUI elements | PML tag + design primitives (BOX, CYLI, CONE, SNOU, DISH, PYRA, RTOR) → `pmef:ParametricGeometry` |
 | `Nozzle` | NOZZ elements | PML coordinates + direction |
 | `PipingDesignConditions` | Line attributes (TEMP, PRES) | PML |

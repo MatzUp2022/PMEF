@@ -57,7 +57,8 @@ pub mod primitives;
 
 pub use mapping::{
     classify_elbow_radius, e3d_dtyp_to_pmef, e3d_element_to_pmef,
-    e3d_material_to_pmef, e3d_psup_to_support_type, skey_to_flange_type,
+    e3d_material_to_pmef, e3d_psup_to_support_type, is_native_piping_type, skey_to_flange_type,
+    NATIVE_TYPES_CATALOG,
 };
 pub use pml::{parse_pml_text, PmlElement, PmlError, PmlValue, E3dElementType};
 pub use primitives::{equipment_geometry, EquipmentGeometry};
@@ -478,10 +479,16 @@ impl E3DAdapter {
 
         for bran in &branches {
             for comp in &bran.children {
-                let (pmef_type, comp_class) = e3d_element_to_pmef(
-                    comp.element_type.keyword(),
-                    comp.attr_str("SKEY"),
-                );
+                let keyword = comp.element_type.keyword();
+                let (pmef_type, comp_class, listed) =
+                    e3d_element_to_pmef(keyword, comp.attr_str("SKEY"));
+                if !listed {
+                    tracing::warn!(
+                        "E3D element type {keyword} at {} is not in catalog {NATIVE_TYPES_CATALOG}; \
+                         exported as pmef:GenericPipingComponent/SPECIAL",
+                        comp.db_address
+                    );
+                }
                 let short = &comp_class.chars().take(4).collect::<String>();
                 let comp_id = self.component_id(&line_clean, short);
                 comp_ids.push(comp_id.clone());
@@ -612,7 +619,10 @@ impl E3DAdapter {
                 );
             }
             "pmef:Flange" => {
-                obj["flangeType"] = serde_json::Value::from(skey_to_flange_type(skey.unwrap_or("")));
+                // The catalog class wins over the SKEY fallback (FBLI without SKEY is blind).
+                let flange_type = if comp_class == "BLIND_FLANGE" { "BLIND" }
+                    else { skey_to_flange_type(skey.unwrap_or("")) };
+                obj["flangeType"] = serde_json::Value::from(flange_type);
                 obj["rating"]     = serde_json::Value::from("ANSI-150");
                 obj["facing"]     = serde_json::Value::from("RF");
             }
@@ -624,6 +634,9 @@ impl E3DAdapter {
                 if let Some(tag) = comp.attr_str("TAG") {
                     obj["tagNumber"] = serde_json::Value::from(tag);
                 }
+            }
+            "pmef:GenericPipingComponent" => {
+                obj["nativeType"] = serde_json::Value::from(format!("E3D:{}", comp.element_type.keyword()));
             }
             "pmef:PipeSupport" => {
                 let sup_type = e3d_psup_to_support_type(skey.unwrap_or("SUPRW"));

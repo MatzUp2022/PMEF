@@ -119,6 +119,17 @@ pub fn gltf_json(bytes: &[u8]) -> Result<Value, String> {
     }
 }
 
+/// Percent-decode the file part of a reference (`pump%20skid.glb` → `pump skid.glb`).
+pub fn decode_path(path: &str) -> Result<String, String> {
+    decode(path)
+}
+
+/// True if `path` names a glTF file (`.gltf` / `.glb`, case-insensitive).
+pub fn is_gltf_path(path: &str) -> bool {
+    let p = path.to_ascii_lowercase();
+    p.ends_with(".gltf") || p.ends_with(".glb")
+}
+
 fn matches(node: &Value, s: &Selector) -> bool {
     match s {
         Selector::Name(n) => node.get("name").and_then(Value::as_str) == Some(n.as_str()),
@@ -184,6 +195,8 @@ mod tests {
         assert!(parse("#/nodes/1").is_err());
         assert!(parse("a.glb#/nodes/x").is_err());
         assert!(parse("a.glb#foo").is_err());
+        assert_eq!(decode_path("pump%20skid.glb").unwrap(), "pump skid.glb");
+        assert!(is_gltf_path("A.GLB") && !is_gltf_path("a.obj"));
     }
 
     #[test]

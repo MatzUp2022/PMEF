@@ -36,7 +36,7 @@ pub fn schema_for_type(type_str: &str) -> Option<&'static str> {
         "pmef:PipingNetworkSystem" | "pmef:PipingSegment" | "pmef:Pipe" |
         "pmef:Elbow" | "pmef:Tee" | "pmef:Reducer" | "pmef:Flange" |
         "pmef:Valve" | "pmef:Olet" | "pmef:Gasket" | "pmef:Weld" |
-        "pmef:PipeSupport" | "pmef:Spool"
+        "pmef:PipeSupport" | "pmef:Spool" | "pmef:GenericPipingComponent"
             => Some("pmef-piping-component.schema.json"),
         "pmef:Vessel" | "pmef:Tank" | "pmef:Pump" | "pmef:Compressor" |
         "pmef:HeatExchanger" | "pmef:Column" | "pmef:Reactor" |

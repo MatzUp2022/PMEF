@@ -1,0 +1,268 @@
+{
+  "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
+  "catalogId": "native-types-e3d",
+  "catalogType": "NATIVE_TYPE_MAPPING",
+  "version": "2026.1",
+  "sourceSystem": "AVEVA_E3D",
+  "description": "AVEVA E3D / PDMS piping element types (PML keyword, optionally refined by SKEY) to PMEF @type and componentClass. Used by pmef-adapter-e3d. The first entry whose conditions hold wins, so SKEY-specific entries precede the generic entry of the same element type. Element types without a specific PMEF type map to pmef:GenericPipingComponent, so no component is dropped.",
+  "notes": [
+    "Element type names as listed in the public E3D/PDMS user documentation; no vendor data.",
+    "An element type that is not listed is exported as pmef:GenericPipingComponent with componentClass SPECIAL and a warning."
+  ],
+  "entries": [
+    {
+      "catalogId": "TUBI",
+      "nativeType": "TUBI",
+      "pmefType": "pmef:Pipe",
+      "componentClass": "PIPE",
+      "note": "Implicit tube between components"
+    },
+    {
+      "catalogId": "FTUB",
+      "nativeType": "FTUB",
+      "pmefType": "pmef:Pipe",
+      "componentClass": "PIPE",
+      "note": "Fixed-length tube"
+    },
+    {
+      "catalogId": "STPIPE",
+      "nativeType": "STPIPE",
+      "pmefType": "pmef:Pipe",
+      "componentClass": "PIPE",
+      "note": "Legacy keyword of the PMEF PML export script"
+    },
+    {
+      "catalogId": "STRAIG",
+      "nativeType": "STRAIG",
+      "pmefType": "pmef:Pipe",
+      "componentClass": "PIPE",
+      "note": "Legacy keyword of the PMEF PML export script"
+    },
+    {
+      "catalogId": "ELBO",
+      "nativeType": "ELBO",
+      "pmefType": "pmef:Elbow",
+      "componentClass": "ELBOW"
+    },
+    {
+      "catalogId": "ELBOW",
+      "nativeType": "ELBOW",
+      "pmefType": "pmef:Elbow",
+      "componentClass": "ELBOW",
+      "note": "Legacy keyword of the PMEF PML export script"
+    },
+    {
+      "catalogId": "BEND",
+      "nativeType": "BEND",
+      "pmefType": "pmef:Elbow",
+      "componentClass": "ELBOW",
+      "note": "Pulled bend"
+    },
+    {
+      "catalogId": "TEE",
+      "nativeType": "TEE",
+      "pmefType": "pmef:Tee",
+      "componentClass": "TEE"
+    },
+    {
+      "catalogId": "CROS",
+      "nativeType": "CROS",
+      "pmefType": "pmef:GenericPipingComponent",
+      "componentClass": "CROSS"
+    },
+    {
+      "catalogId": "REDU-EC",
+      "nativeType": "REDU",
+      "skeyContains": "EC",
+      "pmefType": "pmef:Reducer",
+      "componentClass": "REDUCER_ECCENTRIC",
+      "note": "SKEY contains EC"
+    },
+    {
+      "catalogId": "REDU",
+      "nativeType": "REDU",
+      "pmefType": "pmef:Reducer",
+      "componentClass": "REDUCER_CONCENTRIC"
+    },
+    {
+      "catalogId": "FLAN-BL",
+      "nativeType": "FLAN",
+      "skeyContains": "BL",
+      "pmefType": "pmef:Flange",
+      "componentClass": "BLIND_FLANGE",
+      "note": "SKEY contains BL"
+    },
+    {
+      "catalogId": "FLAN",
+      "nativeType": "FLAN",
+      "pmefType": "pmef:Flange",
+      "componentClass": "FLANGE"
+    },
+    {
+      "catalogId": "FBLI",
+      "nativeType": "FBLI",
+      "pmefType": "pmef:Flange",
+      "componentClass": "BLIND_FLANGE"
+    },
+    {
+      "catalogId": "VALV-GT",
+      "nativeType": "VALV",
+      "skeyPrefix": "GT",
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_GATE"
+    },
+    {
+      "catalogId": "VALV-GL",
+      "nativeType": "VALV",
+      "skeyPrefix": "GL",
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_GLOBE"
+    },
+    {
+      "catalogId": "VALV-BL",
+      "nativeType": "VALV",
+      "skeyPrefix": "BL",
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_BALL"
+    },
+    {
+      "catalogId": "VALV-BF",
+      "nativeType": "VALV",
+      "skeyPrefix": "BF",
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_BUTTERFLY"
+    },
+    {
+      "catalogId": "VALV-CK",
+      "nativeType": "VALV",
+      "skeyPrefix": "CK",
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_CHECK"
+    },
+    {
+      "catalogId": "VALV-SV",
+      "nativeType": "VALV",
+      "skeyPrefix": "SV",
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_RELIEF"
+    },
+    {
+      "catalogId": "VALV-NL",
+      "nativeType": "VALV",
+      "skeyPrefix": "NL",
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_NEEDLE"
+    },
+    {
+      "catalogId": "VALV",
+      "nativeType": "VALV",
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_UNSPECIFIED",
+      "note": "No valve type in the SKEY"
+    },
+    {
+      "catalogId": "VTWA",
+      "nativeType": "VTWA",
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_UNSPECIFIED",
+      "note": "Three-way valve"
+    },
+    {
+      "catalogId": "VFWA",
+      "nativeType": "VFWA",
+      "pmefType": "pmef:Valve",
+      "componentClass": "VALVE_UNSPECIFIED",
+      "note": "Four-way valve"
+    },
+    {
+      "catalogId": "GASK",
+      "nativeType": "GASK",
+      "pmefType": "pmef:Gasket",
+      "componentClass": "GASKET"
+    },
+    {
+      "catalogId": "WELD",
+      "nativeType": "WELD",
+      "pmefType": "pmef:Weld",
+      "componentClass": "WELD_BUTT"
+    },
+    {
+      "catalogId": "OLET",
+      "nativeType": "OLET",
+      "pmefType": "pmef:Olet",
+      "componentClass": "OLET_WELDOLET"
+    },
+    {
+      "catalogId": "WOLP",
+      "nativeType": "WOLP",
+      "pmefType": "pmef:Olet",
+      "componentClass": "OLET_WELDOLET",
+      "note": "Legacy keyword of the PMEF PML export script"
+    },
+    {
+      "catalogId": "SOLP",
+      "nativeType": "SOLP",
+      "pmefType": "pmef:Olet",
+      "componentClass": "OLET_WELDOLET",
+      "note": "Legacy keyword of the PMEF PML export script"
+    },
+    {
+      "catalogId": "PSUP",
+      "nativeType": "PSUP",
+      "pmefType": "pmef:PipeSupport",
+      "componentClass": "PIPE_SUPPORT",
+      "note": "Legacy keyword of the PMEF PML export script"
+    },
+    {
+      "catalogId": "COUP",
+      "nativeType": "COUP",
+      "pmefType": "pmef:GenericPipingComponent",
+      "componentClass": "COUPLING"
+    },
+    {
+      "catalogId": "UNIO",
+      "nativeType": "UNIO",
+      "pmefType": "pmef:GenericPipingComponent",
+      "componentClass": "UNION"
+    },
+    {
+      "catalogId": "CAP",
+      "nativeType": "CAP",
+      "pmefType": "pmef:GenericPipingComponent",
+      "componentClass": "CAP"
+    },
+    {
+      "catalogId": "CLOS",
+      "nativeType": "CLOS",
+      "pmefType": "pmef:GenericPipingComponent",
+      "componentClass": "CLOSURE"
+    },
+    {
+      "catalogId": "INST",
+      "nativeType": "INST",
+      "pmefType": "pmef:GenericPipingComponent",
+      "componentClass": "INLINE_INSTRUMENT",
+      "note": "In-line instrument body (flow element, sight glass, ...)"
+    },
+    {
+      "catalogId": "FILT",
+      "nativeType": "FILT",
+      "pmefType": "pmef:GenericPipingComponent",
+      "componentClass": "STRAINER_BASKET"
+    },
+    {
+      "catalogId": "TRAP",
+      "nativeType": "TRAP",
+      "pmefType": "pmef:GenericPipingComponent",
+      "componentClass": "SPECIAL",
+      "note": "Steam trap"
+    },
+    {
+      "catalogId": "PCOM",
+      "nativeType": "PCOM",
+      "pmefType": "pmef:GenericPipingComponent",
+      "componentClass": "SPECIAL",
+      "note": "General piping component"
+    }
+  ]
+}

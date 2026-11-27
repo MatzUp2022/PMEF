@@ -79,3 +79,12 @@ fn cable_types_carry_bend_radius() {
     assert!(pmef_catalogs::cable_type("NOPE").is_none());
     assert!(pmef_catalogs::cable_types().iter().all(|c| c.min_bend_radius_mm().is_some()));
 }
+
+#[test]
+fn e3d_native_types_map_skey_variants_first() {
+    let m = |kw, skey| pmef_catalogs::native_type("native-types-e3d", kw, skey).unwrap();
+    assert_eq!(m("VALV", Some("bfwafl")).component_class.as_deref(), Some("VALVE_BUTTERFLY"));
+    assert_eq!(m("VALV", None).component_class.as_deref(), Some("VALVE_UNSPECIFIED"));
+    assert_eq!(m("INST", None).pmef_type, "pmef:GenericPipingComponent");
+    assert!(pmef_catalogs::native_type("native-types-e3d", "NOPE", None).is_none());
+}

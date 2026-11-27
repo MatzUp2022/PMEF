@@ -17,6 +17,7 @@ Status values (issue template): `DRAFT` → `REVIEW` → `APPROVED` / `REJECTED`
 | [0006](0006-hvac-ducts-tray-fittings-catalogs.md) | HVAC duct domain, cable tray fittings, support and cable catalogs | 0.10.0 | `DRAFT` | — | Air terminals/AHUs, duct hangers, tray supports (follow-ups) |
 | [0007](0007-pyramid-rect-torus-spherical-cap.md) | Primitives PYRAMID, RECT_TORUS, spherical cap and snout shear | 0.10.0 | `DRAFT` | — | RECT_TORUS for duct bends at LOD3 (WG-Geometry) |
 | [0008](0008-mesh-ref-gltf-node-fragment.md) | `mesh_ref` glTF node fragments and mesh frame | 0.10.0 | `DRAFT` | — | FileHeader default `meshFrame` (WG-Serialisation) |
+| [0009](0009-generic-piping-component.md) | Generic piping component and native type catalog | 0.10.0 | `DRAFT` | — | Type catalogs for Plant 3D and PCF (WG-Adapters) |
 
 RFCs 0001–0003 are fully implemented in this repository (schemas, spec text, Rust reference
 implementation, examples, tests in CI); each RFC's *Review Status* section lists the evidence.
