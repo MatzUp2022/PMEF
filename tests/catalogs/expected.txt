@@ -18,6 +18,7 @@
 ✗ piping-class-x.json:X-PIPE-80: DN80 SCH40 not in the pipe dimension catalog
 ✗ piping-class-x.json:X-FLWN-50: boltCircleDiameter_mm 120.7 vs 160.0 in the flange dimension catalog
 ✗ piping-class-x.json:X-FLWN-50: numberOfBolts 4 vs 6 in the flange dimension catalog
+✗ piping-class-x.json:X-FLWN-50: boltDiameter_mm 22.2 vs 19.0 in the flange dimension catalog
 ✗ duct-dimensions-en.json:R160: area_m2 0.025 vs 0.02011 derived (+24.3 %, tolerance ±0 %)
 ✗ duct-dimensions-en.json:R160: ROUND size 160 not larger than the previous one
 ✗ pipe-supports-generic.json:X: dnMin 300 > dnMax 50
@@ -32,4 +33,4 @@
 ✗ native-types-broken.json:PCOM: pmefType pmef:Gizmo is not a piping component type
 ✗ native-types-broken.json:PCOM: duplicate catalogId
 ✗ native-types-broken.json:PCOM: componentClass WIDGET is not in PipingComponentSpec
-✗ catalogs: 34 inconsistencies
+✗ catalogs: 35 inconsistencies
