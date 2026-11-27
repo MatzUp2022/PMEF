@@ -2,7 +2,8 @@
 
 | Field | Value |
 |---|---|
-| **Status** | `DRAFT` — implemented 2026-11-27; awaiting RFC issue, WG review and TSC sign-off |
+| **Status** | `DRAFT` — implemented 2026-11-27; awaiting WG review and TSC sign-off |
+| **Discussion** | [#44](https://github.com/MatzUp2022/PMEF/issues/44) — opened 2026-11-27, 30-day period until 2026-12-27 |
 | **Target version** | 0.10.0 (two new optional properties; no breaking change) |
 | **Depends on** | [RFC-0001](0001-provenance-asbuilt.md) (`review` block; open question 2) |
 | **Working groups** | WG-Piping, WG-Steel, WG-Equipment |
