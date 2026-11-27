@@ -49,6 +49,10 @@ const CATALOGS: &[(&str, &str)] = &[
         include_str!("../../../catalogs/native-types-e3d.json"),
     ),
     (
+        "native-types-e3d-hvac",
+        include_str!("../../../catalogs/native-types-e3d-hvac.json"),
+    ),
+    (
         "pipe-dimensions",
         include_str!("../../../catalogs/pipe-dimensions.json"),
     ),

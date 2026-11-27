@@ -558,7 +558,7 @@
         "skeyPrefix": { "type": "string", "minLength": 1, "description": "Condition: the SKEY starts with this text (case-insensitive)." },
         "skeyContains": { "type": "string", "minLength": 1, "description": "Condition: the SKEY contains this text (case-insensitive)." },
         "pmefType": { "type": "string", "pattern": "^pmef:[A-Z][A-Za-z]+$", "description": "PMEF @type, e.g. 'pmef:Valve'." },
-        "componentClass": { "type": "string", "description": "PipingComponentSpec.componentClass value (pmef-property-sets)." },
+        "componentClass": { "type": "string", "description": "PipingComponentSpec.componentClass value (pmef-property-sets), or GenericDuctComponent.componentClass for duct types (pmef-hvac, RFC-0014)." },
         "note": { "type": "string" }
       },
       "additionalProperties": false

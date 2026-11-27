@@ -79,7 +79,7 @@ The following `@type` values are normatively defined in PMEF v0.9 (and v0.10 whe
 
 **HVAC** (since 0.10, RFC-0006): `pmef:DuctNetworkSystem`, `pmef:DuctSegment`,
 `pmef:Duct`, `pmef:DuctBend`, `pmef:DuctTransition`, `pmef:DuctBranch`,
-`pmef:DuctDamper`, `pmef:DuctAccessDoor`, `pmef:DuctTestPort`
+`pmef:DuctDamper`, `pmef:DuctAccessDoor`, `pmef:DuctTestPort`, `pmef:GenericDuctComponent` (RFC-0014)
 
 **Structural Steel:** `pmef:SteelSystem`, `pmef:SteelMember`, `pmef:SteelPlate`, `pmef:SteelNode`, `pmef:SteelConnection`
 
@@ -978,6 +978,11 @@ required. `airType` is one of `SUPPLY`, `EXTRACT`, `OUTDOOR`, `EXHAUST`, `RECIRC
 temperature [°C], maximum velocity [m/s] and the air tightness class (`A`–`D`, EN 12237 /
 EN 1507). IDs use the `line` domain segment, like piping lines.
 
+`airType` describes the air category, not the modelling tool's discipline. Adapters that derive
+it from system names apply a project convention and **SHOULD** say so in
+`customAttributes`; systems that a tool models as HVAC but that carry no air (e.g. drains or
+potable water routed as HVAC in E3D) are `OTHER` ([RFC-0014](rfc/0014-generic-duct-component.md)).
+
 ### 11.2 DuctSegment
 
 A section of a duct system with uniform specification (`DuctSpec`: material, grade, sheet
@@ -1012,12 +1017,21 @@ cross-sections and **SHOULD** have the same `connectionType`.
 | `@type` | Purpose | Ports |
 |---|---|---|
 | `pmef:Duct` | straight duct, `length` [mm] | 2 |
-| `pmef:DuctBend` | bend, `angle` [°] required; `bendType` `RADIUS`, `SEGMENTED`, `MITRED`; `radius`, `segments`, `turningVanes`, `bendPlane` | 2 |
+| `pmef:DuctBend` | bend, `angle` [°] — required unless both ports carry a `direction` (then angle = 180° − angle between the outward directions, RFC-0014); `bendType` `RADIUS`, `SEGMENTED`, `MITRED`; `radius`, `segments`, `turningVanes`, `bendPlane` | 2 |
 | `pmef:DuctTransition` | change of size and/or shape | exactly 2 |
 | `pmef:DuctBranch` | `branchType` `TEE`, `LATERAL`, `Y_PIECE`, `CROSS`, `SADDLE_TAP` | ≥ 3 |
 | `pmef:DuctDamper` | `damperType` incl. `FIRE`, `SMOKE`, `FIRE_SMOKE`, stand-ins `UNSPECIFIED`/`CUSTOM` + `damperTypeCustom` (§2.10); `fireResistance` (e.g. `EI 90 S`), `actuation`, `instrumentId` | 2 |
 | `pmef:DuctAccessDoor` | inspection door or hatch | none |
 | `pmef:DuctTestPort` | measuring nipple for pressure, flow, temperature or sampling | none |
+| `pmef:GenericDuctComponent` | in-line part without a specific type: `componentClass` `END_CAP`, `SILENCER`, `SPLITTER`, `GRILLE`, `COWL`, `OFFSET`, `FLEXIBLE_CONNECTOR`, `SPECIAL`; `nativeType` (`<tool>:<type>`), `length` ([RFC-0014](rfc/0014-generic-duct-component.md)) | ≥ 1 |
+
+Adapters **MUST** export an HVAC element type without a specific PMEF type as
+`pmef:GenericDuctComponent` (with `nativeType`, `SPECIAL` if nothing fits) instead of dropping it
+— the HVAC counterpart of `pmef:GenericPipingComponent` (§4.5). `catalogs/native-types-e3d-hvac.json`
+maps E3D HVAC keywords. A `DuctBranch` needs three ports; if the source has no branch port
+(E3D `BRCO`), the adapter derives it from the geometry and **SHOULD** mark it in
+`placeholders` (§2.10). If both `angle` and port directions are given, they **MUST** agree within
+1° (`scripts/check-geometry.py`).
 
 Access doors and test ports are **mounted items**: they have no flow ports, reference the
 component they sit on with `hostId`, and give a `position` (and optional `normal`) in plant

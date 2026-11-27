@@ -298,8 +298,9 @@ duct_component!(
 duct_component!(
     /// Duct bend / elbow.
     DuctBend {
-        /// [°]
-        angle: f64,
+        /// [°]. Optional if both ports carry a direction (RFC-0014); see [`DuctBend::bend_angle`].
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        angle: Option<f64>,
         /// RADIUS, SEGMENTED or MITRED.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         bend_type: Option<String>,
@@ -313,6 +314,38 @@ duct_component!(
         /// HARD or EASY (rectangular ducts).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         bend_plane: Option<String>,
+    }
+);
+
+impl DuctBend {
+    /// Bend angle [°]: `angle`, else 180° minus the angle between the two outward port
+    /// directions (RFC-0014). `None` if neither is available.
+    pub fn bend_angle(&self) -> Option<f64> {
+        if self.angle.is_some() {
+            return self.angle;
+        }
+        let [a, b] = [self.ports.first()?, self.ports.get(1)?].map(|p| p.direction);
+        let (a, b) = (a?, b?);
+        let dot = a.x * b.x + a.y * b.y + a.z * b.z;
+        let la = (a.x * a.x + a.y * a.y + a.z * a.z).sqrt();
+        let lb = (b.x * b.x + b.y * b.y + b.z * b.z).sqrt();
+        (la > 0.0 && lb > 0.0).then(|| 180.0 - (dot / (la * lb)).clamp(-1.0, 1.0).acos().to_degrees())
+    }
+}
+
+duct_component!(
+    /// In-line duct component without a specific PMEF type (RFC-0014): end cap, silencer,
+    /// splitter, grille, cowl, offset, flexible connector or `SPECIAL`.
+    GenericDuctComponent {
+        /// `END_CAP`, `SILENCER`, `SPLITTER`, `GRILLE`, `COWL`, `OFFSET`,
+        /// `FLEXIBLE_CONNECTOR`, `SPECIAL`.
+        component_class: String,
+        /// Source element type as `<tool>:<type>`, e.g. `E3D:SILE`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        native_type: Option<String>,
+        /// [mm]
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        length: Option<f64>,
     }
 );
 
@@ -395,6 +428,22 @@ duct_component!(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn bend_angle_from_ports_when_angle_is_missing() {
+        let port = |id: &str, c: [f64; 3], d: [f64; 3]| -> serde_json::Value {
+            serde_json::json!({"portId": id, "coordinate": c, "direction": d,
+                "crossSection": {"shape": "ROUND", "diameter": 400}})
+        };
+        let mut v = serde_json::json!({"@type": "pmef:DuctBend", "@id": "urn:pmef:obj:t:B1",
+            "pmefVersion": "0.10.0", "isPartOf": "urn:pmef:seg:t:S1",
+            "ports": [port("P1", [0.0, 0.0, 0.0], [-1.0, 0.0, 0.0]), port("P2", [400.0, 400.0, 0.0], [0.0, 1.0, 0.0])]});
+        let b: DuctBend = serde_json::from_value(v.clone()).unwrap();
+        close(b.bend_angle().unwrap(), 90.0);
+        v["angle"] = 45.0.into();
+        let b: DuctBend = serde_json::from_value(v).unwrap();
+        close(b.bend_angle().unwrap(), 45.0);
+    }
 
     fn close(a: f64, b: f64) {
         assert!((a - b).abs() < 1e-6, "{a} != {b}");

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
+  "catalogId": "native-types-e3d-hvac",
+  "catalogType": "NATIVE_TYPE_MAPPING",
+  "version": "2026.1",
+  "sourceSystem": "AVEVA_E3D",
+  "description": "AVEVA E3D HVAC element types to PMEF @type and componentClass (RFC-0014). Separate from native-types-e3d because keywords such as CAP mean different parts in piping and HVAC. The first entry whose conditions hold wins. Element types without a specific PMEF type map to pmef:GenericDuctComponent, so no component is dropped.",
+  "notes": [
+    "Element types as found in the Huldra test case (issue #55); no vendor data.",
+    "An HVAC element type that is not listed is exported as pmef:GenericDuctComponent with componentClass SPECIAL and a warning."
+  ],
+  "entries": [
+    { "catalogId": "BRCO", "nativeType": "BRCO", "pmefType": "pmef:DuctBranch", "note": "Branch connector; the branch port is derived from the geometry if the export has none" },
+    { "catalogId": "CAP", "nativeType": "CAP", "pmefType": "pmef:GenericDuctComponent", "componentClass": "END_CAP" },
+    { "catalogId": "SPLR", "nativeType": "SPLR", "pmefType": "pmef:GenericDuctComponent", "componentClass": "SPLITTER" },
+    { "catalogId": "SILE", "nativeType": "SILE", "pmefType": "pmef:GenericDuctComponent", "componentClass": "SILENCER" },
+    { "catalogId": "MESH", "nativeType": "MESH", "pmefType": "pmef:GenericDuctComponent", "componentClass": "GRILLE", "note": "Mesh / grille in the duct" },
+    { "catalogId": "OFST", "nativeType": "OFST", "pmefType": "pmef:GenericDuctComponent", "componentClass": "OFFSET" },
+    { "catalogId": "COWL", "nativeType": "COWL", "pmefType": "pmef:GenericDuctComponent", "componentClass": "COWL" },
+    { "catalogId": "THRE", "nativeType": "THRE", "pmefType": "pmef:GenericDuctComponent", "componentClass": "SPECIAL", "note": "Meaning not documented publicly; kept with its keyword" },
+    { "catalogId": "PCOM", "nativeType": "PCOM", "pmefType": "pmef:GenericDuctComponent", "componentClass": "SPECIAL", "note": "General HVAC component" }
+  ]
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Golden test for scripts/check-geometry.py: every equipment/steel rule must fire on the
 negative fixture exactly as recorded in expected.txt (and nothing else, so the correct
-counterparts V-OK, P-BOX#OK, N-OK, CN-OK, PL-OK, CT-OK and line L-1 stay clean).
+counterparts V-OK, P-BOX#OK, N-OK, CN-OK, PL-OK, DB-OK, CT-OK and line L-1 stay clean).
 
     python tests/geometry/run.py            # compare
     python tests/geometry/run.py --update   # re-record after an intended change
