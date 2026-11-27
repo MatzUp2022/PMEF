@@ -1,4 +1,4 @@
-✗ equipment-steel-negative.ndjson (33 issue(s))
+✗ equipment-steel-negative.ndjson (38 issue(s))
      urn:pmef:obj:geomtest:ELB-SENSE: CIRC_TORUS ends at [4700.0, 0.0, 300.0], not at the other port [5300.0, 0.0, 300.0] (axis/startDir sense, spec 04 right-hand rule)
      urn:pmef:obj:geomtest:ELB-NOSTART: CIRC_TORUS ends at [4700.0, 0.0, 300.0], not at the other port [5300.0, 0.0, 300.0] (axis/startDir sense, spec 04 right-hand rule)
      urn:pmef:obj:geomtest:CT-NOLIST.P1: direction is not a unit vector
@@ -16,7 +16,12 @@
      urn:pmef:obj:geomtest:V-ASM: DISH at [0.0, 0.0, 2000.0] does not sit on a cylinder end face (spec 04: DISH center = knuckle circle, axis outward)
      urn:pmef:obj:geomtest:B-ZERO: member has zero length
      urn:pmef:obj:geomtest:B-LEN: length 4100.0 but start/end are 4000.0 mm apart
-     urn:pmef:obj:geomtest:B-PROF: profileId EN:HEA999 not found in catalogs/profiles-*.json
+     urn:pmef:obj:geomtest:B-PROF: profileId EN:HEA999 not found in catalogs/profiles-*.json or a project catalog in catalogs/ next to the file
+     urn:pmef:obj:geomtest:PL-SKEW: refDirection is not perpendicular to normal (dot = 0.7071)
+     urn:pmef:obj:geomtest:PL-NONUNIT: normal is not a unit vector (|v| = 2.0000)
+     urn:pmef:obj:geomtest:PL-LINE: outline encloses no area
+     urn:pmef:obj:geomtest:PL-CLOSED: outline repeats its first point (contours are closed implicitly)
+     urn:pmef:obj:geomtest:PL-HOLES: holes (2000000 mm²) are not smaller than the outline (2000000 mm²)
      urn:pmef:obj:geomtest:N-OFF: node is not at an end of member urn:pmef:obj:geomtest:C-1
      urn:pmef:obj:geomtest:CN-APART: members urn:pmef:obj:geomtest:B-LEN and urn:pmef:obj:geomtest:C-FAR are 5000 mm apart (> (h1 + h2) / 2 = 245 mm)
      urn:pmef:obj:geomtest:CT-BEND: port connected to urn:pmef:obj:geomtest:CT-BAD, which is not in connectedTrayIds

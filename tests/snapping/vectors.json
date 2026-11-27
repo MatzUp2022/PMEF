@@ -195,7 +195,7 @@
         "catalogSnap": {
           "catalogRef": {
             "catalogId": "profiles-en",
-            "catalogVersion": "2024.3",
+            "catalogVersion": "2024.4",
             "entryId": "EN:HEB300"
           },
           "snappedSize": "HEB 300",
@@ -246,7 +246,7 @@
         "catalogSnap": {
           "catalogRef": {
             "catalogId": "profiles-en",
-            "catalogVersion": "2024.3",
+            "catalogVersion": "2024.4",
             "entryId": "EN:HEB300"
           },
           "snappedSize": "HEB 300",
@@ -517,7 +517,7 @@
         "catalogSnap": {
           "catalogRef": {
             "catalogId": "profiles-en",
-            "catalogVersion": "2024.3",
+            "catalogVersion": "2024.4",
             "entryId": "EN:HEA300"
           },
           "snappedSize": "HEA 300",

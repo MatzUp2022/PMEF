@@ -49,7 +49,7 @@ pub fn schema_for_type(type_str: &str) -> Option<&'static str> {
         "pmef:DuctTransition" | "pmef:DuctBranch" | "pmef:DuctDamper" |
         "pmef:DuctAccessDoor" | "pmef:DuctTestPort" | "pmef:GenericDuctComponent"
             => Some("pmef-hvac.schema.json"),
-        "pmef:SteelSystem" | "pmef:SteelMember" | "pmef:SteelNode" | "pmef:SteelConnection"
+        "pmef:SteelSystem" | "pmef:SteelMember" | "pmef:SteelPlate" | "pmef:SteelNode" | "pmef:SteelConnection"
             => Some("pmef-steel.schema.json"),
         "pmef:ParametricGeometry" => Some("pmef-geometry.schema.json"),
         "pmef:IsPartOf" | "pmef:IsConnectedTo" | "pmef:IsDerivedFrom" |

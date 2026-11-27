@@ -16,8 +16,13 @@
         "@type":       { "const": "pmef:SteelSystem" },
         "@id":         { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
         "pmefVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
-        "isPartOf":    { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "isPartOf":    { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Unit/area, or a parent SteelSystem for nested structures (RFC-0013)" },
         "systemName":  { "type": "string", "description": "e.g. 'Pipe Rack A', 'EAF Building', 'Compressor Frame'" },
+        "systemLevel": {
+          "type": "string",
+          "enum": ["STRUCTURE","FRAMEWORK","SUBFRAMEWORK"],
+          "description": "Level in a nested structure (RFC-0013): STRUCTURE (top, e.g. E3D STRU), FRAMEWORK (FRMW), SUBFRAMEWORK (SBFR). A FRAMEWORK/SUBFRAMEWORK system SHOULD be isPartOf a SteelSystem one level up."
+        },
         "systemType": {
           "type": "string",
           "enum": ["PIPE_RACK","EQUIPMENT_FRAME","BUILDING","BRIDGE","CONVEYOR_STRUCTURE",
@@ -28,6 +33,7 @@
         "designCode":  { "type": "string", "description": "Applicable design code, e.g. 'EN 1993-1-1', 'AISC 360', 'API RP 2A'" },
         "steelGrade":  { "type": "string", "description": "Primary steel grade, e.g. 'S355JR', 'A572 Gr.50'" },
         "memberIds":   { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" } },
+        "plateIds":    { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" }, "description": "SteelPlate objects of this system (RFC-0013)" },
         "revision":    { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
         "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
         "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
@@ -114,6 +120,63 @@
         "customAttributes": { "type": "object", "additionalProperties": { "type": ["string","number","boolean","null"] } }
       },
       "additionalProperties": false
+    },
+
+    "SteelPlate": {
+      "title": "Steel Plate / Panel",
+      "description": "Plate, grating, chequered plate or panel: a planar outline with a thickness (RFC-0013). The outline lies in the local x/y plane given by origin, refDirection (x) and normal (z); the plate extends from that plane by thickness along +normal. Aligns with IFC 4.3 IfcPlate and E3D PANE (PLOO/PAVE loop, height).",
+      "type": "object",
+      "required": ["@type","@id","pmefVersion","isPartOf","plateType","origin","normal","refDirection","outline","thickness"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
+      "properties": {
+        "@type":        { "const": "pmef:SteelPlate" },
+        "@id":          { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "pmefVersion":  { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "isPartOf":     { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "SteelSystem the plate belongs to" },
+        "plateMark":    { "type": "string", "description": "Mark/piece number from structural drawings" },
+        "plateType": {
+          "type": "string",
+          "enum": ["PLATE","GRATING","CHEQUERED","PANEL","GENERIC"],
+          "description": "PLATE: solid plate; GRATING: open grating (thickness = bar height); CHEQUERED: chequered/tread plate; PANEL: cladding or wall panel"
+        },
+        "origin":       { "$ref": "pmef-base.schema.json#/$defs/Coordinate3D", "description": "Origin of the local outline plane [mm]" },
+        "normal":       { "$ref": "pmef-base.schema.json#/$defs/UnitVector3D", "description": "Local z: plate normal; thickness extends along +normal" },
+        "refDirection": { "$ref": "pmef-base.schema.json#/$defs/UnitVector3D", "description": "Local x in the outline plane; MUST be perpendicular to normal" },
+        "outline": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "$ref": "#/$defs/Point2D" },
+          "description": "Closed outer contour in local x/y [mm], first point not repeated; SHOULD be counter-clockwise seen from +normal"
+        },
+        "holes": {
+          "type": "array",
+          "items": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/Point2D" } },
+          "description": "Openings, each a closed contour inside the outline (local x/y, mm)"
+        },
+        "thickness":    { "type": "number", "exclusiveMinimum": 0, "description": "Plate thickness, grating bar height or panel thickness [mm]" },
+        "material":     { "$ref": "#/$defs/SteelMember/properties/material" },
+        "weight":       { "type": "number", "description": "Plate weight [kg]" },
+        "finish":       { "type": "string", "description": "Surface finish / coating, e.g. 'HOT_DIP_GALVANIZED'" },
+        "iec81346":     { "$ref": "pmef-base.schema.json#/$defs/Iec81346Designation" },
+        "rdlType":      { "$ref": "pmef-base.schema.json#/$defs/RdlUri" },
+        "geometry":     { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
+        "documents":    { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/DocumentLink" } },
+        "revision":     { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance":   { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":       { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":      { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" },
+        "customAttributes": { "type": "object", "additionalProperties": { "type": ["string","number","boolean","null"] } }
+      },
+      "additionalProperties": false
+    },
+
+    "Point2D": {
+      "title": "2D point in a local plane",
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "[x, y] in mm"
     },
 
     "SteelNode": {
@@ -214,6 +277,7 @@
   "oneOf": [
     { "$ref": "#/$defs/SteelSystem" },
     { "$ref": "#/$defs/SteelMember" },
+    { "$ref": "#/$defs/SteelPlate" },
     { "$ref": "#/$defs/SteelNode" },
     { "$ref": "#/$defs/SteelConnection" }
   ]

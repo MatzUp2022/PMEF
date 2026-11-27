@@ -7,7 +7,7 @@ All catalogs are licensed under **CC0 1.0 Universal** (public domain).
 
 | File | Content | Standard | Entries |
 |------|---------|----------|---------|
-| `profiles-en.json` | European structural steel profiles (HEA, HEB, IPE, UPE, RHS, SHS, CHS, angles, flats) | EN 10034, EN 10279, EN 10210, EN 10219 | 202 |
+| `profiles-en.json` | European structural steel profiles (HEA, HEB, IPE, UPE, RHS, SHS, CHS, angles, flats, round bars) | EN 10034, EN 10279, EN 10210, EN 10219, EN 10060 | 212 |
 | `profiles-en-extended.json` | European T-sections and unequal angles | EN 10055, EN 10056-2 | 45 |
 | `profiles-aisc.json` | AISC structural steel sections (W, HSS, L) | AISC Steel Construction Manual 16th ed. | 113 |
 | `profiles-aisc-extended.json` | AISC channels (C, MC) and structural tees (WT) | AISC Steel Construction Manual 16th ed. | 51 |
@@ -87,6 +87,15 @@ Each piping class entry specifies for every component:
 - `catalogId` — unique ID within the class
 - `rdlUri` — ISO 15926-4 PCA-RDL URI (where available)
 - `vendorMappings` — tool-specific catalog IDs
+
+---
+
+## Project catalogs
+
+A package can carry its own catalogs with `"scope": "PROJECT"`, e.g. steel profiles that no shared
+catalog lists (`<PROJECT>:<designation>`, [RFC-0013](../spec/rfc/0013-steel-plates-project-profiles.md)).
+They live in the package (PMEFX `catalogs/`, or `catalogs/` next to an NDJSON file) and are resolved
+before the catalogs in this directory. Example: `examples/catalogs/profiles-demo-project.json`.
 
 ---
 
