@@ -12,7 +12,6 @@ tracing.workspace = true
 anyhow.workspace = true
 pmef-core.workspace = true
 pmef-io.workspace = true
-pmef-validate.workspace = true
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
