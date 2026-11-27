@@ -194,9 +194,13 @@ Last updated: **2026-03-31** · TSC approval: pending
 Items previously listed as "planned" in CHANGELOG.md (moved here — a changelog records
 released changes only):
 
-- 🗓️ Fix EQUIP-U-005 and PIPE-U-003 schema/test gaps
+- ✅ EQUIP-U-005 and PIPE-U-003 (0.9.0-rc known issues) — obsolete: `vesselSubtype` has `KO_DRUM`
+  (`ELECTRIC_ARC_FURNACE` is a `reactorType`), both IDs now name other, passing conformance tests
+  (`tests/conformance/manifest.json`; PIPE-U-003 is a negative test checked by `selftest.py`)
 - 🗓️ `pmef-stress`: CAESAR II .cii import/export adapter (Rust)
-- 🗓️ Full `pmef-geom` AABB computation (all 15 primitives)
+- 🔄 `pmef-geom` AABBs: all 15 types of its own `PrimitiveType` enum are implemented (BOX, DISH,
+  PYRAMID and the tori conservatively); the schema types `STEEL_PROFILE`, `VALVE_BODY`,
+  `CABLE_TRAY`, `MESH_REF` and `COMPOSITE` have none, and no other crate uses `pmef-geom` yet
 - ✅ `pmef-validate` jsonschema Rust integration (cross-file `$ref` resolution)
 - ✅ `cargo test --workspace` green — enforced by `.github/workflows/rust.yml`
 - 🔄 `pmef-adapter-cadmatic`: CADMATIC REST API adapter (compiles and tests green; frozen scope)
