@@ -24,6 +24,7 @@ Status values (issue template): `DRAFT` → `REVIEW` → `APPROVED` / `REJECTED`
 | [0013](0013-steel-plates-project-profiles.md) | Steel plates, project profiles, nested steel systems, reserved volumes | 0.10.0 | `DRAFT` | [#54](https://github.com/MatzUp2022/PMEF/issues/54) | Grating catalogs (WG-Steel) |
 | [0014](0014-generic-duct-component.md) | Generic duct component, duct bends without angle, E3D HVAC type catalog | 0.10.0 | `DRAFT` | [#55](https://github.com/MatzUp2022/PMEF/issues/55) | Typed silencer/grille data (WG-HVAC) |
 | [0015](0015-cable-tray-route-ports.md) | Cable tray route, ports and source data | 0.10.0 | `DRAFT` | [#56](https://github.com/MatzUp2022/PMEF/issues/56) | Tray supports and network nodes (WG-E&I) |
+| [0016](0016-pipe-supports-outside-segments.md) | Pipe supports outside piping segments and support assemblies | 0.10.0 | `DRAFT` | [#53](https://github.com/MatzUp2022/PMEF/issues/53) | Support loads per part vs. per assembly (WG-Piping) |
 
 RFCs 0001–0003 are fully implemented in this repository (schemas, spec text, Rust reference
 implementation, examples, tests in CI); each RFC's *Review Status* section lists the evidence.

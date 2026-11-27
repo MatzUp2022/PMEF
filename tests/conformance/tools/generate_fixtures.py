@@ -29,7 +29,8 @@ REV = {"revisionId": "r2026-10-31-001", "changeState": "SHARED", "authoringTool"
 
 RFC_EXAMPLES = {"asbuilt-recognition.ndjson", "pump-skid-auto-routed.ndjson", "hvac-damper-placeholder.ndjson",
                 "piping-valve-placeholder.ndjson", "hvac-generic-components.ndjson",
-                "cable-tray-route.ndjson"}  # 0.10.0 feature examples, used only where named
+                "cable-tray-route.ndjson",
+                "pipe-support-assembly.ndjson"}  # 0.10.0 feature examples, used only where named
 
 
 def _load_examples(names: set[str] | None = None) -> list[dict]:
@@ -48,6 +49,7 @@ EXAMPLES = _load_examples()
 ASBUILT = _load_examples({"asbuilt-recognition.ndjson"})
 HVACGEN = _load_examples({"hvac-generic-components.ndjson"})
 TRAYROUTE = _load_examples({"cable-tray-route.ndjson"})
+SUPPORTS = _load_examples({"pipe-support-assembly.ndjson"})
 
 
 def ex(type_: str, pred=lambda o: True, source: list[dict] | None = None) -> dict:
@@ -141,6 +143,13 @@ UNIT = [
      [ex("pmef:GenericPipingComponent")]),
     ("PIPE-U-018", "GenericPipingComponent with unknown componentClass — rejected", 2, "piping", "CL1-02",
      "invalid", [with_(ex("pmef:GenericPipingComponent"), ("componentSpec", "componentClass"), "WIDGET")]),
+    # Supports outside piping segments (RFC-0016)
+    ("PIPE-U-019", "PipeSupport assembly in a unit with supportedIds — valid", 2, "piping", "CL2-01", "valid",
+     [ex("pmef:PipeSupport", lambda o: o["@id"].endswith("PS-401"), SUPPORTS)]),
+    ("PIPE-U-020", "PipeSupport part of an assembly (hanger) — valid", 2, "piping", "CL2-01", "valid",
+     [ex("pmef:PipeSupport", lambda o: o["@id"].endswith("PS-401-H1"), SUPPORTS)]),
+    ("PIPE-U-021", "PipeSupport with empty supportedIds — rejected", 2, "piping", "CL1-02", "invalid",
+     [with_(ex("pmef:PipeSupport", lambda o: o["@id"].endswith("PS-401"), SUPPORTS), ("supportedIds",), [])]),
     # Equipment
     ("EQUIP-U-001", "Vessel with VesselDesign — valid", 1, "equipment", "CL1-07", "valid", [VESSEL]),
     ("EQUIP-U-002", "Tank — valid", 1, "equipment", "CL1-07", "valid", [equip("pmef:Tank", "T-1", "STORAGE_TANK")]),

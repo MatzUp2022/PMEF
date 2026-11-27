@@ -25,7 +25,7 @@ EXPECT = {
     "coords": {"RT-009"},
     "header-last": {"INTG-001"},
 }
-NEGATIVE = {"PIPE-U-003", "PIPE-U-015", "PIPE-U-018", "EQUIP-U-011", "EQUIP-U-012", "EQUIP-U-014", "EI-U-003", "EI-U-010", "EI-U-012", "EI-U-014", "STEEL-U-005", "REL-U-008", "HVAC-U-015", "HVAC-U-017",
+NEGATIVE = {"PIPE-U-003", "PIPE-U-015", "PIPE-U-018", "PIPE-U-021", "EQUIP-U-011", "EQUIP-U-012", "EQUIP-U-014", "EI-U-003", "EI-U-010", "EI-U-012", "EI-U-014", "STEEL-U-005", "REL-U-008", "HVAC-U-015", "HVAC-U-017",
             "HVAC-U-010", "HVAC-U-011", "HVAC-U-012", "HVAC-U-013",
             "GEOM-U-008", "GEOM-U-012", "GEOM-U-013"}
 

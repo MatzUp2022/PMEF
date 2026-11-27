@@ -88,5 +88,8 @@ fn e3d_native_types_map_skey_variants_first() {
     assert_eq!(m("INST", None).pmef_type, "pmef:GenericPipingComponent");
     assert_eq!(m("ATTA", None).pmef_type, "pmef:PipeSupport");
     assert_eq!(m("ATTA", None).component_class.as_deref(), Some("PIPE_SUPPORT"));
+    for kw in ["REST", "HANG", "PCLA", "SHU"] {
+        assert_eq!(m(kw, None).pmef_type, "pmef:PipeSupport", "{kw}");
+    }
     assert!(pmef_catalogs::native_type("native-types-e3d", "NOPE", None).is_none());
 }

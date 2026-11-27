@@ -25,7 +25,7 @@ All catalogs are licensed under **CC0 1.0 Universal** (public domain).
 | `duct-dimensions-en.json` | Nominal duct sizes: round diameters and rectangular side lengths | EN 1506, EN 1505 | 36 |
 | `pipe-supports-generic.json` | Generic pipe support assemblies (shoes, guides, stops, hangers, springs) — synthetic, no load ratings | — | 12 |
 | `cable-types-en.json` | Common power, control, instrument and bus cable types | IEC 60502-1, VDE 0276-603, EN 50525 | 13 |
-| `native-types-e3d.json` | AVEVA E3D / PDMS element type (+ SKEY) → PMEF `@type` and `componentClass` | — | 39 |
+| `native-types-e3d.json` | AVEVA E3D / PDMS element type (+ SKEY) → PMEF `@type` and `componentClass` | — | 43 |
 | `native-types-e3d-hvac.json` | AVEVA E3D HVAC element type → PMEF duct `@type` and `componentClass` (RFC-0014) | — | 9 |
 | `rdl-uri-map.json` | PCA-RDL URI cross-reference for catalog entries | ISO 15926-4 | — |
 | `caesarII-cii-mapping.json` | PMEF ↔ CAESAR II field mapping | — | — |

@@ -11,6 +11,16 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added — pipe supports outside piping segments (RFC-0016, #53)
+
+- **`PipeSupport`**: `isPartOf` may name the unit/area of a support zone or the assembly
+  `PipeSupport` (hangers, clamps, shoes); new optional `supportedIds` for the carried pipes,
+  segments or lines (equivalent to `pmef:Supports`). Spec 02 §9.11, §4.4, §8.3.
+- **`native-types-e3d` 2026.2**: E3D `REST` (assembly), `HANG`, `PCLA`, `SHU` → `pmef:PipeSupport`.
+- Rust `PipeSupport.supported_ids`; **fixed** `SupportType` enum to match the schema
+  (`HANGER`, `CLAMP`, … were rejected before).
+- Example `examples/pipe-support-assembly.ndjson`; conformance `PIPE-U-019` … `PIPE-U-021`.
+
 ### Added — generic duct component, duct bends without angle (RFC-0014, #55)
 
 - **`pmef:GenericDuctComponent`** with `componentClass` (`END_CAP`, `SILENCER`, `SPLITTER`,
