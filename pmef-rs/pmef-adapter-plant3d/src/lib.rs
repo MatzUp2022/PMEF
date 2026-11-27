@@ -70,9 +70,40 @@ use std::path::PathBuf;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PcfUnits { Millimetres, Inches }
 
+/// NPS (inch) → DN, ASME B36.10 / ISO 6708 (DN 350 and up: NPS × 25).
+const NPS_TO_DN: &[(f64, f64)] = &[
+    (0.125, 6.0), (0.25, 8.0), (0.375, 10.0), (0.5, 15.0), (0.75, 20.0), (1.0, 25.0),
+    (1.25, 32.0), (1.5, 40.0), (2.0, 50.0), (2.5, 65.0), (3.0, 80.0), (3.5, 90.0),
+    (4.0, 100.0), (5.0, 125.0), (6.0, 150.0), (8.0, 200.0), (10.0, 250.0), (12.0, 300.0),
+];
+
 impl PcfUnits {
     pub fn to_mm(self, v: f64) -> f64 {
         match self { Self::Millimetres => v, Self::Inches => v * 25.4 }
+    }
+    /// Unit keyword value (`MM`, `MILLIMETERS`, `INCH`, `INCHES`, `IN`) → units.
+    pub fn from_keyword(v: &str) -> Self {
+        match v.trim().to_ascii_uppercase().as_str() {
+            "INCH" | "INCHES" | "IN" => Self::Inches,
+            _ => Self::Millimetres,
+        }
+    }
+    /// Bore value → nominal diameter in mm. In inches a standard NPS (8, 1-1/2 as 1.5 …)
+    /// becomes its DN (8 → 200, as PMEF and the catalogs count DN); any other value is
+    /// converted as a length.
+    pub fn bore_to_mm(self, v: f64) -> f64 {
+        match self {
+            Self::Millimetres => v,
+            Self::Inches => {
+                if let Some(&(_, dn)) = NPS_TO_DN.iter().find(|(nps, _)| (nps - v).abs() < 1e-6) {
+                    dn
+                } else if v >= 14.0 && v.fract() == 0.0 {
+                    v * 25.0
+                } else {
+                    v * 25.4
+                }
+            }
+        }
     }
     /// Gauge pressure in native units → Pa absolute.
     pub fn pressure_to_pa_abs(self, p: f64) -> f64 {
@@ -265,6 +296,14 @@ impl PcfComponent {
     }
 }
 
+/// Units of `UNITS-CO-ORDS` in the header, if given (`parse_pcf` returns the bore units).
+pub fn pcf_coord_units(content: &str) -> Option<PcfUnits> {
+    content.lines().map(str::trim).find_map(|l| {
+        let (kw, rest) = l.split_once(' ')?;
+        kw.eq_ignore_ascii_case("UNITS-CO-ORDS").then(|| PcfUnits::from_keyword(rest))
+    })
+}
+
 /// Parse a PCF file content.
 pub fn parse_pcf(content: &str) -> (PcfUnits, String, Vec<PcfComponent>) {
     let mut units = PcfUnits::Millimetres;
@@ -283,9 +322,7 @@ pub fn parse_pcf(content: &str) -> (PcfUnits, String, Vec<PcfComponent>) {
         let kw_upper = kw.to_uppercase();
 
         if kw_upper == "UNITS-BORE" {
-            units = if rest.trim().eq_ignore_ascii_case("INCHES") {
-                PcfUnits::Inches
-            } else { PcfUnits::Millimetres };
+            units = PcfUnits::from_keyword(rest);
             continue;
         }
         if kw_upper == "PIPELINE-REFERENCE" {
@@ -422,8 +459,12 @@ impl Plant3DAdapter {
         let mut buf = Vec::new();
         let mut writer = NdjsonWriter::new(&mut buf, WriterConfig { canonical_key_order: false, ..Default::default() });
 
-        let (units, pipeline_ref, components) = parse_pcf(pcf_content);
-        let units = self.config.pcf_units_override.unwrap_or(units);
+        let (bore_units, pipeline_ref, components) = parse_pcf(pcf_content);
+        let bore_units = self.config.pcf_units_override.unwrap_or(bore_units);
+        // Co-ordinates may differ from the bore (e.g. bore in inches, co-ordinates in mm).
+        let units = self.config.pcf_units_override
+            .or_else(|| pcf_coord_units(pcf_content))
+            .unwrap_or(bore_units);
         let piping_spec = pipeline_attr(pcf_content, "PIPING-SPEC");
 
         // Build coordinate index for topology
@@ -523,7 +564,7 @@ impl Plant3DAdapter {
                 let x = units.to_mm(ep[0]);
                 let y = units.to_mm(ep[1]);
                 let z = units.to_mm(ep[2]);
-                let bore = units.to_mm(ep[3]);
+                let bore = bore_units.bore_to_mm(ep[3]);
 
                 // Topology: find connected component by coordinate
                 let connected = coord_idx.get(&coord_key_mm(x, y, z))
@@ -590,8 +631,8 @@ impl Plant3DAdapter {
                 "pmef:Reducer" => {
                     if comp.end_points.len() >= 2 {
                         obj["reducerType"]   = serde_json::Value::from(if cls.contains("ECC") { "ECCENTRIC" } else { "CONCENTRIC" });
-                        obj["largeDiameter"] = serde_json::Value::from(units.to_mm(comp.end_points[0][3]));
-                        obj["smallDiameter"] = serde_json::Value::from(units.to_mm(comp.end_points[1][3]));
+                        obj["largeDiameter"] = serde_json::Value::from(bore_units.bore_to_mm(comp.end_points[0][3]));
+                        obj["smallDiameter"] = serde_json::Value::from(bore_units.bore_to_mm(comp.end_points[1][3]));
                     }
                 }
                 "pmef:Flange" => {
@@ -1007,6 +1048,25 @@ PIPE
         let connected: Vec<&str> = gasket["ports"].as_array().unwrap().iter()
             .filter_map(|p| p["connectedTo"].as_str()).collect();
         assert!(connected.contains(&"urn:pmef:obj:eaf-2026:CW-201-FL-001"), "{connected:?}");
+    }
+
+    #[test]
+    fn imperial_pcf_becomes_mm_and_dn() {
+        // Bore in inches (NPS), co-ordinates in inches: 100 in pipe, NPS 8.
+        let pcf = "UNITS-BORE INCH\nUNITS-CO-ORDS INCH\nPIPELINE-REFERENCE L1\nPIPE\n\
+                   \x20   END-POINT 0 0 0 8\n    END-POINT 100 0 0 8\n";
+        let mut adapter = Plant3DAdapter::new(Plant3DConfig::default());
+        let out = adapter.export_pcf_to_pmef(pcf).unwrap();
+        let pipe: serde_json::Value = out.lines().map(|l| serde_json::from_str(l).unwrap())
+            .find(|o: &serde_json::Value| o["@type"] == "pmef:Pipe").unwrap();
+        assert!((pipe["pipeLength"].as_f64().unwrap() - 2540.0).abs() < 1e-6, "{pipe}");
+        assert_eq!(pipe["ports"][0]["nominalDiameter"], 200.0);
+        // Bore in inches, co-ordinates in mm.
+        let mixed = pcf.replace("UNITS-CO-ORDS INCH", "UNITS-CO-ORDS MM");
+        let out = adapter.export_pcf_to_pmef(&mixed).unwrap();
+        assert!(out.contains("\"pipeLength\":100.0"), "{out}");
+        assert_eq!(PcfUnits::Inches.bore_to_mm(1.5), 40.0);
+        assert_eq!(PcfUnits::Inches.bore_to_mm(16.0), 400.0);
     }
 
     #[test]

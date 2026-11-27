@@ -80,6 +80,9 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 - **Plant 3D PCF import: generated ids no longer collide with kept PMEF ids.** Kept ids from
   `UNIQUE-COMPONENT-IDENTIFIER` are reserved first; a component without one (e.g. added in
   Plant 3D) gets the next free `<line>-<class>-NNN`.
+- **Plant 3D PCF import: imperial units.** `UNITS-BORE INCH` (also `IN`, `INCHES`) is recognised,
+  `UNITS-CO-ORDS` is read on its own (bore in inches with co-ordinates in mm works), and a
+  standard NPS bore becomes its DN (8 → 200) instead of 203.2 mm, so catalog snapping matches.
 - **`boltDiameter_mm` in the piping classes is now the bolt, not the bolt hole.** All four classes
   (A1A2, B3C1, C5D1, EN-P1A) carried the hole diameter or a mix (88 of 89 flange entries, e.g.
   A1A2 DN200 CL150: 22 → 19.1 mm = 3/4"). The values now come from `flange-dimensions*.json`, and
