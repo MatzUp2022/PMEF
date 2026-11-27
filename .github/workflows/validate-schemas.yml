@@ -39,7 +39,7 @@ jobs:
   # ──────────────────────────────────────────────────────────
   validate-schemas:
     name: JSON Schema syntax check
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, hf]
     steps:
       - uses: actions/checkout@v4
 
@@ -62,7 +62,7 @@ jobs:
   # ──────────────────────────────────────────────────────────
   validate-examples:
     name: Validate NDJSON examples
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, hf]
     needs: validate-schemas
     steps:
       - uses: actions/checkout@v4
@@ -95,7 +95,7 @@ jobs:
   # ──────────────────────────────────────────────────────────
   validate-catalogs:
     name: Validate catalogs
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, hf]
     needs: validate-schemas
     steps:
       - uses: actions/checkout@v4
@@ -128,7 +128,7 @@ jobs:
   # ──────────────────────────────────────────────────────────
   conformance-suite:
     name: Conformance suite
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, hf]
     needs: validate-schemas
     steps:
       - uses: actions/checkout@v4
@@ -163,13 +163,22 @@ jobs:
   # ──────────────────────────────────────────────────────────
   validate-diagrams:
     name: Validate Mermaid diagrams
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, hf]
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Chromium-Bibliotheken (nur self-hosted, z. B. HF-Runner)
+        if: runner.environment == 'self-hosted'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends \
+            libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2t64 libdrm2 libxkbcommon0 \
+            libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64 \
+            libpango-1.0-0 libcairo2 fonts-liberation
 
       - name: Install Mermaid CLI
         run: npm install -g @mermaid-js/mermaid-cli
@@ -201,7 +210,7 @@ jobs:
   # ──────────────────────────────────────────────────────────
   lint-markdown:
     name: Lint Markdown
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, hf]
     steps:
       - uses: actions/checkout@v4
 
@@ -221,7 +230,7 @@ jobs:
   # ──────────────────────────────────────────────────────────
   check-links:
     name: Check internal links
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, hf]
     steps:
       - uses: actions/checkout@v4
       - uses: lycheeverse/lychee-action@v1
@@ -240,7 +249,7 @@ jobs:
   # ──────────────────────────────────────────────────────────
   ci-success:
     name: CI passed
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, hf]
     needs: [validate-schemas, validate-examples, validate-catalogs, conformance-suite, validate-diagrams, lint-markdown]
     if: always()
     steps:
