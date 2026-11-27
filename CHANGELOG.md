@@ -253,6 +253,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **Review comment and issue reference** ([RFC-0010](spec/rfc/0010-review-comment-issue-ref.md),
+  spec 02 §2.9.2). `review` gains optional `comment` (1–2000 characters; SHOULD for `rejected`)
+  and `issueRef` (absolute URI, e.g. the BCF API URL of a topic). Rust `ReviewStatus.comment` /
+  `issue_ref`; `examples/asbuilt-recognition.ndjson` regenerated (two objects carry the new
+  fields); negative cases in `pmef-validate/tests/provenance.rs`.
+
 - **Generic piping component and native type catalog**
   ([RFC-0009](spec/rfc/0009-generic-piping-component.md), spec 02 §4.4).
   New `pmef:GenericPipingComponent` with `nativeType` (e.g. `E3D:PCOM`); new `componentClass`

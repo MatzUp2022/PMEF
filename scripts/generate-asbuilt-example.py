@@ -101,7 +101,9 @@ objs = [
   "revision": rev("WIP", "2026-10-30T15:30:00Z"),
   "provenance": {"sourceType": "scan", "sourceRef": f"{SCAN}#segment=CW-301-seg-03",
                  "recognizer": RECOG, "confidence": 0.88, "createdAt": "2026-10-30T09:12:00Z"},
-  "review": {"status": "reviewed", "reviewedBy": "reviewer-02", "reviewedAt": "2026-10-30T15:30:00Z"},
+  "review": {"status": "reviewed", "reviewedBy": "reviewer-02", "reviewedAt": "2026-10-30T15:30:00Z",
+             "comment": "Length corrected from the scan; elbow fit pending.",
+             "issueRef": "https://bcf.example.org/bcf/3.0/projects/demo-asb/topics/0f6c1e2a-5b7d-4c1e-9a3f-2d8b6e4c7a10"},
   "asBuilt": {"pointCloudRef": f"{SCAN}#segment=CW-301-seg-03", "fitMethod": "ransac-cylinder",
               "deviationRms_mm": 1.6, "deviationMax_mm": 5.9, "catalogSnap": snap_pipe(168.8, 4.7)}},
  # rejected false positive from a photo
@@ -112,7 +114,8 @@ objs = [
   "revision": rev("WIP", "2026-10-30T15:35:00Z"),
   "provenance": {"sourceType": "photo", "sourceRef": "file:photos/IMG_0815.jpg#region=0.41,0.33,0.52,0.47",
                  "recognizer": RECOG, "confidence": 0.42, "createdAt": "2026-10-30T09:20:00Z"},
-  "review": {"status": "rejected", "reviewedBy": "reviewer-02", "reviewedAt": "2026-10-30T15:35:00Z"}},
+  "review": {"status": "rejected", "reviewedBy": "reviewer-02", "reviewedAt": "2026-10-30T15:35:00Z",
+             "comment": "False positive: cable bracket on the wall, not a pipe support."}},
  # steel beam snapped to EN HEB 300
  {"@type": "pmef:SteelMember", "@id": f"urn:pmef:obj:{P}:B-101", "pmefVersion": V,
   "isPartOf": f"urn:pmef:unit:{P}:U-100", "memberMark": "B-101", "memberType": "BEAM",

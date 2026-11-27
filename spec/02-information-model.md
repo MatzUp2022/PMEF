@@ -271,6 +271,8 @@ Recommended `sourceRef` fragments: `#page=<n>&region=<x0>,<y0>,<x1>,<y1>` for do
 | `status` | **MUST** | enum | `detected`, `reviewed`, `approved`, `rejected` |
 | `reviewedBy` | **MUST** unless `detected` | string | Person or role identifier |
 | `reviewedAt` | **MUST** unless `detected` | date-time | Time of the review |
+| `comment` | SHOULD if `rejected` | string, 1–2000 characters | Reviewer's note: why the object was rejected, what was corrected. *Since 0.10.0 ([RFC-0010](rfc/0010-review-comment-issue-ref.md)).* |
+| `issueRef` | MAY | URI | Issue that documents the finding: a BCF topic (its BCF API URL) or an issue in a document/workflow system. PMEF stores only the link; the issue itself is not PMEF data. *Since 0.10.0 (RFC-0010).* |
 
 `review.status` describes object-level checking; `revision.changeState` describes the ISO 19650
 CDE state of the information container. Allowed combinations:

@@ -57,10 +57,21 @@ fn normative_rules_reject_violations() {
         ("negative deviation", { let mut o = pipe.clone(); o["asBuilt"]["deviationRms_mm"] = (-1.0).into(); o }),
         ("snap without catalogVersion", { let mut o = beam.clone(); o["asBuilt"]["catalogSnap"]["catalogRef"].as_object_mut().unwrap().remove("catalogVersion"); o }),
         ("unknown field in provenance", { let mut o = pipe.clone(); o["provenance"]["foo"] = 1.into(); o }),
+        // RFC-0010
+        ("empty review comment", { let mut o = pipe.clone(); o["review"]["comment"] = "".into(); o }),
+        ("review comment > 2000 chars", { let mut o = pipe.clone(); o["review"]["comment"] = "x".repeat(2001).into(); o }),
+        ("relative issueRef", { let mut o = pipe.clone(); o["review"]["issueRef"] = "topics/0f6c1e2a".into(); o }),
+        ("issueRef with blank", { let mut o = pipe.clone(); o["review"]["issueRef"] = "https://bcf.example.org/a b".into(); o }),
     ];
     for (name, o) in cases {
         assert!(errors(&v, &o) > 0, "case '{name}' must be rejected");
     }
+
+    // RFC-0010: comment and issueRef are optional and valid on any status.
+    let mut noted = beam.clone();
+    noted["review"]["comment"] = "Checked against the scan.".into();
+    noted["review"]["issueRef"] = "urn:uuid:0f6c1e2a-5b7d-4c1e-9a3f-2d8b6e4c7a10".into();
+    assert_eq!(errors(&v, &noted), 0);
 
     // `manual` objects need no sourceRef.
     let mut manual = pipe.clone();

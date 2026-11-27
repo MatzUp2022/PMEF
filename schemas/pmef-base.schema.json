@@ -506,6 +506,18 @@
         "reviewedAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "comment": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "description": "Reviewer's note, e.g. why the object was rejected or what was corrected. Since 0.10.0 (RFC-0010)."
+        },
+        "issueRef": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:[^\\s]+$",
+          "description": "Absolute URI of the issue that documents the review finding: a BCF topic (BCF API URL of the topic) or an issue in a document/workflow system. Since 0.10.0 (RFC-0010)."
         }
       },
       "if": {

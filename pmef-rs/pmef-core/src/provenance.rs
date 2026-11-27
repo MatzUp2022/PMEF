@@ -120,6 +120,12 @@ pub struct ReviewStatus {
     /// Time of review. Required unless `detected`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reviewed_at: Option<DateTime<Utc>>,
+    /// Reviewer's note (1–2000 characters), e.g. why the object was rejected. RFC-0010.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+    /// Absolute URI of the issue documenting the finding (BCF topic or workflow issue). RFC-0010.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub issue_ref: Option<String>,
 }
 
 /// Versioned reference to a catalog entry.
