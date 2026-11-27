@@ -206,3 +206,15 @@ impl SteelPlate {
         self.area_mm2() * self.thickness
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn grade_only_material_round_trips() {
+        let m: SteelMaterial = serde_json::from_str(r#"{"grade":"S355JR","density":7850}"#).unwrap();
+        assert_eq!((m.fy, m.density), (None, Some(7850.0)));
+        assert_eq!(serde_json::to_string(&m).unwrap(), r#"{"grade":"S355JR","density":7850.0}"#);
+    }
+}

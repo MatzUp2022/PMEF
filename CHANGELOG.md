@@ -28,6 +28,10 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   `GenericEquipment` (spec 02 §5.3).
 - **E3D adapter**: STRU/FRMW/SBFR → nested `SteelSystem`, SCTN (`POSS`/`POSE`/`BANG`/`SPRE`) →
   `SteelMember`, PANE (PLOO/PAVE) → `SteelPlate` (spec 05 §8.1).
+  Steel `@id`s come from the element name; a name already issued to another DB address
+  (same last name under different parents) falls back to the full address.
+- **`pmef-route`**: `SteelPlate`s are structural obstacles (box over the extruded outline).
+- Rust `SteelMaterial`: `fy`/`fu` optional, `density` added, as in the schema.
 - Example `examples/steel-platform-plates.ndjson` with project catalog
   `examples/catalogs/profiles-demo-project.json`; plate rules in `check-geometry.py`
   (`tests/geometry` cases `PL-*`).
