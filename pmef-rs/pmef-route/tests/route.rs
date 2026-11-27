@@ -1127,3 +1127,73 @@ fn scene_bends_follow_their_arc() {
     // Straight "bend": no arc.
     assert!(bend_arc([0.0, 0.0, 0.0], [-1.0, 0.0, 0.0], [500.0, 0.0, 0.0], [1.0, 0.0, 0.0]).is_none());
 }
+
+fn drop_problem(obstacles: serde_json::Value) -> RouteProblem {
+    serde_json::from_value(json!({
+        "project": "t", "revisionId": "r2026-11-27-001", "parent": "urn:pmef:unit:t:U1",
+        "obstacles": obstacles,
+        "trays": [{"id": "urn:pmef:obj:t:CT-1", "points": [[0, 0, 3000], [10000, 0, 3000]],
+                   "width": 300, "height": 100}],
+        "cableSettings": {"routeDrops": true, "dropStep": 100, "dropClearance": 50},
+        "cables": [{"id": "C-1", "class": "power", "cableType": "POWER_LV", "diameter": 20, "minBendRadius": 150,
+                    "from": {"point": [5000, -1500, 0], "id": "urn:pmef:obj:t:M-1"},
+                    "to": {"point": [9000, 0, 2000]}}]
+    }))
+    .unwrap()
+}
+
+#[test]
+fn drops_are_routed_around_scene_obstacles() {
+    let read = |f: &str| Err(format!("no {f}"));
+    // Without obstacles the drop is the L1 distance: 1500 + 3000 (from), 1000 (to).
+    let free = pmef_route::run(drop_problem(json!([])), None, &read).unwrap();
+    let c = &free.cables[0];
+    assert!(c.ok && c.warnings.is_empty(), "{:?}", c);
+    assert_eq!(c.routed_drops, 2);
+    assert!((c.drop_mm - 5500.0).abs() < 1e-6, "{}", c.drop_mm);
+    // A wall between the motor and the tray, reaching below the floor (and the motor's own
+    // box, which is skipped):
+    // the drop goes around it and gets longer.
+    let wall = json!([
+        {"id": "urn:pmef:obj:t:WALL", "aabb": {"min": [3000, -1000, -3000], "max": [7000, -800, 3500]}},
+        {"id": "urn:pmef:obj:t:M-1", "aabb": {"min": [4800, -1700, 0], "max": [5200, -1300, 400]}}
+    ]);
+    let out = pmef_route::run(drop_problem(wall), None, &read).unwrap();
+    let c = &out.cables[0];
+    assert!(c.ok && c.warnings.is_empty(), "{:?}", c);
+    assert!(c.drop_mm > 5500.0 + 1000.0, "{}", c.drop_mm);
+    // No point of the drop lies inside the wall grown by radius + clearance.
+    let inside = |p: &[f64; 3]| p[0] > 2940.0 && p[0] < 7060.0 && p[1] > -1060.0 && p[1] < -740.0 && p[2] < 3560.0;
+    assert!(c.points.iter().all(|p| !inside(p)), "{:?}", c.points);
+    assert!((c.length_mm - (c.drop_mm + 4000.0)).abs() < 1e-6);
+    // Both ends are still the cable ends, and the path ends with the (free) "to" drop.
+    assert_eq!(c.points[0], [5000.0, -1500.0, 0.0]);
+    assert_eq!(*c.points.last().unwrap(), [9000.0, 0.0, 2000.0]);
+    assert_eq!(c.points[c.points.len() - 2], [9000.0, 0.0, 3000.0]);
+    // An obstacle at both ends: the "from" drop gains corners, and the "to" drop is still
+    // routed past its own obstacle (both drops are found after the insertion).
+    let both = json!([
+        {"id": "urn:pmef:obj:t:WALL", "aabb": {"min": [3000, -1000, -3000], "max": [7000, -800, 3500]}},
+        {"id": "urn:pmef:obj:t:PLATE", "aabb": {"min": [8500, -500, 2400], "max": [9500, 500, 2600]}}
+    ]);
+    let out = pmef_route::run(drop_problem(both), None, &read).unwrap();
+    let c = &out.cables[0];
+    assert!(c.ok && c.warnings.is_empty() && c.routed_drops == 2, "{:?}", c);
+    let in_plate = |p: &[f64; 3]| p[0] > 8440.0 && p[0] < 9560.0 && p[1] > -560.0 && p[1] < 560.0 && p[2] > 2340.0 && p[2] < 2660.0;
+    // No segment of the path crosses the plate (sampled every 10 mm).
+    for w in c.points.windows(2) {
+        let n = ((0..3).map(|i| (w[1][i] - w[0][i]).abs()).sum::<f64>() / 10.0).ceil().max(1.0) as usize;
+        for k in 0..=n {
+            let t = k as f64 / n as f64;
+            let p = [0, 1, 2].map(|i| w[0][i] + t * (w[1][i] - w[0][i]));
+            assert!(!in_plate(&p), "segment {:?} crosses the plate", w);
+        }
+    }
+    // An enclosed cable end: the drop keeps its L1 length and the cable gets a warning.
+    let boxed = json!([{"id": "urn:pmef:obj:t:CAGE", "aabb": {"min": [4000, -2500, -1000], "max": [6000, -500, 1000]}}]);
+    let out = pmef_route::run(drop_problem(boxed), None, &read).unwrap();
+    let c = &out.cables[0];
+    assert!(c.ok);
+    assert_eq!(c.routed_drops, 1);
+    assert!(c.warnings[0].starts_with("from drop kept as L1 distance"), "{:?}", c.warnings);
+}
