@@ -339,9 +339,12 @@ exported as `VOLUME_CONTROL` is wrong in every downstream document). Instead (RF
 - Stand-ins are valid data. Validators **MUST NOT** fail on them; `pmef check` lists them as
   information (`placeholders to replace`).
 
-In 0.10.0 `placeholders` is defined on duct components (`DuctComponent`) and `damperType`
-carries `UNSPECIFIED`/`CUSTOM`. Other domains follow the same pattern when they need it
-(piping already has `componentClass: VALVE_UNSPECIFIED`, RFC-0009).
+In 0.10.0 `placeholders` is defined on duct components (`DuctComponent`), where `damperType`
+carries `UNSPECIFIED`/`CUSTOM`, and on piping components (`PipingComponent`). There the stand-in
+is a component class: a valve of unknown type is `componentClass: VALVE_UNSPECIFIED` (RFC-0009)
+and **SHOULD** be listed with `path` `/componentSpec/componentClass` (`SOURCE_MISSING`, or
+`NOT_IN_ENUM` with the real type in `note` when it is outside the list). Existing data without
+the entry stays valid. Other domains follow the same pattern when they need it.
 
 ## 3 Plant Hierarchy
 

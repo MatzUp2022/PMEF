@@ -11,6 +11,15 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added — placeholders on piping components (RFC-0012 amendment)
+
+- **`PipingComponent.placeholders`** (optional): the RFC-0012 stand-in list is now available on
+  all piping components. A valve of unknown type stays `componentClass: VALVE_UNSPECIFIED`
+  (RFC-0009) and **SHOULD** list `/componentSpec/componentClass` (`SOURCE_MISSING`, or
+  `NOT_IN_ENUM` with the real type in `note`). Spec 02 §2.10, RFC-0012 amendment; example
+  `examples/piping-valve-placeholder.ndjson`; Rust field `placeholders` on every piping
+  component; `tests/placeholders/run.py` with three more negative cases.
+
 ### Added — CAEX XML serialisation (AutomationML)
 
 - **`pmef-io::caex`** (feature `caex`, on by default): `write_caex` / `read_caex` implement the

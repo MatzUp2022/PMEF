@@ -45,4 +45,17 @@ mod tests {
         assert_eq!(p.reason, PlaceholderReason::SourceMissing);
         assert_eq!(serde_json::to_value(&p).unwrap(), v);
     }
+
+    #[test]
+    fn valve_placeholder_round_trip() {
+        let line = include_str!("../../../examples/piping-valve-placeholder.ndjson")
+            .lines()
+            .find(|l| l.contains("\"V-301\""))
+            .unwrap();
+        let v: serde_json::Value = serde_json::from_str(line).unwrap();
+        let valve: crate::piping::Valve = serde_json::from_value(v.clone()).unwrap();
+        assert_eq!(valve.placeholders.len(), 1);
+        assert_eq!(valve.placeholders[0].path, "/componentSpec/componentClass");
+        assert_eq!(serde_json::to_value(&valve).unwrap()["placeholders"], v["placeholders"]);
+    }
 }

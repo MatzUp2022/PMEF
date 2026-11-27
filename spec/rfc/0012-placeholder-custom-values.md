@@ -44,6 +44,15 @@ Normative text: spec 02 §2.10; schemas `pmef-base.schema.json` (`$defs/Placehol
 
 Replacement in revision 2 of the same `@id`: `"damperType":"FIRE","fireResistance":"EI 90 S"`, no `placeholders`.
 
+### Amendment 2026-11-27: piping components
+
+`placeholders` is also defined on `PipingComponent`. A valve whose type is not known keeps the
+existing stand-in `componentClass: VALVE_UNSPECIFIED` (RFC-0009) and **SHOULD** list
+`/componentSpec/componentClass` in `placeholders`. This is a SHOULD rather than a MUST, so files
+written before the amendment stay valid. No new enumeration value is needed: a valve type outside
+the list is `VALVE_UNSPECIFIED` with reason `NOT_IN_ENUM` and the type in `note`.
+Example: `examples/piping-valve-placeholder.ndjson`.
+
 ## Alternatives considered
 
 - **Make `damperType` optional.** Loses the distinction between "not known yet" and "forgot";
@@ -60,9 +69,9 @@ writers targeting 0.9 must not emit them.
 
 | Item | Evidence |
 |---|---|
-| Schema | `schemas/pmef-base.schema.json` `$defs/Placeholder`; `schemas/pmef-hvac.schema.json` |
+| Schema | `schemas/pmef-base.schema.json` `$defs/Placeholder`; `schemas/pmef-hvac.schema.json`; `schemas/pmef-piping-component.schema.json` (amendment) |
 | Spec | spec 02 §2.10, §11.5 table |
-| Rust | `pmef-core/src/placeholder.rs`, `hvac.rs` (`placeholders`, `damper_type_custom`), `pmef check` |
-| Example | `examples/hvac-damper-placeholder.ndjson` |
-| Tests | `tests/placeholders/run.py` (8 negative cases), `placeholder::tests::round_trip`, schema drift |
-| Use case | Huldra (Equinor), 36 dampers in HA/HB/HC HVAC |
+| Rust | `pmef-core/src/placeholder.rs`, `hvac.rs` (`placeholders`, `damper_type_custom`), `piping.rs` (`placeholders`), `pmef check` |
+| Example | `examples/hvac-damper-placeholder.ndjson`, `examples/piping-valve-placeholder.ndjson` |
+| Tests | `tests/placeholders/run.py` (11 negative cases), `placeholder::tests::round_trip`, `valve_placeholder_round_trip`, schema drift |
+| Use case | Huldra (Equinor), 36 dampers in HA/HB/HC HVAC; 1,509 valves without type (no SKEY in the export) |
