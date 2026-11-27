@@ -171,6 +171,11 @@ jobs:
         with:
           node-version: '20'
 
+      # extract-mermaid.py needs `python`; the HF runner image has only python3.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Chromium-Bibliotheken (nur self-hosted, z. B. HF-Runner)
         if: runner.environment == 'self-hosted'
         run: |

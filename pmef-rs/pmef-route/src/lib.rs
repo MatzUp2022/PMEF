@@ -18,6 +18,7 @@
 //! increments: `docs/auto-routing.md`.
 
 pub mod cable;
+pub mod drop;
 pub mod geom;
 pub mod grid;
 pub mod line_list;
