@@ -709,7 +709,12 @@ fn cable_fill_and_bend_radius() {
     assert!(!c[0].ok);
     let (c, _) = pmef_route::cable::route_cables(&l_tray(600.0));
     assert!(c[0].ok, "{:?}", c[0].error);
-    assert_eq!(c[0].length_mm, 9000.0 + 9000.0 + 2.0 * 3000.0);
+    // The 90° corner is taken at the centreline radius R = 600 + 300/2 = 750 mm:
+    // 2 R − R π/2 shorter than the sharp corner.
+    let r = 750.0;
+    let corner = 2.0 * r - r * std::f64::consts::FRAC_PI_2;
+    assert!((c[0].bend_correction_mm - corner).abs() < 1e-6, "{}", c[0].bend_correction_mm);
+    assert!((c[0].length_mm - (9000.0 + 9000.0 + 2.0 * 3000.0 - corner)).abs() < 1e-6);
 }
 
 #[test]
@@ -1095,4 +1100,25 @@ fn scene_fittings_zero_radius_port_sizes_and_main_run() {
     let read0 = |f: &str| if f == "trays.ndjson" { Ok(s0.clone()) } else { Err(format!("no {f}")) };
     let o0 = pmef_route::run(problem(), None, &read0).unwrap();
     assert!(!o0.ok(), "{:?}", o0.cables);
+}
+
+#[test]
+fn scene_bends_follow_their_arc() {
+    use pmef_route::cable::bend_arc;
+    // 90° bend, centreline radius 500: P1 (6000,0) pointing −X, P2 (6500,500) pointing +Y.
+    let arc = bend_arc([6000.0, 0.0, 3000.0], [-1.0, 0.0, 0.0], [6500.0, 500.0, 3000.0], [0.0, 1.0, 0.0]).unwrap();
+    let len: f64 = arc.windows(2).map(|w| ((0..3).map(|i| (w[1][i] - w[0][i]).powi(2)).sum::<f64>()).sqrt()).sum();
+    let exact = 500.0 * std::f64::consts::FRAC_PI_2;
+    assert!((len - exact).abs() / exact < 1e-3, "{len} vs {exact}");
+    let last = arc.last().unwrap();
+    assert!((last[0] - 6500.0).abs() < 1e-6 && (last[1] - 500.0).abs() < 1e-6);
+    // Every sample lies on the circle around (6000, 500).
+    for p in &arc {
+        let r = ((p[0] - 6000.0).powi(2) + (p[1] - 500.0).powi(2)).sqrt();
+        assert!((r - 500.0).abs() < 1e-6);
+    }
+    // Ports that do not lie on a tangent arc keep the chord.
+    assert!(bend_arc([0.0, 0.0, 0.0], [-1.0, 0.0, 0.0], [800.0, 500.0, 0.0], [0.0, 1.0, 0.0]).is_none());
+    // Straight "bend": no arc.
+    assert!(bend_arc([0.0, 0.0, 0.0], [-1.0, 0.0, 0.0], [500.0, 0.0, 0.0], [1.0, 0.0, 0.0]).is_none());
 }
