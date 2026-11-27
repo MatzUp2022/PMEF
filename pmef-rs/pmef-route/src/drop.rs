@@ -177,8 +177,9 @@ pub fn route_drops(cables: &mut [RoutedCable], trays: &[TraySpec], scene: &Scene
         let ids: Vec<String> = [&spec.from.id, &spec.to.id].iter().filter_map(|x| x.as_ref().cloned()).collect();
         skip.extend(ids.iter().map(String::as_str));
         let n = c.points.len();
-        // (index of the drop's first point, which end)
-        for (i, which, leg) in [(0usize, "from", c.drop_legs[0]), (n.saturating_sub(2), "to", c.drop_legs[1])] {
+        // (index of the drop's first point, which end). The "to" drop at the end of `points`
+        // first, so that inserting its corners does not move the "from" drop at index 0.
+        for (i, which, leg) in [(n.saturating_sub(2), "to", c.drop_legs[1]), (0usize, "from", c.drop_legs[0])] {
             if !leg || n < 2 {
                 continue;
             }

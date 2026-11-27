@@ -1161,6 +1161,29 @@ fn drops_are_routed_around_scene_obstacles() {
     let inside = |p: &[f64; 3]| p[0] > 2940.0 && p[0] < 7060.0 && p[1] > -1060.0 && p[1] < -740.0 && p[2] < 3560.0;
     assert!(c.points.iter().all(|p| !inside(p)), "{:?}", c.points);
     assert!((c.length_mm - (c.drop_mm + 4000.0)).abs() < 1e-6);
+    // Both ends are still the cable ends, and the path ends with the (free) "to" drop.
+    assert_eq!(c.points[0], [5000.0, -1500.0, 0.0]);
+    assert_eq!(*c.points.last().unwrap(), [9000.0, 0.0, 2000.0]);
+    assert_eq!(c.points[c.points.len() - 2], [9000.0, 0.0, 3000.0]);
+    // An obstacle at both ends: the "from" drop gains corners, and the "to" drop is still
+    // routed past its own obstacle (both drops are found after the insertion).
+    let both = json!([
+        {"id": "urn:pmef:obj:t:WALL", "aabb": {"min": [3000, -1000, -3000], "max": [7000, -800, 3500]}},
+        {"id": "urn:pmef:obj:t:PLATE", "aabb": {"min": [8500, -500, 2400], "max": [9500, 500, 2600]}}
+    ]);
+    let out = pmef_route::run(drop_problem(both), None, &read).unwrap();
+    let c = &out.cables[0];
+    assert!(c.ok && c.warnings.is_empty() && c.routed_drops == 2, "{:?}", c);
+    let in_plate = |p: &[f64; 3]| p[0] > 8440.0 && p[0] < 9560.0 && p[1] > -560.0 && p[1] < 560.0 && p[2] > 2340.0 && p[2] < 2660.0;
+    // No segment of the path crosses the plate (sampled every 10 mm).
+    for w in c.points.windows(2) {
+        let n = ((0..3).map(|i| (w[1][i] - w[0][i]).abs()).sum::<f64>() / 10.0).ceil().max(1.0) as usize;
+        for k in 0..=n {
+            let t = k as f64 / n as f64;
+            let p = [0, 1, 2].map(|i| w[0][i] + t * (w[1][i] - w[0][i]));
+            assert!(!in_plate(&p), "segment {:?} crosses the plate", w);
+        }
+    }
     // An enclosed cable end: the drop keeps its L1 length and the cable gets a warning.
     let boxed = json!([{"id": "urn:pmef:obj:t:CAGE", "aabb": {"min": [4000, -2500, -1000], "max": [6000, -500, 1000]}}]);
     let out = pmef_route::run(drop_problem(boxed), None, &read).unwrap();
