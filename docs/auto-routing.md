@@ -34,7 +34,9 @@ flowchart LR
    reported as a note. Design pressure and temperature are checked against the envelope stated in
    the class catalog. Full P/T rating curves remain DEXPI-Manager `pipe-class-engine` territory.
 2. **Scene** (`scene.rs`). Obstacles come from PMEF packages (equipment `geometry.boundingBox`,
-   `ParametricGeometry` primitives, steel members with catalog profile sizes, existing piping
+   `ParametricGeometry` primitives — bounded by `pmef_geom::schema_primitive_aabb`, including
+   `STEEL_PROFILE`, `VALVE_BODY`, `CABLE_TRAY` and `COMPOSITE`; `MESH_REF` has no extent and is
+   skipped — steel members with catalog profile sizes, existing piping
    components via their ports), Wavefront OBJ meshes (e.g. IFC models converted with
    `tests/route/corpus/ifc2obstacles.py`) and explicit boxes. Nozzles of PMEF equipment become
    terminals (`<@id>#<nozzleMark>`). Obstacles are *hard* (never touched) or *soft* (walls, slabs:

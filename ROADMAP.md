@@ -201,7 +201,8 @@ released changes only):
 - ✅ `pmef-geom` AABBs: the 15 parametric types (BOX, DISH, PYRAMID and the tori conservatively)
   plus `STEEL_PROFILE`, `VALVE_BODY` (envelope from flange OD, else a documented heuristic) and
   `CABLE_TRAY`; `COMPOSITE` via `aabb_union`; `MESH_REF` has no extent in the schema (bounds from
-  the mesh / PMEFX bbox LODs). Open: no other crate uses `pmef-geom` yet
+  the mesh / PMEFX bbox LODs); `schema_primitive_aabb` reads schema JSON and is what `pmef-route`
+  uses for obstacles
 - ✅ `pmef-validate` jsonschema Rust integration (cross-file `$ref` resolution)
 - ✅ `cargo test --workspace` green — enforced by `.github/workflows/rust.yml`
 - 🔄 `pmef-adapter-cadmatic`: CADMATIC REST API adapter (compiles and tests green; frozen scope)
