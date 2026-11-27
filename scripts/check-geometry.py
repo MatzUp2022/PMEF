@@ -131,6 +131,7 @@ def check(objs):
                 issues.append(f"{o['@id']}: angle {o['angle']}° but port directions give {bend:.1f}°")
     issues += check_equipment(objs, by_id)
     issues += check_steel(objs, by_id)
+    issues += check_trays(objs, by_id)
     for o in objs:
         if o.get("@type") == "pmef:ParametricGeometry":
             issues += check_primitive(o.get("@id"), o.get("primitive") or {})
@@ -391,6 +392,63 @@ def check_steel(objs, by_id):
                     if gap > (ha + hb) / 2 + TOL:
                         issues.append(f"{o['@id']}: members {a} and {b} are {gap:.0f} mm apart "
                                       f"(> (h1 + h2) / 2 = {(ha + hb) / 2:.0f} mm)")
+    return issues
+
+
+TRAY_BENDS = {"HORIZONTAL_BEND", "VERTICAL_BEND_UP", "VERTICAL_BEND_DOWN"}
+
+
+def tray_centreline(o):
+    if len(o.get("path") or []) >= 2:
+        return o["path"]
+    if "startPoint" in o and "endPoint" in o:
+        return [o["startPoint"], o["endPoint"]]
+    pts = [p["coordinate"] for p in o.get("ports") or [] if "coordinate" in p]
+    return pts if len(pts) >= 2 else []
+
+
+def check_trays(objs, by_id):
+    """RFC-0015: cable tray centreline, ports and fitting connections (spec 02 §6.8)."""
+    issues = []
+    for o in objs:
+        t, oid = o.get("@type"), o.get("@id")
+        if t not in ("pmef:CableTrayRun", "pmef:CableTrayFitting"):
+            continue
+        ports = [p for p in o.get("ports") or [] if "coordinate" in p]
+        for p in ports:
+            if "width" in p and "width" in o and t == "pmef:CableTrayRun" and abs(p["width"] - o["width"]) > TOL:
+                issues.append(f"{oid}.{p.get('portId')}: port width {p['width']} differs from run width {o['width']}")
+        if t == "pmef:CableTrayRun":
+            path = o.get("path") or []
+            for key, pt in (("startPoint", path[:1]), ("endPoint", path[-1:])):
+                if key in o and pt and norm(sub(o[key], pt[0])) > TOL:
+                    issues.append(f"{oid}: {key} is not the {'first' if key == 'startPoint' else 'last'} path point")
+            line = tray_centreline(o)
+            if len(line) < 2:
+                continue
+            ends = [(line[0], line[1]), (line[-1], line[-2])]
+            for p in ports:
+                c = p["coordinate"]
+                end = min(ends, key=lambda e: norm(sub(c, e[0])))
+                if norm(sub(c, end[0])) > TOL:
+                    issues.append(f"{oid}.{p.get('portId')}: port is not at an end of the centreline")
+                elif "direction" in p and dot(p["direction"], sub(end[0], end[1])) <= 0:
+                    issues.append(f"{oid}.{p.get('portId')}: direction must point away from the run (spec 02 §2.6)")
+            continue
+        joined = set(o.get("connectedTrayIds") or [])
+        via_ports = {p.get("connectedTo") for p in o.get("ports") or []} - {None}
+        if o.get("ports"):
+            for x in sorted(via_ports - joined):
+                issues.append(f"{oid}: port connected to {x}, which is not in connectedTrayIds")
+            for x in sorted(joined - via_ports):
+                issues.append(f"{oid}: connectedTrayIds lists {x}, but no port connects to it")
+        dirs = [p["direction"] for p in ports if "direction" in p]
+        if (o.get("fittingType") in TRAY_BENDS and "angle" in o and len(ports) == 2 and len(dirs) == 2
+                and norm(dirs[0]) > 0 and norm(dirs[1]) > 0):
+            cosang = max(-1.0, min(1.0, dot(dirs[0], dirs[1]) / (norm(dirs[0]) * norm(dirs[1]))))
+            bend = 180.0 - math.degrees(math.acos(cosang))
+            if abs(bend - o["angle"]) > 1.0:
+                issues.append(f"{oid}: angle {o['angle']}° but port directions give {bend:.1f}°")
     return issues
 
 

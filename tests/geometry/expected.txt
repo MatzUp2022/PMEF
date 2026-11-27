@@ -1,6 +1,7 @@
-✗ equipment-steel-negative.ndjson (23 issue(s))
+✗ equipment-steel-negative.ndjson (33 issue(s))
      urn:pmef:obj:geomtest:ELB-SENSE: CIRC_TORUS ends at [4700.0, 0.0, 300.0], not at the other port [5300.0, 0.0, 300.0] (axis/startDir sense, spec 04 right-hand rule)
      urn:pmef:obj:geomtest:ELB-NOSTART: CIRC_TORUS ends at [4700.0, 0.0, 300.0], not at the other port [5300.0, 0.0, 300.0] (axis/startDir sense, spec 04 right-hand rule)
+     urn:pmef:obj:geomtest:CT-NOLIST.P1: direction is not a unit vector
      urn:pmef:obj:geomtest:DB-ANGLE: angle 45.0° but port directions give 90.0°
      urn:pmef:obj:geomtest:V-OK: DISH at [0.0, 0.0, 0.0] does not sit on a cylinder end face (spec 04: DISH center = knuckle circle, axis outward)
      urn:pmef:obj:geomtest:V-OK: DISH at [0.0, 0.0, 0.0] does not sit on a cylinder end face (spec 04: DISH center = knuckle circle, axis outward)
@@ -18,6 +19,15 @@
      urn:pmef:obj:geomtest:B-PROF: profileId EN:HEA999 not found in catalogs/profiles-*.json
      urn:pmef:obj:geomtest:N-OFF: node is not at an end of member urn:pmef:obj:geomtest:C-1
      urn:pmef:obj:geomtest:CN-APART: members urn:pmef:obj:geomtest:B-LEN and urn:pmef:obj:geomtest:C-FAR are 5000 mm apart (> (h1 + h2) / 2 = 245 mm)
+     urn:pmef:obj:geomtest:CT-BEND: port connected to urn:pmef:obj:geomtest:CT-BAD, which is not in connectedTrayIds
+     urn:pmef:obj:geomtest:CT-BEND: connectedTrayIds lists urn:pmef:obj:geomtest:CT-ELSEWHERE, but no port connects to it
+     urn:pmef:obj:geomtest:CT-BEND: angle 60° but port directions give 90.0°
+     urn:pmef:obj:geomtest:CT-BAD.P1: port width 200 differs from run width 300
+     urn:pmef:obj:geomtest:CT-BAD: startPoint is not the first path point
+     urn:pmef:obj:geomtest:CT-BAD.P1: direction must point away from the run (spec 02 §2.6)
+     urn:pmef:obj:geomtest:CT-BAD.P2: port is not at an end of the centreline
+     urn:pmef:obj:geomtest:CT-PORTS.P1: direction must point away from the run (spec 02 §2.6)
+     urn:pmef:obj:geomtest:CT-NOLIST: port connected to urn:pmef:obj:geomtest:CT-PORTS, which is not in connectedTrayIds
      urn:pmef:geom:geomtest:PRIM-BAD/flat: PYRAMID has no face with non-zero area
      urn:pmef:geom:geomtest:PRIM-BAD/ring: RECT_TORUS outerRadius 800.0 must exceed innerRadius 900.0
      urn:pmef:geom:geomtest:PRIM-BAD/deep: SPHERICAL_CAP depth 500.0 must be in (0, shellRadius 400.0]

@@ -24,6 +24,31 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 - Conventions for `airType` from system names and derived `DuctBranch` ports (spec 02 §11.1,
   §11.5). Example `examples/hvac-generic-components.ndjson`; conformance HVAC-U-014–017.
 
+### Added — cable tray route, ports and source data (RFC-0015, #56)
+
+- **`CableTrayRun`**: optional centreline (`startPoint`/`endPoint` or `path` polyline, tray-bottom
+  centre), `ports` (new `TrayPort`: coordinate, direction, width, height, `connectedTo`),
+  `nativeType`, `customAttributes`, `placeholders` (RFC-0012). The E&I tray run is no longer frozen.
+- **`CableTrayFitting`**: optional `ports`, `nativeType`, `customAttributes`, `placeholders`.
+- Spec 02 §6.8: route and port rules, convention for `trayType` derived from zone/spec names.
+- `scripts/check-geometry.py`: path vs start/end, ports at centreline ends and pointing outward,
+  port width, fitting ports vs `connectedTrayIds`, bend angle vs port directions.
+- Rust `pmef-core`: `TrayPort`, `CableTrayRun::centreline()`/`length_mm()`; `trayType`, `width`,
+  `height` optional as in the schema.
+- Example `examples/cable-tray-route.ndjson`; conformance `EI-U-011` … `EI-U-014`.
+
+### Fixed — steel bounds for rolled and skewed members
+
+- **`pmef_geom::member_aabb`** with **`SectionSize`**: bounds of a straight member that enclose
+  the section for any roll. Along a world axis the rolled rectangle's larger perpendicular extent
+  (`max(h, b)` at 0° and 90°, unchanged), otherwise the half-diagonal; round sections their radius.
+  Before, `STEEL_PROFILE` primitives (`rollDeg`) and routing obstacles of steel members
+  (`rollAngle`) always used half the larger dimension, so a member rolled by 45° or a skewed
+  brace could leave flange corners outside the obstacle (Codex review on #62).
+- `schema_primitive_aabb` takes a `SectionSize` callback instead of a half dimension; `pmef-route`
+  supplies it from the profile catalogs (flat bars: `b × t`). Routing examples are byte-identical
+  (all members there are axis-aligned with roll 0).
+
 ### Changed — routing obstacles from `pmef-geom`
 
 - **`pmef_geom::schema_primitive_aabb`**: conservative bounds of a primitive given as schema JSON

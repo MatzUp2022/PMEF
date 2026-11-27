@@ -28,7 +28,8 @@ REV = {"revisionId": "r2026-10-31-001", "changeState": "SHARED", "authoringTool"
 
 
 RFC_EXAMPLES = {"asbuilt-recognition.ndjson", "pump-skid-auto-routed.ndjson", "hvac-damper-placeholder.ndjson",
-                "piping-valve-placeholder.ndjson", "hvac-generic-components.ndjson"}  # 0.10.0 feature examples, used only where named
+                "piping-valve-placeholder.ndjson", "hvac-generic-components.ndjson",
+                "cable-tray-route.ndjson"}  # 0.10.0 feature examples, used only where named
 
 
 def _load_examples(names: set[str] | None = None) -> list[dict]:
@@ -46,6 +47,7 @@ def _load_examples(names: set[str] | None = None) -> list[dict]:
 EXAMPLES = _load_examples()
 ASBUILT = _load_examples({"asbuilt-recognition.ndjson"})
 HVACGEN = _load_examples({"hvac-generic-components.ndjson"})
+TRAYROUTE = _load_examples({"cable-tray-route.ndjson"})
 
 
 def ex(type_: str, pred=lambda o: True, source: list[dict] | None = None) -> dict:
@@ -180,6 +182,15 @@ UNIT = [
     ("EI-U-009", "CableTrayFitting — valid", 2, "ei", "CL2-01", "valid", [ex("pmef:CableTrayFitting")]),
     ("EI-U-010", "CableTrayFitting with unknown fittingType — rejected", 2, "ei", "CL1-02", "invalid",
      [with_(ex("pmef:CableTrayFitting"), ("fittingType",), "SPIRAL")]),
+    # Cable tray route (RFC-0015)
+    ("EI-U-011", "CableTrayRun with path, ports, nativeType and placeholder — valid", 2, "ei", "CL2-01", "valid",
+     [ex("pmef:CableTrayRun", lambda o: "path" in o, TRAYROUTE)]),
+    ("EI-U-012", "CableTrayRun with a one-point path — rejected", 2, "ei", "CL1-02", "invalid",
+     [with_(ex("pmef:CableTrayRun", lambda o: "path" in o, TRAYROUTE), ("path",), [[6500, 500, 3000]])]),
+    ("EI-U-013", "CableTrayFitting with ports and customAttributes — valid", 2, "ei", "CL2-01", "valid",
+     [ex("pmef:CableTrayFitting", lambda o: "customAttributes" in o, TRAYROUTE)]),
+    ("EI-U-014", "Cable tray port without coordinate — rejected", 2, "ei", "CL1-02", "invalid",
+     [without(ex("pmef:CableTrayFitting", lambda o: "customAttributes" in o, TRAYROUTE), "ports", 0, "coordinate")]),
     # HVAC (RFC-0006)
     ("HVAC-U-001", "DuctNetworkSystem — valid", 2, "hvac", "CL2-01", "valid", [ex("pmef:DuctNetworkSystem")]),
     ("HVAC-U-002", "DuctSegment — valid", 2, "hvac", "CL2-01", "valid", [ex("pmef:DuctSegment")]),
