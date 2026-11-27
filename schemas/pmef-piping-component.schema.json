@@ -298,7 +298,11 @@
           "properties": {
             "@type":      { "const": "pmef:Gasket" },
             "gasketType": { "type": "string", "enum": ["RING","FULL_FACE","SPIRAL_WOUND","KAMMPROFILE","SOLID_METAL","RUBBER","PTFE","GRAPHITE"] },
-            "gasketMaterial": { "type": "string" }
+            "gasketMaterial": { "type": "string" },
+            "bondingJumper": {
+              "type": "boolean",
+              "description": "The flanged joint of this gasket is bridged by a bonding jumper (earthing cable) for electrical continuity of the piping system, e.g. in hazardous areas or with insulating gaskets. Absent means not specified."
+            }
           }
         }
       ]

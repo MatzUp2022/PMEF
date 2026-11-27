@@ -11,6 +11,14 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added — bonding jumpers on flanged joints
+
+- **`Gasket.bondingJumper`** (optional boolean): the flanged joint of the gasket is bridged by a
+  bonding jumper (earthing cable) for electrical continuity, e.g. in hazardous areas or with
+  insulating gaskets. Isometric generators show the jumper and list it in the bill of materials.
+  Example: `examples/pump-skid-complete.ndjson` (gasket `CW-202-GK-001`); Rust field
+  `Gasket.bonding_jumper`.
+
 ### Added — RFC-0012 placeholder and custom values
 
 - **`placeholders`** on duct components and **`$defs/Placeholder`** (`path`, `reason`, `note`,
