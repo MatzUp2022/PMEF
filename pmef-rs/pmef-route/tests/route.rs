@@ -1117,6 +1117,11 @@ fn scene_bends_follow_their_arc() {
         let r = ((p[0] - 6000.0).powi(2) + (p[1] - 500.0).powi(2)).sqrt();
         assert!((r - 500.0).abs() < 1e-6);
     }
+    // Ports slightly off the arc (rounded coordinates): the ends are the ports exactly.
+    let p2 = [500.0, 500.1, 0.0];
+    let arc = bend_arc([0.0, 0.0, 0.0], [-1.0, 0.0, 0.0], p2, [0.0, 1.0, 0.0]).unwrap();
+    assert_eq!(*arc.last().unwrap(), p2);
+    assert_eq!(arc[0], [0.0, 0.0, 0.0]);
     // Ports that do not lie on a tangent arc keep the chord.
     assert!(bend_arc([0.0, 0.0, 0.0], [-1.0, 0.0, 0.0], [800.0, 500.0, 0.0], [0.0, 1.0, 0.0]).is_none());
     // Straight "bend": no arc.
