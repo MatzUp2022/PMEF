@@ -65,6 +65,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **Plant 3D PCF bridge keeps what a material takeoff snaps against.** `write_pcf` writes
+  `PIPING-SPEC` (line `pipeClass`) and `ITEM-CODE` (`catalogRef.catalogId`); `export_pcf_to_pmef`
+  reads them back and keeps a PMEF object id from `UNIQUE-COMPONENT-IDENTIFIER`, so
+  PMEF → PCF → PMEF keeps pipe class, catalog codes and stable `@id`s. Port topology no longer
+  drops the link in one direction where two components meet (one coordinate index entry per point
+  kept only the last component).
 - **`boltDiameter_mm` in the piping classes is now the bolt, not the bolt hole.** All four classes
   (A1A2, B3C1, C5D1, EN-P1A) carried the hole diameter or a mix (88 of 89 flange entries, e.g.
   A1A2 DN200 CL150: 22 → 19.1 mm = 3/4"). The values now come from `flange-dimensions*.json`, and

@@ -325,6 +325,24 @@ pub fn parse_pcf(content: &str) -> (PcfUnits, String, Vec<PcfComponent>) {
     (units, pipeline_ref, components)
 }
 
+/// A pipeline header attribute (between PIPELINE-REFERENCE and the first component),
+/// e.g. `PIPING-SPEC`.
+pub fn pipeline_attr(content: &str, key: &str) -> Option<String> {
+    let mut in_header = false;
+    for line in content.lines().map(str::trim) {
+        let (kw, rest) = line.split_once(' ').map_or((line, ""), |(k, r)| (k, r.trim()));
+        let kw = kw.to_uppercase();
+        if kw == "PIPELINE-REFERENCE" {
+            in_header = true;
+        } else if in_header && !line.is_empty() && !line.starts_with('!') && !line.contains(' ') {
+            return None; // first component keyword ends the header
+        } else if in_header && kw == key && !rest.is_empty() {
+            return Some(rest.to_owned());
+        }
+    }
+    None
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Coordinate key for topology resolution
 // ─────────────────────────────────────────────────────────────────────────────
@@ -406,13 +424,16 @@ impl Plant3DAdapter {
 
         let (units, pipeline_ref, components) = parse_pcf(pcf_content);
         let units = self.config.pcf_units_override.unwrap_or(units);
+        let piping_spec = pipeline_attr(pcf_content, "PIPING-SPEC");
 
         // Build coordinate index for topology
-        let mut coord_idx: HashMap<CoordKey, (usize, usize)> = HashMap::new();
+        // All components touching a point (two at a joint; one map entry per point would
+        // keep only the last and lose the link in one direction).
+        let mut coord_idx: HashMap<CoordKey, Vec<usize>> = HashMap::new();
         for (ci, comp) in components.iter().enumerate() {
-            for (pi, ep) in comp.end_points.iter().enumerate() {
+            for ep in &comp.end_points {
                 let (x, y, z) = (units.to_mm(ep[0]), units.to_mm(ep[1]), units.to_mm(ep[2]));
-                coord_idx.insert(coord_key_mm(x, y, z), (ci, pi));
+                coord_idx.entry(coord_key_mm(x, y, z)).or_default().push(ci);
             }
         }
 
@@ -424,7 +445,7 @@ impl Plant3DAdapter {
         let unit_id = format!("urn:pmef:unit:{}:{}", self.config.project_code, self.config.unit_area);
 
         // PipingNetworkSystem
-        let pns = serde_json::json!({
+        let mut pns = serde_json::json!({
             "@type": "pmef:PipingNetworkSystem",
             "@id": line_id,
             "pmefVersion": "0.9.0",
@@ -434,12 +455,28 @@ impl Plant3DAdapter {
             "revision": { "revisionId":"r2026-01-01-001","changeState":"WIP",
                           "authoringTool":"pmef-adapter-plant3d 0.9.0" }
         });
+        if let Some(spec) = &piping_spec {
+            pns["pipeClass"] = serde_json::Value::from(spec.as_str());
+        }
         writer.write_value(&pns).map_err(AdapterError::from)?;
 
-        // Pre-generate component IDs
+        // Pre-generate component IDs. A PMEF object id in UNIQUE-COMPONENT-IDENTIFIER (written by
+        // `pcf_bridge::write_pcf`) is kept, so ids stay stable over a PMEF -> PCF -> PMEF trip.
+        let mut uci_count: HashMap<&str, usize> = HashMap::new();
+        for comp in &components {
+            if let Some(u) = comp.attr(pcf_bridge::UCI) {
+                *uci_count.entry(u).or_insert(0) += 1;
+            }
+        }
         let mut comp_ids: Vec<String> = Vec::new();
         let mut kw_counters: HashMap<String, usize> = HashMap::new();
         for comp in &components {
+            if let Some(u) = comp.attr(pcf_bridge::UCI)
+                .filter(|u| u.starts_with("urn:pmef:obj:") && uci_count.get(u) == Some(&1))
+            {
+                comp_ids.push(u.to_owned());
+                continue;
+            }
             let (_, cls, _) = pcf_to_pmef_type(&comp.keyword, comp.skey());
             let short = &cls[..4.min(cls.len())];
             let n = kw_counters.entry(short.to_owned()).or_insert(0);
@@ -477,9 +514,9 @@ impl Plant3DAdapter {
                 let bore = units.to_mm(ep[3]);
 
                 // Topology: find connected component by coordinate
-                let connected = coord_idx.iter()
-                    .find(|(&ck, &(other_ci, _))| other_ci != ci && ck == coord_key_mm(x, y, z))
-                    .map(|(_, &(other_ci, _))| comp_ids[other_ci].clone());
+                let connected = coord_idx.get(&coord_key_mm(x, y, z))
+                    .and_then(|cs| cs.iter().find(|&&other| other != ci))
+                    .map(|&other| comp_ids[other].clone());
 
                 let mut port = serde_json::json!({
                     "portId": format!("P{}", pi + 1),
@@ -513,6 +550,11 @@ impl Plant3DAdapter {
                 "revision": { "revisionId":"r2026-01-01-001","changeState":"WIP",
                               "authoringTool":"pmef-adapter-plant3d 0.9.0" }
             });
+
+            // ITEM-CODE = catalog/BOM code of the piping class entry
+            if let Some(code) = comp.attr("ITEM-CODE") {
+                obj["catalogRef"]["catalogId"] = serde_json::Value::from(code);
+            }
 
             // Type-specific fields
             match pmef_type {
@@ -928,6 +970,38 @@ PIPE
         assert_eq!(pipe["@type"], "pmef:Pipe");
         let len = pipe["pipeLength"].as_f64().unwrap();
         assert!((len - 2500.0).abs() < 1.0);
+    }
+
+    #[test]
+    fn pcf_from_pmef_keeps_pipe_class_catalog_codes_and_ids() {
+        // PMEF -> PCF (write_pcf) -> PMEF keeps what a material takeoff snaps against.
+        let skid = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/../../examples/pump-skid-complete.ndjson")).unwrap();
+        let objects: Vec<serde_json::Value> = skid.lines()
+            .filter(|l| l.trim_start().starts_with('{'))
+            .map(|l| serde_json::from_str(l).unwrap()).collect();
+        let export = pcf_bridge::write_pcf(&objects);
+        let (_, pcf) = export.files.iter().find(|(l, _)| l.contains("CW-201")).unwrap();
+        assert!(pcf.contains("    PIPING-SPEC A1A2\n"), "{pcf}");
+        assert!(pcf.contains("    ITEM-CODE A1A2-PIPE-200\n"), "{pcf}");
+
+        let mut adapter = Plant3DAdapter::new(Plant3DConfig::default());
+        let back: Vec<serde_json::Value> = adapter.export_pcf_to_pmef(pcf).unwrap().lines()
+            .filter(|l| !l.is_empty()).map(|l| serde_json::from_str(l).unwrap()).collect();
+        assert_eq!(back[0]["pipeClass"], "A1A2");
+        let pipe = back.iter().find(|o| o["@id"] == "urn:pmef:obj:eaf-2026:CW-201-PIPE-001").unwrap();
+        assert_eq!(pipe["catalogRef"]["catalogId"], "A1A2-PIPE-200");
+        let gasket = back.iter().find(|o| o["@type"] == "pmef:Gasket").unwrap();
+        let connected: Vec<&str> = gasket["ports"].as_array().unwrap().iter()
+            .filter_map(|p| p["connectedTo"].as_str()).collect();
+        assert!(connected.contains(&"urn:pmef:obj:eaf-2026:CW-201-FL-001"), "{connected:?}");
+    }
+
+    #[test]
+    fn pipeline_attr_reads_only_the_header() {
+        let pcf = "PIPELINE-REFERENCE L1\n    PIPING-SPEC B3C1\nPIPE\n    PIPING-SPEC X\n";
+        assert_eq!(pipeline_attr(pcf, "PIPING-SPEC").as_deref(), Some("B3C1"));
+        assert_eq!(pipeline_attr("PIPELINE-REFERENCE L1\nPIPE\n    PIPING-SPEC X\n", "PIPING-SPEC"), None);
     }
 
     #[test]
