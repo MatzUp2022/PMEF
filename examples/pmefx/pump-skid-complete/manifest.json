@@ -9,8 +9,8 @@
     {
       "path": "model/pump-skid-complete.ndjson",
       "type": "ndjson",
-      "sizeBytes": 28211,
-      "sha256": "dd1fd056937380c9a782eca0eff00604a15889c001cdb780ba239dfbd90d8ed9",
+      "sizeBytes": 28232,
+      "sha256": "ba3cf33d1d74ca9c4c6f6a0ed7b013c23ce91f6a6ed627ba066c02e890f68c60",
       "objects": 35
     },
     {

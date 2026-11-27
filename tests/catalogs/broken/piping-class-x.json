@@ -32,6 +32,7 @@
       "outsideDiameter_mm": 152.4,
       "boltCircleDiameter_mm": 120.7,
       "numberOfBolts": 4,
+      "boltDiameter_mm": 22.2,
       "flangeThickness_mm": 19.1
     }
   ]

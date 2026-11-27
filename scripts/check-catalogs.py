@@ -337,6 +337,8 @@ def check_piping_classes():
                 keys = ((("outsideDiameter_mm", "flangeOD_mm"), ("boltCircleDiameter_mm", "boltCircle_mm"),
                          ("numberOfBolts", "boltHoles")) if "boltCircleDiameter_mm" in e else
                         (("flangeOD_mm", "flangeOD_mm"), ("boltCircle_mm", "boltCircle_mm"), ("boltHoles", "boltHoles")))
+                # bolt diameter, not the bolt hole: bolting BOMs (stud length, thread) are derived from it
+                keys += (("boltDiameter_mm", "boltDiameter_mm"),)
                 # EN 1092-1 blind flanges (type 05) have their own thicknesses; the catalog is type 11
                 if not (is_en and cc == "BLIND_FLANGE"):
                     keys += (("flangeThickness_mm", "flangeThickness_mm"),)

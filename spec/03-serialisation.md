@@ -479,7 +479,9 @@ follows; the round trip PMEF → CAEX → PMEF is lossless:
 - Scalars use `AttributeDataType` `xs:string`, `xs:boolean`, `xs:long` (integers) or `xs:double`.
 - Object-valued and array-valued fields are written as an `Attribute` with nested `Attribute`s
   (`RefAttributeType` `PMEF_AttributeTypeLib/Object` or `…/Array`, array items named `0`, `1`, …);
-  `null` is an empty `Attribute` of type `PMEF_AttributeTypeLib/Null`. Nested `InternalElement`s
+  `null` is an empty `Attribute` of type `PMEF_AttributeTypeLib/Null`. A string with characters
+  XML 1.0 cannot carry (e.g. U+0000) is written as its JSON string literal, with such characters
+  as `\uXXXX`, and `RefAttributeType` `PMEF_AttributeTypeLib/JsonString`. Nested `InternalElement`s
   are reserved for `isPartOf` children, so field values and child objects never mix.
 - `isPartOf` is expressed by nesting where the parent is in the same document, and is also kept
   as an `Attribute` so it survives partial documents.

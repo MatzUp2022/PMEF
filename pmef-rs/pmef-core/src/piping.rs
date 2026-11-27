@@ -404,6 +404,9 @@ piping_component_base!(Gasket {
     gasket_type: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     gasket_material: Option<String>,
+    /// The flanged joint is bridged by a bonding jumper (earthing cable).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    bonding_jumper: Option<bool>,
 });
 
 /// Weld inspection specification.

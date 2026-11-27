@@ -22,6 +22,14 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   §4.4 flags the unit-suffix rule as an open point (names stay unchanged in the reference
   implementation).
 
+### Added — bonding jumpers on flanged joints
+
+- **`Gasket.bondingJumper`** (optional boolean): the flanged joint of the gasket is bridged by a
+  bonding jumper (earthing cable) for electrical continuity, e.g. in hazardous areas or with
+  insulating gaskets. Isometric generators show the jumper and list it in the bill of materials.
+  Example: `examples/pump-skid-complete.ndjson` (gasket `CW-202-GK-001`); Rust field
+  `Gasket.bonding_jumper`.
+
 ### Added — RFC-0012 placeholder and custom values
 
 - **`placeholders`** on duct components and **`$defs/Placeholder`** (`path`, `reason`, `note`,
@@ -57,6 +65,11 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **`boltDiameter_mm` in the piping classes is now the bolt, not the bolt hole.** All four classes
+  (A1A2, B3C1, C5D1, EN-P1A) carried the hole diameter or a mix (88 of 89 flange entries, e.g.
+  A1A2 DN200 CL150: 22 → 19.1 mm = 3/4"). The values now come from `flange-dimensions*.json`, and
+  `scripts/check-catalogs.py` checks them against the flange catalogs. Bolting BOMs (stud length,
+  thread) derive from this field.
 - **0.9.0-rc known issues closed or restated** (ROADMAP backlog). EQUIP-U-005 and PIPE-U-003 are
   obsolete (`vesselSubtype` has `KO_DRUM`; both IDs now name other, passing conformance tests);
   the Rust `jsonschema` integration is done; DS-05 was removed; the `pmef-geom` AABB item now names

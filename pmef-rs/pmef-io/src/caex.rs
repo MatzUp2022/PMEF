@@ -47,7 +47,9 @@ pub enum CaexError {
 
 /// Serialise PMEF records (the `pmef:FileHeader` included, if present) as a CAEX 3.0 document.
 pub fn write_caex(records: &[Value]) -> String {
-    let header = records.iter().find(|r| type_of(r) == Some("pmef:FileHeader"));
+    let header = records
+        .iter()
+        .find(|r| type_of(r) == Some("pmef:FileHeader"));
     let objects: Vec<&Value> = records
         .iter()
         .filter(|r| type_of(r) != Some("pmef:FileHeader"))
@@ -159,7 +161,7 @@ pub fn write_caex(records: &[Value]) -> String {
     x.push_str("  </SystemUnitClassLib>\n");
     let _ = writeln!(
         x,
-        "  <AttributeTypeLib Name=\"{ATTR_LIB}\">\n    <AttributeType Name=\"Object\" />\n    <AttributeType Name=\"Array\" />\n    <AttributeType Name=\"Null\" />\n  </AttributeTypeLib>"
+        "  <AttributeTypeLib Name=\"{ATTR_LIB}\">\n    <AttributeType Name=\"Object\" />\n    <AttributeType Name=\"Array\" />\n    <AttributeType Name=\"Null\" />\n    <AttributeType Name=\"JsonString\" AttributeDataType=\"xs:string\" />\n  </AttributeTypeLib>"
     );
     x.push_str("</CAEXFile>\n");
     x
@@ -249,7 +251,10 @@ fn write_attribute(x: &mut String, name: &str, v: &Value, indent: usize) {
     let name = esc(name);
     match v {
         Value::Null => {
-            let _ = writeln!(x, "{pad}<Attribute Name=\"{name}\" RefAttributeType=\"{ATTR_LIB}/Null\" />");
+            let _ = writeln!(
+                x,
+                "{pad}<Attribute Name=\"{name}\" RefAttributeType=\"{ATTR_LIB}/Null\" />"
+            );
         }
         Value::Bool(b) => {
             let _ = writeln!(
@@ -264,6 +269,19 @@ fn write_attribute(x: &mut String, name: &str, v: &Value, indent: usize) {
                 "{pad}<Attribute Name=\"{name}\" AttributeDataType=\"{t}\"><Value>{n}</Value></Attribute>"
             );
         }
+        Value::String(s) if !s.chars().all(xml_char) => {
+            // Characters XML 1.0 cannot carry (e.g. U+0000): keep the JSON string literal,
+            // whose escapes are plain ASCII, so the round trip stays lossless.
+            let _ = writeln!(
+                x,
+                "{pad}<Attribute Name=\"{name}\" AttributeDataType=\"xs:string\" RefAttributeType=\"{ATTR_LIB}/JsonString\"><Value>{}</Value></Attribute>",
+                esc(&Value::String(s.clone())
+                    .to_string()
+                    .chars()
+                    .map(|c| if xml_char(c) { c.to_string() } else { format!("\\u{:04x}", c as u32) })
+                    .collect::<String>())
+            );
+        }
         Value::String(s) => {
             let _ = writeln!(
                 x,
@@ -273,10 +291,16 @@ fn write_attribute(x: &mut String, name: &str, v: &Value, indent: usize) {
         }
         Value::Array(items) => {
             if items.is_empty() {
-                let _ = writeln!(x, "{pad}<Attribute Name=\"{name}\" RefAttributeType=\"{ATTR_LIB}/Array\" />");
+                let _ = writeln!(
+                    x,
+                    "{pad}<Attribute Name=\"{name}\" RefAttributeType=\"{ATTR_LIB}/Array\" />"
+                );
                 return;
             }
-            let _ = writeln!(x, "{pad}<Attribute Name=\"{name}\" RefAttributeType=\"{ATTR_LIB}/Array\">");
+            let _ = writeln!(
+                x,
+                "{pad}<Attribute Name=\"{name}\" RefAttributeType=\"{ATTR_LIB}/Array\">"
+            );
             for (i, item) in items.iter().enumerate() {
                 write_attribute(x, &i.to_string(), item, indent + 2);
             }
@@ -284,10 +308,16 @@ fn write_attribute(x: &mut String, name: &str, v: &Value, indent: usize) {
         }
         Value::Object(map) => {
             if map.is_empty() {
-                let _ = writeln!(x, "{pad}<Attribute Name=\"{name}\" RefAttributeType=\"{ATTR_LIB}/Object\" />");
+                let _ = writeln!(
+                    x,
+                    "{pad}<Attribute Name=\"{name}\" RefAttributeType=\"{ATTR_LIB}/Object\" />"
+                );
                 return;
             }
-            let _ = writeln!(x, "{pad}<Attribute Name=\"{name}\" RefAttributeType=\"{ATTR_LIB}/Object\">");
+            let _ = writeln!(
+                x,
+                "{pad}<Attribute Name=\"{name}\" RefAttributeType=\"{ATTR_LIB}/Object\">"
+            );
             for (k, item) in map {
                 write_attribute(x, k, item, indent + 2);
             }
@@ -338,7 +368,9 @@ fn display_name(r: &Value) -> String {
 /// Stable GUID (8-4-4-4-12) from a string: two FNV-1a 64-bit hashes.
 fn guid(s: &str) -> String {
     let fnv = |seed: u64| {
-        s.bytes().fold(seed, |h, b| (h ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3))
+        s.bytes().fold(seed, |h, b| {
+            (h ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3)
+        })
     };
     let a = fnv(0xcbf2_9ce4_8422_2325);
     let b = fnv(0x84222325_cbf29ce4);
@@ -351,6 +383,11 @@ fn guid(s: &str) -> String {
         &hex[16..20],
         &hex[20..32]
     )
+}
+
+/// Whether XML 1.0 can carry `c` (production `Char`).
+fn xml_char(c: char) -> bool {
+    matches!(c, '\t' | '\n' | '\r' | '\u{20}'..='\u{D7FF}' | '\u{E000}'..='\u{FFFD}' | '\u{10000}'..)
 }
 
 fn esc(s: &str) -> String {
@@ -383,7 +420,10 @@ struct Node {
 
 impl Node {
     fn attr(&self, key: &str) -> Option<&str> {
-        self.attrs.iter().find(|(k, _)| k == key).map(|(_, v)| v.as_str())
+        self.attrs
+            .iter()
+            .find(|(k, _)| k == key)
+            .map(|(_, v)| v.as_str())
     }
     fn child(&self, name: &str) -> Option<&Node> {
         self.children.iter().find(|c| c.name == name)
@@ -409,10 +449,17 @@ fn parse_tree(xml: &str) -> Result<Node, CaexError> {
                 .into_owned();
             attrs.push((key, value));
         }
-        Ok(Node { name, attrs, ..Node::default() })
+        Ok(Node {
+            name,
+            attrs,
+            ..Node::default()
+        })
     };
     loop {
-        match reader.read_event().map_err(|e| CaexError::Xml(e.to_string()))? {
+        match reader
+            .read_event()
+            .map_err(|e| CaexError::Xml(e.to_string()))?
+        {
             Event::Start(e) => stack.push(to_node(&e)?),
             Event::Empty(e) => {
                 let node = to_node(&e)?;
@@ -523,7 +570,8 @@ fn read_element(ie: &Node, parent: Option<&str>, out: &mut Vec<Value>) {
 }
 
 fn pmef_id_missing(ie: &Node) -> bool {
-    !ie.all("ExternalInterface").any(|i| i.attr("Name") == Some("pmefId"))
+    !ie.all("ExternalInterface")
+        .any(|i| i.attr("Name") == Some("pmefId"))
 }
 
 fn attribute_value(a: &Node) -> Value {
@@ -551,6 +599,11 @@ fn attribute_value(a: &Node) -> Value {
         );
     }
     let text = a.child("Value").map(|v| v.text.as_str()).unwrap_or("");
+    if kind == Some("JsonString") {
+        if let Ok(v @ Value::String(_)) = serde_json::from_str::<Value>(text) {
+            return v;
+        }
+    }
     let dtype = a
         .attr("AttributeDataType")
         .map(|t| t.rsplit(':').next().unwrap_or(t).to_ascii_lowercase());
@@ -618,7 +671,9 @@ mod tests {
             let back_by_id = by_id(&back);
             for r in &records {
                 let id = id_of(r).unwrap_or("");
-                let b = back_by_id.get(id).unwrap_or_else(|| panic!("{name}: {id} fehlt"));
+                let b = back_by_id
+                    .get(id)
+                    .unwrap_or_else(|| panic!("{name}: {id} fehlt"));
                 assert_eq!(*b, r, "{name}: {id}");
                 // key order is kept too
                 let keys = |v: &Value| v.as_object().unwrap().keys().cloned().collect::<Vec<_>>();
@@ -634,7 +689,9 @@ mod tests {
         let records = example("pump-skid-complete.ndjson");
         let xml = write_caex(&records);
         assert!(xml.contains("SchemaVersion=\"3.0\""));
-        assert!(xml.contains("<SuperiorStandardVersion>AutomationML 2.10</SuperiorStandardVersion>"));
+        assert!(
+            xml.contains("<SuperiorStandardVersion>AutomationML 2.10</SuperiorStandardVersion>")
+        );
         assert!(xml.contains("<PMEFHeader"));
         assert!(xml.contains("RefBaseSystemUnitPath=\"PMEF_SystemUnitClasses/Pump\""));
         assert!(xml.contains("<ExternalInterface Name=\"pmefId\""));
@@ -647,7 +704,8 @@ mod tests {
             if n.attr("RefBaseSystemUnitPath") == Some(class) {
                 return Some(d);
             }
-            n.all("InternalElement").find_map(|c| depth_of(c, class, d + 1))
+            n.all("InternalElement")
+                .find_map(|c| depth_of(c, class, d + 1))
         }
         let pump = plant
             .all("InternalElement")
@@ -684,6 +742,15 @@ mod tests {
             "d":[1,2.5,"x",{"e":true}],"f":"  spaces\nline <&>\"'","g":-3,"h":1e-7,"i":18446744073709551615u64});
         let back = read_caex(&write_caex(std::slice::from_ref(&r))).unwrap();
         assert_eq!(back, vec![r]);
+    }
+
+    #[test]
+    fn xml_forbidden_characters_round_trip() {
+        let r = json!({"@type":"pmef:Pump","@id":"urn:pmef:obj:p:1","a":"nul\u{0}vt\u{b}\"q\"","b":"\u{fffe}"});
+        let xml = write_caex(std::slice::from_ref(&r));
+        assert!(!xml.contains('\u{0}') && !xml.contains('\u{b}') && !xml.contains('\u{fffe}'));
+        assert!(quick_xml::Reader::from_str(&xml).read_event().is_ok());
+        assert_eq!(read_caex(&xml).unwrap(), vec![r]);
     }
 
     #[test]
