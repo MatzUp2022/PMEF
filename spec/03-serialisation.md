@@ -476,7 +476,8 @@ follows; the round trip PMEF → CAEX → PMEF is lossless:
   `Value` of `ExternalInterface[pmefId]/Attribute[id]`.
 - `@RefBaseSystemUnitPath` is `PMEF_SystemUnitClasses/<type without the pmef: prefix>`; the
   document carries one `SystemUnitClass` per type used.
-- Scalars use `AttributeDataType` `xs:string`, `xs:boolean`, `xs:long` (integers) or `xs:double`.
+- Scalars use `AttributeDataType` `xs:string`, `xs:boolean`, `xs:long` (integers; `xs:unsignedLong`
+  above 2^63 − 1) or `xs:double`.
 - Object-valued and array-valued fields are written as an `Attribute` with nested `Attribute`s
   (`RefAttributeType` `PMEF_AttributeTypeLib/Object` or `…/Array`, array items named `0`, `1`, …);
   `null` is an empty `Attribute` of type `PMEF_AttributeTypeLib/Null`. A string with characters

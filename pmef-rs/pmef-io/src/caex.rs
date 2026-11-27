@@ -17,7 +17,7 @@
 //! - `SystemUnitClassLib "PMEF_SystemUnitClasses"`: one class per PMEF type used.
 //!
 //! Field encoding: a scalar becomes `Attribute` with `AttributeDataType` `xs:string`,
-//! `xs:boolean`, `xs:long` (integers) or `xs:double`; an object becomes an `Attribute` with
+//! `xs:boolean`, `xs:long` (integers; `xs:unsignedLong` above i64::MAX) or `xs:double`; an object becomes an `Attribute` with
 //! nested `Attribute`s (`RefAttributeType="PMEF_AttributeTypeLib/Object"`), an array the same
 //! with `…/Array` and children named `0`, `1`, …, `null` an empty `Attribute` of type `…/Null`.
 //! Field names are the PMEF names (SI units, spec 01 §7), and `isPartOf` is kept as an attribute
@@ -263,7 +263,14 @@ fn write_attribute(x: &mut String, name: &str, v: &Value, indent: usize) {
             );
         }
         Value::Number(n) => {
-            let t = if n.is_f64() { "xs:double" } else { "xs:long" };
+            // Integers above i64::MAX do not fit xs:long.
+            let t = if n.is_f64() {
+                "xs:double"
+            } else if n.is_i64() {
+                "xs:long"
+            } else {
+                "xs:unsignedLong"
+            };
             let _ = writeln!(
                 x,
                 "{pad}<Attribute Name=\"{name}\" AttributeDataType=\"{t}\"><Value>{n}</Value></Attribute>"
@@ -740,7 +747,10 @@ mod tests {
     fn edge_values_survive() {
         let r = json!({"@type":"pmef:Pump","@id":"urn:pmef:obj:p:1","a":null,"b":[],"c":{},
             "d":[1,2.5,"x",{"e":true}],"f":"  spaces\nline <&>\"'","g":-3,"h":1e-7,"i":18446744073709551615u64});
-        let back = read_caex(&write_caex(std::slice::from_ref(&r))).unwrap();
+        let xml = write_caex(std::slice::from_ref(&r));
+        assert!(xml.contains(r#"AttributeDataType="xs:unsignedLong"><Value>18446744073709551615<"#));
+        assert!(xml.contains(r#"AttributeDataType="xs:long"><Value>-3<"#));
+        let back = read_caex(&xml).unwrap();
         assert_eq!(back, vec![r]);
     }
 
