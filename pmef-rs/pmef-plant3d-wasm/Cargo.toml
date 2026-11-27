@@ -1,0 +1,20 @@
+[package]
+name = "pmef-plant3d-wasm"
+description = "WASM binding of the PMEF Plant 3D adapter: PCF isometrics to PMEF in the browser"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pmef-adapter-plant3d = { path = "../pmef-adapter-plant3d" }
+wasm-bindgen = "0.2"
+
+# pmef-core uses uuid v4; on wasm32 its randomness comes from the browser crypto API.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+uuid = { workspace = true, features = ["js"] }
