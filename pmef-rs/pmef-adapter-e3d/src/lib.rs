@@ -154,6 +154,8 @@ pub struct E3DAdapter {
     end_refs: Vec<(branch::EndRef, String)>,
     /// E3D branch address → `(@id, portId)` of its head and tail ports.
     branch_ends: HashMap<String, Vec<(String, String)>>,
+    /// Components without arrive/leave points (fallback `P0`): never a branch-end target.
+    fallback_ids: std::collections::HashSet<String>,
     /// Nozzle DB address → (line `@id`, port id) of the branch end connected to it.
     nozzle_links: HashMap<String, (String, String)>,
 }
@@ -168,6 +170,7 @@ impl E3DAdapter {
             warnings: Vec::new(),
             end_refs: Vec::new(),
             branch_ends: HashMap::new(),
+            fallback_ids: std::collections::HashSet::new(),
             nozzle_links: HashMap::new(),
         }
     }
@@ -504,6 +507,10 @@ impl E3DAdapter {
                         Some((l, o, i))
                     })
                     .collect()
+            } else if let Some(id) = self.addr_to_id.get(&r.target).filter(|id| self.fallback_ids.contains(*id)) {
+                self.warnings.push(format!("{} {}: {id} has no arrive/leave points (open end)",
+                    r.component, r.port));
+                continue;
             } else if let Some(&(l, o)) = self.addr_to_id.get(&r.target).and_then(|id| at.get(id)) {
                 (0..ports(&lines[l][o]).len()).map(|i| (l, o, i)).collect()
             } else {
@@ -591,6 +598,9 @@ impl E3DAdapter {
                 let comp_id = self.component_id(&line_clean, short);
                 self.addr_to_id.insert(comp.db_address.clone(), comp_id.clone());
                 let (obj, connected) = self.map_component(comp, pmef_type, comp_class, &comp_id, &seg_id);
+                if !connected {
+                    self.fallback_ids.insert(comp_id.clone());
+                }
                 items.push((obj, connected, pmef_type != "pmef:PipeSupport", comp.db_address.clone()));
             }
             let mut new_tube = || self.component_id(&line_clean, "TUBI");

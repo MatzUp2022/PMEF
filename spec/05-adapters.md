@@ -336,7 +336,7 @@ leave p-points, and for tees the branch p-point:
 | `LPOS`, `LDIR`, `LBOR`, `LCON` | port `P2` |
 | `P3POS`, `P3DIR`, `P3BOR`, `P3CON` | port `P3` (tee branch) |
 | Branch `HPOS`/`HBOR`, `TPOS` | start and end of the routing sequence |
-| Branch `HREF`/`TREF` | nozzle: `connectedLineId` + `connectedPortId` on the nozzle; component (tee) or other branch end: `connectedTo` both ways to its nearest free port |
+| Branch `HREF`/`TREF` | nozzle: `connectedLineId` + `connectedPortId` on the nozzle; component (tee) or other branch end: `connectedTo` both ways to its nearest free port; a component without arrive/leave points stays an open end |
 
 Connection types map by prefix: `BW*` → `BW`, `F*` → `FL`, `SW*` → `SW`, `SC*`/`TH*`/`NPT*` →
 `SC`, `GR*` → `GROOVED`, `PL*`/`OPEN` → `PLAIN`. Components of a branch are joined in their

@@ -75,3 +75,42 @@ async fn branch_ports_are_connected_and_tubes_fill_the_gaps() {
         eprintln!("output: {}", out.display());
     }
 }
+
+/// A branch end at a component without arrive/leave points stays open (spec 05 fallback):
+/// its `P0` at `POS` is not a connection point.
+#[tokio::test]
+async fn branch_end_at_fallback_component_stays_open() {
+    let dir = std::env::temp_dir().join(format!("pmef-e3d-fallback-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let pml = dir.join("fallback.pml");
+    std::fs::write(&pml, "\
+SITE /S
+  ZONE /S/Z
+    PIPE /S/Z/P1
+      LINREF 'L-1'
+      BORE 50
+      BRAN /S/Z/P1/B1
+        HPOS 0.0 0.0 0.0
+        TPOS 0.0 0.0 500.0
+        VALV /S/Z/P1/B1/V1
+          BORE 50
+          POS 0.0 0.0 250.0
+      BRAN /S/Z/P1/B2
+        HPOS 0.0 100.0 250.0
+        HREF /S/Z/P1/B1/V1
+        TPOS 0.0 400.0 250.0
+").unwrap();
+    let out = dir.join("out.ndjson");
+    let mut adapter = E3DAdapter::new(E3DConfig {
+        project_code: "test-proj".to_owned(),
+        pml_export_path: pml,
+        ..Default::default()
+    });
+    adapter.export_to_pmef(out.to_str().unwrap()).await.unwrap();
+    assert!(adapter.warnings().iter().any(|w| w.contains("no arrive/leave points")), "{:?}", adapter.warnings());
+    let text = std::fs::read_to_string(&out).unwrap();
+    let valve = text.lines().map(|l| serde_json::from_str::<Value>(l).unwrap())
+        .find(|o| o["@type"] == "pmef:Valve").unwrap();
+    assert_eq!(valve["ports"][0]["portId"], "P0");
+    assert!(valve["ports"][0].get("connectedTo").is_none());
+}
