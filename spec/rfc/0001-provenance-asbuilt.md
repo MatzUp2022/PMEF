@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | `REVIEW` — implemented and verified 2026-11-01; awaiting WG review and TSC sign-off |
+| **Status** | `APPROVED` — 2026-12-01, proposed resolutions of the open questions adopted (see *Resolution*) |
 | **Discussion** | [#6](https://github.com/MatzUp2022/PMEF/issues/6) — opened 2026-11-01, 30-day period until 2026-12-01 |
 | **Target version** | 0.10.0 (minor: new optional fields only) |
 | **Working groups** | WG-Piping, WG-Steel, WG-Equipment, WG-Geometry, WG-Catalogs |
@@ -203,13 +203,15 @@ rename and needs maintainer approval).
 
 ## Open Questions
 
-1. **`$id` paths** — should they move to `/0.10/`? *Proposed resolution:* no. Keep `/0.9/` for
-   all 0.x releases and move to a major-version namespace (`/1/`) with 1.0.0, together with the
-   decision on the project's home (organisation, `pmef.net`). A path per minor version would force
-   every consumer to re-resolve references on each additive release. *Decision: TSC.*
-2. **`review.comment` and a link to a markup/BCF issue?** *Proposed resolution:* out of scope for
-   this RFC; a follow-up RFC can add optional `comment` and `issueRef` (URI) — additive, no
-   impact on the blocks defined here. *Decision: WG-Piping/WG-Steel.*
+1. ~~**`$id` paths** — should they move to `/0.10/`?~~ — **resolved (TSC, 2026-12-01):** as
+   proposed. *Proposed resolution:* no. Keep `/0.9/` for all 0.x releases and move to a
+   major-version namespace (`/1/`) with 1.0.0, together with the decision on the project's home
+   (organisation, `pmef.net`). A path per minor version would force every consumer to re-resolve
+   references on each additive release. *Decision: TSC.*
+2. ~~**`review.comment` and a link to a markup/BCF issue?**~~ — **resolved (WGs, 2026-12-01):** as
+   proposed; follow-up [RFC-0010](0010-review-comment-issue-ref.md). *Proposed resolution:* out of
+   scope for this RFC; a follow-up RFC can add optional `comment` and `issueRef` (URI) — additive,
+   no impact on the blocks defined here. *Decision: WG-Piping/WG-Steel.*
 3. ~~Snapping algorithm and residual definitions per catalog type~~ — resolved by
    [RFC-0002](0002-catalog-snapping.md) (`pmef-snap/1`).
 
@@ -236,6 +238,18 @@ Verified against the repository state:
 
 Approval needed from: WG-Piping, WG-Steel, WG-Equipment, WG-Geometry, WG-Catalogs; TSC sign-off
 after the 30-day discussion period (GOVERNANCE.md). Decisions needed: open questions 1 and 2.
+
+## Resolution (2026-12-01)
+
+This status takes effect when this change is merged, which happens after the 30-day discussion
+period ends on 2026-12-01 without blocking objections (GOVERNANCE.md).
+
+1. Schema `$id`s keep the `/0.9/` path for all 0.x releases; the move to `/1/` is decided with
+   1.0.0 together with the project's home.
+2. `review.comment` and `review.issueRef` are specified in the follow-up
+   [RFC-0010](0010-review-comment-issue-ref.md); the blocks of this RFC are unchanged.
+
+No change to schemas, Rust code or examples.
 
 ## References
 

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | `REVIEW` — implemented and verified 2026-11-01; awaiting WG review and TSC sign-off |
+| **Status** | `APPROVED` — 2026-12-01, proposed resolution of open question 1 adopted (see *Resolution*) |
 | **Discussion** | [#8](https://github.com/MatzUp2022/PMEF/issues/8) — opened 2026-11-01, 30-day period until 2026-12-01 |
 | **Target version** | 0.10.0 (one new optional property; no breaking change) |
 | **Depends on** | [RFC-0001](0001-provenance-asbuilt.md) (`review` block), spec 03 §9.5 (matching) |
@@ -103,11 +103,11 @@ their meaning anyway.
 
 ## Open Questions
 
-1. **Delta packages** (spec 03 §8.4) also use `IsRevisionOf`. *Proposed resolution:* yes — an
-   `IsRevisionOf` with `changeType = AS_BUILT` records a correspondence and never marks content
-   replacement in a delta package. On approval, spec 03 §8.4 gains the sentence: "An
-   `IsRevisionOf` with `changeType` `AS_BUILT` is an as-built correspondence (RFC-0003), not a
-   content revision." *Decision: TSC.*
+1. ~~**Delta packages** (spec 03 §8.4) also use `IsRevisionOf`.~~ — **resolved (TSC, 2026-12-01):**
+   as proposed; sentence added to spec 03 §8.4. *Proposed resolution:* yes — an `IsRevisionOf` with
+   `changeType = AS_BUILT` records a correspondence and never marks content replacement in a delta
+   package. On approval, spec 03 §8.4 gains the sentence: "An `IsRevisionOf` with `changeType`
+   `AS_BUILT` is an as-built correspondence (RFC-0003), not a content revision." *Decision: TSC.*
 2. ~~Should `pmef merge` rename as-built ids to design ids?~~ — resolved: no. `pmef merge`
    (spec 03 §10) exists and keeps every `@id` (stable identifiers, spec 02 §2.1); a confirmed
    correspondence stays a link between the two ids.
@@ -121,6 +121,17 @@ reject → rerun (`pmef-cli/tests/diff_cli.rs`), example `examples/asbuilt-recog
 
 Approval needed from: WG-Piping, WG-Steel, WG-Equipment; TSC sign-off after the 30-day
 discussion period. Decision needed: open question 1 (adds one sentence to spec 03 §8.4).
+
+## Resolution (2026-12-01)
+
+This status takes effect when this change is merged, which happens after the 30-day discussion
+period ends on 2026-12-01 without blocking objections (GOVERNANCE.md).
+
+spec 03 §8.4 gains: "An `IsRevisionOf` with `changeType` `AS_BUILT` is an as-built
+correspondence (RFC-0003), not a content revision; it never marks an object of a delta package
+as replaced." The reference implementation is consistent with this: `pmef_core::diff` and `pmef_core::merge`
+do not interpret `IsRevisionOf`, and only `pmef_core::matching` reads correspondences. No change
+to schemas, Rust code or examples.
 
 ## Implementation Notes
 

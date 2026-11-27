@@ -572,6 +572,8 @@ For large plant models that change incrementally, PMEF supports delta packages:
 
 - A delta package is a valid PMEF NDJSON file containing only the changed and new objects.
 - Every changed object **MUST** carry a `pmef:IsRevisionOf` relationship referencing the replaced object's `@id`.
+- An `IsRevisionOf` with `changeType` `AS_BUILT` is an as-built correspondence (RFC-0003), not a content
+  revision; it never marks an object of a delta package as replaced.
 - Deleted objects are represented by a PMEF object with `changeState: "ARCHIVED"` and no other content changes.
 - Delta packages **MAY** reference objects defined in the base package using their full `urn:pmef:` URIs.
 
