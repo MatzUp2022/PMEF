@@ -69,6 +69,7 @@ fn registry() -> BTreeMap<&'static str, RoundTrip> {
     m.insert("pmef:Turbine", rt::<core::Turbine>);
     m.insert("pmef:GenericEquipment", rt::<core::GenericEquipment>);
     m.insert("pmef:SteelMember", rt::<core::SteelMember>);
+    m.insert("pmef:SteelPlate", rt::<core::SteelPlate>);
     m.insert("pmef:SteelNode", rt::<core::SteelNode>);
     m.insert("pmef:SteelConnection", rt::<core::SteelConnection>);
     m.insert("pmef:SteelSystem", rt::<core::SteelSystem>);

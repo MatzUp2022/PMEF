@@ -11,6 +11,27 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added — steel plates, project profiles, nested steel systems (RFC-0013, #54)
+
+- **`pmef:SteelPlate`**: plate, grating, chequered plate or panel as an outline in a local plane
+  (`origin`, `normal`, `refDirection`, `outline`, `holes`) with `thickness` and `plateType`
+  (spec 02 §7.4). `SteelSystem.plateIds`; Rust `SteelPlate` with area and volume.
+- **Nested steel systems**: `SteelSystem.isPartOf` may name a parent `SteelSystem`; new
+  `systemLevel` `STRUCTURE`/`FRAMEWORK`/`SUBFRAMEWORK` (spec 02 §7.5).
+- **Project profiles**: catalog field `scope` (`SHARED`/`PROJECT`); `<PROJECT>:<designation>`
+  resolved in the package's project catalogs first (spec 02 §7.1, spec 05 §7.2 replaces
+  `CUSTOM:`). `check-geometry.py` reads project catalogs from `catalogs/` next to the file;
+  `validate-catalogs.py` also checks `examples/catalogs/`.
+- **`profiles-en` 2024.4**: round bars `EN:RB10`–`EN:RB60` (EN 10060); snapping vectors and
+  `asbuilt-recognition` example pin the new version.
+- **Reserved volumes**: `equipmentClass` `OBSTRUCTION_VOLUME` and `ACCESS_ROUTE` for
+  `GenericEquipment` (spec 02 §5.3).
+- **E3D adapter**: STRU/FRMW/SBFR → nested `SteelSystem`, SCTN (`POSS`/`POSE`/`BANG`/`SPRE`) →
+  `SteelMember`, PANE (PLOO/PAVE) → `SteelPlate` (spec 05 §8.1).
+- Example `examples/steel-platform-plates.ndjson` with project catalog
+  `examples/catalogs/profiles-demo-project.json`; plate rules in `check-geometry.py`
+  (`tests/geometry` cases `PL-*`).
+
 ### Changed — routing obstacles from `pmef-geom`
 
 - **`pmef_geom::schema_primitive_aabb`**: conservative bounds of a primitive given as schema JSON

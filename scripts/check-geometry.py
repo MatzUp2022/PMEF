@@ -319,15 +319,50 @@ def check_assembly(oid, prim):
 
 # ── structural steel ──────────────────────────────────────────────────────────
 
+PROJECT_CATALOG_DIR = None  # `catalogs/` next to the checked file (PMEFX layout, RFC-0013)
+
+
 def load_profiles():
+    """Shared profile catalogs plus project STEEL_PROFILES catalogs in PROJECT_CATALOG_DIR."""
     prof = {}
-    for f in sorted((ROOT / "catalogs").glob("profiles-*.json")):
-        for e in json.loads(f.read_text(encoding="utf-8")).get("entries", []):
+    files = sorted((ROOT / "catalogs").glob("profiles-*.json"))
+    if PROJECT_CATALOG_DIR and PROJECT_CATALOG_DIR.is_dir():
+        files += sorted(PROJECT_CATALOG_DIR.glob("*.json"))
+    for f in files:
+        doc = json.loads(f.read_text(encoding="utf-8"))
+        if doc.get("catalogType") not in (None, "STEEL_PROFILES"):
+            continue
+        for e in doc.get("entries", []):
             prof[e.get("catalogId")] = e
     return prof
 
 
 PROFILES = None
+
+
+def check_plate(o):
+    """SteelPlate (RFC-0013): unit normal/refDirection, perpendicular, non-degenerate outline."""
+    oid, issues = o["@id"], []
+    n, r = o.get("normal"), o.get("refDirection")
+    for name, v in (("normal", n), ("refDirection", r)):
+        if v and abs(norm(v) - 1.0) > 1e-3:
+            issues.append(f"{oid}: {name} is not a unit vector (|v| = {norm(v):.4f})")
+    if n and r and abs(dot(n, r)) > 1e-3:
+        issues.append(f"{oid}: refDirection is not perpendicular to normal (dot = {dot(n, r):.4f})")
+
+    def area(poly):
+        return sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(poly, poly[1:] + poly[:1])) / 2
+
+    outline = o.get("outline") or []
+    if len(outline) >= 2 and outline[0] == outline[-1]:
+        issues.append(f"{oid}: outline repeats its first point (contours are closed implicitly)")
+    a = abs(area(outline)) if len(outline) >= 3 else 0.0
+    if a <= TOL:
+        issues.append(f"{oid}: outline encloses no area")
+    holes = sum(abs(area(h)) for h in o.get("holes") or [] if len(h) >= 3)
+    if a > TOL and holes >= a:
+        issues.append(f"{oid}: holes ({holes:.0f} mm²) are not smaller than the outline ({a:.0f} mm²)")
+    return issues
 
 
 def seg_dist(p1, q1, p2, q2):
@@ -345,6 +380,8 @@ def check_steel(objs, by_id):
     global PROFILES
     issues = []
     for o in objs:
+        if o.get("@type") == "pmef:SteelPlate":
+            issues += check_plate(o)
         if o.get("@type") != "pmef:SteelMember":
             continue
         oid, s, e = o["@id"], o.get("startPoint"), o.get("endPoint")
@@ -359,7 +396,8 @@ def check_steel(objs, by_id):
             if PROFILES is None:
                 PROFILES = load_profiles()
             if pid not in PROFILES:
-                issues.append(f"{oid}: profileId {pid} not found in catalogs/profiles-*.json")
+                issues.append(f"{oid}: profileId {pid} not found in catalogs/profiles-*.json "
+                              "or a project catalog in catalogs/ next to the file")
     members = {o["@id"]: o for o in objs if o.get("@type") == "pmef:SteelMember"}
     for o in objs:
         t, ids = o.get("@type"), [m for m in o.get("memberIds") or [] if m in members]
@@ -388,7 +426,10 @@ def check_steel(objs, by_id):
 def main():
     files = [Path(a) for a in sys.argv[1:]] or sorted((ROOT / "examples").glob("*.ndjson"))
     total = 0
+    global PROJECT_CATALOG_DIR, PROFILES
     for f in files:
+        if PROJECT_CATALOG_DIR != f.parent / "catalogs":
+            PROJECT_CATALOG_DIR, PROFILES = f.parent / "catalogs", None
         objs = [json.loads(line) for line in f.read_text(encoding="utf-8").splitlines() if line.startswith("{")]
         issues = check(objs)
         total += len(issues)

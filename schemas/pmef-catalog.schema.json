@@ -48,6 +48,12 @@
       "minLength": 1,
       "description": "Catalog version string."
     },
+    "scope": {
+      "type": "string",
+      "enum": ["SHARED", "PROJECT"],
+      "default": "SHARED",
+      "description": "SHARED: open catalog of this repository; PROJECT: project catalog shipped with a package (PMEFX catalogs/), e.g. project steel profiles (RFC-0013). Entry catalogIds of a PROJECT catalog use the project prefix, e.g. 'DEMO:HP200x10'."
+    },
     "description": {
       "type": "string",
       "description": "Human-readable summary of the catalog contents."

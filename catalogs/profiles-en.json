@@ -2,8 +2,8 @@
   "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
   "catalogId": "profiles-en",
   "catalogType": "STEEL_PROFILES",
-  "standard": "EN 10034:1993, EN 10279:2000, EN 10210-2:2006, EN 10219-2:2006, EN 10055:1995, EN 10056-1:1998, EN 10058:2003",
-  "version": "2024.3",
+  "standard": "EN 10034:1993, EN 10279:2000, EN 10210-2:2006, EN 10219-2:2006, EN 10055:1995, EN 10056-1:1998, EN 10058:2003, EN 10060:2003",
+  "version": "2024.4",
   "description": "European structural steel profiles. Dimensions and section properties per EN standards. Units: mm for dimensions, cm² for area, cm⁴ for second moments, cm³ for elastic section moduli, kg/m for mass per unit length.",
   "units": {
     "length": "mm",
@@ -21,9 +21,10 @@
     "SHS": "Square hollow section (EN 10210 / EN 10219)",
     "CHS": "Circular hollow section (EN 10210 / EN 10219)",
     "EQUAL_ANGLE": "Equal leg angle (EN 10056-1)",
-    "FLAT": "Flat bar (EN 10058)"
+    "FLAT": "Flat bar (EN 10058)",
+    "ROUND_BAR": "Round bar, hot rolled (EN 10060)"
   },
-  "note": "Section properties are nominal values from European standards. For design use, verify against the current edition of the applicable standard. Version 2024.2 corrects the HEA series: heights h and flange thicknesses of HEA 900/1000 per the EN 10365 dimension tables, entry EN:HEA96 renamed to EN:HEA100, and Iy/Iz/Wel recomputed from the dimensions with scripts/i-section-properties.py (4 significant figures; agrees with published tables within 1 %). Version 2024.3 corrects UPE 80–400 (dimensions and section properties per the Stad UPE technical data sheet, EN 10279 sections) and RHS 100x60x4/5/6 (area and mass from the EN 10210-2 hot-finished corner radii). Checked with scripts/check-catalogs.py.",
+  "note": "Section properties are nominal values from European standards. For design use, verify against the current edition of the applicable standard. Version 2024.2 corrects the HEA series: heights h and flange thicknesses of HEA 900/1000 per the EN 10365 dimension tables, entry EN:HEA96 renamed to EN:HEA100, and Iy/Iz/Wel recomputed from the dimensions with scripts/i-section-properties.py (4 significant figures; agrees with published tables within 1 %). Version 2024.3 corrects UPE 80–400 (dimensions and section properties per the Stad UPE technical data sheet, EN 10279 sections) and RHS 100x60x4/5/6 (area and mass from the EN 10210-2 hot-finished corner radii). Checked with scripts/check-catalogs.py. Version 2024.4 adds round bars RB10–RB60 (EN 10060; area and mass from the diameter, density 7850 kg/m³).",
   "entries": [
     {
       "family": "HEA",
@@ -2360,6 +2361,86 @@
       "mass_kg_m": 4.71,
       "standard": "EN 10058",
       "catalogId": "EN:FLAT60x10"
+    },
+    {
+      "family": "ROUND_BAR",
+      "D_mm": 10,
+      "A_cm2": 0.79,
+      "mass_kg_m": 0.62,
+      "standard": "EN 10060",
+      "catalogId": "EN:RB10"
+    },
+    {
+      "family": "ROUND_BAR",
+      "D_mm": 12,
+      "A_cm2": 1.13,
+      "mass_kg_m": 0.89,
+      "standard": "EN 10060",
+      "catalogId": "EN:RB12"
+    },
+    {
+      "family": "ROUND_BAR",
+      "D_mm": 16,
+      "A_cm2": 2.01,
+      "mass_kg_m": 1.58,
+      "standard": "EN 10060",
+      "catalogId": "EN:RB16"
+    },
+    {
+      "family": "ROUND_BAR",
+      "D_mm": 20,
+      "A_cm2": 3.14,
+      "mass_kg_m": 2.47,
+      "standard": "EN 10060",
+      "catalogId": "EN:RB20"
+    },
+    {
+      "family": "ROUND_BAR",
+      "D_mm": 25,
+      "A_cm2": 4.91,
+      "mass_kg_m": 3.85,
+      "standard": "EN 10060",
+      "catalogId": "EN:RB25"
+    },
+    {
+      "family": "ROUND_BAR",
+      "D_mm": 30,
+      "A_cm2": 7.07,
+      "mass_kg_m": 5.55,
+      "standard": "EN 10060",
+      "catalogId": "EN:RB30"
+    },
+    {
+      "family": "ROUND_BAR",
+      "D_mm": 35,
+      "A_cm2": 9.62,
+      "mass_kg_m": 7.55,
+      "standard": "EN 10060",
+      "catalogId": "EN:RB35"
+    },
+    {
+      "family": "ROUND_BAR",
+      "D_mm": 40,
+      "A_cm2": 12.57,
+      "mass_kg_m": 9.86,
+      "standard": "EN 10060",
+      "catalogId": "EN:RB40"
+    },
+    {
+      "family": "ROUND_BAR",
+      "D_mm": 50,
+      "A_cm2": 19.63,
+      "mass_kg_m": 15.41,
+      "standard": "EN 10060",
+      "catalogId": "EN:RB50"
+    },
+    {
+      "family": "ROUND_BAR",
+      "D_mm": 60,
+      "A_cm2": 28.27,
+      "mass_kg_m": 22.2,
+      "standard": "EN 10060",
+      "catalogId": "EN:RB60"
     }
   ]
 }

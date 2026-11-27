@@ -81,7 +81,7 @@ The following `@type` values are normatively defined in PMEF v0.9 (and v0.10 whe
 `pmef:Duct`, `pmef:DuctBend`, `pmef:DuctTransition`, `pmef:DuctBranch`,
 `pmef:DuctDamper`, `pmef:DuctAccessDoor`, `pmef:DuctTestPort`
 
-**Structural Steel:** `pmef:SteelSystem`, `pmef:SteelMember`, `pmef:SteelNode`, `pmef:SteelConnection`
+**Structural Steel:** `pmef:SteelSystem`, `pmef:SteelMember`, `pmef:SteelPlate`, `pmef:SteelNode`, `pmef:SteelConnection`
 
 **Geometry:** `pmef:ParametricGeometry`
 
@@ -517,6 +517,14 @@ Piping. It is embedded as an array on each `EquipmentObject`.
 | `pmef:Turbine` | inline (pressures, temperatures) | API 611, API 612 |
 | `pmef:GenericEquipment` | `EquipmentBasic` only | Fallback type |
 
+**Reserved volumes** ([RFC-0013](rfc/0013-steel-plates-project-profiles.md)). Volumes that are not
+process equipment but take part in clash checks are `pmef:GenericEquipment` with
+`equipmentBasic.equipmentClass` `OBSTRUCTION_VOLUME` (hard obstruction, e.g. a lifting zone or a
+volume reserved for later equipment) or `ACCESS_ROUTE` (keep-clear zone for access, escape or
+maintenance). Their geometry is the volume itself; they have no nozzles. Clash checks treat
+`OBSTRUCTION_VOLUME` like solid equipment and `ACCESS_ROUTE` as a soft clash (reported, not an
+error).
+
 ### 5.4 Equipment Topology Rules
 
 1. An equipment object's `nozzles` array **MAY** be empty for
@@ -624,6 +632,16 @@ The central structural entity. Represents a single beam, column, brace, or other
 
 **Profile identifier convention:** `<standard>:<designation>`, e.g. `"EN:HEA200"`, `"AISC:W12x53"`, `"EN:RHS200x100x6"`.
 
+**Project profiles** ([RFC-0013](rfc/0013-steel-plates-project-profiles.md)). A profile that is
+not in a shared catalog (`catalogs/profiles-*.json`) uses the project prefix,
+`<PROJECT>:<designation>` (e.g. `HULDRA:HP260x10`, `HULDRA:TG580x150x10x15`). The package
+**SHOULD** carry a `STEEL_PROFILES` catalog with `scope: "PROJECT"` that defines it — in a PMEFX
+package under `catalogs/`, next to an NDJSON file in a `catalogs/` folder. A reader resolves a
+`profileId` in the project catalogs of the package first, then in the shared catalogs. An entry
+of a project catalog needs `catalogId` and `family` and **SHOULD** give the section's bounding
+dimensions (`h_mm`/`b_mm`, or `D_mm` for round bars) so that bounds and clash checks work.
+Flat bars are `EN:FLAT<b>x<t>`, round bars `EN:RB<D>` (EN 10060).
+
 The `cis2Ref` field carries the CIS/2 member identifier for
 round-trip with Tekla Structures and Advance Steel.
 The `teklaGUID` field carries the Tekla Open API GUID.
@@ -645,6 +663,33 @@ export and for associating boundary conditions with physical
 locations.
 
 `supportType` defines the boundary condition: `FIXED`, `PINNED`, `ROLLER_X/Y/Z`, `SPRING`, `FREE`.
+
+### 7.4 SteelPlate
+
+Plates, gratings, chequered plates and panels ([RFC-0013](rfc/0013-steel-plates-project-profiles.md);
+IFC 4.3 `IfcPlate`; E3D `PANE`). Geometry is an outline in a local plane:
+
+| Field | Meaning |
+|---|---|
+| `origin` | Origin of the local plane (project coordinates, mm) |
+| `refDirection` | Local x axis in the plane (unit vector) |
+| `normal` | Local z axis (unit vector); **MUST** be perpendicular to `refDirection` |
+| `outline` | Closed outer contour as `[x, y]` in local coordinates (mm), at least 3 points, first point not repeated; **SHOULD** be counter-clockwise seen from +`normal` |
+| `holes` | Openings, each a closed contour inside the outline |
+| `thickness` | Plate thickness, grating bar height or panel thickness (mm); the plate extends from the plane by `thickness` along +`normal` |
+| `plateType` | `PLATE`, `GRATING`, `CHEQUERED`, `PANEL`, `GENERIC` |
+
+Local y is `normal × refDirection`. `scripts/check-geometry.py` checks unit vectors,
+perpendicularity, a non-zero outline area and that the holes are smaller than the outline.
+
+### 7.5 Nested steel systems
+
+A `SteelSystem` is `isPartOf` a unit or area, or — for nested structures — of another
+`SteelSystem` ([RFC-0013](rfc/0013-steel-plates-project-profiles.md)). `systemLevel` names the
+level: `STRUCTURE` (top; E3D `STRU`), `FRAMEWORK` (`FRMW`), `SUBFRAMEWORK` (`SBFR`). A
+`FRAMEWORK` or `SUBFRAMEWORK` system **SHOULD** be `isPartOf` a system one level up. Members and
+plates are `isPartOf` the lowest system that contains them and are listed in its `memberIds` /
+`plateIds`.
 
 ---
 

@@ -114,6 +114,9 @@ def designation_dims(e):
     if fam == "FLAT":
         m = re.fullmatch(r"FLAT([\d.]+)x([\d.]+)", cid)
         return {"b_mm": num(m[1]), "t_mm": num(m[2])} if m else {}
+    if fam == "ROUND_BAR":
+        m = re.fullmatch(r"RB([\d.]+)", cid)
+        return {"D_mm": num(m[1])} if m else {}
     if fam == "EQUAL_ANGLE":
         m = re.fullmatch(r"L([\d.]+)x([\d.]+)", cid)
         return {"b1_mm": num(m[1]), "b2_mm": num(m[1]), "t_mm": num(m[2])} if m else {}
@@ -176,6 +179,8 @@ def check_profile(e, src):
         area = math.pi * (e["OD_mm"] - e["t_mm"]) * e["t_mm"]
     elif fam == "FLAT":
         area = e["b_mm"] * e["t_mm"]
+    elif fam == "ROUND_BAR":
+        area = math.pi * e["D_mm"] ** 2 / 4
     elif fam in ("RHS", "SHS"):
         areas = rhs_en_areas(e["h_mm"], e["b_mm"], e["t_mm"])
         best = min(areas, key=lambda a: abs(rel(e.get("A_cm2", 0) * 100 or e["mass_kg_m"] / RHO * 100, a)))
