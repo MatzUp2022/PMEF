@@ -87,7 +87,7 @@ python tests/conformance/tools/generate_fixtures.py       # regenerate fixtures 
 python tests/conformance/tools/generate_fixtures.py --check
 python tests/conformance/tools/selftest.py                # broken implementations must be detected
 python tests/run_tests.py --kind converter --domains piping --sut "sh tests/conformance/suts/plant3d-pcf.sh {input} {output}"   # Plant 3D PCF bridge
-python tests/snapping/reference_snap.py                   # pmef-snap/1 test vectors (RFC-0002)
+python tests/snapping/reference_snap.py                   # pmef-snap/1 + /2 test vectors (RFC-0002, RFC-0011)
 python tests/geometry/run.py                              # check-geometry rules fire on the negative fixture
 python tests/catalogs/run.py                              # check-catalogs rules fire on the broken catalogs
 python tests/validators/differential.py --pmef pmef-rs/target/debug/pmef   # Rust and Python validators agree

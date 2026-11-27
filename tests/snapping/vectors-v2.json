@@ -1,0 +1,1001 @@
+{
+  "description": "Test vectors for pmef-snap/2 (RFC-0011). Default algorithm pmef-snap/2 unless a vector sets `algorithm`. Every implementation must reproduce `expected` (numbers within 1e-6) or fail with an error containing `expected_error`. Catalog data is pinned by catalogRef.catalogVersion.",
+  "vectors": [
+    {
+      "id": "SNAP2-001",
+      "name": "pipe under pmef-snap/2 → same entry, score and residuals as SNAP-001",
+      "catalog": "catalogs/piping-class-en-p1a.json",
+      "kind": "pipe",
+      "measured": {
+        "outsideDiameter": 168.3,
+        "wallThickness": 5.0
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "piping-class-en-p1a",
+            "catalogVersion": "2024.2",
+            "entryId": "ENP1A-PIPE-150"
+          },
+          "snappedSize": "DN 150 PN40",
+          "residuals": [
+            {
+              "parameter": "outsideDiameter",
+              "measured_mm": 168.3,
+              "catalog_mm": 168.3,
+              "residual_mm": 0.0
+            },
+            {
+              "parameter": "wallThickness",
+              "measured_mm": 5.0,
+              "catalog_mm": 5.0,
+              "residual_mm": 0.0
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.0,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-002",
+      "name": "I-section under pmef-snap/2 → same result as SNAP-017",
+      "catalog": "catalogs/profiles-en.json",
+      "kind": "i-section",
+      "measured": {
+        "h": 291.0,
+        "b": 299.0
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "profiles-en",
+            "catalogVersion": "2024.3",
+            "entryId": "EN:HEA300"
+          },
+          "snappedSize": "HEA 300",
+          "residuals": [
+            {
+              "parameter": "h",
+              "measured_mm": 291.0,
+              "catalog_mm": 290.0,
+              "residual_mm": 1.0
+            },
+            {
+              "parameter": "b",
+              "measured_mm": 299.0,
+              "catalog_mm": 300.0,
+              "residual_mm": -1.0
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.169565,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-003",
+      "name": "Channel UPE 200 from scan noise",
+      "catalog": "catalogs/profiles-en.json",
+      "kind": "channel",
+      "measured": {
+        "h": 201.1,
+        "b": 79.4,
+        "tw": 6.3,
+        "tf": 10.6
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "profiles-en",
+            "catalogVersion": "2024.3",
+            "entryId": "EN:UPE200"
+          },
+          "snappedSize": "UPE 200",
+          "residuals": [
+            {
+              "parameter": "h",
+              "measured_mm": 201.1,
+              "catalog_mm": 200.0,
+              "residual_mm": 1.1
+            },
+            {
+              "parameter": "b",
+              "measured_mm": 79.4,
+              "catalog_mm": 80.0,
+              "residual_mm": -0.6
+            },
+            {
+              "parameter": "tw",
+              "measured_mm": 6.3,
+              "catalog_mm": 6.0,
+              "residual_mm": 0.3
+            },
+            {
+              "parameter": "tf",
+              "measured_mm": 10.6,
+              "catalog_mm": 11.0,
+              "residual_mm": -0.4
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.280354,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-004",
+      "name": "RHS 100x60x5, measured rotated (larger side first is d1)",
+      "catalog": "catalogs/profiles-en.json",
+      "kind": "rect-hollow",
+      "measured": {
+        "d1": 100.8,
+        "d2": 59.6,
+        "t": 5.2
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "profiles-en",
+            "catalogVersion": "2024.3",
+            "entryId": "EN:RHS100x60x5"
+          },
+          "snappedSize": "RHS100x60x5",
+          "residuals": [
+            {
+              "parameter": "d1",
+              "measured_mm": 100.8,
+              "catalog_mm": 100.0,
+              "residual_mm": 0.8
+            },
+            {
+              "parameter": "d2",
+              "measured_mm": 59.6,
+              "catalog_mm": 60.0,
+              "residual_mm": -0.4
+            },
+            {
+              "parameter": "t",
+              "measured_mm": 5.2,
+              "catalog_mm": 5.0,
+              "residual_mm": 0.2
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.300617,
+          "runnerUp": {
+            "entryId": "EN:RHS100x60x6",
+            "score": 0.574492
+          },
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-005",
+      "name": "SHS 100 without wall thickness → ambiguous between wall series",
+      "catalog": "catalogs/profiles-en.json",
+      "kind": "rect-hollow",
+      "measured": {
+        "d1": 100.4,
+        "d2": 99.8
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "profiles-en",
+            "catalogVersion": "2024.3",
+            "entryId": "EN:SHS100x4"
+          },
+          "snappedSize": "SHS100x4",
+          "residuals": [
+            {
+              "parameter": "d1",
+              "measured_mm": 100.4,
+              "catalog_mm": 100.0,
+              "residual_mm": 0.4
+            },
+            {
+              "parameter": "d2",
+              "measured_mm": 99.8,
+              "catalog_mm": 100.0,
+              "residual_mm": -0.2
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.158114,
+          "runnerUp": {
+            "entryId": "EN:SHS100x5",
+            "score": 0.158114
+          },
+          "ambiguous": true
+        }
+      }
+    },
+    {
+      "id": "SNAP2-006",
+      "name": "Family restriction RHS excludes SHS for a nearly square section",
+      "catalog": "catalogs/profiles-en.json",
+      "kind": "rect-hollow",
+      "measured": {
+        "d1": 100.0,
+        "d2": 98.5,
+        "t": 4.0
+      },
+      "family": "RHS",
+      "expected": {
+        "snapped": false,
+        "nearest": {
+          "entryId": "EN:RHS120x80x4",
+          "score": 7.188114
+        }
+      }
+    },
+    {
+      "id": "SNAP2-007",
+      "name": "Round HSS 6.625 (AISC) from a cylinder fit",
+      "catalog": "catalogs/profiles-aisc.json",
+      "kind": "round-hollow",
+      "measured": {
+        "outsideDiameter": 168.9,
+        "wallThickness": 6.1
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "profiles-aisc",
+            "catalogVersion": "2023.2",
+            "entryId": "AISC:HSS6.625x0.25"
+          },
+          "snappedSize": "HSS6.625x0.25",
+          "residuals": [
+            {
+              "parameter": "outsideDiameter",
+              "measured_mm": 168.9,
+              "catalog_mm": 168.3,
+              "residual_mm": 0.6
+            },
+            {
+              "parameter": "wallThickness",
+              "measured_mm": 6.1,
+              "catalog_mm": 6.35,
+              "residual_mm": -0.25
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.313038,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-008",
+      "name": "Equal angle L80x8 (EN)",
+      "catalog": "catalogs/profiles-en.json",
+      "kind": "angle",
+      "measured": {
+        "leg1": 80.6,
+        "leg2": 79.5,
+        "t": 8.3
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "profiles-en",
+            "catalogVersion": "2024.3",
+            "entryId": "EN:L80x8"
+          },
+          "snappedSize": "L80x8",
+          "residuals": [
+            {
+              "parameter": "leg1",
+              "measured_mm": 80.6,
+              "catalog_mm": 80.0,
+              "residual_mm": 0.6
+            },
+            {
+              "parameter": "leg2",
+              "measured_mm": 79.5,
+              "catalog_mm": 80.0,
+              "residual_mm": -0.5
+            },
+            {
+              "parameter": "t",
+              "measured_mm": 8.3,
+              "catalog_mm": 8.0,
+              "residual_mm": 0.3
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.267706,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-009",
+      "name": "Unequal angle L100x75x8 (EN extended)",
+      "catalog": "catalogs/profiles-en-extended.json",
+      "kind": "angle",
+      "measured": {
+        "leg1": 100.9,
+        "leg2": 74.6,
+        "t": 7.8
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "profiles-en-extended",
+            "catalogVersion": "2024.2",
+            "entryId": "EN:L100x75x8"
+          },
+          "snappedSize": "L100x75x8",
+          "residuals": [
+            {
+              "parameter": "leg1",
+              "measured_mm": 100.9,
+              "catalog_mm": 100.0,
+              "residual_mm": 0.9
+            },
+            {
+              "parameter": "leg2",
+              "measured_mm": 74.6,
+              "catalog_mm": 75.0,
+              "residual_mm": -0.4
+            },
+            {
+              "parameter": "t",
+              "measured_mm": 7.8,
+              "catalog_mm": 8.0,
+              "residual_mm": -0.2
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.300154,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-010",
+      "name": "Angle L4x4 (AISC) with t = 11.2 mm → 1/2 in; 3/8 in is outside its band",
+      "catalog": "catalogs/profiles-aisc.json",
+      "kind": "angle",
+      "measured": {
+        "leg1": 101.6,
+        "leg2": 101.6,
+        "t": 11.2
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "profiles-aisc",
+            "catalogVersion": "2023.2",
+            "entryId": "AISC:L4x4x0.5"
+          },
+          "snappedSize": "L4x4x0.5",
+          "residuals": [
+            {
+              "parameter": "leg1",
+              "measured_mm": 101.6,
+              "catalog_mm": 101.6,
+              "residual_mm": 0.0
+            },
+            {
+              "parameter": "leg2",
+              "measured_mm": 101.6,
+              "catalog_mm": 101.6,
+              "residual_mm": 0.0
+            },
+            {
+              "parameter": "t",
+              "measured_mm": 11.2,
+              "catalog_mm": 12.7,
+              "residual_mm": -1.5
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.454607,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-011",
+      "name": "Elbow 90° LR DN150 (ASME class): OD from the class's pipe, centre-to-face measured",
+      "catalog": "catalogs/piping-class-a1a2.json",
+      "kind": "elbow",
+      "measured": {
+        "outsideDiameter": 168.8,
+        "centreToFace": 230.5
+      },
+      "select": {
+        "angle": 90
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "piping-class-a1a2",
+            "catalogVersion": "2024.2",
+            "entryId": "A1A2-ELB90LR-150"
+          },
+          "snappedSize": "DN 150 90° ANSI-150",
+          "residuals": [
+            {
+              "parameter": "outsideDiameter",
+              "measured_mm": 168.8,
+              "catalog_mm": 168.3,
+              "residual_mm": 0.5
+            },
+            {
+              "parameter": "centreToFace",
+              "measured_mm": 230.5,
+              "catalog_mm": 229.0,
+              "residual_mm": 1.5
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.31267,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-012",
+      "name": "Elbow by OD only, no angle selector → 45° and 90° tie, ambiguous",
+      "catalog": "catalogs/piping-class-en-p1a.json",
+      "kind": "elbow",
+      "measured": {
+        "outsideDiameter": 114.6
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "piping-class-en-p1a",
+            "catalogVersion": "2024.2",
+            "entryId": "ENP1A-ELBOW45-100"
+          },
+          "snappedSize": "DN 100 45° PN40",
+          "residuals": [
+            {
+              "parameter": "outsideDiameter",
+              "measured_mm": 114.6,
+              "catalog_mm": 114.3,
+              "residual_mm": 0.3
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.262467,
+          "runnerUp": {
+            "entryId": "ENP1A-ELBOW90-100",
+            "score": 0.262467
+          },
+          "ambiguous": true
+        }
+      }
+    },
+    {
+      "id": "SNAP2-013",
+      "name": "Same elbow with angle selector 89° → 90° elbow, not ambiguous",
+      "catalog": "catalogs/piping-class-en-p1a.json",
+      "kind": "elbow",
+      "measured": {
+        "outsideDiameter": 114.6
+      },
+      "select": {
+        "angle": 89
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "piping-class-en-p1a",
+            "catalogVersion": "2024.2",
+            "entryId": "ENP1A-ELBOW90-100"
+          },
+          "snappedSize": "DN 100 90° PN40",
+          "residuals": [
+            {
+              "parameter": "outsideDiameter",
+              "measured_mm": 114.6,
+              "catalog_mm": 114.3,
+              "residual_mm": 0.3
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.262467,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-014",
+      "name": "Equal tee DN150 (class without fitting ODs; centreToEnd for run and branch)",
+      "catalog": "catalogs/piping-class-b3c1.json",
+      "kind": "tee",
+      "measured": {
+        "outsideDiameter": 168.0,
+        "branchOutsideDiameter": 168.6,
+        "centreToEndRun": 172.0,
+        "centreToEndBranch": 170.2
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "piping-class-b3c1",
+            "catalogVersion": "2024.2",
+            "entryId": "B3C1-TEE-150"
+          },
+          "snappedSize": "DN 150x150 ANSI-300",
+          "residuals": [
+            {
+              "parameter": "outsideDiameter",
+              "measured_mm": 168.0,
+              "catalog_mm": 168.3,
+              "residual_mm": -0.3
+            },
+            {
+              "parameter": "branchOutsideDiameter",
+              "measured_mm": 168.6,
+              "catalog_mm": 168.3,
+              "residual_mm": 0.3
+            },
+            {
+              "parameter": "centreToEndRun",
+              "measured_mm": 172.0,
+              "catalog_mm": 171.0,
+              "residual_mm": 1.0
+            },
+            {
+              "parameter": "centreToEndBranch",
+              "measured_mm": 170.2,
+              "catalog_mm": 171.0,
+              "residual_mm": -0.8
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.2257,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-015",
+      "name": "Equal tee DN100 (EN class, branch OD from the class's pipe)",
+      "catalog": "catalogs/piping-class-en-p1a.json",
+      "kind": "tee",
+      "measured": {
+        "outsideDiameter": 114.0,
+        "branchOutsideDiameter": 114.5
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "piping-class-en-p1a",
+            "catalogVersion": "2024.2",
+            "entryId": "ENP1A-TEE-100"
+          },
+          "snappedSize": "DN 100x100 PN40",
+          "residuals": [
+            {
+              "parameter": "outsideDiameter",
+              "measured_mm": 114.0,
+              "catalog_mm": 114.3,
+              "residual_mm": -0.3
+            },
+            {
+              "parameter": "branchOutsideDiameter",
+              "measured_mm": 114.5,
+              "catalog_mm": 114.3,
+              "residual_mm": 0.2
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.223054,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-016",
+      "name": "Concentric reducer DN150x100 (ASME class): both ODs from the class's pipes",
+      "catalog": "catalogs/piping-class-a1a2.json",
+      "kind": "reducer",
+      "measured": {
+        "outsideDiameter": 168.6,
+        "reducedOutsideDiameter": 114.1,
+        "length": 151.0
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "piping-class-a1a2",
+            "catalogVersion": "2024.2",
+            "entryId": "A1A2-REDC-150x100"
+          },
+          "snappedSize": "DN 150x100 ANSI-150",
+          "residuals": [
+            {
+              "parameter": "outsideDiameter",
+              "measured_mm": 168.6,
+              "catalog_mm": 168.3,
+              "residual_mm": 0.3
+            },
+            {
+              "parameter": "reducedOutsideDiameter",
+              "measured_mm": 114.1,
+              "catalog_mm": 114.3,
+              "residual_mm": -0.2
+            },
+            {
+              "parameter": "length",
+              "measured_mm": 151.0,
+              "catalog_mm": 152.0,
+              "residual_mm": -1.0
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.238466,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-017",
+      "name": "Reducer DN150x100 (EN class, reducedOD in the entry)",
+      "catalog": "catalogs/piping-class-en-p1a.json",
+      "kind": "reducer",
+      "measured": {
+        "outsideDiameter": 168.3,
+        "reducedOutsideDiameter": 114.3
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "piping-class-en-p1a",
+            "catalogVersion": "2024.2",
+            "entryId": "ENP1A-REDUCER-150x100"
+          },
+          "snappedSize": "DN 150x100 PN40",
+          "residuals": [
+            {
+              "parameter": "outsideDiameter",
+              "measured_mm": 168.3,
+              "catalog_mm": 168.3,
+              "residual_mm": 0.0
+            },
+            {
+              "parameter": "reducedOutsideDiameter",
+              "measured_mm": 114.3,
+              "catalog_mm": 114.3,
+              "residual_mm": 0.0
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.0,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-018",
+      "name": "Reducer length outside the default band but inside a tolerance override",
+      "catalog": "catalogs/piping-class-a1a2.json",
+      "kind": "reducer",
+      "measured": {
+        "outsideDiameter": 168.3,
+        "reducedOutsideDiameter": 114.3,
+        "length": 157.0
+      },
+      "tolerances": {
+        "length": 6.0
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "piping-class-a1a2",
+            "catalogVersion": "2024.2",
+            "entryId": "A1A2-REDC-150x100"
+          },
+          "snappedSize": "DN 150x100 ANSI-150",
+          "residuals": [
+            {
+              "parameter": "outsideDiameter",
+              "measured_mm": 168.3,
+              "catalog_mm": 168.3,
+              "residual_mm": 0.0
+            },
+            {
+              "parameter": "reducedOutsideDiameter",
+              "measured_mm": 114.3,
+              "catalog_mm": 114.3,
+              "residual_mm": 0.0
+            },
+            {
+              "parameter": "length",
+              "measured_mm": 157.0,
+              "catalog_mm": 152.0,
+              "residual_mm": 5.0
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.481125,
+          "ambiguous": false,
+          "tolerances": {
+            "length": 6.0
+          }
+        }
+      }
+    },
+    {
+      "id": "SNAP2-019",
+      "name": "ASME B16.5 Class 300 DN150 flange with bolt-count selector",
+      "catalog": "catalogs/flange-dimensions.json",
+      "kind": "flange",
+      "measured": {
+        "flangeOD": 318.0,
+        "flangeThickness": 35.6,
+        "boltCircle": 270.5,
+        "boltHoleDiameter": 22.0
+      },
+      "select": {
+        "boltCount": 12
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "flange-dimensions",
+            "catalogVersion": "2024.2",
+            "entryId": "B165-300-DN150"
+          },
+          "snappedSize": "DN 150 Class 300",
+          "residuals": [
+            {
+              "parameter": "flangeOD",
+              "measured_mm": 318.0,
+              "catalog_mm": 317.5,
+              "residual_mm": 0.5
+            },
+            {
+              "parameter": "flangeThickness",
+              "measured_mm": 35.6,
+              "catalog_mm": 35.1,
+              "residual_mm": 0.5
+            },
+            {
+              "parameter": "boltCircle",
+              "measured_mm": 270.5,
+              "catalog_mm": 269.9,
+              "residual_mm": 0.6
+            },
+            {
+              "parameter": "boltHoleDiameter",
+              "measured_mm": 22.0,
+              "catalog_mm": 22.2,
+              "residual_mm": -0.2
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.178169,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-020",
+      "name": "EN 1092-1 DN50 PN10/PN16 identical → tie decided by catalogId, ambiguous",
+      "catalog": "catalogs/flange-dimensions-en.json",
+      "kind": "flange",
+      "measured": {
+        "flangeOD": 165.2,
+        "flangeThickness": 18.1,
+        "boltCircle": 125.0
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "flange-dimensions-en",
+            "catalogVersion": "2024.2",
+            "entryId": "EN1092-PN10-DN50"
+          },
+          "snappedSize": "DN 50 PN10",
+          "residuals": [
+            {
+              "parameter": "flangeOD",
+              "measured_mm": 165.2,
+              "catalog_mm": 165.0,
+              "residual_mm": 0.2
+            },
+            {
+              "parameter": "flangeThickness",
+              "measured_mm": 18.1,
+              "catalog_mm": 18.0,
+              "residual_mm": 0.1
+            },
+            {
+              "parameter": "boltCircle",
+              "measured_mm": 125.0,
+              "catalog_mm": 125.0,
+              "residual_mm": 0.0
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.066046,
+          "runnerUp": {
+            "entryId": "EN1092-PN16-DN50",
+            "score": 0.066046
+          },
+          "ambiguous": true
+        }
+      }
+    },
+    {
+      "id": "SNAP2-021",
+      "name": "Flange in a piping class whose outsideDiameter_mm is the flange OD (A1A2 layout)",
+      "catalog": "catalogs/piping-class-a1a2.json",
+      "kind": "flange",
+      "measured": {
+        "flangeOD": 279.5,
+        "boltCircle": 241.0,
+        "flangeThickness": 24.1
+      },
+      "family": "FLANGE",
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "piping-class-a1a2",
+            "catalogVersion": "2024.2",
+            "entryId": "A1A2-FLWN-150-150"
+          },
+          "snappedSize": "DN 150 ANSI-150",
+          "residuals": [
+            {
+              "parameter": "flangeOD",
+              "measured_mm": 279.5,
+              "catalog_mm": 279.0,
+              "residual_mm": 0.5
+            },
+            {
+              "parameter": "flangeThickness",
+              "measured_mm": 24.1,
+              "catalog_mm": 23.9,
+              "residual_mm": 0.2
+            },
+            {
+              "parameter": "boltCircle",
+              "measured_mm": 241.0,
+              "catalog_mm": 241.0,
+              "residual_mm": 0.0
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.114192,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-022",
+      "name": "Flange in a piping class with flangeOD_mm (EN-P1A layout)",
+      "catalog": "catalogs/piping-class-en-p1a.json",
+      "kind": "flange",
+      "measured": {
+        "flangeOD": 300.4,
+        "boltCircle": 250.3,
+        "flangeThickness": 28.2
+      },
+      "select": {
+        "boltCount": 8
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "piping-class-en-p1a",
+            "catalogVersion": "2024.2",
+            "entryId": "ENP1A-FLANGE-WN-150"
+          },
+          "snappedSize": "DN 150 PN40",
+          "residuals": [
+            {
+              "parameter": "flangeOD",
+              "measured_mm": 300.4,
+              "catalog_mm": 300.0,
+              "residual_mm": 0.4
+            },
+            {
+              "parameter": "flangeThickness",
+              "measured_mm": 28.2,
+              "catalog_mm": 28.0,
+              "residual_mm": 0.2
+            },
+            {
+              "parameter": "boltCircle",
+              "measured_mm": 250.3,
+              "catalog_mm": 250.0,
+              "residual_mm": 0.3
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.111475,
+          "ambiguous": false
+        }
+      }
+    },
+    {
+      "id": "SNAP2-023",
+      "name": "Bolt-count selector excludes every candidate → no snap, no nearest",
+      "catalog": "catalogs/flange-dimensions.json",
+      "kind": "flange",
+      "measured": {
+        "flangeOD": 279.4
+      },
+      "select": {
+        "boltCount": 7
+      },
+      "expected": {
+        "snapped": false,
+        "nearest": null
+      }
+    },
+    {
+      "id": "SNAP2-024",
+      "name": "Invalid: d2 > d1",
+      "catalog": "catalogs/profiles-en.json",
+      "kind": "rect-hollow",
+      "measured": {
+        "d1": 60.0,
+        "d2": 100.0
+      },
+      "expected_error": "parameter order: d1 must be >= d2"
+    },
+    {
+      "id": "SNAP2-025",
+      "name": "Invalid: selector not defined for the kind",
+      "catalog": "catalogs/profiles-en.json",
+      "kind": "angle",
+      "measured": {
+        "leg1": 80.0,
+        "leg2": 80.0
+      },
+      "select": {
+        "angle": 90
+      },
+      "expected_error": "unknown selector 'angle'"
+    },
+    {
+      "id": "SNAP2-026",
+      "name": "Invalid: kind channel requested as pmef-snap/1",
+      "catalog": "catalogs/profiles-en.json",
+      "kind": "channel",
+      "measured": {
+        "h": 200.0,
+        "b": 80.0
+      },
+      "algorithm": "pmef-snap/1",
+      "expected_error": "unsupported kind 'channel' for pmef-snap/1"
+    }
+  ]
+}
