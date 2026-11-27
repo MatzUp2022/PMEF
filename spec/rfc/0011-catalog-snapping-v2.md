@@ -57,8 +57,8 @@ leg of an angle is the first. `d1`/`d2` and `leg1`/`leg2` are the larger and the
 dimension; the measured values **MUST** satisfy `d1 ≥ d2` and `leg1 ≥ leg2` (otherwise the input
 is invalid), and the catalog values are sorted the same way.
 
-**Catalog field mapping** (first present wins; only `_mm` fields are read, so AISC channels that
-carry inch fields only have no candidates):
+**Catalog field mapping** (first present wins; only `_mm` fields are read — an entry with inch
+fields only has no candidates; `profiles-aisc-extended` carries `_mm` fields since 2024.3):
 
 | Parameter | Catalog fields |
 |---|---|
@@ -125,7 +125,7 @@ after `:` (channels: `<family> <size>`); elbows `DN <dn> <angle>° <rating>`; te
 
 ### Test vectors and reference implementations
 
-`tests/snapping/vectors-v2.json` (CC0): 26 vectors — `pipe`/`i-section` equivalence with
+`tests/snapping/vectors-v2.json` (CC0): 27 vectors — `pipe`/`i-section` equivalence with
 version 1, every new kind, rotated hollow sections, ties broken by `catalogId` (elbows without
 angle, EN 1092-1 PN10/PN16 with identical dimensions), class-pipe OD lookup for ASME fittings,
 both flange layouts, selectors, a tolerance override, no-snap cases and invalid input.
@@ -154,7 +154,9 @@ signature; `SnapError` gains variants.
 
 1. **Inch-only catalogs** (AISC C, MC, WT): convert `_in` fields (× 25.4) in a version 3, or add
    `_mm` fields to the catalogs? *Proposed resolution:* add `_mm` fields to the catalogs (data
-   change, no algorithm change). *Decision: WG-Catalogs.*
+   change, no algorithm change) — done in `profiles-aisc-extended` 2024.3 (checked by
+   `check-catalogs.py`, vector SNAP2-027); WT sections still have no snapping kind.
+   *Decision: WG-Catalogs.*
 2. **Olets, caps, crosses, valves** — out of scope; valves need face-to-face tables first.
    *Decision: WG-Piping.*
 

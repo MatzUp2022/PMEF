@@ -961,6 +961,58 @@
       }
     },
     {
+      "id": "SNAP2-027",
+      "name": "AISC channel C8x11.5 via the mm fields of profiles-aisc-extended 2024.3",
+      "catalog": "catalogs/profiles-aisc-extended.json",
+      "kind": "channel",
+      "measured": {
+        "h": 203.9,
+        "b": 57.9,
+        "tw": 5.9,
+        "tf": 10.1
+      },
+      "expected": {
+        "snapped": true,
+        "catalogSnap": {
+          "catalogRef": {
+            "catalogId": "profiles-aisc-extended",
+            "catalogVersion": "2024.3",
+            "entryId": "AISC:C8x11.5"
+          },
+          "snappedSize": "C 8x11.5",
+          "residuals": [
+            {
+              "parameter": "h",
+              "measured_mm": 203.9,
+              "catalog_mm": 203.2,
+              "residual_mm": 0.7
+            },
+            {
+              "parameter": "b",
+              "measured_mm": 57.9,
+              "catalog_mm": 57.4,
+              "residual_mm": 0.5
+            },
+            {
+              "parameter": "tw",
+              "measured_mm": 5.9,
+              "catalog_mm": 5.6,
+              "residual_mm": 0.3
+            },
+            {
+              "parameter": "tf",
+              "measured_mm": 10.1,
+              "catalog_mm": 9.9,
+              "residual_mm": 0.2
+            }
+          ],
+          "algorithm": "pmef-snap/2",
+          "score": 0.223778,
+          "ambiguous": false
+        }
+      }
+    },
+    {
       "id": "SNAP2-024",
       "name": "Invalid: d2 > d1",
       "catalog": "catalogs/profiles-en.json",

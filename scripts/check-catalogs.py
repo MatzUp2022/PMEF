@@ -151,6 +151,9 @@ def check_profile(e, src):
     fam, cid = e.get("family"), e["catalogId"]
     w = f"{src}:{cid}"
     check_designation(e, w)
+    for dim in ("d", "bf", "tw", "tf"):  # inch catalogs that also carry mm (profiles-aisc-extended 2024.3)
+        if f"{dim}_in" in e and f"{dim}_mm" in e and abs(e[f"{dim}_mm"] - e[f"{dim}_in"] * IN) > 0.05 + 1e-9:
+            bad(w, f"{dim}_mm {e[f'{dim}_mm']} != {dim}_in {e[f'{dim}_in']} × 25.4 = {e[f'{dim}_in'] * IN:.2f}")
     area = None  # mm² (or in² for the inch catalog)
     if fam in ("HEA", "HEB", "HEM", "IPE"):
         p = isp.properties(e["h_mm"], e["b_mm"], e["tw_mm"], e["tf_mm"], e.get("r_mm", 0))
