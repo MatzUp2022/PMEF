@@ -253,7 +253,7 @@ def check_equipment(objs, by_id):
     for o in objs:
         oid = o.get("@id")
         prim = geom.get(oid)
-        if prim and prim.get("type") == "COMPOSITE":
+        if prim and prim.get("type") == "COMPOSITE" and o.get("@type") in HEAD_TYPES:
             issues += check_assembly(oid, prim)
         for n in o.get("nozzles") or []:
             nid = f"{oid}#{n.get('nozzleId')}"
@@ -290,6 +290,12 @@ def check_equipment(objs, by_id):
                 elif d and all(p.get("direction") and dot(p["direction"], d) > -0.99 for _, p in hit):
                     issues.append(f"{nid}: connected port direction is not opposite to the nozzle direction")
     return issues
+
+
+# Dished heads close a shell only on these types. Catalogue bodies of piping components and
+# generic equipment use DISH freely (e.g. E3D valve bodies: two dishes back to back across a
+# cone or cylinder of another radius), so the head rule does not apply to them (issue #53).
+HEAD_TYPES = {"pmef:Vessel", "pmef:Tank", "pmef:Column", "pmef:Reactor", "pmef:HeatExchanger"}
 
 
 def check_assembly(oid, prim):

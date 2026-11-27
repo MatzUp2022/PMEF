@@ -263,6 +263,13 @@
       "pmefType": "pmef:GenericPipingComponent",
       "componentClass": "SPECIAL",
       "note": "General piping component"
+    },
+    {
+      "catalogId": "ATTA",
+      "nativeType": "ATTA",
+      "pmefType": "pmef:PipeSupport",
+      "componentClass": "PIPE_SUPPORT",
+      "note": "Attachment point on a branch; in practice the location of a pipe support. ATTA without a support (other ATTY) still maps here; the support itself is detailed in supportSpec when known"
     }
   ]
 }

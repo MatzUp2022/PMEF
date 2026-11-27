@@ -86,5 +86,7 @@ fn e3d_native_types_map_skey_variants_first() {
     assert_eq!(m("VALV", Some("bfwafl")).component_class.as_deref(), Some("VALVE_BUTTERFLY"));
     assert_eq!(m("VALV", None).component_class.as_deref(), Some("VALVE_UNSPECIFIED"));
     assert_eq!(m("INST", None).pmef_type, "pmef:GenericPipingComponent");
+    assert_eq!(m("ATTA", None).pmef_type, "pmef:PipeSupport");
+    assert_eq!(m("ATTA", None).component_class.as_deref(), Some("PIPE_SUPPORT"));
     assert!(pmef_catalogs::native_type("native-types-e3d", "NOPE", None).is_none());
 }
