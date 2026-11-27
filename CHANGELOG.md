@@ -253,6 +253,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **Review comment and issue reference** ([RFC-0010](spec/rfc/0010-review-comment-issue-ref.md),
+  spec 02 §2.9.2). `review` gains optional `comment` (1–2000 characters; SHOULD for `rejected`)
+  and `issueRef` (absolute URI, e.g. the BCF API URL of a topic). Rust `ReviewStatus.comment` /
+  `issue_ref`; `examples/asbuilt-recognition.ndjson` regenerated (two objects carry the new
+  fields); negative cases in `pmef-validate/tests/provenance.rs`.
+
 - **E3D adapter: ports, connectivity and implicit tubes** (spec 05 §8.1). Arrive/leave/branch
   p-points of the PML export (`APOS`/`LPOS`/`P3POS`, directions, bores, connection types)
   become ports `P1`/`P2`/`P3` with `connectedTo` along the branch; gaps become generated
@@ -260,6 +266,7 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   (`connectedLineId`/`connectedPortId`) and tees of other branches. Components without
   p-points fall back to one port `P0` without `connectedTo`. SITE/ZONE are now traversed.
   Fixture `pmef-adapter-e3d/tests/fixtures/branch-ports.pml`.
+
 - **Generic piping component and native type catalog**
   ([RFC-0009](spec/rfc/0009-generic-piping-component.md), spec 02 §4.4).
   New `pmef:GenericPipingComponent` with `nativeType` (e.g. `E3D:PCOM`); new `componentClass`

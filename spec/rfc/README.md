@@ -18,6 +18,7 @@ Status values (issue template): `DRAFT` → `REVIEW` → `APPROVED` / `REJECTED`
 | [0007](0007-pyramid-rect-torus-spherical-cap.md) | Primitives PYRAMID, RECT_TORUS, spherical cap and snout shear | 0.10.0 | `DRAFT` | — | RECT_TORUS for duct bends at LOD3 (WG-Geometry) |
 | [0008](0008-mesh-ref-gltf-node-fragment.md) | `mesh_ref` glTF node fragments and mesh frame | 0.10.0 | `DRAFT` | — | FileHeader default `meshFrame` (WG-Serialisation) |
 | [0009](0009-generic-piping-component.md) | Generic piping component and native type catalog | 0.10.0 | `DRAFT` | — | Type catalogs for Plant 3D and PCF (WG-Adapters) |
+| [0010](0010-review-comment-issue-ref.md) | Review comment and issue reference (follow-up of 0001) | 0.10.0 | `DRAFT` | — | `issueRef` single URI vs. array (WG-Piping/WG-Steel) |
 
 RFCs 0001–0003 are fully implemented in this repository (schemas, spec text, Rust reference
 implementation, examples, tests in CI); each RFC's *Review Status* section lists the evidence.

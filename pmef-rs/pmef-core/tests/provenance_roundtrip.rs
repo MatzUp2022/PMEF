@@ -38,7 +38,13 @@ fn asbuilt_example_round_trips_through_core_types() {
             "pmef:PipingSegment" => round_trip::<PipingSegment>(&v).1,
             "pmef:Pipe" => round_trip::<Pipe>(&v).1,
             "pmef:Elbow" => round_trip::<Elbow>(&v).1,
-            "pmef:PipeSupport" => round_trip::<PipeSupport>(&v).1,
+            "pmef:PipeSupport" => {
+                let (ps, back) = round_trip::<PipeSupport>(&v);
+                let review = ps.recognition.review.as_ref().unwrap();
+                assert_eq!(review.status, ReviewState::Rejected);
+                assert!(review.comment.as_deref().unwrap().starts_with("False positive"), "RFC-0010 comment");
+                back
+            }
             "pmef:SteelMember" => {
                 let (m, back) = round_trip::<SteelMember>(&v);
                 let snap = m.recognition.as_built.as_ref().unwrap().catalog_snap.as_ref().unwrap();
