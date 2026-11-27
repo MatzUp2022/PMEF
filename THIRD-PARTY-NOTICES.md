@@ -72,6 +72,9 @@ Dependency of the WASM binding of the routing kernel (`pmef-route-wasm`):
 |---|---|---|
 | `wasm-bindgen` | MIT OR Apache-2.0 | JavaScript bindings of `route()` / `version()` |
 
+The WASM binding of the Plant 3D adapter (`pmef-plant3d-wasm`) uses the same `wasm-bindgen` and
+enables the `js` feature of `uuid` (already a dependency, MIT OR Apache-2.0) on wasm32 only.
+
 The full dependency tree: `cargo tree` in `pmef-rs/` (SBOM: docs/AUDIT.md P3.4).
 
 ---

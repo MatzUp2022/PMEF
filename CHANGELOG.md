@@ -11,6 +11,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added — PCF to PMEF as WASM
+
+- **`pmef-plant3d-wasm`**: one call, `pcf_to_pmef(pcf)`, runs the Plant 3D adapter in the
+  browser (about 0.7 MB). Web apps that only need PCF isometrics as PMEF, such as the
+  ProDocAimAi material takeoff, no longer load a full converter.
+
 ### Added — CAEX XML serialisation (AutomationML)
 
 - **`pmef-io::caex`** (feature `caex`, on by default): `write_caex` / `read_caex` implement the
