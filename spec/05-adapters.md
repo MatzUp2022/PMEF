@@ -327,9 +327,34 @@ data and geometry. The adapter **MUST NOT** parse AVEVA's binary RVM format (see
 stored in `authoringToolObjectId` and
 `pmef:HasEquivalentIn.targetSystemId`.
 
+**Ports and branch topology.** The PML export writes per piping component the arrive and
+leave p-points, and for tees the branch p-point:
+
+| PML attribute | PMEF |
+|---|---|
+| `APOS`, `ADIR`, `ABOR`, `ACON` | port `P1`: `coordinate`, `direction` (away from the component), `nominalDiameter`, `endType` |
+| `LPOS`, `LDIR`, `LBOR`, `LCON` | port `P2` |
+| `P3POS`, `P3DIR`, `P3BOR`, `P3CON` | port `P3` (tee branch) |
+| Branch `HPOS`/`HBOR`, `TPOS` | start and end of the routing sequence |
+| Branch `HREF`/`TREF` | nozzle: `connectedLineId` + `connectedPortId` on the nozzle; component (tee) or other branch end: `connectedTo` both ways to its nearest free port; a component without arrive/leave points stays an open end |
+
+Connection types map by prefix: `BW*` → `BW`, `F*` → `FL`, `SW*` → `SW`, `SC*`/`TH*`/`NPT*` →
+`SC`, `GR*` → `GROOVED`, `PL*`/`OPEN` → `PLAIN`. Components of a branch are joined in their
+PML order: `P2` of one component and `P1` of the next get `connectedTo` to each other. A gap
+of more than 1 mm between them (or to the branch head or tail) is an implicit tube (E3D TUBI):
+the adapter writes a `pmef:Pipe` with `pipeLength` = gap and
+`customAttributes.e3dGenerated = "TUBI"`. A pipe support without p-points sits on the pipe
+and does not interrupt the sequence.
+
+**Fallback.** A component without arrive/leave points (attribute-only or RVM-derived data)
+gets one port `P0` at `POS` without `connectedTo`, and the sequence restarts after it, so no
+tube is generated across it.
+
 **Known limitations:**
 
 - Piping class data is read via PML (SPEC reference), not from geometry.
+- Branch ends that refer to elements outside the export stay open and are reported as
+  adapter warnings.
 - Models available only as RVM files are out of scope for this adapter. They can be
   converted to glTF 2.0 with external tools under the user's responsibility and
   referenced as `mesh_ref` geometry (see `ROADMAP.md`, "RVM-only models").
