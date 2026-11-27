@@ -24,6 +24,18 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   `height` optional as in the schema.
 - Example `examples/cable-tray-route.ndjson`; conformance `EI-U-011` … `EI-U-014`.
 
+### Fixed — steel bounds for rolled and skewed members
+
+- **`pmef_geom::member_aabb`** with **`SectionSize`**: bounds of a straight member that enclose
+  the section for any roll. Along a world axis the rolled rectangle's larger perpendicular extent
+  (`max(h, b)` at 0° and 90°, unchanged), otherwise the half-diagonal; round sections their radius.
+  Before, `STEEL_PROFILE` primitives (`rollDeg`) and routing obstacles of steel members
+  (`rollAngle`) always used half the larger dimension, so a member rolled by 45° or a skewed
+  brace could leave flange corners outside the obstacle (Codex review on #62).
+- `schema_primitive_aabb` takes a `SectionSize` callback instead of a half dimension; `pmef-route`
+  supplies it from the profile catalogs (flat bars: `b × t`). Routing examples are byte-identical
+  (all members there are axis-aligned with roll 0).
+
 ### Changed — routing obstacles from `pmef-geom`
 
 - **`pmef_geom::schema_primitive_aabb`**: conservative bounds of a primitive given as schema JSON
