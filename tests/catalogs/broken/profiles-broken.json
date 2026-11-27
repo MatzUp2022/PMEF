@@ -75,6 +75,21 @@
       "mass_kg_m": 133.9,
       "lbft": 95,
       "catalogId": "AISC:W14x90"
+    },
+    {
+      "family": "C",
+      "d_in": 3.0,
+      "d_mm": 76.2,
+      "bf_in": 1.41,
+      "bf_mm": 35.8,
+      "tw_in": 0.17,
+      "tw_mm": 5.3,
+      "tf_in": 0.273,
+      "tf_mm": 6.9,
+      "A_in2": 1.21,
+      "mass_lb_ft": 4.1,
+      "note": "MM-IN: tw_mm is not tw_in x 25.4",
+      "catalogId": "AISC:C3x4.1"
     }
   ]
 }

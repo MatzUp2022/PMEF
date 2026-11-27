@@ -5,6 +5,7 @@
 ✗ profiles-broken.json:AISC:L2x2x0.25: mass_kg_m (lb/ft) 2.9 vs 2.947 derived (-1.6 %, tolerance ±1 %)
 ✗ profiles-broken.json:AISC:W14x90: mass_kg_m (lb/ft) 133.9 vs 141.4 derived (-5.3 %, tolerance ±1 %)
 ✗ profiles-broken.json:AISC:W14x90: lbft (designation) 95 vs 90 derived (+5.6 %, tolerance ±1 %)
+✗ profiles-broken.json:AISC:C3x4.1: tw_mm 5.3 != tw_in 0.17 × 25.4 = 4.32
 ✗ profiles-broken.json:EN:HEB240: Iy_cm4 7000 not larger than EN:HEB220 (8091)
 ✗ pipe-dimensions.json:ASME-NPS2 SCH40: bore 52.0 vs OD − 2t = 52.48
 ✗ pipe-dimensions.json:ASME-NPS2: SCH80 wall 3.5 thinner than SCH40 (3.91)
@@ -31,4 +32,4 @@
 ✗ native-types-broken.json:PCOM: pmefType pmef:Gizmo is not a piping component type
 ✗ native-types-broken.json:PCOM: duplicate catalogId
 ✗ native-types-broken.json:PCOM: componentClass WIDGET is not in PipingComponentSpec
-✗ catalogs: 33 inconsistencies
+✗ catalogs: 34 inconsistencies
