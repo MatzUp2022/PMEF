@@ -268,6 +268,10 @@ macro_rules! piping_component_base {
             /// RFC-0001 provenance / review / asBuilt blocks.
             #[serde(flatten, default)]
             pub recognition: crate::provenance::RecognitionMetadata,
+            /// RFC-0012: fields holding stand-in values to be replaced later, e.g.
+            /// `componentSpec.componentClass` = `VALVE_UNSPECIFIED`.
+            #[serde(default, skip_serializing_if = "Vec::is_empty")]
+            pub placeholders: Vec<crate::placeholder::Placeholder>,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
             /// Material traceability heat/cast number.

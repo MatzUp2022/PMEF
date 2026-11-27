@@ -139,6 +139,12 @@
         "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
         "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
         "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" },
+        "placeholders": {
+          "type": "array",
+          "description": "Fields of this object that hold stand-in values to be replaced in a later revision (RFC-0012), e.g. componentSpec.componentClass VALVE_UNSPECIFIED",
+          "items": { "$ref": "pmef-base.schema.json#/$defs/Placeholder" },
+          "minItems": 1
+        },
 
         "customAttributes": {
           "type": "object",
