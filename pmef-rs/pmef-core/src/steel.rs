@@ -6,7 +6,13 @@ use std::collections::HashMap;
 
 #[derive(Debug,Clone,Serialize,Deserialize)]
 #[serde(rename_all="camelCase")]
-pub struct SteelMaterial { pub grade:String, pub fy:f64, pub fu:f64,
+pub struct SteelMaterial { pub grade:String,
+    /// Yield strength [MPa].
+    #[serde(default, skip_serializing_if="Option::is_none")] pub fy:Option<f64>,
+    /// Ultimate tensile strength [MPa].
+    #[serde(default, skip_serializing_if="Option::is_none")] pub fu:Option<f64>,
+    /// [kg/m³], schema default 7850.
+    #[serde(default, skip_serializing_if="Option::is_none")] pub density:Option<f64>,
     #[serde(skip_serializing_if="Option::is_none")] pub standard:Option<String> }
 
 #[derive(Debug,Clone,Serialize,Deserialize)]

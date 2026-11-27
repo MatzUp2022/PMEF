@@ -159,6 +159,8 @@ pub struct E3DAdapter {
     fallback_ids: std::collections::HashSet<String>,
     /// Nozzle DB address → (line `@id`, port id) of the branch end connected to it.
     nozzle_links: HashMap<String, (String, String)>,
+    /// Steel `@id` → E3D DB address it was issued for (collision check across structures).
+    steel_ids: HashMap<String, String>,
 }
 
 impl E3DAdapter {
@@ -173,6 +175,7 @@ impl E3DAdapter {
             branch_ends: HashMap::new(),
             fallback_ids: std::collections::HashSet::new(),
             nozzle_links: HashMap::new(),
+            steel_ids: HashMap::new(),
         }
     }
 
@@ -349,10 +352,12 @@ impl E3DAdapter {
             unit_id: format!("urn:pmef:unit:{0}:{0}-U01", self.config.project_code),
             cs: self.config.coordinate_system,
             warnings: Vec::new(),
+            issued: std::cell::RefCell::new(std::mem::take(&mut self.steel_ids)),
         };
         let mut out = Vec::new();
         let unit = mapper.unit_id.clone();
         mapper.map_system(stru, &unit, &mut out);
+        self.steel_ids = mapper.issued.take();
         for w in &mapper.warnings {
             tracing::warn!("E3D steel: {w}");
         }

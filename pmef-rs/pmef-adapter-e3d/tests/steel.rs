@@ -58,3 +58,32 @@ async fn structure_frameworks_sections_and_panels() {
     assert_eq!(by_id(&id("FRMW-DECK"))["plateIds"], serde_json::json!([id("PL-310")]));
     std::fs::remove_dir_all(dir).ok();
 }
+
+#[tokio::test]
+async fn same_last_name_under_different_parents_keeps_distinct_ids() {
+    let dir = std::env::temp_dir().join(format!("pmef-e3d-steel-dup-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let out = dir.join("out.ndjson");
+    let mut adapter = E3DAdapter::new(E3DConfig {
+        project_code: "huldra".to_owned(),
+        pml_export_path: here().join("tests/fixtures/steel-dup-names.pml"),
+        ..Default::default()
+    });
+    adapter.export_to_pmef(out.to_str().unwrap()).await.unwrap();
+    let objs: Vec<Value> = std::fs::read_to_string(&out)
+        .unwrap()
+        .lines()
+        .map(|l| serde_json::from_str(l).unwrap())
+        .collect();
+    let mut ids: Vec<&str> = objs.iter().filter_map(|o| o["@id"].as_str()).collect();
+    let n = ids.len();
+    ids.sort();
+    ids.dedup();
+    assert_eq!(ids.len(), n, "duplicate @id: {ids:?}");
+    let a = "urn:pmef:obj:huldra:FRAME";
+    let b = "urn:pmef:obj:huldra:SITE01.STR-B.FRAME";
+    let get = |id: &str| objs.iter().find(|o| o["@id"] == id).unwrap_or_else(|| panic!("{id} missing"));
+    assert_eq!(get(a)["isPartOf"], "urn:pmef:obj:huldra:STR-A");
+    assert_eq!(get(b)["isPartOf"], "urn:pmef:obj:huldra:STR-B");
+    assert_eq!(get("urn:pmef:obj:huldra:B-2")["isPartOf"], b);
+}

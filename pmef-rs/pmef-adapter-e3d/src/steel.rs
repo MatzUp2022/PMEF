@@ -112,16 +112,34 @@ pub struct SteelMapper<'a> {
     pub unit_id: String,
     pub cs: E3DCoordinateSystem,
     pub warnings: Vec<String>,
+    /// `@id` → DB address it was issued for; shared across structures of one export.
+    pub issued: std::cell::RefCell<std::collections::HashMap<String, String>>,
 }
 
 impl SteelMapper<'_> {
+    /// `@id` from the element name. If another element (other DB address) already got that
+    /// `@id`, e.g. `/STR-A/FRAME` and `/STR-B/FRAME`, the full address is used instead
+    /// (`STR-B.FRAME`), so identities stay unique and deterministic for a given export.
     fn id(&self, domain: &str, elem: &PmlElement) -> String {
-        let local: String = elem
-            .local_name()
-            .chars()
-            .filter(|c| c.is_alphanumeric() || matches!(c, '-' | '_' | '.'))
-            .collect();
-        format!("urn:pmef:{domain}:{}:{local}", self.project_code)
+        let clean = |s: &str| -> String {
+            s.chars().filter(|c| c.is_alphanumeric() || matches!(c, '-' | '_' | '.')).collect()
+        };
+        let addr = &elem.db_address;
+        let short = format!("urn:pmef:{domain}:{}:{}", self.project_code, clean(elem.local_name()));
+        let mut issued = self.issued.borrow_mut();
+        match issued.get(&short) {
+            None => {
+                issued.insert(short.clone(), addr.clone());
+                short
+            }
+            Some(a) if a == addr => short,
+            Some(_) => {
+                let full = format!("urn:pmef:{domain}:{}:{}", self.project_code,
+                    clean(&addr.trim_start_matches('/').replace('/', ".")));
+                issued.insert(full.clone(), addr.clone());
+                full
+            }
+        }
     }
 
     fn point(&self, elem: &PmlElement, key: &str) -> Option<V3> {
