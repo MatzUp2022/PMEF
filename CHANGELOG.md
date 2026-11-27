@@ -288,6 +288,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **`pmef-geom` bounds for the schema compound types**: `PrimitiveType::SteelProfile`
+  (startPt→endPt inflated by the section half-diagonal, any roll), `ValveBody` (face-to-face
+  cylinder with flange-OD envelope, else `VALVE_ENVELOPE_FACTOR` × boreD, plus bonnet/actuator)
+  and `CableTray` (polyline capsule); `aabb_union` for `COMPOSITE`. `MESH_REF` stays without
+  bounds (no extent in the schema). New `PrimitiveParams` fields: `end_point`, `points`,
+  `actuator_axis`, `actuator_height`.
+
 - **`profiles-aisc-extended` 2024.3: millimetre dimensions** for C, MC and WT (`d_mm`, `bf_mm`,
   `tw_mm`, `tf_mm` = inch value × 25.4, half-up to 0.1 mm; inch values unchanged and
   authoritative). AISC channels can now be snapped with `pmef-snap/2` (RFC-0011 open question 1,

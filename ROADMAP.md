@@ -198,9 +198,10 @@ released changes only):
   (`ELECTRIC_ARC_FURNACE` is a `reactorType`), both IDs now name other, passing conformance tests
   (`tests/conformance/manifest.json`; PIPE-U-003 is a negative test checked by `selftest.py`)
 - 🗓️ `pmef-stress`: CAESAR II .cii import/export adapter (Rust)
-- 🔄 `pmef-geom` AABBs: all 15 types of its own `PrimitiveType` enum are implemented (BOX, DISH,
-  PYRAMID and the tori conservatively); the schema types `STEEL_PROFILE`, `VALVE_BODY`,
-  `CABLE_TRAY`, `MESH_REF` and `COMPOSITE` have none, and no other crate uses `pmef-geom` yet
+- ✅ `pmef-geom` AABBs: the 15 parametric types (BOX, DISH, PYRAMID and the tori conservatively)
+  plus `STEEL_PROFILE`, `VALVE_BODY` (envelope from flange OD, else a documented heuristic) and
+  `CABLE_TRAY`; `COMPOSITE` via `aabb_union`; `MESH_REF` has no extent in the schema (bounds from
+  the mesh / PMEFX bbox LODs). Open: no other crate uses `pmef-geom` yet
 - ✅ `pmef-validate` jsonschema Rust integration (cross-file `$ref` resolution)
 - ✅ `cargo test --workspace` green — enforced by `.github/workflows/rust.yml`
 - 🔄 `pmef-adapter-cadmatic`: CADMATIC REST API adapter (compiles and tests green; frozen scope)
