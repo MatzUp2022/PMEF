@@ -59,7 +59,7 @@ pub use equipment::{p3d_class_to_pmef, P3dEquipment, P3dNozzle};
 pub use idf::{idf_bore_to_mm, idf_coord_to_mm, parse_idf, IdfFile};
 
 use pmef_core::traits::{AdapterError, AdapterStats, PmefAdapter};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -468,20 +468,32 @@ impl Plant3DAdapter {
                 *uci_count.entry(u).or_insert(0) += 1;
             }
         }
+        fn kept<'a>(comp: &'a PcfComponent, uci_count: &HashMap<&str, usize>) -> Option<&'a str> {
+            comp.attr(pcf_bridge::UCI)
+                .filter(|u| u.starts_with("urn:pmef:obj:") && uci_count.get(u) == Some(&1))
+        }
+        // Reserve every kept id first, so a generated id never collides with one of them
+        // (e.g. a component added in Plant 3D next to components that came from PMEF).
+        let mut taken: HashSet<String> =
+            components.iter().filter_map(|c| kept(c, &uci_count)).map(str::to_owned).collect();
         let mut comp_ids: Vec<String> = Vec::new();
         let mut kw_counters: HashMap<String, usize> = HashMap::new();
         for comp in &components {
-            if let Some(u) = comp.attr(pcf_bridge::UCI)
-                .filter(|u| u.starts_with("urn:pmef:obj:") && uci_count.get(u) == Some(&1))
-            {
+            if let Some(u) = kept(comp, &uci_count) {
                 comp_ids.push(u.to_owned());
                 continue;
             }
             let (_, cls, _) = pcf_to_pmef_type(&comp.keyword, comp.skey());
             let short = &cls[..4.min(cls.len())];
             let n = kw_counters.entry(short.to_owned()).or_insert(0);
-            *n += 1;
-            let id = format!("urn:pmef:obj:{}:{line_clean}-{short}-{:03}", self.config.project_code, n);
+            let id = loop {
+                *n += 1;
+                let id = format!("urn:pmef:obj:{}:{line_clean}-{short}-{:03}", self.config.project_code, n);
+                if !taken.contains(&id) {
+                    break id;
+                }
+            };
+            taken.insert(id.clone());
             comp_ids.push(id);
         }
 
@@ -995,6 +1007,20 @@ PIPE
         let connected: Vec<&str> = gasket["ports"].as_array().unwrap().iter()
             .filter_map(|p| p["connectedTo"].as_str()).collect();
         assert!(connected.contains(&"urn:pmef:obj:eaf-2026:CW-201-FL-001"), "{connected:?}");
+    }
+
+    #[test]
+    fn generated_ids_skip_kept_pmef_ids() {
+        // A pipe added in Plant 3D (no PMEF id) next to one that came from PMEF.
+        let pcf = "PIPELINE-REFERENCE L1\nPIPE\n    END-POINT 0 0 0 100\n    END-POINT 1000 0 0 100\n\
+                   PIPE\n    END-POINT 1000 0 0 100\n    END-POINT 2000 0 0 100\n\
+                   \x20   UNIQUE-COMPONENT-IDENTIFIER urn:pmef:obj:proj:L1-PIPE-001\n";
+        let mut adapter = Plant3DAdapter::new(Plant3DConfig::default());
+        let ids: Vec<String> = adapter.export_pcf_to_pmef(pcf).unwrap().lines()
+            .map(|l| serde_json::from_str::<serde_json::Value>(l).unwrap())
+            .filter(|o| o["@type"] == "pmef:Pipe")
+            .map(|o| o["@id"].as_str().unwrap().to_owned()).collect();
+        assert_eq!(ids, ["urn:pmef:obj:proj:L1-PIPE-002", "urn:pmef:obj:proj:L1-PIPE-001"]);
     }
 
     #[test]
