@@ -333,10 +333,12 @@ Each entry of `lods`:
 | `vertexCount` | SHOULD | Vertex count — lets viewers check GPU budgets before loading |
 | `errorMm` | SHOULD | Largest geometric deviation from the finest available representation [mm] (a Hausdorff-distance estimate is sufficient); drives screen-space-error LOD selection |
 | `sizeBytes` | MAY | Size of the `.glb` |
+| `offset` | MAY | `{x, y, z}` [mm]: the mesh's vertices are relative to `meshOrigin + offset` (§3.6, RFC-0017). Default `0,0,0` |
 
 `lods` **MUST** be ordered coarse to fine, and each level **MUST** occur at most once per
-object. Readers that find no `errorMm` **SHOULD** fall back to the projected size of the
-object's bounding sphere.
+object. Several entries, of one or of different objects, **MAY** reference the same `path`;
+the file is listed once in `files`. This stores repeated shapes once (RFC-0017). Readers that
+find no `errorMm` **SHOULD** fall back to the projected size of the object's bounding sphere.
 
 Example line:
 
@@ -357,7 +359,8 @@ gltf = ( (p.x − o.x) / 1000,  (p.z − o.z) / 1000,  −(p.y − o.y) / 1000 )
 This is a proper rotation plus scaling, so triangle winding is preserved. `meshOrigin` keeps
 vertex values small enough for 32-bit floats in plants with large site coordinates; writers
 **SHOULD** set it near the centre of the package extent. Mesh vertices are in final project
-position (no per-object transform is applied by the reader). A mesh **SHOULD** name its root
+position up to the level's `offset`: for an entry with `offset` `d`, use `o + d` in place of
+`o` (RFC-0017). Readers apply no other per-object transform. A mesh **SHOULD** name its root
 node after the object's `@id` and carry it in `extras.pmefId`, so that picking can be mapped
 back to the object.
 

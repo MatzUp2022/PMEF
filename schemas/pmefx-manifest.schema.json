@@ -103,7 +103,11 @@
                 "minimum": 0,
                 "description": "Largest geometric deviation from the finest representation [mm]."
               },
-              "sizeBytes": { "type": "integer", "minimum": 0 }
+              "sizeBytes": { "type": "integer", "minimum": 0 },
+              "offset": {
+                "$ref": "#/$defs/Point3",
+                "description": "RFC-0017: the mesh's vertices are relative to meshOrigin + offset [mm]; several objects may reference one mesh file with different offsets. Absent = 0,0,0."
+              }
             },
             "additionalProperties": false
           }

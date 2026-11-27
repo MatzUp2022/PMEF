@@ -170,6 +170,8 @@ pub struct PmefxWriter<W: Write + Seek> {
     zip: ZipWriter<W>,
     files: Vec<FileEntry>,
     paths: BTreeSet<String>,
+    /// Size of each glTF file by path, for levels that reuse it (RFC-0017).
+    gltf_sizes: BTreeMap<String, u64>,
     objects: BTreeMap<String, ObjectEntry>,
     main_file: Option<String>,
     package_id: Option<String>,
@@ -183,6 +185,7 @@ impl<W: Write + Seek> PmefxWriter<W> {
             zip: ZipWriter::new(inner),
             files: Vec::new(),
             paths: BTreeSet::new(),
+            gltf_sizes: BTreeMap::new(),
             objects: BTreeMap::new(),
             main_file: None,
             package_id: None,
@@ -306,11 +309,36 @@ impl<W: Write + Seek> PmefxWriter<W> {
     /// Adds a mesh level of detail (glTF binary) for object `id`. Levels are kept ordered
     /// coarse → fine; each level may occur once per object.
     pub fn add_lod(&mut self, id: &str, lod: Lod, path: &str, glb_bytes: &[u8], stats: LodStats) -> Result<(), PmefxError> {
+        self.add_lod_at(id, lod, path, glb_bytes, stats, None)
+    }
+
+    /// [`Self::add_lod`] for a mesh written relative to `meshOrigin + offset` (RFC-0017).
+    pub fn add_lod_at(&mut self, id: &str, lod: Lod, path: &str, glb_bytes: &[u8], stats: LodStats, offset: Option<Point3>) -> Result<(), PmefxError> {
         if self.object_mut(id)?.lods.iter().any(|l| l.lod == lod) {
             return invalid(format!("{id}: duplicate level {}", lod.as_str()));
         }
         glb::parse_glb_json(glb_bytes).map_err(|e| PmefxError::Invalid(format!("{path}: {e}")))?;
         self.write_entry(path, FileKind::Gltf, glb_bytes, None)?;
+        let size = glb_bytes.len() as u64;
+        self.gltf_sizes.insert(path.to_string(), size);
+        self.push_lod(id, lod, path, stats, offset, size)
+    }
+
+    /// Adds a level of detail for object `id` that uses a mesh file already in the package
+    /// (written by [`Self::add_lod`]/[`Self::add_lod_at`] for another object), placed with
+    /// its own `offset` (RFC-0017). Repeated shapes are stored once this way.
+    pub fn reuse_lod(&mut self, id: &str, lod: Lod, path: &str, stats: LodStats, offset: Option<Point3>) -> Result<(), PmefxError> {
+        let Some(&size) = self.gltf_sizes.get(path) else {
+            return invalid(format!("{id}: {path} is not a glTF file of the package"));
+        };
+        if self.object_mut(id)?.lods.iter().any(|l| l.lod == lod) {
+            return invalid(format!("{id}: duplicate level {}", lod.as_str()));
+        }
+        self.push_lod(id, lod, path, stats, offset, size)
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn push_lod(&mut self, id: &str, lod: Lod, path: &str, stats: LodStats, offset: Option<Point3>, size: u64) -> Result<(), PmefxError> {
         let o = self.object_mut(id)?;
         o.lods.push(LodRef {
             lod,
@@ -318,7 +346,8 @@ impl<W: Write + Seek> PmefxWriter<W> {
             triangles: stats.triangles,
             vertex_count: stats.vertex_count,
             error_mm: stats.error_mm,
-            size_bytes: Some(glb_bytes.len() as u64),
+            size_bytes: Some(size),
+            offset: offset.filter(|p| *p != Point3::default()),
         });
         o.lods.sort_by_key(|l| l.lod);
         Ok(())

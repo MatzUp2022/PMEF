@@ -437,6 +437,56 @@ fn mesh_lods_round_trip_through_glb_and_package() {
     }
 }
 
+/// RFC-0017: two objects share one mesh file, each placed with its own `offset`.
+#[test]
+fn shared_mesh_files_are_placed_by_offset() {
+    let ids = ["urn:pmef:obj:eaf-2026:CW-201-PIPE-001", "urn:pmef:obj:eaf-2026:CW-201-PIPE-002"];
+    let origin = Point3 { x: 1_000.0, y: 2_000.0, z: 0.0 };
+    // One tetrahedron in shape-local coordinates (its corner at 0,0,0).
+    let shape = glb::GlbMesh {
+        positions: vec![[0.0, 0.0, 0.0], [100.0, 0.0, 0.0], [0.0, 100.0, 0.0], [0.0, 0.0, 100.0]],
+        normals: vec![[0.0, 0.0, -1.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+        indices: vec![0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3],
+        color: None,
+    };
+    let bytes = glb::mesh_glb(ids[0], &shape, Point3::default());
+    let at = |x: f64| Point3 { x: x - origin.x, y: 500.0 - origin.y, z: 250.0 - origin.z };
+    let stats = || LodStats { triangles: Some(4), vertex_count: Some(4), error_mm: None };
+
+    let mut w = PmefxWriter::new(Cursor::new(Vec::new()));
+    w.add_ndjson("model/main.ndjson", &example("pump-skid-complete.ndjson")).unwrap();
+    w.set_mesh_origin(origin).unwrap();
+    w.add_lod_at(ids[0], Lod::Lod3Fine, "meshes/shape.glb", &bytes, stats(), Some(at(3_000.0)))
+        .unwrap();
+    w.reuse_lod(ids[1], Lod::Lod3Fine, "meshes/shape.glb", stats(), Some(at(7_000.0)))
+        .unwrap();
+    // Only files of the package can be reused.
+    assert!(w.reuse_lod(ids[1], Lod::Lod2Medium, "meshes/missing.glb", stats(), None).is_err());
+    let archive = w.finish(FinishOptions::default()).unwrap().into_inner();
+
+    let mut r = reader(&archive);
+    assert_eq!(r.verify(), Vec::<String>::new());
+    let gltf_files = r.manifest().files.iter().filter(|f| f.kind == FileKind::Gltf).count();
+    assert_eq!(gltf_files, 1, "the shape is stored once");
+    let package_origin = r.manifest().mesh_origin.unwrap_or_default();
+    let index = r.object_index().unwrap();
+    let entry_v = validator("ObjectEntry");
+    for (id, x) in ids.iter().zip([3_000.0, 7_000.0]) {
+        let o = index.iter().find(|o| o.id == *id).unwrap();
+        let v = serde_json::to_value(o).unwrap();
+        assert_valid(&entry_v, &v, "object index line");
+        let back: ObjectEntry = serde_json::from_value(v).unwrap();
+        let l = &o.lods[0];
+        assert_eq!(back.lods[0].offset, l.offset, "serde round trip");
+        assert!(l.offset.is_some());
+        let m = glb::read_mesh_glb(&r.read_file(&l.path).unwrap(), l.mesh_origin(package_origin))
+            .unwrap();
+        let min = m.positions.iter().fold([f64::MAX; 3], |a, p| [0, 1, 2].map(|k| a[k].min(p[k])));
+        let ok = (min[0] - x).abs() < 1e-3 && (min[1] - 500.0).abs() < 1e-3 && (min[2] - 250.0).abs() < 1e-3;
+        assert!(ok, "{id}: {min:?}");
+    }
+}
+
 #[test]
 #[allow(clippy::manual_is_multiple_of)] // MSRV 1.75
 fn glb_reader_applies_node_transforms_and_rejects_garbage() {
