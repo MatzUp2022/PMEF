@@ -297,100 +297,15 @@ impl Scene {
     }
 }
 
-fn p3v(v: &Value) -> Option<P3> {
-    let a = v.as_array()?;
-    Some([
-        a.first()?.as_f64()?,
-        a.get(1)?.as_f64()?,
-        a.get(2)?.as_f64()?,
-    ])
-}
-
-/// Conservative box of a PMEF parametric primitive (spec 04); `None` for unsupported types.
-/// Composite primitives are the union of their children.
+/// Conservative box of a PMEF parametric primitive (spec 04); `None` for unsupported types
+/// and `MESH_REF`. Composite primitives are the union of their children. Delegates to
+/// [`pmef_geom::schema_primitive_aabb`], the single implementation for schema primitives.
 pub fn primitive_box(p: &Value) -> Option<Aabb> {
-    let f = |k: &str| p[k].as_f64();
-    let t = p["type"].as_str()?;
-    if t == "COMPOSITE" {
-        return p["children"]
-            .as_array()?
-            .iter()
-            .filter_map(|c| primitive_box(&c["primitive"]))
-            .reduce(|a, b| a.union(&b));
-    }
-    let c = p3v(&p["center"]).or_else(|| p3v(&p["origin"]))?;
-    let axis = p3v(&p["axis"]).unwrap_or([0.0, 0.0, 1.0]);
-    // Disc of radius r perpendicular to the axis, swept along axis by `len`.
-    let swept = |r: f64, len: f64| {
-        let ext = axis.map(|a| r * (1.0 - a * a).max(0.0).sqrt());
-        let end = [0, 1, 2].map(|i| c[i] + axis[i] * len);
-        Aabb::from_points(c, end)
-            .union(&Aabb::from_points(c, c))
-            .inflate(0.0)
-            .union(&Aabb {
-                min: [0, 1, 2].map(|i| c[i].min(end[i]) - ext[i]),
-                max: [0, 1, 2].map(|i| c[i].max(end[i]) + ext[i]),
-            })
-    };
-    // Field names per schemas/pmef-geometry.schema.json; legacy aliases are accepted.
-    match t {
-        "CYLINDER" | "PIPE" => Some(swept(f("radius")?, f("length").or(f("height"))?)),
-        // `depth` is optional; the shell radius bounds every head type.
-        "DISH" => {
-            let r = f("shellRadius").or(f("radius"))?;
-            Some(swept(r, f("depth").unwrap_or(r)))
-        }
-        "CONE" | "SNOUT" => {
-            let r1 = f("r1").or(f("radius"))?;
-            let r2 = f("r2").or(f("radius2")).unwrap_or(0.0);
-            let off = f("offsetX")
-                .unwrap_or(0.0)
-                .hypot(f("offsetY").unwrap_or(0.0));
-            // Sheared end faces (spec 04 §4.3) move face points along the axis by up to
-            // r·|(tan shearX, tan shearY)|; inflating by that bound stays conservative.
-            let shear = |x: &str, y: &str, r: f64| {
-                let t = |k: &str| f(k).unwrap_or(0.0).to_radians().tan();
-                r * t(x).hypot(t(y))
-            };
-            let overhang = shear("bottomShearX", "bottomShearY", r1)
-                .max(shear("topShearX", "topShearY", r2));
-            Some(swept(r1.max(r2) + off, f("length").or(f("height"))?).inflate(overhang))
-        }
-        "SPHERE" => Some(Aabb::from_points(c, c).inflate(f("radius")?)),
-        "CIRC_TORUS" => Some(Aabb::from_points(c, c).inflate(f("torusRadius")? + f("tubeRadius")?)),
-        "RECT_TORUS" => {
-            Some(Aabb::from_points(c, c).inflate(f("outerRadius")?.hypot(f("height")? / 2.0)))
-        }
-        // Bounded by the half-diagonal of the larger face plus the top offset (local frame
-        // per spec 04 §4.3 is not needed for a conservative box).
-        "PYRAMID" => {
-            let bottom = f("bottomX")?.hypot(f("bottomY")?) / 2.0;
-            let top = f("topX")?.hypot(f("topY")?) / 2.0
-                + f("offsetX").unwrap_or(0.0).hypot(f("offsetY").unwrap_or(0.0));
-            Some(swept(bottom.max(top), f("height")?))
-        }
-        "BOX" => {
-            let h = [
-                f("xLen").or(f("length"))?,
-                f("yLen").or(f("width"))?,
-                f("zLen").or(f("height")).or(f("depth"))?,
-            ];
-            let rotated = ["rotationX", "rotationY", "rotationZ"]
-                .iter()
-                .any(|k| f(k).is_some_and(|v| v.abs() > 1e-9));
-            if rotated {
-                // Rotated box: bounded by its circumscribed sphere.
-                let r = (h[0] * h[0] + h[1] * h[1] + h[2] * h[2]).sqrt() / 2.0;
-                Some(Aabb::from_points(c, c).inflate(r))
-            } else {
-                Some(Aabb {
-                    min: [0, 1, 2].map(|i| c[i] - h[i] / 2.0),
-                    max: [0, 1, 2].map(|i| c[i] + h[i] / 2.0),
-                })
-            }
-        }
-        _ => None,
-    }
+    let b = pmef_geom::schema_primitive_aabb(p, &profile_half)?;
+    Some(Aabb {
+        min: [b.min.x, b.min.y, b.min.z],
+        max: [b.max.x, b.max.y, b.max.z],
+    })
 }
 
 /// Half of the larger cross-section dimension of a catalog steel profile (`EN:HEA200`).
@@ -476,6 +391,18 @@ mod tests {
             "axis": [0.0, 0.0, 1.0], "r1": 100.0, "r2": 100.0, "length": 300.0,
             "bottomShearX": 45.0})).unwrap();
         assert!(b.min[2] <= -100.0 + 1e-9, "{b:?}");
+    }
+
+    #[test]
+    fn compound_schema_primitives_are_obstacles() {
+        // via pmef-geom; the member size comes from the profile catalog
+        let m = serde_json::json!({"type": "STEEL_PROFILE", "startPt": [0, 0, 0],
+            "endPt": [6000, 0, 0], "profileId": "EN:HEB300"});
+        assert_eq!(primitive_box(&m).unwrap().max[1], 150.0);
+        let v = serde_json::json!({"type": "VALVE_BODY", "valveBodyType": "BALL", "center": [0, 0, 0],
+            "direction": [1, 0, 0], "boreD": 50, "faceToFace": 200});
+        assert!(primitive_box(&v).is_some());
+        assert!(primitive_box(&serde_json::json!({"type": "MESH_REF", "meshUri": "a.glb"})).is_none());
     }
 
     #[test]

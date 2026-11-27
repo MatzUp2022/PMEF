@@ -11,6 +11,18 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Changed — routing obstacles from `pmef-geom`
+
+- **`pmef_geom::schema_primitive_aabb`**: conservative bounds of a primitive given as schema JSON
+  (all spec 04 types, `STEEL_PROFILE` with a profile-size callback, `VALVE_BODY`, `CABLE_TRAY`,
+  `COMPOSITE`; `MESH_REF` → none). Moved from `pmef-route`, which now delegates to it, so the
+  routing kernel and the geometry crate share one implementation.
+- **`pmef-route`**: `STEEL_PROFILE`, `VALVE_BODY` and `CABLE_TRAY` primitives in
+  `ParametricGeometry` now block routes (before they were ignored). `examples/pump-skid-auto-routed.ndjson`
+  and the line-list run are byte-identical; the WASM build grows by about 15 kB.
+- `pmef-geom` drops its unused `nalgebra`, `serde` and `thiserror` dependencies and uses plain
+  `serde_json` (no `preserve_order` forced on consumers of `pmef-route`).
+
 ### Added — PCF to PMEF as WASM
 
 - **`pmef-plant3d-wasm`**: one call, `pcf_to_pmef(pcf)`, runs the Plant 3D adapter in the

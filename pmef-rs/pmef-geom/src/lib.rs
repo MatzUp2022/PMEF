@@ -6,6 +6,10 @@
 //! `STEEL_PROFILE`, `VALVE_BODY` and `CABLE_TRAY`. `COMPOSITE` is bounded by
 //! [`aabb_union`] of its children; `MESH_REF` carries no extent in the schema,
 //! so its bounds come from the referenced mesh (e.g. PMEFX bounding-box LODs).
+//! [`schema_primitive_aabb`] reads a primitive as schema JSON directly.
+
+mod schema;
+pub use schema::schema_primitive_aabb;
 
 // ---------------------------------------------------------------------------
 // Vec3
