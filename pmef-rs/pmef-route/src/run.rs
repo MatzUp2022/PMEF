@@ -100,11 +100,21 @@ pub fn run_cached(
             }
         }
     }
-    let (cables, tray_fill) = if problem.cables.is_empty() {
+    let (mut cables, tray_fill) = if problem.cables.is_empty() {
         (Vec::new(), Vec::new())
     } else {
         route_cables(&problem)
     };
+    if let Some(set) = problem.cable_settings.as_ref().filter(|s| s.route_drops) {
+        let ds = crate::drop::DropSettings {
+            step: set.drop_step,
+            margin: problem.grid.margin.min(2000.0),
+            clearance: set.drop_clearance,
+            bend_penalty: problem.settings.bend_penalty,
+            max_expansions: problem.settings.max_expansions,
+        };
+        crate::drop::route_drops(&mut cables, &problem.trays, &scene, &ds);
+    }
     let mut objects = Vec::new();
     if let Some(plant) = plant {
         objects.push(json!({

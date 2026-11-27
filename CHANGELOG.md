@@ -11,6 +11,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added — cable drops routed past obstacles (`pmef-route`)
+
+- `cableSettings.routeDrops`: the drops between cable ends and trays are routed on an orthogonal
+  grid past the scene obstacles (cable radius + `dropClearance`, grid `dropStep`); the drop length
+  is the routed length instead of the L1 distance. Unroutable drops keep L1 and add a cable
+  `warnings` entry; report field `routedDrops`.
+
 ### Changed — cable lengths with bend arcs (`pmef-route`)
 
 - Corners on tray runs count as arcs at the centreline radius (tray `bendRadius` + width/2):
