@@ -394,7 +394,8 @@ def tray_centreline(o):
         return o["path"]
     if "startPoint" in o and "endPoint" in o:
         return [o["startPoint"], o["endPoint"]]
-    return []
+    pts = [p["coordinate"] for p in o.get("ports") or [] if "coordinate" in p]
+    return pts if len(pts) >= 2 else []
 
 
 def check_trays(objs, by_id):
@@ -427,13 +428,14 @@ def check_trays(objs, by_id):
             continue
         joined = set(o.get("connectedTrayIds") or [])
         via_ports = {p.get("connectedTo") for p in o.get("ports") or []} - {None}
-        if o.get("ports") and joined:
+        if o.get("ports"):
             for x in sorted(via_ports - joined):
                 issues.append(f"{oid}: port connected to {x}, which is not in connectedTrayIds")
             for x in sorted(joined - via_ports):
                 issues.append(f"{oid}: connectedTrayIds lists {x}, but no port connects to it")
         dirs = [p["direction"] for p in ports if "direction" in p]
-        if o.get("fittingType") in TRAY_BENDS and "angle" in o and len(ports) == 2 and len(dirs) == 2:
+        if (o.get("fittingType") in TRAY_BENDS and "angle" in o and len(ports) == 2 and len(dirs) == 2
+                and norm(dirs[0]) > 0 and norm(dirs[1]) > 0):
             cosang = max(-1.0, min(1.0, dot(dirs[0], dirs[1]) / (norm(dirs[0]) * norm(dirs[1]))))
             bend = 180.0 - math.degrees(math.acos(cosang))
             if abs(bend - o["angle"]) > 1.0:
