@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Status** | `DRAFT` — schema, spec text, Rust model, geometry check, example and tests in this repository |
-| **Discussion** | issue opened with the implementing pull request, 30-day period |
+| **Discussion** | [#71](https://github.com/MatzUp2022/PMEF/issues/71), 30-day period 2026-11-27 → 2026-12-27 |
 | **Target version** | 0.10.0 (additive: one type, optional fields on two types, `width`/`height` no longer assumed present) |
 | **Depends on** | spec 02 §2.6, §2.10, §6.6–§6.8; RFC-0001 (provenance), RFC-0006 (tray fittings), RFC-0012 (placeholders) |
 | **Working groups** | WG-E&I, WG-Adapters |

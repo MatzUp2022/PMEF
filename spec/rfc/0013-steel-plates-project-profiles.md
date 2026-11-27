@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Status** | `DRAFT` — schema, spec text, Rust model, E3D adapter mapping, example and tests in this repository |
-| **Discussion** | [#54](https://github.com/MatzUp2022/PMEF/issues/54) (finding from the Huldra test case) |
+| **Discussion** | [#69](https://github.com/MatzUp2022/PMEF/issues/69), 30-day period 2026-11-27 → 2026-12-27 |
 | **Target version** | 0.10.0 (additive: one object type, optional fields, one catalog field, catalog entries) |
 | **Depends on** | spec 02 §5.3, §7; spec 05 §7.2, §8.1; `pmef-steel`, `pmef-catalog` schemas |
 | **Working groups** | WG-Steel, WG-Catalogs, WG-Adapters |
