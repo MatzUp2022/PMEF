@@ -29,7 +29,7 @@ fn root() -> PathBuf {
 /// Frozen disciplines whose Rust types are not maintained (known drift, docs/AUDIT.md P3.9).
 const FROZEN: &[&str] = &[
     "pmef:InstrumentObject", "pmef:InstrumentLoop", "pmef:PLCObject",
-    "pmef:CableObject", "pmef:CableTrayRun", "pmef:MTPModule",
+    "pmef:CableObject", "pmef:MTPModule",
 ];
 
 type RoundTrip = fn(&Value) -> Result<Value, String>;
