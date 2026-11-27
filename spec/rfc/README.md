@@ -22,6 +22,7 @@ Status values (issue template): `DRAFT` → `REVIEW` → `APPROVED` / `REJECTED`
 | [0011](0011-catalog-snapping-v2.md) | Catalog snapping version 2 `pmef-snap/2` (follow-up of 0002) | 0.10.0 | `DRAFT` | [#45](https://github.com/MatzUp2022/PMEF/issues/45) | Inch-only catalogs; olets/caps/valves (WG-Catalogs, WG-Piping) |
 | [0012](0012-placeholder-custom-values.md) | Placeholder and custom values (`UNSPECIFIED`, `CUSTOM`, `placeholders`) | 0.10.0 | `DRAFT` | — | Extend `placeholders` to piping, equipment, steel (WG-Adapters) |
 | [0015](0015-cable-tray-route-ports.md) | Cable tray route, ports and source data | 0.10.0 | `DRAFT` | [#56](https://github.com/MatzUp2022/PMEF/issues/56) | Tray supports and network nodes (WG-E&I) |
+| [0016](0016-pipe-supports-outside-segments.md) | Pipe supports outside piping segments and support assemblies | 0.10.0 | `DRAFT` | [#53](https://github.com/MatzUp2022/PMEF/issues/53) | Support loads per part vs. per assembly (WG-Piping) |
 
 RFCs 0001–0003 are fully implemented in this repository (schemas, spec text, Rust reference
 implementation, examples, tests in CI); each RFC's *Review Status* section lists the evidence.

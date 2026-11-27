@@ -458,7 +458,7 @@ The following piping component subtypes are defined in v0.9:
 | `pmef:Olet` | `oletType`, `branchDiameter` [mm] | 8 olet types |
 | `pmef:Gasket` | `gasketType`, `gasketMaterial`, `bondingJumper` | `bondingJumper: true`: the flanged joint is bridged by a bonding jumper (earthing cable) |
 | `pmef:Weld` | `weldSpec` (`WeldSpec`), `connects[2]` | `connects` MUST have exactly 2 IDs |
-| `pmef:PipeSupport` | `supportSpec` (`SupportSpec`), `supportsMark` | 13 support types |
+| `pmef:PipeSupport` | `supportSpec` (`SupportSpec`), `supportsMark`, `supportedIds` | 13 support types; supports outside a branch and support assemblies: §9.11 |
 | `pmef:GenericPipingComponent` | `nativeType` (e.g. `E3D:PCOM`) | Any in-line component without a specific subtype (coupling, union, in-line instrument, closure, …); classes in `componentClass` ([RFC-0009](rfc/0009-generic-piping-component.md)) |
 | `pmef:Spool` | `spoolMark`, `components[]`, `totalWeight` [kg] | Fabrication unit |
 
@@ -725,7 +725,7 @@ All relationship types extend a base structure:
 | `pmef:IsPartOf` | child → parent | any object | Plant/Unit/Area/System | — |
 | `pmef:IsConnectedTo` | bidirectional | any object | any object | `connectionMedium`, `connectionPointSource/Target` |
 | `pmef:IsDerivedFrom` | physical → functional | physical object | DEXPI/functional object | `sourceStandard`, `mappingVersion` |
-| `pmef:Supports` | structure → load | SteelMember | PipeSupport/PipingLine | `loadTransferred` (6 DOF) |
+| `pmef:Supports` | structure → load | SteelMember, PipeSupport | PipeSupport, Pipe, PipingSegment, PipingNetworkSystem | `loadTransferred` (6 DOF) |
 | `pmef:ControlledBy` | equipment → instrument | valve/motor | instrument/loop | `controlMode`, `signalPath` |
 | `pmef:IsDocumentedBy` | object → document | any object | document | `documentType`, `documentId`, `documentUri` |
 | `pmef:IsRevisionOf` | new → old | new revision | old revision | `changeReason`, `changeType`, `correspondence` ([RFC-0003](rfc/0003-as-built-correspondence.md): as-built ↔ design, `changeType = AS_BUILT`) |
@@ -864,6 +864,24 @@ Since 0.10 (RFC-0006), `PipeSupport.catalogRef` **MAY** reference a `PIPE_SUPPOR
 catalog entry (e.g. `pipe-supports-generic`) by its `supportCode`. The entry fixes the
 support type, the restrained degrees of freedom and the DN range; the object's
 `SupportSpec.supportType` **SHOULD** equal the entry's `supportType`.
+
+#### Supports outside piping segments and support assemblies (RFC-0016)
+
+Source models often keep supports in their own support zones rather than under the pipe they
+carry (E3D support assemblies with hangers and clamps). A `PipeSupport` is then modelled as
+follows:
+
+- `isPartOf` is the `PipingSegment` or `PipingNetworkSystem` when the support sits on a branch,
+  otherwise the `Unit`/`Area` of the support zone. A hanger, clamp or shoe that belongs to a
+  support assembly has `isPartOf` = the assembly `PipeSupport`.
+- `supportedIds` lists the pipes, segments or lines the support carries. It **SHOULD** be
+  present whenever `isPartOf` is not a piping segment or system; it is omitted only when the
+  carried pipe is not known. `supportedIds` is equivalent to `pmef:Supports` relationships with
+  the support as `sourceId`; when both are present they **MUST** name the same targets.
+- `componentSpec` stays required: the minimal value is `{"componentClass":"PIPE_SUPPORT"}`.
+  The support design data is in `supportSpec`.
+- E3D mapping: `ATTA`, `REST` (assembly), `HANG`, `PCLA`, `SHU` → `pmef:PipeSupport`
+  (`catalogs/native-types-e3d.json` 2026.2).
 
 ---
 

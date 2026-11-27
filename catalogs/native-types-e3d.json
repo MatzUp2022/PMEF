@@ -2,7 +2,7 @@
   "$schema": "https://pmef.net/schemas/0.9/pmef-catalog.schema.json",
   "catalogId": "native-types-e3d",
   "catalogType": "NATIVE_TYPE_MAPPING",
-  "version": "2026.1",
+  "version": "2026.2",
   "sourceSystem": "AVEVA_E3D",
   "description": "AVEVA E3D / PDMS piping element types (PML keyword, optionally refined by SKEY) to PMEF @type and componentClass. Used by pmef-adapter-e3d. The first entry whose conditions hold wins, so SKEY-specific entries precede the generic entry of the same element type. Element types without a specific PMEF type map to pmef:GenericPipingComponent, so no component is dropped.",
   "notes": [
@@ -270,6 +270,34 @@
       "pmefType": "pmef:PipeSupport",
       "componentClass": "PIPE_SUPPORT",
       "note": "Attachment point on a branch; in practice the location of a pipe support. ATTA without a support (other ATTY) still maps here; the support itself is detailed in supportSpec when known"
+    },
+    {
+      "catalogId": "REST",
+      "nativeType": "REST",
+      "pmefType": "pmef:PipeSupport",
+      "componentClass": "PIPE_SUPPORT",
+      "note": "Support assembly in a support zone (outside a branch); maps to the assembly PipeSupport, its hangers and clamps are PipeSupports with isPartOf = the assembly, the carried pipe in supportedIds (spec 02 §9.11)"
+    },
+    {
+      "catalogId": "HANG",
+      "nativeType": "HANG",
+      "pmefType": "pmef:PipeSupport",
+      "componentClass": "PIPE_SUPPORT",
+      "note": "Hanger of a support assembly; isPartOf = the assembly PipeSupport"
+    },
+    {
+      "catalogId": "PCLA",
+      "nativeType": "PCLA",
+      "pmefType": "pmef:PipeSupport",
+      "componentClass": "PIPE_SUPPORT",
+      "note": "Pipe clamp of a support assembly; isPartOf = the assembly PipeSupport, clamped pipe in supportedIds"
+    },
+    {
+      "catalogId": "SHU",
+      "nativeType": "SHU",
+      "pmefType": "pmef:PipeSupport",
+      "componentClass": "PIPE_SUPPORT",
+      "note": "Pipe shoe; supportSpec.supportType RESTING when nothing else is known"
     }
   ]
 }

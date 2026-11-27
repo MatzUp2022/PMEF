@@ -345,6 +345,14 @@
             "@type":       { "const": "pmef:PipeSupport" },
             "supportSpec": { "$ref": "pmef-property-sets.schema.json#/$defs/SupportSpec" },
             "supportsMark":{ "type": "string", "description": "Support mark from isometric" },
+            "isPartOf":    { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "PipingSegment or PipingNetworkSystem; for supports modelled outside a branch (support zones) the Unit/Area, or the PipeSupport assembly a hanger or clamp belongs to (spec 02 §9.11)" },
+            "supportedIds": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+              "description": "Pipes, segments or lines this support carries; SHOULD be present when isPartOf is not a piping segment or system (spec 02 §9.11). Equivalent to pmef:Supports relationships with this support as sourceId"
+            },
             "structuralAttachmentId": {
               "$ref": "pmef-base.schema.json#/$defs/PmefId",
               "description": "SteelObject or CivilObject this support is welded/bolted to"

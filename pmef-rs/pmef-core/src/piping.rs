@@ -497,9 +497,10 @@ impl SupportSpec {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+/// Support type, as `SupportSpec.supportType` in `pmef-property-sets.schema.json`.
 pub enum SupportType {
-    Anchor, Guide, Stop, Resting, SpringVariable, SpringConstant,
-    Strut, Sway, Rigid, Dummy, Lugs, ClampOn, Trunnion,
+    Anchor, Guide, Directional, SpringVariable, SpringConstant, Hanger, Resting,
+    Trunnion, Clamp, Strap, Saddle, DummyLeg, SlidePlate,
 }
 
 piping_component_base!(PipeSupport {
@@ -509,6 +510,10 @@ piping_component_base!(PipeSupport {
     support_spec: Option<SupportSpec>,
     #[serde(skip_serializing_if = "Option::is_none")]
     structural_attachment_id: Option<PmefId>,
+    /// Pipes, segments or lines carried (RFC-0016); needed when `isPartOf` is a unit/area
+    /// or a support assembly rather than a piping segment.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    supported_ids: Vec<PmefId>,
 });
 
 /// Fabrication spool — a group of components shop-fabricated as one unit.

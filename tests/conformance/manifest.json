@@ -190,6 +190,36 @@
       "expect": "invalid"
     },
     {
+      "id": "PIPE-U-019",
+      "name": "PipeSupport assembly in a unit with supportedIds — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "piping",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/PIPE-U-019.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "PIPE-U-020",
+      "name": "PipeSupport part of an assembly (hanger) — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "piping",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/PIPE-U-020.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "PIPE-U-021",
+      "name": "PipeSupport with empty supportedIds — rejected",
+      "category": "negative",
+      "level": 2,
+      "domain": "piping",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/PIPE-U-021.ndjson",
+      "expect": "invalid"
+    },
+    {
       "id": "EQUIP-U-001",
       "name": "Vessel with VesselDesign — valid",
       "category": "unit",
