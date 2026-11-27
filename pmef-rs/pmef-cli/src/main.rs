@@ -832,6 +832,12 @@ fn cmd_check(file: PathBuf, json_output: bool, output: Option<PathBuf>) -> Resul
         "all connectedTo targets resolve".into() } else { format!("{} unresolved connectedTo: {}", broken.len(), list(&broken)) }));
     let info = if outside.is_empty() { "none".to_owned() } else { format!("{}: {}", outside.len(), list(&outside)) };
 
+    // mesh_ref targets (spec 04 §2.3): resolve the fragment when the glTF file is in the package.
+    let (mesh_failed, mesh_notes) = check_mesh_refs(&file, &objects);
+    checks.push(("meshRefsResolve", mesh_failed.is_empty(), if mesh_failed.is_empty() {
+        "all mesh_ref fragments resolve (or their file is not in the package)".into()
+    } else { format!("{} unresolved mesh_ref: {}", mesh_failed.len(), list(&mesh_failed)) }));
+
     let failed = checks.iter().filter(|c| !c.1).count();
     let version = headers.first().and_then(|h| h.value.get("pmefVersion")).and_then(|v| v.as_str()).unwrap_or("?");
     let mut by_type: Vec<(String, usize)> = objects.iter().fold(HashMap::new(), |mut m, o| {
@@ -850,6 +856,7 @@ fn cmd_check(file: PathBuf, json_output: bool, output: Option<PathBuf>) -> Resul
             "checks": checks.iter().map(|(n, ok, d)| serde_json::json!({
                 "check": n, "status": if *ok { "PASS" } else { "FAIL" }, "detail": d })).collect::<Vec<_>>(),
             "referencesOutsidePackage": outside,
+            "meshRefNotes": mesh_notes,
             "typeCounts": by_type.iter().map(|(t, n)| (t.clone(), serde_json::json!(n))).collect::<serde_json::Map<String, serde_json::Value>>(),
         }))?
     } else {
@@ -858,6 +865,9 @@ fn cmd_check(file: PathBuf, json_output: bool, output: Option<PathBuf>) -> Resul
             t += &format!("  {} {n}: {d}\n", if *ok { "✓" } else { "✗" });
         }
         t += &format!("  i references outside the package (unit, functional model; not checked): {info}\n");
+        if !mesh_notes.is_empty() {
+            t += &format!("  i mesh_ref notes: {}: {}\n", mesh_notes.len(), list(&mesh_notes));
+        }
         t += &format!("{} — {} of {} checks passed\n", if failed == 0 { "PASS" } else { "FAIL" }, checks.len() - failed, checks.len());
         t
     };
@@ -869,6 +879,60 @@ fn cmd_check(file: PathBuf, json_output: bool, output: Option<PathBuf>) -> Resul
         std::process::exit(1);
     }
     Ok(())
+}
+
+/// Resolve `geometry.ref` of type `mesh_ref` and `MESH_REF.meshUri` (inside ParametricGeometry,
+/// also in COMPOSITE children) against glTF files next to the package. Returns (failures, notes):
+/// notes list stale indices and files that are not in the package.
+fn check_mesh_refs(file: &std::path::Path, objects: &[pmef_io::RawPmefObject]) -> (Vec<String>, Vec<String>) {
+    use pmef_io::mesh_ref;
+    fn uris<'a>(prim: &'a serde_json::Value, out: &mut Vec<&'a str>) {
+        if prim.get("type").and_then(|v| v.as_str()) == Some("MESH_REF") {
+            out.extend(prim.get("meshUri").and_then(|v| v.as_str()));
+        }
+        for c in prim.get("children").and_then(|v| v.as_array()).into_iter().flatten() {
+            if let Some(p) = c.get("primitive") {
+                uris(p, out);
+            }
+        }
+    }
+    let dir = file.parent().unwrap_or(std::path::Path::new("."));
+    let mut docs: std::collections::HashMap<String, Result<serde_json::Value, String>> = Default::default();
+    let (mut failed, mut notes) = (Vec::new(), Vec::new());
+    for o in objects {
+        let mut refs = Vec::new();
+        let g = o.value.get("geometry");
+        if g.and_then(|g| g.get("type")).and_then(|v| v.as_str()) == Some("mesh_ref") {
+            refs.extend(g.and_then(|g| g.get("ref")).and_then(|v| v.as_str()));
+        }
+        if let Some(p) = o.value.get("primitive") {
+            uris(p, &mut refs);
+        }
+        for r in refs {
+            let parsed = match mesh_ref::parse(r) {
+                Ok(p) => p,
+                Err(e) => { failed.push(format!("{} -> {r}: {e}", o.id_str)); continue; }
+            };
+            // Only package-relative paths are checked; URIs with a scheme point elsewhere.
+            let rel = parsed.path.strip_prefix("file:").unwrap_or(&parsed.path);
+            if rel.contains("://") || rel.starts_with('/') || rel.contains(':') {
+                continue;
+            }
+            let path = dir.join(rel);
+            if !path.is_file() {
+                notes.push(format!("{} -> {rel}: file not in the package", o.id_str));
+                continue;
+            }
+            let doc = docs.entry(rel.to_owned()).or_insert_with(|| {
+                std::fs::read(&path).map_err(|e| e.to_string()).and_then(|b| mesh_ref::gltf_json(&b))
+            });
+            match doc.as_ref().map_err(Clone::clone).and_then(|d| mesh_ref::resolve(d, &parsed)) {
+                Ok(res) => notes.extend(res.warnings.into_iter().map(|w| format!("{} -> {r}: {w}", o.id_str))),
+                Err(e) => failed.push(format!("{} -> {r}: {e}", o.id_str)),
+            }
+        }
+    }
+    (failed, notes)
 }
 
 async fn cmd_check_refs(file: PathBuf, strict: bool) -> Result<()> {

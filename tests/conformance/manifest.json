@@ -290,6 +290,26 @@
       "expect": "invalid"
     },
     {
+      "id": "EQUIP-U-013",
+      "name": "mesh_ref with glTF node fragment and meshFrame — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "equipment",
+      "requirement": "CL2-03",
+      "fixture": "fixtures/unit/EQUIP-U-013.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "EQUIP-U-014",
+      "name": "mesh_ref with unknown fragment selector — rejected",
+      "category": "negative",
+      "level": 2,
+      "domain": "equipment",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/EQUIP-U-014.ndjson",
+      "expect": "invalid"
+    },
+    {
       "id": "EI-U-001",
       "name": "InstrumentObject — valid",
       "category": "unit",

@@ -81,7 +81,7 @@ When `type` is `"parametric"`, `ref` points to the `@id` of a `pmef:ParametricGe
 
 When `type` is `"mesh_ref"`, `"step_ref"`, or `"usd_ref"`, `ref`
 is a file URI or package-relative path to the external geometry
-file.
+file; a `mesh_ref` may select one glTF node with a fragment (§2.3).
 
 ### 2.2 Multiple Geometry Layers per Object
 
@@ -105,6 +105,43 @@ alternative-format representations linked via
 ```
 
 ---
+
+### 2.3 `mesh_ref` References
+
+For `type: "mesh_ref"`, `ref` is `<file>[#<fragment>]`. `<file>` is a package-relative path
+(e.g. `meshes/HA-PIPE.glb`) or a URI. Without a fragment the whole file is the object's
+geometry. The fragment selects one node of a glTF 2.0 file:
+
+```text
+fragment = selector *( ";" selector )
+selector = "/nodes/" index          ; JSON pointer into the glTF JSON
+         | "node=" value            ; node "name"
+         | "extras." key "=" value  ; member of the node's "extras", compared as text
+```
+
+Values are percent-encoded where they contain `;`, `=`, `#` or `%`. Examples:
+`HA-PIPE.glb#/nodes/34`, `HA-PIPE.glb#/nodes/34;extras.RefNo=16791/39427`,
+`skid.glb#node=P-201A`.
+
+- Node indices change when a file is exported again. A writer **SHOULD** add a stable
+  selector (`node=` or `extras.`) whenever the source has one (e.g. the AVEVA reference number
+  `RefNo` in `extras`); it **MAY** add the index as a hint.
+- A reader resolves the stable selectors first: all of them **MUST** match the same single
+  node. The index is used alone only when no stable selector is given. If the index points
+  to another node than the stable selectors, the stable match wins and the reader
+  **SHOULD** warn.
+- The same syntax applies to `MESH_REF.meshUri` (§4.2).
+- `pmef check` resolves every fragment whose file lies in the package and fails on
+  unresolved or ambiguous selectors.
+
+The optional `meshFrame` gives the frame of the mesh coordinates: `unit` (`m` or `mm`),
+`upAxis` (`Y`: mesh `(x, y, z)` is project `(x, −z, y)`; `Z`: axes as in the project) and
+`origin` (project coordinates in mm of the mesh origin, added after unit and axis
+conversion). Without `meshFrame` the glTF convention of §5.3 applies (metres, Y-up, origin
+at project `0,0,0`). Converters that write Z-up files with a local origin, as is common for
+files converted from plant design review formats, **MUST** state it in `meshFrame`.
+
+The level of detail of the mesh is the existing `lod` field of the `GeometryReference`.
 
 ## 3 Level of Detail System
 
@@ -410,7 +447,7 @@ Reference to a pre-computed mesh file. Used when no parametric primitive is avai
 | Field | Type | Description |
 |-------|------|-------------|
 | `type` | const | `"MESH_REF"` |
-| `meshUri` | string (URI) | URI to the mesh file |
+| `meshUri` | string (URI) | URI to the mesh file, optionally with a node fragment (§2.3) |
 | `meshFormat` | enum | `GLTF`, `USD`, `STEP_AP242`, `OBJ`, `STL` |
 | `featureId` | integer \| null | glTF `EXT_mesh_features` feature ID for semantic annotation. |
 

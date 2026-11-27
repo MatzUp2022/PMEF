@@ -71,7 +71,8 @@ reference implementation. Dates are targets, not commitments.
 - 🗓️ **`pmef-adapter-cadmatic`** — CADMATIC via REST Web API (Swagger)
 - 🔄 **`pmef-adapter-e3d`** — AVEVA E3D via PML scripting only (semantics + design-primitive
   geometry); no RVM parsing ([DD-011](docs/design-decisions.md#dd-011-e3d-geometry-via-pml-no-rvm-parsing))
-- 🗓️ **RVM-only models (DD-011, option D)** — no RVM code in PMEF. Instead:
+- 🔄 **RVM-only models (DD-011, option D)** — no RVM code in PMEF. Reference convention
+  done (spec 04 §2.3: glTF node fragment, `meshFrame`, resolved by `pmef check`). Instead:
   - `mesh_ref` import path: attach glTF 2.0 meshes (produced by an external RVM→glTF tool
     run by the user) to PMEF objects via `GeometryReference.ref`, matched by E3D name/address
   - guide in `docs/` describing the workflow and the user's licence responsibility

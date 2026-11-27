@@ -185,3 +185,9 @@ and mapped to `pmef:ParametricGeometry`. The former `rvm.rs` parser was removed.
 - Models that exist only as RVM files are not covered by the adapter. Planned path (see
   `ROADMAP.md`): convert RVM → glTF 2.0 with an external tool, chosen and run by the user,
   and reference the result as `mesh_ref` geometry. PMEF itself never parses RVM.
+
+**Addendum (2026-11-27, RFC-0008):** the reference convention is now fixed: `ref` selects a
+glTF node by index, name or `extras` member (e.g. the E3D `RefNo`), and `meshFrame` states
+units, up axis and origin of the converted file (spec 04 §2.3). `pmef check` resolves the
+fragments. PMEF still names no converter: the choice of tool and the licence terms of the
+tool and of the model data stay with the user.

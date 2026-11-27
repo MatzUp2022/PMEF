@@ -253,6 +253,14 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **`mesh_ref` glTF node fragments and `meshFrame`**
+  ([RFC-0008](spec/rfc/0008-mesh-ref-gltf-node-fragment.md), spec 04 §2.3).
+  `ref = <file>#/nodes/<i>;node=<name>;extras.<key>=<value>` selects one glTF node; stable
+  selectors win over a stale index. `GeometryReference.meshFrame` gives unit, up axis and origin
+  of the mesh file. `GeometryReference.ref` format is now `uri-reference`. New
+  `pmef_io::mesh_ref` (parse/resolve, `.gltf`/`.glb`), `pmef_core::geometry::MeshFrame`, and
+  check `meshRefsResolve` in `pmef check`. Example `compressor-train.ndjson` (K-101), tests
+  `EQUIP-U-013/014`. Found with glTF files converted from an E3D model (DD-011 addendum).
 - **Primitives `PYRAMID` and `RECT_TORUS`, `DISH.dishType = SPHERICAL_CAP`, `SNOUT` shear**
   ([RFC-0007](spec/rfc/0007-pyramid-rect-torus-spherical-cap.md), spec 04 §4.2–§4.3). New
   optional `refDirection` on SNOUT and PYRAMID; spec 04 §4.3 now defines the local frame that
