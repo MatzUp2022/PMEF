@@ -469,7 +469,37 @@ The following mapping rules apply when converting between PMEF NDJSON and CAEX X
 | `isPartOf` | Parent-child `InternalElement` nesting |
 | Relationship | `InternalLink` between `ExternalInterface` elements |
 
+The reference implementation (`pmef-io::caex`, `pmef convert --to aml`) applies these rules as
+follows; the round trip PMEF → CAEX → PMEF is lossless:
+
+- `@ID` is a GUID derived deterministically from the PMEF `@id`; the PMEF `@id` itself is the
+  `Value` of `ExternalInterface[pmefId]/Attribute[id]`.
+- `@RefBaseSystemUnitPath` is `PMEF_SystemUnitClasses/<type without the pmef: prefix>`; the
+  document carries one `SystemUnitClass` per type used.
+- Scalars use `AttributeDataType` `xs:string`, `xs:boolean`, `xs:long` (integers; `xs:unsignedLong`
+  above 2^63 − 1) or `xs:double`.
+- Object-valued and array-valued fields are written as an `Attribute` with nested `Attribute`s
+  (`RefAttributeType` `PMEF_AttributeTypeLib/Object` or `…/Array`, array items named `0`, `1`, …);
+  `null` is an empty `Attribute` of type `PMEF_AttributeTypeLib/Null`. A string with characters
+  XML 1.0 cannot carry (e.g. U+0000) is written as its JSON string literal, with such characters
+  as `\uXXXX`, and `RefAttributeType` `PMEF_AttributeTypeLib/JsonString`. Nested `InternalElement`s
+  are reserved for `isPartOf` children, so field values and child objects never mix.
+- `isPartOf` is expressed by nesting where the parent is in the same document, and is also kept
+  as an `Attribute` so it survives partial documents.
+- Relationship objects (`relationType` or `sourceId`/`targetId`) are `InternalElement`s in an
+  `InstanceHierarchy` named `Relationships`, together with one `InternalLink` between the
+  `pmefId` interfaces of source and target when both are in the document.
+- The `pmef:FileHeader` is written as `Attribute`s of `AdditionalInformation/PMEFHeader`.
+
+Reading a foreign AutomationML file maps each `InternalElement` to an object: `@type` from the
+last segment of its system unit class path (prefixed `pmef:`), `@id` from the `pmefId` interface
+or else `urn:pmef:obj:aml:<ID>`, `isPartOf` from the nesting, `Attribute`s as fields.
+
 ### 4.4 Unit Serialisation in CAEX
+
+> **Open point.** The reference implementation keeps the PMEF field names unchanged (no unit
+> suffix), because PMEF fields already carry fixed SI units (spec 01 §7) and the suffixes would
+> break the lossless round trip. Whether this section stays a MUST is open.
 
 In CAEX, attribute names **MUST** include the unit suffix when the unit is not self-evident:
 

@@ -60,6 +60,12 @@ Dependencies added for the PMEFX container (`pmef-io`, feature `pmefx`):
 | `zip` | MIT | ZIP/ZIP64 reading and writing |
 | `sha2` | MIT OR Apache-2.0 | SHA-256 file digests in `manifest.json` |
 
+Dependency of the CAEX XML serialisation (`pmef-io`, feature `caex`, spec 03 §4):
+
+| Crate | Licence | Use |
+|---|---|---|
+| `quick-xml` | MIT | Reading CAEX/AutomationML documents |
+
 Dependency of the WASM binding of the routing kernel (`pmef-route-wasm`):
 
 | Crate | Licence | Use |

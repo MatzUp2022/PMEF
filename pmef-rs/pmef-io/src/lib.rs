@@ -3,6 +3,8 @@
 //! Streaming NDJSON reader and writer for PMEF packages.
 //! Processes one object per line without loading the full file into memory.
 
+#[cfg(feature = "caex")]
+pub mod caex;
 pub mod mesh_ref;
 #[cfg(feature = "pmefx")]
 pub mod pmefx;

@@ -5,6 +5,7 @@
 //!   pmef diff <base.ndjson> <head.ndjson> [--format text|json]
 //!   pmef stats <file.ndjson>
 //!   pmef convert <input.pcf> --to pmef --output <output.ndjson>
+//!   pmef convert <file.ndjson> --to aml -o <out.aml>   |   pmef convert <in.aml> --to pmef -o <out.ndjson>
 //!   pmef index <file.ndjson> [--key tag-number|line-number]
 //!   pmef check <file.ndjson> [--json]
 //!   pmef topology <file.ndjson> [--allow-external]
@@ -131,15 +132,18 @@ enum Commands {
 
     /// Convert between PMEF and other formats.
     Convert {
-        /// Input: a PMEF NDJSON file (--to pcf) or a PCF file / directory of *.pcf (--to pmef).
+        /// Input: a PMEF NDJSON file (--to pcf, --to aml), a PCF file / directory of *.pcf or a
+        /// CAEX/AutomationML `.aml` file (--to pmef).
         input: PathBuf,
-        /// Target format: pcf (PMEF → AutoCAD Plant 3D) or pmef (Plant 3D PCF → PMEF).
-        #[arg(long, value_parser = ["pcf", "pmef"])]
+        /// Target format: pcf (PMEF → AutoCAD Plant 3D), aml (PMEF → CAEX XML, spec 03 §4) or
+        /// pmef (PCF or AML → PMEF).
+        #[arg(long, value_parser = ["pcf", "aml", "pmef"])]
         to: String,
-        /// Reference PMEF model updated from the PCF (required with --to pmef).
-        #[arg(long, required_if_eq("to", "pmef"))]
+        /// Reference PMEF model updated from the PCF (required with --to pmef from PCF).
+        #[arg(long)]
         base: Option<PathBuf>,
-        /// Output: a directory for PCF files (--to pcf) or an NDJSON file (--to pmef).
+        /// Output: a directory for PCF files (--to pcf), an `.aml` file (--to aml) or an NDJSON
+        /// file (--to pmef).
         #[arg(long, short)]
         output: PathBuf,
     },
@@ -639,6 +643,21 @@ fn cmd_convert(input: PathBuf, to: &str, base: Option<PathBuf>, output: PathBuf)
                 eprintln!("warning: {w}");
             }
             eprintln!("wrote {} PCF file(s) to {}", export.files.len(), output.display());
+        } else if to == "aml" {
+            let objs = read_values(&input)?;
+            std::fs::write(&output, pmef_io::caex::write_caex(&objs))
+                .with_context(|| format!("Cannot write {}", output.display()))?;
+            eprintln!("wrote {} object(s) as CAEX to {}", objs.len(), output.display());
+        } else if input.extension().is_some_and(|x| x.eq_ignore_ascii_case("aml")) {
+            let xml = std::fs::read_to_string(&input).with_context(|| format!("Cannot open {}", input.display()))?;
+            let objs = pmef_io::caex::read_caex(&xml)?;
+            let mut text = String::new();
+            for o in &objs {
+                text.push_str(&serde_json::to_string(o)?);
+                text.push('\n');
+            }
+            std::fs::write(&output, text).with_context(|| format!("Cannot write {}", output.display()))?;
+            eprintln!("read {} object(s) from {}", objs.len(), input.display());
         } else {
             let base = base.as_ref().context("--base is required with --to pmef")?;
             let reference = read_values(base)?;

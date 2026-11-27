@@ -73,6 +73,8 @@ cargo run -p pmef-cli -- diff ../tests/diff/design.ndjson ../tests/diff/asbuilt-
 cargo run -p pmef-cli -- merge ../tests/diff/design.ndjson ../tests/merge/ours-design-change.ndjson ../tests/merge/theirs-asbuilt-update.ndjson -o /tmp/merged.ndjson
 cargo run -p pmef-cli -- convert ../examples/pump-skid-complete.ndjson --to pcf -o /tmp/pcf   # PMEF -> Plant 3D (PCF)
 cargo run -p pmef-cli -- convert /tmp/pcf --to pmef --base ../examples/pump-skid-complete.ndjson -o /tmp/back.ndjson
+cargo run -p pmef-cli -- convert ../examples/pump-skid-complete.ndjson --to aml -o /tmp/skid.aml   # PMEF -> CAEX/AutomationML (spec 03 §4)
+cargo run -p pmef-cli -- convert /tmp/skid.aml --to pmef -o /tmp/skid-back.ndjson
 cargo run -p pmef-cli -- check ../examples/pump-skid-complete.ndjson   # package structure: header, unique @id, connectedTo
 cargo run -p pmef-cli -- route ../tests/route/pump-skid-route.json -o /tmp/routed.ndjson --report /tmp/route.json --plant urn:pmef:plant:eaf-2026:EAF-LINE-3   # auto-routing (docs/auto-routing.md)
 cargo run -p pmef-cli -- route ../tests/route/pump-skid-linelist-route.json -o /tmp/linelist.ndjson   # P&ID line list as input

@@ -13,11 +13,14 @@ thiserror.workspace=true
 pmef-core.workspace=true
 zip = { workspace = true, optional = true }
 sha2 = { workspace = true, optional = true }
+quick-xml = { version = "0.36", optional = true }
 
 [features]
-default = ["pmefx"]
+default = ["pmefx", "caex"]
 # PMEFX ZIP container reader/writer (spec 03 §3, RFC-0005).
 pmefx = ["dep:zip", "dep:sha2"]
+# CAEX XML secondary serialisation (spec 03 §4, AutomationML).
+caex = ["dep:quick-xml"]
 
 [dev-dependencies]
 jsonschema = { workspace = true, features = ["draft202012"] }
