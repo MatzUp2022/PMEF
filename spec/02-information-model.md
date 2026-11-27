@@ -311,6 +311,14 @@ catalogs; HEA/HEB/HEM/IPE/W sections against `STEEL_PROFILES` catalogs) **MUST**
 `tolerances`, and **MUST** reproduce the test vectors in `tests/snapping/vectors.json`. An object
 whose snap is `ambiguous` **MUST NOT** be created with `review.status = approved`.
 
+*Since 0.10.0 ([RFC-0011](rfc/0011-catalog-snapping-v2.md)).* `pmef-snap/2` adds the kinds
+`channel`, `rect-hollow`, `round-hollow`, `angle` (`STEEL_PROFILES`), `elbow`, `tee`, `reducer`
+(`PIPING_CLASS`) and `flange` (`FLANGE_DIMENSIONS` or `PIPING_CLASS`), plus the selectors `angle`
+(elbows) and `boltCount` (flanges). For `pipe` and `i-section` it **MUST** return the same entry,
+`score`, `residuals`, `runnerUp` and `ambiguous` as `pmef-snap/1`. A snap produced by it **MUST**
+set `algorithm = "pmef-snap/2"` and **MUST** reproduce `tests/snapping/vectors-v2.json`; the
+other rules of this section apply unchanged.
+
 ---
 
 ## 3 Plant Hierarchy

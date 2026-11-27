@@ -19,6 +19,7 @@ Status values (issue template): `DRAFT` → `REVIEW` → `APPROVED` / `REJECTED`
 | [0008](0008-mesh-ref-gltf-node-fragment.md) | `mesh_ref` glTF node fragments and mesh frame | 0.10.0 | `DRAFT` | — | FileHeader default `meshFrame` (WG-Serialisation) |
 | [0009](0009-generic-piping-component.md) | Generic piping component and native type catalog | 0.10.0 | `DRAFT` | — | Type catalogs for Plant 3D and PCF (WG-Adapters) |
 | [0010](0010-review-comment-issue-ref.md) | Review comment and issue reference (follow-up of 0001) | 0.10.0 | `DRAFT` | — | `issueRef` single URI vs. array (WG-Piping/WG-Steel) |
+| [0011](0011-catalog-snapping-v2.md) | Catalog snapping version 2 `pmef-snap/2` (follow-up of 0002) | 0.10.0 | `DRAFT` | — | Inch-only catalogs; olets/caps/valves (WG-Catalogs, WG-Piping) |
 
 RFCs 0001–0003 are fully implemented in this repository (schemas, spec text, Rust reference
 implementation, examples, tests in CI); each RFC's *Review Status* section lists the evidence.

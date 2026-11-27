@@ -147,7 +147,7 @@ jobs:
       - name: Self-test (broken implementations must be detected)
         run: python tests/conformance/tools/selftest.py
 
-      - name: Catalog snapping test vectors (pmef-snap/1 Python reference)
+      - name: Catalog snapping test vectors (pmef-snap/1 and /2 Python reference)
         run: python tests/snapping/reference_snap.py
 
       - name: As-built example matches the snapping algorithm

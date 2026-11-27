@@ -253,6 +253,13 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Added
 
+- **Catalog snapping `pmef-snap/2`** ([RFC-0011](spec/rfc/0011-catalog-snapping-v2.md), spec 02
+  §2.9.4). New kinds `channel`, `rect-hollow`, `round-hollow`, `angle`, `elbow`, `tee`, `reducer`,
+  `flange`; selectors `angle` and `boltCount`; fitting ODs from the class's pipes where a class
+  stores none. `pipe`/`i-section` results equal `pmef-snap/1`. Python reference and Rust
+  `pmef_core::snapping::{snap_v2, snap_with, Algorithm}` agree on 26 new vectors
+  (`tests/snapping/vectors-v2.json`); `pmef-snap/1` vectors and examples unchanged. No schema change.
+
 - **Review comment and issue reference** ([RFC-0010](spec/rfc/0010-review-comment-issue-ref.md),
   spec 02 §2.9.2). `review` gains optional `comment` (1–2000 characters; SHOULD for `rejected`)
   and `issueRef` (absolute URI, e.g. the BCF API URL of a topic). Rust `ReviewStatus.comment` /
