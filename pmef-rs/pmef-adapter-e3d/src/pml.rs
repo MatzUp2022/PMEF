@@ -298,7 +298,17 @@ pub fn parse_pml_text(text: &str) -> Result<Vec<PmlElement>, PmlError> {
         // Element declaration: a structural keyword, or a component/primitive keyword
         // that is either bare or followed by its DB address. Reference attributes such
         // as `SPEC /SPEC-A1A2` or `CREF /PIPE-1` also start with '/' but are attributes.
+        // A direct child of a branch whose address lies below the branch is a component of
+        // an element type that is not listed (e.g. `XYZZ /PIPE/B1/X1`): it is kept and
+        // exported as a generic component instead of being merged into the branch.
+        let parent = stack.iter().rev().find(|(si, _)| *si < indent).map(|(_, e)| e);
+        let branch_child = parent.is_some_and(|p| {
+            p.element_type == E3dElementType::Branch
+                && rest.strip_prefix(p.db_address.as_str()).is_some_and(|r| r.starts_with('/'))
+                && keyword.chars().all(|c| c.is_ascii_uppercase())
+        });
         let is_element = is_element_keyword(&keyword)
+            || branch_child
             || (is_component_type(&keyword) && (rest.is_empty() || rest.starts_with('/')));
 
         if is_element {

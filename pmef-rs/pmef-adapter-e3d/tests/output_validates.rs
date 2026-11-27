@@ -50,6 +50,10 @@ async fn all_exported_objects_are_schema_valid() {
         .collect();
     assert_eq!(generic, [("E3D:COUP".into(), "COUPLING".into()),
                          ("E3D:INST".into(), "INLINE_INSTRUMENT".into()),
-                         ("E3D:CLOS".into(), "CLOSURE".into())]);
+                         ("E3D:CLOS".into(), "CLOSURE".into()),
+                         ("E3D:XYZZ".into(), "SPECIAL".into())]);
+    let blind = text.lines().map(|l| serde_json::from_str::<serde_json::Value>(l).unwrap())
+        .find(|o| o["componentSpec"]["componentClass"] == "BLIND_FLANGE").expect("FBLI exported");
+    assert_eq!(blind["flangeType"], "BLIND");
     std::fs::remove_dir_all(dir).ok();
 }

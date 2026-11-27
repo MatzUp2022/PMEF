@@ -619,7 +619,10 @@ impl E3DAdapter {
                 );
             }
             "pmef:Flange" => {
-                obj["flangeType"] = serde_json::Value::from(skey_to_flange_type(skey.unwrap_or("")));
+                // The catalog class wins over the SKEY fallback (FBLI without SKEY is blind).
+                let flange_type = if comp_class == "BLIND_FLANGE" { "BLIND" }
+                    else { skey_to_flange_type(skey.unwrap_or("")) };
+                obj["flangeType"] = serde_json::Value::from(flange_type);
                 obj["rating"]     = serde_json::Value::from("ANSI-150");
                 obj["facing"]     = serde_json::Value::from("RF");
             }
