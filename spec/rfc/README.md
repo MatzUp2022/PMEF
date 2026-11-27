@@ -24,5 +24,5 @@ Status values (issue template): `DRAFT` → `REVIEW` → `APPROVED` / `REJECTED`
 RFCs 0001–0003 are fully implemented in this repository (schemas, spec text, Rust reference
 implementation, examples, tests in CI); each RFC's *Review Status* section lists the evidence.
 Review issues were filed on 2026-11-01 (texts: [`docs/rfc-review-2026-11.md`](../../docs/rfc-review-2026-11.md)); the
-30-day discussion period ended on 2026-12-01 and the proposed resolutions were adopted (section
-*Resolution* of each RFC).
+30-day discussion period would have ended on 2026-12-01; the TSC adopted the proposed resolutions on
+2026-11-27 without objections having been raised (section *Resolution* of each RFC).

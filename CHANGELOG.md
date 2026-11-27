@@ -199,12 +199,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Changed
 
-- **RFC-0001 to RFC-0003 `APPROVED`** (2026-12-01, end of the discussion period of #6–#8) with
-  the proposed resolutions: schema `$id`s keep `/0.9/` for all 0.x releases; `review.comment` /
-  `issueRef` and `pmef-snap/2` move to follow-up RFCs (0010, 0011); the `pmef-snap/1` ambiguity
-  margin is part of the algorithm identity. spec 03 §8.4 gains one sentence: an `IsRevisionOf`
-  with `changeType` `AS_BUILT` is a correspondence, not a content revision of a delta package.
-  No schema, code or example change.
+- **RFC-0001 to RFC-0003 `APPROVED`** (TSC decision 2026-11-27, before the end of the discussion
+  period of #6–#8 on 2026-12-01; no objections) with the proposed resolutions: schema `$id`s keep
+  `/0.9/` for all 0.x releases; `review.comment` / `issueRef` and `pmef-snap/2` move to follow-up
+  RFCs (0010, 0011); the `pmef-snap/1` ambiguity margin is part of the algorithm identity. spec 03
+  §8.4 gains one sentence: an `IsRevisionOf` with `changeType` `AS_BUILT` is a correspondence, not a
+  content revision of a delta package. No schema, code or example change.
 
 - **RFC-0001 to RFC-0003 moved to `REVIEW`** — verified against the implementation; open questions
   answered or given a proposed resolution; each RFC has a *Review Status* section. New RFC index

@@ -204,14 +204,14 @@ released changes only):
 - 🗓️ Published schemas under a project-owned domain (namespace decision open, see docs/AUDIT.md §8)
 - 🗓️ Project website with full documentation
 - 🗓️ First vendor Level 2 certification
-- ✅ RFC-0001 provenance / review / as-built — implemented for 0.10.0, `APPROVED` 2026-12-01
-- ✅ RFC-0002 catalog snapping `pmef-snap/1` (pipes, I-sections) — implemented, `APPROVED` 2026-12-01
+- ✅ RFC-0001 provenance / review / as-built — implemented for 0.10.0, `APPROVED` 2026-11-27
+- ✅ RFC-0002 catalog snapping `pmef-snap/1` (pipes, I-sections) — implemented, `APPROVED` 2026-11-27
 - 🔄 `pmef-snap/2`: fittings, flanges, hollow sections, angles — [RFC-0011](spec/rfc/0011-catalog-snapping-v2.md), `DRAFT`
 - ✅ `catalogs/profiles-en.json` HEA data corrected (2024.2)
 - 🗓️ Same consistency check for AISC, hollow-section and piping-class catalogs
 - ✅ Deterministic object-level `pmef diff` (spec 03 §9)
 - ✅ 3-way merge (`pmef merge`, spec 03 §10)
 - ✅ `pmef diff --match` for differing `@id`s (spec 03 §9.5)
-- ✅ RFC-0003 persisted as-built ↔ design correspondence (`--emit-matches`, pass 1b) — implemented, `APPROVED` 2026-12-01
+- ✅ RFC-0003 persisted as-built ↔ design correspondence (`--emit-matches`, pass 1b) — implemented, `APPROVED` 2026-11-27
 - 🔄 Plant 3D import via PCF (`pmef convert`) — bridge done; open: confirm with a Plant 3D
   installation; native object id for `HasEquivalentIn`
