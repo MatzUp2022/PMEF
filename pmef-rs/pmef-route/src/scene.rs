@@ -234,17 +234,23 @@ impl Scene {
                 continue;
             }
             if let (Some(a), Some(b)) = (p3(&o["startPoint"]), p3(&o["endPoint"])) {
-                // Steel member: centreline grown by half the larger profile dimension.
-                let half = o["profileId"]
-                    .as_str()
-                    .and_then(profile_half)
-                    .unwrap_or(250.0);
-                self.push(
-                    id.into(),
-                    ObstacleKind::Hard,
-                    0.0,
-                    Shape::Box(Aabb::from_points(a, b).inflate(half)),
+                // Steel member: centreline grown by the rolled section (pmef_geom::member_aabb);
+                // unknown profiles get 250 mm.
+                let s = o["profileId"].as_str().and_then(profile_section).unwrap_or(
+                    pmef_geom::SectionSize {
+                        half_h: 250.0,
+                        half_b: 250.0,
+                        round: true,
+                    },
                 );
+                let v = |p: P3| pmef_geom::Vec3::new(p[0], p[1], p[2]);
+                let m =
+                    pmef_geom::member_aabb(v(a), v(b), s, o["rollAngle"].as_f64().unwrap_or(0.0));
+                let bx = Aabb {
+                    min: [m.min.x, m.min.y, m.min.z],
+                    max: [m.max.x, m.max.y, m.max.z],
+                };
+                self.push(id.into(), ObstacleKind::Hard, 0.0, Shape::Box(bx));
                 if let Some(last) = self.obstacles.last_mut() {
                     last.structural = true;
                 }
@@ -301,15 +307,15 @@ impl Scene {
 /// and `MESH_REF`. Composite primitives are the union of their children. Delegates to
 /// [`pmef_geom::schema_primitive_aabb`], the single implementation for schema primitives.
 pub fn primitive_box(p: &Value) -> Option<Aabb> {
-    let b = pmef_geom::schema_primitive_aabb(p, &profile_half)?;
+    let b = pmef_geom::schema_primitive_aabb(p, &profile_section)?;
     Some(Aabb {
         min: [b.min.x, b.min.y, b.min.z],
         max: [b.max.x, b.max.y, b.max.z],
     })
 }
 
-/// Half of the larger cross-section dimension of a catalog steel profile (`EN:HEA200`).
-fn profile_half(id: &str) -> Option<f64> {
+/// Cross-section size of a catalog steel profile (`EN:HEA200`) for member bounds.
+fn profile_section(id: &str) -> Option<pmef_geom::SectionSize> {
     for cat in [
         "profiles-en",
         "profiles-en-extended",
@@ -323,13 +329,23 @@ fn profile_half(id: &str) -> Option<f64> {
             .find(|e| e["catalogId"] == id)
         {
             let g = |k: &str| e[k].as_f64().unwrap_or(0.0);
-            let m = g("h_mm")
-                .max(g("b_mm"))
-                .max(g("d_mm"))
-                .max(g("bf_mm"))
-                .max(g("D_mm"));
-            if m > 0.0 {
-                return Some(m / 2.0);
+            let round = g("OD_mm").max(g("D_mm"));
+            if round > 0.0 {
+                return Some(pmef_geom::SectionSize {
+                    half_h: round / 2.0,
+                    half_b: round / 2.0,
+                    round: true,
+                });
+            }
+            let h = g("h_mm").max(g("d_mm")).max(g("b1_mm"));
+            let h = if h > 0.0 { h } else { g("t_mm") }; // flat bar: b × t
+            let b = g("b_mm").max(g("bf_mm")).max(g("b2_mm"));
+            if h.max(b) > 0.0 {
+                return Some(pmef_geom::SectionSize {
+                    half_h: h / 2.0,
+                    half_b: b / 2.0,
+                    round: false,
+                });
             }
         }
     }
@@ -387,9 +403,12 @@ mod tests {
 
     #[test]
     fn sheared_snout_box_covers_the_tilted_face() {
-        let b = primitive_box(&serde_json::json!({"type": "SNOUT", "center": [0.0, 0.0, 0.0],
+        let b = primitive_box(
+            &serde_json::json!({"type": "SNOUT", "center": [0.0, 0.0, 0.0],
             "axis": [0.0, 0.0, 1.0], "r1": 100.0, "r2": 100.0, "length": 300.0,
-            "bottomShearX": 45.0})).unwrap();
+            "bottomShearX": 45.0}),
+        )
+        .unwrap();
         assert!(b.min[2] <= -100.0 + 1e-9, "{b:?}");
     }
 
@@ -399,10 +418,16 @@ mod tests {
         let m = serde_json::json!({"type": "STEEL_PROFILE", "startPt": [0, 0, 0],
             "endPt": [6000, 0, 0], "profileId": "EN:HEB300"});
         assert_eq!(primitive_box(&m).unwrap().max[1], 150.0);
+        // rolled 45°: flange corners at the half-diagonal (Codex review on #62)
+        let mut r = m.clone();
+        r["rollDeg"] = 45.0.into();
+        assert!((primitive_box(&r).unwrap().max[1] - 300f64.hypot(300.0) / 2.0).abs() < 1e-9);
         let v = serde_json::json!({"type": "VALVE_BODY", "valveBodyType": "BALL", "center": [0, 0, 0],
             "direction": [1, 0, 0], "boreD": 50, "faceToFace": 200});
         assert!(primitive_box(&v).is_some());
-        assert!(primitive_box(&serde_json::json!({"type": "MESH_REF", "meshUri": "a.glb"})).is_none());
+        assert!(
+            primitive_box(&serde_json::json!({"type": "MESH_REF", "meshUri": "a.glb"})).is_none()
+        );
     }
 
     #[test]
@@ -410,7 +435,10 @@ mod tests {
         let pyr = serde_json::json!({"type": "PYRAMID", "center": [0, 0, 0], "axis": [0, 0, 1],
             "bottomX": 600, "bottomY": 800, "topX": 0, "topY": 0, "height": 300});
         let b = primitive_box(&pyr).unwrap();
-        assert_eq!((b.min[0], b.max[0], b.min[2], b.max[2]), (-500.0, 500.0, 0.0, 300.0));
+        assert_eq!(
+            (b.min[0], b.max[0], b.min[2], b.max[2]),
+            (-500.0, 500.0, 0.0, 300.0)
+        );
         let tor = serde_json::json!({"type": "RECT_TORUS", "center": [0, 0, 0], "axis": [0, 0, 1],
             "startDir": [1, 0, 0], "innerRadius": 300, "outerRadius": 400, "height": 600, "angleDeg": 90});
         let b = primitive_box(&tor).unwrap();
