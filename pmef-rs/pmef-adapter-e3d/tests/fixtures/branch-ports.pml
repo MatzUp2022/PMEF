@@ -80,6 +80,7 @@ SITE /SITE-A
         HBOR 50
         HREF /SITE-A/ZONE-A/PIPE-100-A/B1/TEE-1
         TPOS 150.0 450.0 1650.0
+        TREF /SITE-A/ZONE-A/PIPE-100-A/B3
         VALV /SITE-A/ZONE-A/PIPE-100-A/B2/VALV-2
           SKEY BLSWSW
           BORE 50
@@ -89,3 +90,8 @@ SITE /SITE-A
           LPOS 150.0 450.0 1650.0
           LDIR 0.0 1.0 0.0
           LCON SWF
+      BRAN /SITE-A/ZONE-A/PIPE-100-A/B3
+        HPOS 150.0 450.0 1650.0
+        HBOR 50
+        HREF /SITE-A/ZONE-A/PIPE-100-A/B2
+        TPOS 150.0 750.0 1650.0

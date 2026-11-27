@@ -152,6 +152,8 @@ pub struct E3DAdapter {
     warnings: Vec<String>,
     /// Branch ends (HREF/TREF) of the mapped lines, with their line `@id`.
     end_refs: Vec<(branch::EndRef, String)>,
+    /// E3D branch address → `(@id, portId)` of its head and tail ports.
+    branch_ends: HashMap<String, Vec<(String, String)>>,
     /// Nozzle DB address → (line `@id`, port id) of the branch end connected to it.
     nozzle_links: HashMap<String, (String, String)>,
 }
@@ -165,6 +167,7 @@ impl E3DAdapter {
             counters: HashMap::new(),
             warnings: Vec::new(),
             end_refs: Vec::new(),
+            branch_ends: HashMap::new(),
             nozzle_links: HashMap::new(),
         }
     }
@@ -463,7 +466,8 @@ impl E3DAdapter {
 
     /// Resolve HREF/TREF of all branch ends: a nozzle gets `connectedLineId`/`connectedPortId`
     /// (applied in [`Self::map_equipment`]); a component (tee, other branch end) is linked by
-    /// `connectedTo` both ways to its nearest free port. Anything else is a boundary.
+    /// `connectedTo` both ways to its nearest free port; another branch is linked through its
+    /// nearest free head or tail port. Anything else is a boundary.
     fn resolve_end_refs(
         &mut self,
         lines: &mut [Vec<serde_json::Value>],
@@ -482,25 +486,40 @@ impl E3DAdapter {
                 self.nozzle_links.insert(r.target, (line_id, r.port));
                 continue;
             }
-            let target = self.addr_to_id.get(&r.target).and_then(|id| at.get(id)).copied();
-            let (Some((tl, to)), Some(&(sl, so))) = (target, at.get(&r.component)) else {
-                self.warnings.push(format!("{} {}: {} is outside the export (open end)",
-                    r.component, r.port, r.target));
-                continue;
-            };
+            let Some(&(sl, so)) = at.get(&r.component) else { continue };
             let ports = |v: &serde_json::Value| v["ports"].as_array().cloned().unwrap_or_default();
             let coord = |p: &serde_json::Value| [0, 1, 2].map(|k| p["coordinate"][k].as_f64().unwrap_or(0.0));
             let src_ports = ports(&lines[sl][so]);
             let Some(si) = src_ports.iter().position(|p| p["portId"] == r.port.as_str()) else { continue };
+            if src_ports[si].get("connectedTo").is_some() {
+                continue; // already linked from the other side (branch ↔ branch)
+            }
+            // Candidate ports: all ports of a component, or the head/tail ports of a branch.
+            let candidates: Vec<(usize, usize, usize)> = if let Some(ends) = self.branch_ends.get(&r.target) {
+                ends.iter()
+                    .filter(|(id, _)| *id != r.component)
+                    .filter_map(|(id, port)| {
+                        let &(l, o) = at.get(id)?;
+                        let i = ports(&lines[l][o]).iter().position(|p| p["portId"] == port.as_str())?;
+                        Some((l, o, i))
+                    })
+                    .collect()
+            } else if let Some(&(l, o)) = self.addr_to_id.get(&r.target).and_then(|id| at.get(id)) {
+                (0..ports(&lines[l][o]).len()).map(|i| (l, o, i)).collect()
+            } else {
+                self.warnings.push(format!("{} {}: {} is outside the export (open end)",
+                    r.component, r.port, r.target));
+                continue;
+            };
             let here = coord(&src_ports[si]);
-            let free = ports(&lines[tl][to]).iter().enumerate()
-                .filter(|(_, p)| p.get("connectedTo").is_none())
-                .map(|(i, p)| {
-                    let c = coord(p);
-                    (i, (0..3).map(|k| (c[k] - here[k]).powi(2)).sum::<f64>())
+            let free = candidates.into_iter()
+                .filter(|&(l, o, i)| lines[l][o]["ports"][i].get("connectedTo").is_none())
+                .map(|(l, o, i)| {
+                    let c = coord(&lines[l][o]["ports"][i]);
+                    ((l, o, i), (0..3).map(|k| (c[k] - here[k]).powi(2)).sum::<f64>())
                 })
                 .min_by(|a, b| a.1.total_cmp(&b.1));
-            let Some((ti, _)) = free else {
+            let Some(((tl, to, ti), _)) = free else {
                 self.warnings.push(format!("{} {}: {} has no free port", r.component, r.port, r.target));
                 continue;
             };
@@ -579,8 +598,9 @@ impl E3DAdapter {
             for (obj, connected, inline, _) in &items {
                 chain.push(obj.clone(), *connected, *inline);
             }
-            let (objs, refs) = chain.finish(bran, cs);
+            let (objs, refs, ends) = chain.finish(bran, cs);
             drop(new_tube);
+            self.branch_ends.insert(bran.db_address.clone(), ends.into_iter().flatten().collect());
             self.end_refs.extend(refs.into_iter().map(|r| (r, line_id.clone())));
             for obj in objs {
                 let id = obj["@id"].as_str().unwrap_or_default().to_owned();

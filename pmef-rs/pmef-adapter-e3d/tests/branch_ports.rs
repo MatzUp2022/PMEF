@@ -43,14 +43,15 @@ async fn branch_ports_are_connected_and_tubes_fill_the_gaps() {
         }
     }
     // B1: FLAN-TUBI-ELBO-TUBI-TEE-TUBI-VALV-TUBI = 7 joints (PSUP sits on a tube);
-    // B2: TUBI-VALV = 1 joint, plus tee P3 to the B2 head tube: 9 joints, seen from both sides.
-    assert_eq!(links, 18);
+    // B2: TUBI-VALV = 1 joint, plus tee P3 to the B2 head tube; B3 (no components, one
+    // tube) starts at the B2 tail and both refer to each other: 10 joints, seen from both sides.
+    assert_eq!(links, 20);
 
     let tubes: Vec<f64> = objs.iter()
         .filter(|o| o["customAttributes"]["e3dGenerated"] == "TUBI")
         .map(|o| o["pipeLength"].as_f64().unwrap())
         .collect();
-    assert_eq!(tubes, [600.0, 850.0, 200.0, 700.0, 150.0]);
+    assert_eq!(tubes, [600.0, 850.0, 200.0, 700.0, 150.0, 300.0]);
 
     let tee = objs.iter().find(|o| o["@type"] == "pmef:Tee").unwrap();
     assert_eq!(tee["ports"][2]["portId"], "P3");

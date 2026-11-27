@@ -104,6 +104,8 @@ pub struct BranchChain<'a> {
     pub objs: Vec<Value>,
     /// Branch ends that refer to other elements.
     pub refs: Vec<EndRef>,
+    /// `(@id, portId)` of the branch head and tail ports, for references to this branch.
+    pub ends: [Option<(String, String)>; 2],
     end: Option<End>,
     new_tube: &'a mut dyn FnMut() -> String,
     tube_template: Value,
@@ -125,15 +127,16 @@ impl<'a> BranchChain<'a> {
             bore,
             href: bran.attr_str("HREF").map(str::to_owned),
         });
-        Self { objs: Vec::new(), refs: Vec::new(), end, new_tube, tube_template }
+        Self { objs: Vec::new(), refs: Vec::new(), ends: [None, None], end, new_tube, tube_template }
     }
 
     fn link(&mut self, end: End, obj: usize, port: usize) {
         let id = self.objs[obj]["@id"].as_str().unwrap_or_default().to_owned();
         match end {
             End::Head { href, .. } => {
+                let port = self.objs[obj]["ports"][port]["portId"].as_str().unwrap_or("P1").to_owned();
+                self.ends[0] = Some((id.clone(), port.clone()));
                 if let Some(target) = href {
-                    let port = self.objs[obj]["ports"][port]["portId"].as_str().unwrap_or("P1").to_owned();
                     self.refs.push(EndRef { component: id, port, target });
                 }
             }
@@ -193,16 +196,21 @@ impl<'a> BranchChain<'a> {
     }
 
     /// Close the chain at the branch tail (`TPOS`, `TREF`).
-    pub fn finish(mut self, bran: &PmlElement, cs: E3DCoordinateSystem) -> (Vec<Value>, Vec<EndRef>) {
+    /// Returns the objects, the end references and the head/tail ports ([`Self::ends`]).
+    pub fn finish(
+        mut self, bran: &PmlElement, cs: E3DCoordinateSystem,
+    ) -> (Vec<Value>, Vec<EndRef>, [Option<(String, String)>; 2]) {
         if let (Some(end), Some(tail)) = (self.end.take(), point(bran, "TPOS", cs)) {
-            let end = self.bridge(end, tail);
-            if let (End::Port { obj, port, .. }, Some(target)) = (end, bran.attr_str("TREF")) {
+            if let End::Port { obj, port, .. } = self.bridge(end, tail) {
                 let component = self.objs[obj]["@id"].as_str().unwrap_or_default().to_owned();
                 let port = self.objs[obj]["ports"][port]["portId"].as_str().unwrap_or("P2").to_owned();
-                self.refs.push(EndRef { component, port, target: target.to_owned() });
+                self.ends[1] = Some((component.clone(), port.clone()));
+                if let Some(target) = bran.attr_str("TREF") {
+                    self.refs.push(EndRef { component, port, target: target.to_owned() });
+                }
             }
         }
-        (self.objs, self.refs)
+        (self.objs, self.refs, self.ends)
     }
 }
 
