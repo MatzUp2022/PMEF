@@ -321,6 +321,28 @@ other rules of this section apply unchanged.
 
 ---
 
+### 2.10 Placeholders (Stand-in Values)
+
+An exporter sometimes knows that an object exists but not the value of a required field, or
+knows a value that the PMEF enumeration does not contain. It **MUST NOT** guess (a fire damper
+exported as `VOLUME_CONTROL` is wrong in every downstream document). Instead (RFC-0012):
+
+- The field holds a valid stand-in: `UNSPECIFIED` (value not known) or `CUSTOM` (value outside
+  the enumeration, given in the matching `…Custom` field as `<namespace>:<name>`, e.g.
+  `damperTypeCustom: "HULDRA:BLAST_DAMPER"`).
+- The object lists the field in `placeholders`: an array of `{path, reason, note?, expectedFrom?}`
+  with `path` a JSON Pointer relative to the object (`/damperType`) and `reason`
+  `SOURCE_MISSING`, `NOT_IN_ENUM` or `TO_BE_CONFIRMED`. A field set to `UNSPECIFIED`
+  **MUST** be listed.
+- The real value arrives as an ordinary new revision of the **same `@id`**: the field gets the
+  real value and the entry is removed. No relationship or new object is needed.
+- Stand-ins are valid data. Validators **MUST NOT** fail on them; `pmef check` lists them as
+  information (`placeholders to replace`).
+
+In 0.10.0 `placeholders` is defined on duct components (`DuctComponent`) and `damperType`
+carries `UNSPECIFIED`/`CUSTOM`. Other domains follow the same pattern when they need it
+(piping already has `componentClass: VALVE_UNSPECIFIED`, RFC-0009).
+
 ## 3 Plant Hierarchy
 
 The plant hierarchy provides the containment context for all PMEF objects.
@@ -903,7 +925,7 @@ cross-sections and **SHOULD** have the same `connectionType`.
 | `pmef:DuctBend` | bend, `angle` [°] required; `bendType` `RADIUS`, `SEGMENTED`, `MITRED`; `radius`, `segments`, `turningVanes`, `bendPlane` | 2 |
 | `pmef:DuctTransition` | change of size and/or shape | exactly 2 |
 | `pmef:DuctBranch` | `branchType` `TEE`, `LATERAL`, `Y_PIECE`, `CROSS`, `SADDLE_TAP` | ≥ 3 |
-| `pmef:DuctDamper` | `damperType` incl. `FIRE`, `SMOKE`, `FIRE_SMOKE`; `fireResistance` (e.g. `EI 90 S`), `actuation`, `instrumentId` | 2 |
+| `pmef:DuctDamper` | `damperType` incl. `FIRE`, `SMOKE`, `FIRE_SMOKE`, stand-ins `UNSPECIFIED`/`CUSTOM` + `damperTypeCustom` (§2.10); `fireResistance` (e.g. `EI 90 S`), `actuation`, `instrumentId` | 2 |
 | `pmef:DuctAccessDoor` | inspection door or hatch | none |
 | `pmef:DuctTestPort` | measuring nipple for pressure, flow, temperature or sampling | none |
 

@@ -11,6 +11,16 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added — RFC-0012 placeholder and custom values
+
+- **`placeholders`** on duct components and **`$defs/Placeholder`** (`path`, `reason`, `note`,
+  `expectedFrom`): marks stand-in values that a later revision of the same `@id` replaces
+  (spec 02 §2.10, [RFC-0012](spec/rfc/0012-placeholder-custom-values.md)).
+- **`damperType` `UNSPECIFIED` and `CUSTOM`**, new field **`damperTypeCustom`**; schema rules:
+  `UNSPECIFIED` needs a `/damperType` placeholder, `CUSTOM` ⇔ `damperTypeCustom`.
+- `pmef check` lists open placeholders (information, never a failure).
+- Example `examples/hvac-damper-placeholder.ndjson`, test `tests/placeholders/run.py`.
+
 ### Deprecated
 
 - **`CompressorSpec.polytropic_efficiency`** — use `polytropicEfficiency`

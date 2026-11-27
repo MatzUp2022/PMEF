@@ -188,6 +188,12 @@
         "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
         "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
         "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" },
+        "placeholders": {
+          "type": "array",
+          "description": "Fields of this object that hold stand-in values to be replaced in a later revision (RFC-0012)",
+          "items": { "$ref": "pmef-base.schema.json#/$defs/Placeholder" },
+          "minItems": 1
+        },
         "customAttributes": { "type": "object", "additionalProperties": { "type": ["string","number","boolean","null"] } }
       }
     },
@@ -266,13 +272,25 @@
         {
           "properties": {
             "@type":          { "const": "pmef:DuctDamper" },
-            "damperType":     { "type": "string", "enum": ["VOLUME_CONTROL","SHUT_OFF","NON_RETURN","FIRE","SMOKE","FIRE_SMOKE","PRESSURE_RELIEF"] },
+            "damperType":     { "type": "string", "enum": ["VOLUME_CONTROL","SHUT_OFF","NON_RETURN","FIRE","SMOKE","FIRE_SMOKE","PRESSURE_RELIEF","UNSPECIFIED","CUSTOM"],
+                                "description": "UNSPECIFIED = damper present, type not yet known (stand-in; MUST be listed in placeholders). CUSTOM = type outside this list, given in damperTypeCustom (RFC-0012)" },
+            "damperTypeCustom": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.-]+$",
+                                "description": "Namespaced type when damperType is CUSTOM, e.g. 'HULDRA:BLAST_DAMPER'" },
             "actuation":      { "type": "string", "enum": ["MANUAL","ELECTRIC","PNEUMATIC","THERMAL_FUSE","SELF_ACTING"] },
             "fireResistance": { "type": "string", "description": "Classification per EN 13501-3, e.g. 'EI 90 S'" },
             "length":         { "type": "number", "exclusiveMinimum": 0, "description": "Installation length [mm]" },
             "instrumentId":   { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "Actuator/position switch as InstrumentObject" }
           },
-          "required": ["damperType","ports"]
+          "required": ["damperType","ports"],
+          "allOf": [
+            { "if": { "properties": { "damperType": { "const": "CUSTOM" } }, "required": ["damperType"] },
+              "then": { "required": ["damperTypeCustom"] } },
+            { "if": { "required": ["damperTypeCustom"] },
+              "then": { "properties": { "damperType": { "const": "CUSTOM" } } } },
+            { "if": { "properties": { "damperType": { "const": "UNSPECIFIED" } }, "required": ["damperType"] },
+              "then": { "required": ["placeholders"],
+                        "properties": { "placeholders": { "contains": { "properties": { "path": { "const": "/damperType" } }, "required": ["path"] } } } } }
+          ]
         }
       ]
     },

@@ -37,6 +37,7 @@ pub mod provenance;
 pub mod piping;
 pub mod relationships;
 pub mod revision;
+pub mod placeholder;
 pub mod snapping;
 pub mod steel;
 pub mod traits;
@@ -54,6 +55,7 @@ pub use hvac::{
     Duct, DuctAccessDoor, DuctBend, DuctBranch, DuctCrossSection, DuctDamper, DuctNetworkSystem,
     DuctPort, DuctSegment, DuctShape, DuctTestPort, DuctTransition,
 };
+pub use placeholder::{Placeholder, PlaceholderReason};
 pub use plant::{Area, FileHeader, Plant, Unit};
 pub use piping::{
     Elbow, Flange, Gasket, GenericPipingComponent, Olet, Pipe, PipeSupport, PipingNetworkSystem,
