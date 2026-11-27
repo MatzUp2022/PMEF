@@ -132,6 +132,18 @@ PMEF `@id`), provenance `generated`; the report lists path, trays and the fill p
 A viewer re-routes one cable and keeps the others where they are by giving each other cable the
 trays it used (report `cables[].trays`). Example: `tests/route/cable-trays-route.json`.
 
+With `cableSettings.traysFromScene` the network is read from the `pmef:CableTrayRun` and
+`pmef:CableTrayFitting` objects of `pmefScene` (RFC-0015, spec 02 §6.8): a run's centreline from
+`path`, else `startPoint`/`endPoint`, else its ports, with `width`, `height` and `fillLevel`; its
+bend radius is the smallest `bendRadius` of the fittings joined to it (default 300 mm). A fitting
+with two ports becomes a tray from port to port, a tee or cross one tray per port from the port
+centroid (`<@id>#<portId>`; the `CableObject` names the run carrying the longest part). PMEF has
+no segregation class on trays, so `cableSettings.trayClasses` gives them per `@id` or mark;
+an entry of `trays` with the same `id` replaces a scene tray. Objects without a route, width or
+height are listed in the report under `skippedTrays`, the used ones under `sceneTrays`. Lengths
+over bends use the chord between the ports. Example: `tests/route/cable-trays-scene-route.json`
+on `examples/cable-tray-route.ndjson`.
+
 **Line lists** (stage 6, `line_list.rs`). `lineLists` names PMEF packages with lines to route,
 typically DEXPI-Manager `dexpi-pmef` output of a P&ID: `pmef:PipingNetworkSystem` (line number,
 DN, class, design conditions, insulation) and `pmef:IsConnectedTo` from the equipment to the line
@@ -203,6 +215,7 @@ The problem format is documented in `pmef-rs/pmef-route/src/problem.rs` (camelCa
 | `pmef-route-wasm` in Node 22 | same problem, files passed in memory | 1 | NDJSON byte-identical to `pmef route`, 35 ms |
 | `pmef-route-wasm` `RouteSession` in Node 22 | Clinic (140 MB OBJ), each line routed on its own as when one line is moved | 4 | one-shot `route`: 9.6–10.7 s per call (JSON transfer and OBJ parse each time); session: first run 2.9 s (parse), then 0.36–14.6 s per line, i.e. the search alone; with `coarseStep` 600: first run 3.7 s, then 0.25–0.61 s per line |
 | `pmef-route` stage 5 tests, `tests/route/cable-trays-route.json` | power and signal trays, cross tray, L-shaped tray | 2–3 cables | each cable uses only its segregated tray; a full tray and a too small tray bend radius are refused; example output (2 `CableObject`s) passes `pmef validate --strict` |
+| `pmef-route` stage 5 scene trays, `tests/route/cable-trays-scene-route.json` | trays read from `CableTrayRun`/`CableTrayFitting` (run, bend, tee, run without height) | 1 cable | route over run → fitting → run; tee split per port; run without height skipped; segregation and bend radius of the fittings apply; explicit `trays` override |
 
 ## Reference tests
 
@@ -251,8 +264,8 @@ already run (Clinic).
    insertion from the class (the catalogs lack the weld-neck length through hub), guides and
    supports on vertical runs.
 5. **Cables.** Done in stage 5: routing on tray networks with segregation, bend radius and fill
-   limit; output as `pmef:CableObject`. Open: reading trays from PMEF `CableTrayRun` geometry
-   (today the problem lists them), drops routed through the voxel graph instead of L1 distances,
+   limit; output as `pmef:CableObject`; trays read from PMEF `CableTrayRun`/`CableTrayFitting`
+   (`traysFromScene`, RFC-0015). Open: drops routed through the voxel graph instead of L1 distances,
    tray sizing proposals when the fill limit is hit, cable lengths with tray-bend arcs.
 6. **Integration.** Done in stage 6: WASM binding `pmef-route-wasm` (CI builds it for
    `wasm32-unknown-unknown`) and P&ID line lists as input (`lineLists`, `dexpi-pmef` shape).

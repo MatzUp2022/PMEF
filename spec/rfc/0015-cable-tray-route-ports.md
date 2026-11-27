@@ -75,4 +75,5 @@ required there).
 | Rust | `pmef-core/src/ei.rs` (`TrayPort`, `CableTrayRun::centreline`/`length_mm`, fitting fields); `CableTrayRun` leaves the frozen list in `schema_drift.rs` |
 | Checks | `scripts/check-geometry.py` (`check_trays`); negative cases `CT-*` in `tests/geometry/equipment-steel-negative.ndjson` |
 | Example | `examples/cable-tray-route.ndjson` |
+| Consumer | `pmef-route` cable routing reads the network from runs and fittings (`cableSettings.traysFromScene`, `docs/auto-routing.md`); `tests/route/cable-trays-scene-route.json` |
 | Conformance | `EI-U-011` … `EI-U-014` |

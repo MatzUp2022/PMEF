@@ -11,6 +11,15 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added — cable routing on PMEF tray networks (RFC-0015 follow-up, #71)
+
+- **`pmef-route`**: `cableSettings.traysFromScene` reads the tray network from the
+  `CableTrayRun`/`CableTrayFitting` objects of `pmefScene` (centreline, ports, width, height,
+  fill level, fitting bend radius; tees and crosses one tray per port). `cableSettings.trayClasses`
+  gives segregation classes per `@id` or mark; explicit `trays` with the same `id` win. Report
+  fields `sceneTrays`, `skippedTrays`. Example `tests/route/cable-trays-scene-route.json`.
+- **Fixed**: `pmefScene` files with `//` comment lines (the annotated examples) failed to load.
+
 ### Added — pipe supports outside piping segments (RFC-0016, #53)
 
 - **`PipeSupport`**: `isPartOf` may name the unit/area of a support zone or the assembly

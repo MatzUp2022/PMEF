@@ -964,3 +964,89 @@ fn no_turns_inside_a_thick_soft_mesh() {
         assert!(!inside, "bend at {q:?} inside the wall: {:?}", r[0].points);
     }
 }
+
+/// Tray network from PMEF objects (RFC-0015): a run, a tee with three ports, a run joined to
+/// the tee and a run without height (skipped).
+fn tray_scene() -> String {
+    let u = "urn:pmef:unit:t:U1";
+    let objs = [
+        json!({"@type": "pmef:CableTrayRun", "@id": "urn:pmef:obj:t:CT-A", "isPartOf": u, "trayMark": "CT-A",
+               "width": 300, "height": 100, "fillLevel": 10,
+               "startPoint": [0, 0, 3000], "endPoint": [10000, 0, 3000]}),
+        json!({"@type": "pmef:CableTrayFitting", "@id": "urn:pmef:obj:t:CT-T", "isPartOf": u, "fittingMark": "CT-T",
+               "fittingType": "TEE", "width": 300, "height": 100, "bendRadius": 300,
+               "connectedTrayIds": ["urn:pmef:obj:t:CT-A", "urn:pmef:obj:t:CT-B"],
+               "ports": [{"portId": "P1", "coordinate": [10000, 0, 3000], "connectedTo": "urn:pmef:obj:t:CT-A"},
+                         {"portId": "P2", "coordinate": [10600, 0, 3000]},
+                         {"portId": "P3", "coordinate": [10300, 300, 3000], "connectedTo": "urn:pmef:obj:t:CT-B"}]}),
+        json!({"@type": "pmef:CableTrayRun", "@id": "urn:pmef:obj:t:CT-B", "isPartOf": u, "trayMark": "CT-B",
+               "width": 300, "height": 100,
+               "path": [[10300, 300, 3000], [10300, 8000, 3000], [10300, 8000, 1000]]}),
+        json!({"@type": "pmef:CableTrayRun", "@id": "urn:pmef:obj:t:CT-C", "isPartOf": u, "trayMark": "CT-C",
+               "width": 300, "startPoint": [0, 5000, 3000], "endPoint": [5000, 5000, 3000]}),
+    ];
+    objs.iter().map(|o| o.to_string() + "\n").collect()
+}
+
+fn tray_scene_problem(extra: serde_json::Value) -> RouteProblem {
+    let mut base = json!({
+        "project": "t", "revisionId": "r2026-11-27-001", "parent": "urn:pmef:unit:t:U1",
+        "pmefScene": ["trays.ndjson"],
+        "cableSettings": {"traysFromScene": true, "trayClasses": {"CT-A": ["power"]}},
+        "cables": [
+            {"id": "C-1", "class": "power", "cableType": "POWER_LV", "diameter": 32, "minBendRadius": 256,
+             "from": {"point": [1000, -1000, 0]}, "to": {"point": [10300, 9000, 1000], "id": "urn:pmef:obj:t:M-1"}}
+        ]
+    });
+    if let serde_json::Value::Object(m) = extra {
+        for (k, v) in m {
+            base[k] = v;
+        }
+    }
+    serde_json::from_value(base).unwrap()
+}
+
+#[test]
+fn cables_route_on_trays_read_from_the_scene() {
+    let scene = tray_scene();
+    let read = |f: &str| if f == "trays.ndjson" { Ok(scene.clone()) } else { Err(format!("no {f}")) };
+    let out = pmef_route::run(tray_scene_problem(json!({})), None, &read).unwrap();
+    assert!(out.ok(), "{:?}", out.cables);
+    let c = &out.cables[0];
+    assert_eq!(
+        c.trays,
+        ["urn:pmef:obj:t:CT-A", "urn:pmef:obj:t:CT-T#P1", "urn:pmef:obj:t:CT-T#P3", "urn:pmef:obj:t:CT-B"]
+    );
+    // CT-C has no height; the tee becomes one tray per port, its free branch P2 unused.
+    assert_eq!(out.skipped_trays.len(), 1);
+    assert_eq!(out.skipped_trays[0].id, "urn:pmef:obj:t:CT-C");
+    assert!(out.scene_trays.contains(&"urn:pmef:obj:t:CT-T#P2".to_string()));
+    // Existing fill of CT-A (10 %) is kept; the cable adds π·16² / (300·100) = 2.7 %.
+    let a = out.tray_fill.iter().find(|f| f.id == "urn:pmef:obj:t:CT-A").unwrap();
+    assert!((a.fill - 12.7).abs() < 0.05, "{}", a.fill);
+    // A branch id is not an @id: the CableObject names the run carrying the longest part.
+    assert_eq!(out.objects[0]["cableTrayId"], "urn:pmef:obj:t:CT-B");
+    let report = out.report();
+    assert_eq!(report["skippedTrays"][0]["reason"], "width or height missing");
+}
+
+#[test]
+fn scene_trays_keep_segregation_bend_radius_and_overrides() {
+    let scene = tray_scene();
+    let read = |f: &str| if f == "trays.ndjson" { Ok(scene.clone()) } else { Err(format!("no {f}")) };
+    // CT-A carries power only.
+    let mut p = tray_scene_problem(json!({}));
+    p.cables[0].class = "signal".into();
+    assert!(!pmef_route::run(p, None, &read).unwrap().ok());
+    // The tee's bend radius (300 mm) is below the cable's minimum bend radius.
+    let mut p = tray_scene_problem(json!({}));
+    p.cables[0].min_bend_radius = 400.0;
+    assert!(!pmef_route::run(p, None, &read).unwrap().ok());
+    // An explicit tray with the same id replaces the scene tray (here: other classes).
+    let p = tray_scene_problem(json!({"trays": [
+        {"id": "urn:pmef:obj:t:CT-A", "points": [[0, 0, 3000], [10000, 0, 3000]], "width": 300,
+         "height": 100, "classes": ["signal"]}]}));
+    let out = pmef_route::run(p, None, &read).unwrap();
+    assert!(!out.ok());
+    assert!(!out.scene_trays.contains(&"urn:pmef:obj:t:CT-A".to_string()));
+}

@@ -2,7 +2,7 @@
 //! cables, PMEF output and report. Files are read through a [`Reader`], so the run needs no
 //! file system.
 
-use crate::cable::{route_cables, RoutedCable, TrayFill};
+use crate::cable::{route_cables, trays_from_pmef, RoutedCable, SkippedTray, TrayFill};
 use crate::line_list::{expand, SkippedLine};
 use crate::pmef_out::{cables_to_pmef, to_pmef};
 use crate::problem::RouteSpec;
@@ -24,6 +24,10 @@ pub struct RunOutput {
     /// The routes generated from the line lists (as they were routed): a viewer copies one into
     /// `routes` to edit and re-route that line alone.
     pub line_list_routes: Vec<RouteSpec>,
+    /// Trays read from the scene (`cableSettings.traysFromScene`) and scene tray objects that
+    /// could not be used.
+    pub scene_trays: Vec<String>,
+    pub skipped_trays: Vec<SkippedTray>,
     /// The problem had cables or line lists: the report is an object, not the route array.
     extended: bool,
 }
@@ -51,6 +55,7 @@ impl RunOutput {
             json!({
                 "routes": self.routes, "cables": self.cables, "trayFill": self.tray_fill,
                 "skippedLines": self.skipped_lines, "lineListRoutes": self.line_list_routes,
+                "sceneTrays": self.scene_trays, "skippedTrays": self.skipped_trays,
             })
         } else {
             json!(self.routes)
@@ -80,6 +85,21 @@ pub fn run_cached(
     let skipped_lines = expand(&mut problem, &scene, read, cache)?;
     let line_list_routes = problem.routes[explicit..].to_vec();
     let routes = route_all(&problem, &scene);
+    let (mut scene_trays, mut skipped_trays) = (Vec::new(), Vec::new());
+    if let Some(set) = problem.cable_settings.clone().filter(|s| s.trays_from_scene) {
+        let mut objs = Vec::new();
+        for f in &problem.pmef_scene {
+            objs.extend(cache.ndjson(f, read)?.iter().cloned());
+        }
+        let (trays, skipped) = trays_from_pmef(&objs, &set.tray_classes);
+        skipped_trays = skipped;
+        for t in trays {
+            if !problem.trays.iter().any(|x| x.id == t.id) {
+                scene_trays.push(t.id.clone());
+                problem.trays.push(t);
+            }
+        }
+    }
     let (cables, tray_fill) = if problem.cables.is_empty() {
         (Vec::new(), Vec::new())
     } else {
@@ -104,6 +124,8 @@ pub fn run_cached(
         tray_fill,
         skipped_lines,
         line_list_routes,
+        scene_trays,
+        skipped_trays,
         extended: !problem.cables.is_empty() || !problem.line_lists.is_empty(),
     })
 }

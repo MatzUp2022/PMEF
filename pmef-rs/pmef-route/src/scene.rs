@@ -111,7 +111,8 @@ pub fn read_ndjson(f: &str, read: &Reader<'_>) -> Result<Vec<Value>, SceneError>
     for (i, line) in text
         .lines()
         .enumerate()
-        .filter(|(_, l)| !l.trim().is_empty())
+        // `//` comment lines, as in the annotated examples (skipped by every PMEF reader).
+        .filter(|(_, l)| !l.trim().is_empty() && !l.trim_start().starts_with("//"))
     {
         let v: Value = serde_json::from_str(line)
             .map_err(|e| SceneError::Parse(f.to_string(), i + 1, e.to_string()))?;

@@ -96,6 +96,15 @@ pub struct CableSettings {
     /// Cost factor of drops (free-hanging or in conduit) relative to tray length.
     #[serde(default = "d_drop_factor")]
     pub drop_factor: f64,
+    /// Read the tray network from the `pmef:CableTrayRun`/`pmef:CableTrayFitting` objects of
+    /// `pmefScene` (RFC-0015 centreline and ports). Entries of `trays` with the same `id`
+    /// replace a scene tray. See [`trays_from_pmef`].
+    #[serde(default)]
+    pub trays_from_scene: bool,
+    /// Cable classes per tray (`@id` or mark) for trays read from the scene, which carry no
+    /// segregation class in PMEF; trays not listed carry any class.
+    #[serde(default)]
+    pub tray_classes: std::collections::BTreeMap<String, Vec<String>>,
 }
 fn d_fill() -> f64 {
     40.0
@@ -112,8 +121,151 @@ impl Default for CableSettings {
             max_fill: d_fill(),
             max_drop: d_drop(),
             drop_factor: d_drop_factor(),
+            trays_from_scene: false,
+            tray_classes: Default::default(),
         }
     }
+}
+
+/// A scene tray object that could not become a [`TraySpec`].
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SkippedTray {
+    pub id: String,
+    pub reason: String,
+}
+
+/// Tray network from PMEF objects (RFC-0015, spec 02 §6.8).
+///
+/// - `pmef:CableTrayRun`: centreline from `path`, else `startPoint`/`endPoint`, else the port
+///   coordinates; `width`, `height` and `fillLevel` [%] as given; the bend radius is the
+///   smallest `bendRadius` of the fittings joined to the run (default 300 mm).
+/// - `pmef:CableTrayFitting` with ports: two ports become one tray from port to port; more
+///   ports (tee, cross) become one tray per port from the port centroid, with id
+///   `<@id>#<portId>`; width and height from the fitting, else its ports, else a joined run.
+///
+/// Runs and fittings are joined where their points coincide. Objects without a route, width or
+/// height are returned as skipped.
+pub fn trays_from_pmef(
+    objs: &[serde_json::Value],
+    classes: &std::collections::BTreeMap<String, Vec<String>>,
+) -> (Vec<TraySpec>, Vec<SkippedTray>) {
+    use serde_json::Value;
+    let p3 = |v: &Value| -> Option<P3> {
+        let a = v.as_array()?;
+        (a.len() == 3).then_some(())?;
+        Some([a[0].as_f64()?, a[1].as_f64()?, a[2].as_f64()?])
+    };
+    let num = |v: &Value| v.as_f64().filter(|x| *x > 0.0);
+    let id_of = |o: &Value| o["@id"].as_str().unwrap_or_default().to_string();
+    let classes_for = |o: &Value, id: &str| -> Vec<String> {
+        for k in [id, o["trayMark"].as_str().unwrap_or(""), o["fittingMark"].as_str().unwrap_or("")] {
+            if let Some(c) = classes.get(k).filter(|_| !k.is_empty()) {
+                return c.clone();
+            }
+        }
+        Vec::new()
+    };
+    let runs: Vec<&Value> = objs.iter().filter(|o| o["@type"] == "pmef:CableTrayRun").collect();
+    let fittings: Vec<&Value> = objs.iter().filter(|o| o["@type"] == "pmef:CableTrayFitting").collect();
+    // Fittings joined to each run (connectedTrayIds or port connectedTo) and their bend radius.
+    let joins = |f: &Value, run: &str| -> bool {
+        f["connectedTrayIds"].as_array().is_some_and(|a| a.iter().any(|x| x == run))
+            || f["ports"].as_array().is_some_and(|a| a.iter().any(|p| p["connectedTo"] == run))
+    };
+    let mut trays = Vec::new();
+    let mut skipped = Vec::new();
+    let mut size_of_run = std::collections::HashMap::new();
+    for o in &runs {
+        let id = id_of(o);
+        let ports: Vec<P3> = o["ports"].as_array().into_iter().flatten().filter_map(|p| p3(&p["coordinate"])).collect();
+        let path: Vec<P3> = o["path"].as_array().into_iter().flatten().filter_map(p3).collect();
+        let points = if path.len() >= 2 {
+            path
+        } else if let (Some(a), Some(b)) = (p3(&o["startPoint"]), p3(&o["endPoint"])) {
+            vec![a, b]
+        } else {
+            ports
+        };
+        let (w, h) = (num(&o["width"]), num(&o["height"]));
+        let reason = if points.len() < 2 {
+            Some("no centreline (path, startPoint/endPoint or two ports)")
+        } else if w.is_none() || h.is_none() {
+            Some("width or height missing")
+        } else {
+            None
+        };
+        if let Some(r) = reason {
+            skipped.push(SkippedTray { id, reason: r.into() });
+            continue;
+        }
+        let bend = fittings
+            .iter()
+            .filter(|f| joins(f, &id))
+            .filter_map(|f| num(&f["bendRadius"]))
+            .fold(f64::INFINITY, f64::min);
+        size_of_run.insert(id.clone(), (w.unwrap(), h.unwrap()));
+        trays.push(TraySpec {
+            classes: classes_for(o, &id),
+            id,
+            points,
+            width: w.unwrap(),
+            height: h.unwrap(),
+            bend_radius: if bend.is_finite() { bend } else { d_tray_bend() },
+            fill: o["fillLevel"].as_f64().unwrap_or(0.0),
+        });
+    }
+    for f in &fittings {
+        let id = id_of(f);
+        let ports: Vec<(String, P3, &Value)> = f["ports"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|p| Some((p["portId"].as_str().unwrap_or("P").to_string(), p3(&p["coordinate"])?, p)))
+            .collect();
+        if ports.len() < 2 {
+            if f["fittingType"] != "END_PIECE" {
+                skipped.push(SkippedTray { id, reason: "fewer than two ports with coordinates".into() });
+            }
+            continue;
+        }
+        let joined = runs.iter().map(|r| id_of(r)).find(|r| joins(f, r)).and_then(|r| size_of_run.get(&r).copied());
+        let size = |p: Option<&Value>, k: &str, i: usize| {
+            num(&f[k])
+                .or_else(|| p.and_then(|p| num(&p[k])))
+                .or_else(|| joined.map(|s| if i == 0 { s.0 } else { s.1 }))
+        };
+        let bend = num(&f["bendRadius"]).unwrap_or_else(d_tray_bend);
+        let fill = f["fillLevel"].as_f64().unwrap_or(0.0);
+        let mk = |tid: String, pts: Vec<P3>, p: Option<&Value>| -> Result<TraySpec, SkippedTray> {
+            match (size(p, "width", 0), size(p, "height", 1)) {
+                (Some(width), Some(height)) => Ok(TraySpec {
+                    classes: classes_for(f, &id),
+                    id: tid,
+                    points: pts,
+                    width,
+                    height,
+                    bend_radius: bend,
+                    fill,
+                }),
+                _ => Err(SkippedTray { id: tid, reason: "width or height missing".into() }),
+            }
+        };
+        let made: Vec<_> = if ports.len() == 2 {
+            vec![mk(id.clone(), vec![ports[0].1, ports[1].1], None)]
+        } else {
+            let n = ports.len() as f64;
+            let c = [0, 1, 2].map(|i| ports.iter().map(|p| p.1[i]).sum::<f64>() / n);
+            ports.iter().map(|(pid, p, pv)| mk(format!("{id}#{pid}"), vec![c, *p], Some(pv))).collect()
+        };
+        for m in made {
+            match m {
+                Ok(t) => trays.push(t),
+                Err(s) => skipped.push(s),
+            }
+        }
+    }
+    (trays, skipped)
 }
 
 /// Outcome of one cable.
