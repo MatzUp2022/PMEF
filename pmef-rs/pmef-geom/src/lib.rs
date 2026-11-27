@@ -394,11 +394,7 @@ fn cylinder_aabb_inner(center: Vec3, axis: &[f64; 3], radius: f64, length: f64) 
 /// # Panics
 ///
 /// Panics if required parameters for the given primitive type are `None`.
-pub fn primitive_aabb(
-    ptype: &PrimitiveType,
-    origin: Vec3,
-    params: &PrimitiveParams,
-) -> Aabb {
+pub fn primitive_aabb(ptype: &PrimitiveType, origin: Vec3, params: &PrimitiveParams) -> Aabb {
     let axis = params.axis.unwrap_or([0.0, 0.0, 1.0]);
 
     match ptype {
@@ -407,7 +403,10 @@ pub fn primitive_aabb(
         // ---------------------------------------------------------------
         PrimitiveType::Cylinder => {
             let r = params.radius.expect("Cylinder requires radius");
-            let len = params.height.or(params.length).expect("Cylinder requires height/length");
+            let len = params
+                .height
+                .or(params.length)
+                .expect("Cylinder requires height/length");
             cylinder_aabb_inner(origin, &axis, r, len)
         }
 
@@ -418,12 +417,23 @@ pub fn primitive_aabb(
         PrimitiveType::Box => {
             let xl = params.length.expect("Box requires length");
             let yl = params.width.expect("Box requires width");
-            let zl = params.depth.or(params.height).expect("Box requires depth/height");
+            let zl = params
+                .depth
+                .or(params.height)
+                .expect("Box requires depth/height");
             // Conservative: bounding sphere of the box
             let half_diag = (xl * xl + yl * yl + zl * zl).sqrt() * 0.5;
             Aabb::new(
-                Vec3::new(origin.x - half_diag, origin.y - half_diag, origin.z - half_diag),
-                Vec3::new(origin.x + half_diag, origin.y + half_diag, origin.z + half_diag),
+                Vec3::new(
+                    origin.x - half_diag,
+                    origin.y - half_diag,
+                    origin.z - half_diag,
+                ),
+                Vec3::new(
+                    origin.x + half_diag,
+                    origin.y + half_diag,
+                    origin.z + half_diag,
+                ),
             )
         }
 
@@ -444,7 +454,10 @@ pub fn primitive_aabb(
         PrimitiveType::Cone => {
             let r1 = params.radius.expect("Cone requires radius (r1)");
             let r2 = params.radius2.expect("Cone requires radius2 (r2)");
-            let len = params.height.or(params.length).expect("Cone requires height/length");
+            let len = params
+                .height
+                .or(params.length)
+                .expect("Cone requires height/length");
             let end = Vec3::new(
                 origin.x + axis[0] * len,
                 origin.y + axis[1] * len,
@@ -498,7 +511,10 @@ pub fn primitive_aabb(
         // NOZZLE: barrel cylinder + flange disc
         // ---------------------------------------------------------------
         PrimitiveType::Nozzle => {
-            let proj = params.length.or(params.height).expect("Nozzle requires length (projection)");
+            let proj = params
+                .length
+                .or(params.height)
+                .expect("Nozzle requires length (projection)");
             let barrel_r = params.radius.unwrap_or(0.0);
             let flange_od = params.flange_od.unwrap_or(barrel_r * 2.0);
             let flange_r = flange_od * 0.5;
@@ -513,11 +529,20 @@ pub fn primitive_aabb(
         //          projected via the axis
         // ---------------------------------------------------------------
         PrimitiveType::Pyramid => {
-            let bl = params.base_length.or(params.length).expect("Pyramid requires base_length");
-            let bw = params.base_width.or(params.width).expect("Pyramid requires base_width");
+            let bl = params
+                .base_length
+                .or(params.length)
+                .expect("Pyramid requires base_length");
+            let bw = params
+                .base_width
+                .or(params.width)
+                .expect("Pyramid requires base_width");
             let tl = params.top_length.unwrap_or(0.0);
             let tw = params.top_width.unwrap_or(0.0);
-            let h = params.height.or(params.depth).expect("Pyramid requires height");
+            let h = params
+                .height
+                .or(params.depth)
+                .expect("Pyramid requires height");
             // Conservative: enclosing cylinder of radius = half diagonal
             // of the larger base, height = h.
             let max_half = ((bl.max(tl)).powi(2) + (bw.max(tw)).powi(2)).sqrt() * 0.5;
@@ -530,7 +555,10 @@ pub fn primitive_aabb(
         PrimitiveType::Snout => {
             let r1 = params.radius.expect("Snout requires radius (r1)");
             let r2 = params.radius2.expect("Snout requires radius2 (r2)");
-            let len = params.height.or(params.length).expect("Snout requires height/length");
+            let len = params
+                .height
+                .or(params.length)
+                .expect("Snout requires height/length");
             let ox = params.offset_x.unwrap_or(0.0);
             let oy = params.offset_y.unwrap_or(0.0);
             let offset_mag = (ox * ox + oy * oy).sqrt();
@@ -562,8 +590,12 @@ pub fn primitive_aabb(
         // CIRCULAR TORUS: pipe elbow — conservative bounding sphere
         // ---------------------------------------------------------------
         PrimitiveType::CircularTorus => {
-            let big_r = params.torus_radius.expect("CircularTorus requires torus_radius");
-            let small_r = params.tube_radius.expect("CircularTorus requires tube_radius");
+            let big_r = params
+                .torus_radius
+                .expect("CircularTorus requires torus_radius");
+            let small_r = params
+                .tube_radius
+                .expect("CircularTorus requires tube_radius");
             // Conservative: full torus bounding sphere regardless of angle.
             let outer = big_r + small_r;
             Aabb::new(
@@ -576,7 +608,9 @@ pub fn primitive_aabb(
         // RECTANGULAR TORUS: duct elbow — conservative bounding sphere
         // ---------------------------------------------------------------
         PrimitiveType::RectangularTorus => {
-            let big_r = params.torus_radius.expect("RectangularTorus requires torus_radius");
+            let big_r = params
+                .torus_radius
+                .expect("RectangularTorus requires torus_radius");
             let w = params.width.unwrap_or(0.0);
             let h = params.height.or(params.depth).unwrap_or(0.0);
             let half_diag = (w * w + h * h).sqrt() * 0.5;
@@ -611,7 +645,10 @@ pub fn primitive_aabb(
         //            cylinder enclosing the profile swept along the axis.
         // ---------------------------------------------------------------
         PrimitiveType::Extrusion => {
-            let len = params.length.or(params.height).expect("Extrusion requires length");
+            let len = params
+                .length
+                .or(params.height)
+                .expect("Extrusion requires length");
             let profile_r = params.profile_max_r.or(params.radius).unwrap_or(0.0);
             cylinder_aabb_inner(origin, &axis, profile_r, len)
         }
@@ -621,7 +658,10 @@ pub fn primitive_aabb(
         //             enclosing the max radial extent.
         // ---------------------------------------------------------------
         PrimitiveType::Revolution => {
-            let max_r = params.profile_max_r.or(params.radius).expect("Revolution requires profile_max_r or radius");
+            let max_r = params
+                .profile_max_r
+                .or(params.radius)
+                .expect("Revolution requires profile_max_r or radius");
             let max_z = params.profile_max_z.unwrap_or(0.0);
             let min_z = params.profile_min_z.unwrap_or(0.0);
             let total_z = max_z - min_z;
@@ -641,7 +681,9 @@ pub fn primitive_aabb(
         // ---------------------------------------------------------------
         PrimitiveType::SteelProfile => {
             let [x, y, z] = params.end_point.expect("SteelProfile requires end_point");
-            let r = params.profile_max_r.expect("SteelProfile requires profile_max_r");
+            let r = params
+                .profile_max_r
+                .expect("SteelProfile requires profile_max_r");
             let mut b = Aabb::from_point(origin);
             b.include_point(Vec3::new(x, y, z));
             inflate(b, r)
@@ -652,8 +694,12 @@ pub fn primitive_aabb(
         //             plus bonnet/actuator extent.
         // ---------------------------------------------------------------
         PrimitiveType::ValveBody => {
-            let bore_r = params.radius.expect("ValveBody requires radius (boreD / 2)");
-            let ftf = params.length.expect("ValveBody requires length (faceToFace)");
+            let bore_r = params
+                .radius
+                .expect("ValveBody requires radius (boreD / 2)");
+            let ftf = params
+                .length
+                .expect("ValveBody requires length (faceToFace)");
             let env_r = params
                 .flange_od
                 .map_or(2.0 * bore_r * VALVE_ENVELOPE_FACTOR, |od| od * 0.5)
@@ -661,7 +707,10 @@ pub fn primitive_aabb(
             let a = Vec3::new(axis[0], axis[1], axis[2]);
             let start = origin - a * (ftf * 0.5);
             let mut b = cylinder_aabb_inner(start, &axis, env_r, ftf);
-            let up = params.height.unwrap_or(0.0).max(params.actuator_height.unwrap_or(0.0));
+            let up = params
+                .height
+                .unwrap_or(0.0)
+                .max(params.actuator_height.unwrap_or(0.0));
             if up > 0.0 {
                 b = b.union(&match params.actuator_axis {
                     Some(d) => {
@@ -690,6 +739,41 @@ pub fn primitive_aabb(
             inflate(b, (w * w + h * h).sqrt() * 0.5)
         }
     }
+}
+
+/// Cross-section size of a steel profile for member bounds: half the section height and width
+/// (bounding rectangle of the section), or the radius of a round section (`round`, then
+/// `half_h` is the radius).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct SectionSize {
+    pub half_h: f64,
+    pub half_b: f64,
+    pub round: bool,
+}
+
+/// Conservative AABB of a straight steel member from `start` to `end` with the given section,
+/// rolled by `roll_deg` about its axis.
+///
+/// The box is grown by the same distance `e` on every side. Round sections: `e` = radius.
+/// Members along a world axis: `e` = the larger perpendicular extent of the rolled rectangle,
+/// `max(h|cos θ| + b|sin θ|, h|sin θ| + b|cos θ|)`, which needs no convention for the local
+/// frame and equals `max(h, b)` at 0° and 90°. Any other direction: the half-diagonal
+/// `hypot(h, b)` (every point of the section lies within it of the axis).
+pub fn member_aabb(start: Vec3, end: Vec3, s: SectionSize, roll_deg: f64) -> Aabb {
+    let mut b = Aabb::from_point(start);
+    b.include_point(end);
+    let d = (end - start).normalize();
+    let axis_aligned = [d.x, d.y, d.z].iter().filter(|c| c.abs() < 1e-9).count() == 2;
+    let e = if s.round {
+        s.half_h
+    } else if axis_aligned {
+        let (sin, cos) = roll_deg.to_radians().sin_cos();
+        let (sin, cos) = (sin.abs(), cos.abs());
+        (s.half_h * cos + s.half_b * sin).max(s.half_h * sin + s.half_b * cos)
+    } else {
+        s.half_h.hypot(s.half_b)
+    };
+    inflate(b, e)
 }
 
 /// Smallest AABB enclosing all given boxes (bounds of a `COMPOSITE` from the
@@ -923,14 +1007,26 @@ mod tests {
     fn steel_profile_aabb_contains_all_rolled_corners() {
         // HEB300: 300 x 300 → half-diagonal 212.13; beam along X, 6 m
         let r = (300.0f64.powi(2) * 2.0).sqrt() / 2.0;
-        let p = PrimitiveParams { end_point: Some([6000.0, 0.0, 0.0]), profile_max_r: Some(r), ..Default::default() };
+        let p = PrimitiveParams {
+            end_point: Some([6000.0, 0.0, 0.0]),
+            profile_max_r: Some(r),
+            ..Default::default()
+        };
         let b = primitive_aabb(&PrimitiveType::SteelProfile, Vec3::zero(), &p);
         for deg in (0..360).step_by(15) {
             let t = (deg as f64).to_radians();
-            for (u, v) in [(150.0, 150.0), (150.0, -150.0), (-150.0, 150.0), (-150.0, -150.0)] {
+            for (u, v) in [
+                (150.0, 150.0),
+                (150.0, -150.0),
+                (-150.0, 150.0),
+                (-150.0, -150.0),
+            ] {
                 let (y, z) = (u * t.cos() - v * t.sin(), u * t.sin() + v * t.cos());
                 for x in [0.0, 6000.0] {
-                    assert!(b.contains_point(Vec3::new(x, y, z)), "corner at roll {deg}°");
+                    assert!(
+                        b.contains_point(Vec3::new(x, y, z)),
+                        "corner at roll {deg}°"
+                    );
                 }
             }
         }
@@ -954,30 +1050,49 @@ mod tests {
         assert!(approx_eq(b.min.z, -114.5) && approx_eq(b.max.z, 600.0 + 114.5));
         assert!(approx_eq(b.max.y, 114.5));
         // without flange OD the heuristic envelope (VALVE_ENVELOPE_FACTOR × boreD) applies
-        let q = PrimitiveParams { flange_od: None, actuator_height: None, ..p };
+        let q = PrimitiveParams {
+            flange_od: None,
+            actuator_height: None,
+            ..p
+        };
         let b = primitive_aabb(&PrimitiveType::ValveBody, Vec3::zero(), &q);
         assert!(approx_eq(b.max.y, 100.0 * VALVE_ENVELOPE_FACTOR));
     }
 
     #[test]
     fn valve_body_without_actuator_direction_bounds_all_directions() {
-        let p = PrimitiveParams { radius: Some(25.0), length: Some(100.0), height: Some(400.0), ..Default::default() };
+        let p = PrimitiveParams {
+            radius: Some(25.0),
+            length: Some(100.0),
+            height: Some(400.0),
+            ..Default::default()
+        };
         let b = primitive_aabb(&PrimitiveType::ValveBody, Vec3::zero(), &p);
         for d in [[1.0, 0.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, -1.0]] {
             assert!(b.contains_point(Vec3::new(d[0], d[1], d[2]) * 400.0));
         }
         // must enclose the envelope of every directed actuator (up + env_r)
         for d in [[0.0, 0.0, 1.0], [0.0, -1.0, 0.0], [1.0, 0.0, 0.0]] {
-            let q = PrimitiveParams { actuator_axis: Some(d), ..p.clone() };
+            let q = PrimitiveParams {
+                actuator_axis: Some(d),
+                ..p.clone()
+            };
             let directed = primitive_aabb(&PrimitiveType::ValveBody, Vec3::zero(), &q);
-            assert!(b.contains_point(directed.min) && b.contains_point(directed.max), "direction {d:?}");
+            assert!(
+                b.contains_point(directed.min) && b.contains_point(directed.max),
+                "direction {d:?}"
+            );
         }
     }
 
     #[test]
     fn cable_tray_aabb_polyline() {
         let p = PrimitiveParams {
-            points: Some(vec![[0.0, 0.0, 3000.0], [5000.0, 0.0, 3000.0], [5000.0, 2000.0, 3000.0]]),
+            points: Some(vec![
+                [0.0, 0.0, 3000.0],
+                [5000.0, 0.0, 3000.0],
+                [5000.0, 2000.0, 3000.0],
+            ]),
             width: Some(600.0),
             height: Some(100.0),
             ..Default::default()
@@ -989,16 +1104,86 @@ mod tests {
     }
 
     #[test]
+    fn member_aabb_encloses_rolled_and_skewed_sections() {
+        let s = SectionSize {
+            half_h: 150.0,
+            half_b: 100.0,
+            round: false,
+        };
+        // section corners in the plane perpendicular to the axis (unit vectors u, v), rolled
+        let corners = |a: Vec3, u: Vec3, v: Vec3, roll: f64| {
+            let (sn, cs) = roll.to_radians().sin_cos();
+            let mut pts = Vec::new();
+            for (p, q) in [
+                (150.0, 100.0),
+                (150.0, -100.0),
+                (-150.0, 100.0),
+                (-150.0, -100.0),
+            ] {
+                let off = u * (p * cs - q * sn) + v * (p * sn + q * cs);
+                pts.push(off);
+                pts.push(a + off);
+            }
+            pts
+        };
+        // axis-aligned along X, every roll: exact-enough and enclosing
+        for roll in (0..360).step_by(5) {
+            let r = roll as f64;
+            let b = member_aabb(Vec3::zero(), Vec3::new(5000.0, 0.0, 0.0), s, r);
+            for p in corners(
+                Vec3::new(5000.0, 0.0, 0.0),
+                Vec3::new(0.0, 1.0, 0.0),
+                Vec3::new(0.0, 0.0, 1.0),
+                r,
+            ) {
+                assert!(b.contains_point(p), "roll {roll}: {p:?}");
+            }
+        }
+        assert!(approx_eq(
+            member_aabb(Vec3::zero(), Vec3::new(1.0, 0.0, 0.0), s, 0.0)
+                .max
+                .y,
+            150.0
+        ));
+        // skewed brace along (1,1,1): needs the half-diagonal
+        let a = Vec3::new(3000.0, 3000.0, 3000.0);
+        let u = Vec3::new(1.0, -1.0, 0.0).normalize();
+        let v = a.normalize().cross(&u);
+        for roll in (0..360).step_by(15) {
+            let b = member_aabb(Vec3::zero(), a, s, roll as f64);
+            for p in corners(a, u, v, roll as f64) {
+                assert!(b.contains_point(p), "skewed roll {roll}: {p:?}");
+            }
+        }
+        let round = SectionSize {
+            half_h: 84.15,
+            half_b: 84.15,
+            round: true,
+        };
+        assert!(approx_eq(
+            member_aabb(Vec3::zero(), a, round, 30.0).max.x,
+            3084.15
+        ));
+    }
+
+    #[test]
     fn composite_union() {
         let shell = primitive_aabb(
             &PrimitiveType::Cylinder,
             Vec3::zero(),
-            &PrimitiveParams { radius: Some(500.0), height: Some(3000.0), ..Default::default() },
+            &PrimitiveParams {
+                radius: Some(500.0),
+                height: Some(3000.0),
+                ..Default::default()
+            },
         );
         let head = primitive_aabb(
             &PrimitiveType::EllipticalHead,
             Vec3::new(0.0, 0.0, 3000.0),
-            &PrimitiveParams { radius: Some(500.0), ..Default::default() },
+            &PrimitiveParams {
+                radius: Some(500.0),
+                ..Default::default()
+            },
         );
         let b = aabb_union([shell, head]).unwrap();
         assert!(approx_eq(b.max.z, 3250.0) && approx_eq(b.min.x, -500.0));
