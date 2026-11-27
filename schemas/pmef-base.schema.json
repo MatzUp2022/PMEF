@@ -688,6 +688,27 @@
       },
       "additionalProperties": false
     },
+    "Placeholder": {
+      "title": "Placeholder entry",
+      "description": "Marks one field of the object as a stand-in that a later revision of the same @id replaces with real data (RFC-0012). The field itself holds a valid value, typically UNSPECIFIED or CUSTOM.",
+      "type": "object",
+      "required": ["path", "reason"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(/[^/]+)+$",
+          "description": "JSON Pointer (RFC 6901) to the stand-in field, relative to the object, e.g. '/damperType'"
+        },
+        "reason": {
+          "type": "string",
+          "enum": ["SOURCE_MISSING", "NOT_IN_ENUM", "TO_BE_CONFIRMED"],
+          "description": "SOURCE_MISSING: the source has no value; NOT_IN_ENUM: the real value lies outside the PMEF enumeration (see the matching *Custom field); TO_BE_CONFIRMED: a value is entered but not yet confirmed"
+        },
+        "note": { "type": "string", "description": "What is known and where the value will come from" },
+        "expectedFrom": { "type": "string", "description": "Source or party expected to deliver the value, e.g. 'HVAC damper schedule', 'vendor'" }
+      },
+      "additionalProperties": false
+    },
     "ReviewChangeStateRule": {
       "title": "Review / CDE state consistency",
       "description": "review.status 'detected' requires changeState WIP; 'rejected' must not be PUBLISHED (spec 02 §2.9.2).",

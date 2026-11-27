@@ -838,6 +838,16 @@ fn cmd_check(file: PathBuf, json_output: bool, output: Option<PathBuf>) -> Resul
         "all mesh_ref fragments resolve (or their file is not in the package)".into()
     } else { format!("{} unresolved mesh_ref: {}", mesh_failed.len(), list(&mesh_failed)) }));
 
+    // RFC-0012: stand-in values are valid data; report them so they can be replaced later.
+    let mut placeholders: Vec<String> = Vec::new();
+    for o in &objects {
+        for p in o.value.get("placeholders").and_then(|v| v.as_array()).into_iter().flatten() {
+            let path = p.get("path").and_then(|v| v.as_str()).unwrap_or("?");
+            let reason = p.get("reason").and_then(|v| v.as_str()).unwrap_or("?");
+            placeholders.push(format!("{}{path} ({reason})", o.id_str));
+        }
+    }
+
     let failed = checks.iter().filter(|c| !c.1).count();
     let version = headers.first().and_then(|h| h.value.get("pmefVersion")).and_then(|v| v.as_str()).unwrap_or("?");
     let mut by_type: Vec<(String, usize)> = objects.iter().fold(HashMap::new(), |mut m, o| {
@@ -857,6 +867,7 @@ fn cmd_check(file: PathBuf, json_output: bool, output: Option<PathBuf>) -> Resul
                 "check": n, "status": if *ok { "PASS" } else { "FAIL" }, "detail": d })).collect::<Vec<_>>(),
             "referencesOutsidePackage": outside,
             "meshRefNotes": mesh_notes,
+            "placeholders": placeholders,
             "typeCounts": by_type.iter().map(|(t, n)| (t.clone(), serde_json::json!(n))).collect::<serde_json::Map<String, serde_json::Value>>(),
         }))?
     } else {
@@ -867,6 +878,9 @@ fn cmd_check(file: PathBuf, json_output: bool, output: Option<PathBuf>) -> Resul
         t += &format!("  i references outside the package (unit, functional model; not checked): {info}\n");
         if !mesh_notes.is_empty() {
             t += &format!("  i mesh_ref notes: {}: {}\n", mesh_notes.len(), list(&mesh_notes));
+        }
+        if !placeholders.is_empty() {
+            t += &format!("  i placeholders to replace (RFC-0012): {}: {}\n", placeholders.len(), list(&placeholders));
         }
         t += &format!("{} — {} of {} checks passed\n", if failed == 0 { "PASS" } else { "FAIL" }, checks.len() - failed, checks.len());
         t

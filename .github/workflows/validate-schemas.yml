@@ -120,6 +120,9 @@ jobs:
       - name: Catalog checks detect broken catalogs (golden negative fixture)
         run: python tests/catalogs/run.py
 
+      - name: RFC-0012 placeholder rules
+        run: python tests/placeholders/run.py
+
   # ──────────────────────────────────────────────────────────
   # 3b. Conformance test suite (spec 06 §5)
   # ──────────────────────────────────────────────────────────

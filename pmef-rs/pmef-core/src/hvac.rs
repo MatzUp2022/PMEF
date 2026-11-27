@@ -276,6 +276,9 @@ macro_rules! duct_component {
             /// RFC-0001 provenance / review / asBuilt blocks.
             #[serde(flatten, default)]
             pub recognition: crate::provenance::RecognitionMetadata,
+            /// RFC-0012: fields holding stand-in values to be replaced later.
+            #[serde(default, skip_serializing_if = "Vec::is_empty")]
+            pub placeholders: Vec<crate::placeholder::Placeholder>,
             #[serde(default, skip_serializing_if = "Option::is_none")]
             pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
             $( $(#[$field_meta])* pub $field: $ty ),*
@@ -336,8 +339,12 @@ duct_component!(
 
 duct_component!(
     /// Volume-control, shut-off, non-return, fire or smoke damper.
+    /// `damper_type` `UNSPECIFIED` is a stand-in (listed in `placeholders`); `CUSTOM` needs
+    /// `damper_type_custom` (RFC-0012).
     DuctDamper {
         damper_type: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        damper_type_custom: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         actuation: Option<String>,
         /// EN 13501-3 classification, e.g. `EI 90 S`.
