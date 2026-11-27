@@ -346,7 +346,15 @@ pub fn primitive_box(p: &Value) -> Option<Aabb> {
             let off = f("offsetX")
                 .unwrap_or(0.0)
                 .hypot(f("offsetY").unwrap_or(0.0));
-            Some(swept(r1.max(r2) + off, f("length").or(f("height"))?))
+            // Sheared end faces (spec 04 §4.3) move face points along the axis by up to
+            // r·|(tan shearX, tan shearY)|; inflating by that bound stays conservative.
+            let shear = |x: &str, y: &str, r: f64| {
+                let t = |k: &str| f(k).unwrap_or(0.0).to_radians().tan();
+                r * t(x).hypot(t(y))
+            };
+            let overhang = shear("bottomShearX", "bottomShearY", r1)
+                .max(shear("topShearX", "topShearY", r2));
+            Some(swept(r1.max(r2) + off, f("length").or(f("height"))?).inflate(overhang))
         }
         "SPHERE" => Some(Aabb::from_points(c, c).inflate(f("radius")?)),
         "CIRC_TORUS" => Some(Aabb::from_points(c, c).inflate(f("torusRadius")? + f("tubeRadius")?)),
@@ -460,6 +468,14 @@ mod tests {
     fn obj_quad() {
         let t = parse_obj("v 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\nf 1 2 3 4\n").unwrap();
         assert_eq!(t.len(), 2);
+    }
+
+    #[test]
+    fn sheared_snout_box_covers_the_tilted_face() {
+        let b = primitive_box(&serde_json::json!({"type": "SNOUT", "center": [0.0, 0.0, 0.0],
+            "axis": [0.0, 0.0, 1.0], "r1": 100.0, "r2": 100.0, "length": 300.0,
+            "bottomShearX": 45.0})).unwrap();
+        assert!(b.min[2] <= -100.0 + 1e-9, "{b:?}");
     }
 
     #[test]

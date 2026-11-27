@@ -203,6 +203,12 @@ def sdist(prim, p):
         v = sub(p, prim["center"])
         h = dot(v, a)
         d = norm(sub(v, [a[i] * h for i in range(3)]))
+        if t == "SNOUT" and any(prim.get(k) for k in ("bottomShearX", "bottomShearY", "topShearX", "topShearY")):
+            return None  # sheared end faces are not evaluated
+        if t == "DISH" and prim.get("dishType") == "SPHERICAL_CAP":  # sphere segment of height depth
+            r, depth = prim["shellRadius"], prim["depth"]
+            big = (r * r + depth * depth) / (2 * depth)
+            return max(norm(sub(v, [a[i] * (depth - big) for i in range(3)])) - big, -h)
         if t == "DISH":  # half-ellipsoid beyond the knuckle circle
             r = prim["shellRadius"]
             depth = prim.get("depth") or {"HEMISPHERICAL": r, "FLAT": 0.0}.get(prim.get("dishType"), r / 2)
