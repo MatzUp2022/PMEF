@@ -19,6 +19,8 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   gives segregation classes per `@id` or mark; explicit `trays` with the same `id` win. Report
   fields `sceneTrays`, `skippedTrays`. Example `tests/route/cable-trays-scene-route.json`.
 - **Fixed**: `pmefScene` files with `//` comment lines (the annotated examples) failed to load.
+- **Fixed** (review on #75): fitting `bendRadius: 0` was read as missing (300 mm); two-port
+  fittings ignored port widths/heights; `cableTrayId` could name a fitting (spec 02 §6.7: runs only).
 
 ### Added — pipe supports outside piping segments (RFC-0016, #53)
 

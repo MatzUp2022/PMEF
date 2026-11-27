@@ -137,7 +137,9 @@ With `cableSettings.traysFromScene` the network is read from the `pmef:CableTray
 `path`, else `startPoint`/`endPoint`, else its ports, with `width`, `height` and `fillLevel`; its
 bend radius is the smallest `bendRadius` of the fittings joined to it (default 300 mm). A fitting
 with two ports becomes a tray from port to port, a tee or cross one tray per port from the port
-centroid (`<@id>#<portId>`; the `CableObject` names the run carrying the longest part). PMEF has
+centroid (`<@id>#<portId>`); its width and height come from the fitting, else its ports, else a
+joined run, and `bendRadius: 0` is a sharp junction. The `CableObject` always names the run
+carrying the longest part, never a fitting (spec 02 §6.7). PMEF has
 no segregation class on trays, so `cableSettings.trayClasses` gives them per `@id` or mark;
 an entry of `trays` with the same `id` replaces a scene tray. Objects without a route, width or
 height are listed in the report under `skippedTrays`, the used ones under `sceneTrays`. Lengths
