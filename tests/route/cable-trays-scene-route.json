@@ -1,0 +1,14 @@
+{
+  "project": "demo-tray",
+  "revisionId": "r2026-11-27-001",
+  "parent": "urn:pmef:unit:demo-tray:U-300",
+  "pmefScene": ["../../examples/cable-tray-route.ndjson"],
+  "cableSettings": { "maxFill": 40, "maxDrop": 5000, "dropFactor": 2, "traysFromScene": true,
+    "trayClasses": { "CT-301": ["power"], "CT-302": ["power"] } },
+  "cables": [
+    { "id": "W-301", "cableNumber": "W-301", "class": "power", "cableType": "POWER_LV",
+      "diameter": 32, "minBendRadius": 256,
+      "from": { "point": [1000, -1500, 0], "id": "urn:pmef:obj:demo-tray:MCC-3", "terminal": "F4" },
+      "to": { "point": [6500, 8000, 0], "id": "urn:pmef:obj:demo-tray:M-301" } }
+  ]
+}
