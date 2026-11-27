@@ -100,6 +100,16 @@ pub struct CableSettings {
     /// Cost factor of drops (free-hanging or in conduit) relative to tray length.
     #[serde(default = "d_drop_factor")]
     pub drop_factor: f64,
+    /// Route the drops (cable end ↔ tray) through the scene obstacles instead of counting
+    /// their orthogonal distance (see `drop.rs`).
+    #[serde(default)]
+    pub route_drops: bool,
+    /// Grid spacing of the drop search [mm].
+    #[serde(default = "d_drop_step")]
+    pub drop_step: f64,
+    /// Clearance between a dropped cable and obstacles [mm].
+    #[serde(default = "d_drop_clearance")]
+    pub drop_clearance: f64,
     /// Read the tray network from the `pmef:CableTrayRun`/`pmef:CableTrayFitting` objects of
     /// `pmefScene` (RFC-0015 centreline and ports). Entries of `trays` with the same `id`
     /// replace a scene tray. See [`trays_from_pmef`].
@@ -116,6 +126,12 @@ fn d_fill() -> f64 {
 fn d_drop() -> f64 {
     5000.0
 }
+fn d_drop_step() -> f64 {
+    100.0
+}
+fn d_drop_clearance() -> f64 {
+    50.0
+}
 fn d_drop_factor() -> f64 {
     2.0
 }
@@ -125,6 +141,9 @@ impl Default for CableSettings {
             max_fill: d_fill(),
             max_drop: d_drop(),
             drop_factor: d_drop_factor(),
+            route_drops: false,
+            drop_step: d_drop_step(),
+            drop_clearance: d_drop_clearance(),
             trays_from_scene: false,
             tray_classes: Default::default(),
         }
@@ -302,8 +321,19 @@ pub struct RoutedCable {
     pub drop_mm: f64,
     /// How much shorter the corners on tray runs make the path than the sharp polyline [mm].
     pub bend_correction_mm: f64,
+    /// Drops routed through the scene (`cableSettings.routeDrops`).
+    #[serde(skip_serializing_if = "is_zero")]
+    pub routed_drops: usize,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub warnings: Vec<String>,
     #[serde(skip)]
     pub spec: Option<CableSpec>,
+    /// Whether the first / last leg of `points` is a drop.
+    #[serde(skip)]
+    pub drop_legs: [bool; 2],
+}
+fn is_zero(n: &usize) -> bool {
+    *n == 0
 }
 
 /// Fill of a tray after routing.
@@ -344,15 +374,18 @@ pub fn bend_arc(p1: P3, d1: P3, p2: P3, d2: P3) -> Option<Vec<P3>> {
     }
     let n = ((theta.to_degrees() / 5.0).ceil() as usize).max(2);
     let a = [p1[0] - centre[0], p1[1] - centre[1], p1[2] - centre[2]];
-    Some(
-        (0..=n)
-            .map(|k| {
-                let phi = theta * k as f64 / n as f64;
-                // Rotate a towards u1 (the travel direction) by phi in the plane (a, u1).
-                [0, 1, 2].map(|i| centre[i] + a[i] * phi.cos() + r * u1[i] * phi.sin())
-            })
-            .collect(),
-    )
+    let mut pts: Vec<P3> = (0..=n)
+        .map(|k| {
+            let phi = theta * k as f64 / n as f64;
+            // Rotate a towards u1 (the travel direction) by phi in the plane (a, u1).
+            [0, 1, 2].map(|i| centre[i] + a[i] * phi.cos() + r * u1[i] * phi.sin())
+        })
+        .collect();
+    // The ends are the port coordinates exactly, so that joined runs stay connected even when
+    // the ports are within the tolerance but not exactly on the arc.
+    pts[0] = p1;
+    pts[n] = p2;
+    Some(pts)
 }
 
 fn dist(a: P3, b: P3) -> f64 {
@@ -487,6 +520,9 @@ fn route_cable(
         length_mm: 0.0,
         drop_mm: 0.0,
         bend_correction_mm: 0.0,
+        routed_drops: 0,
+        warnings: Vec::new(),
+        drop_legs: [false; 2],
         spec: Some(c.clone()),
     };
     let mut g = Graph {
@@ -629,6 +665,12 @@ fn route_cable(
         }
     }
     res.ok = true;
+    if nodes.len() >= 2 {
+        res.drop_legs = [
+            edge_tray(nodes[0], nodes[1]).is_none(),
+            edge_tray(nodes[nodes.len() - 2], nodes[nodes.len() - 1]).is_none(),
+        ];
+    }
     res.points = nodes.iter().map(|n| g.pts[*n]).collect();
     res.trays = per_tray.iter().map(|(t, _)| trays[*t].id.clone()).collect();
     // The run carrying the longest part (fittings are never `cableTrayId`, spec 02 §6.7).

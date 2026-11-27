@@ -5,11 +5,8 @@ name: Windows
 # nie auf dem PC läuft. Nur Pushes auf main/develop und manueller Start.
 # Ist der PC aus, wartet der Job, bis er wieder online ist.
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - 'pmef-rs/**'
-      - '.github/workflows/windows.yml'
+  # Vorerst nur manuell (Actions -> Windows -> Run workflow), bis der Runner auf dem PC
+  # installiert ist (ci-runner, Schritt 4). Danach push/pull_request wieder aktivieren.
   workflow_dispatch:
 
 concurrency:

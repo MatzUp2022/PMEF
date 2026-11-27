@@ -136,6 +136,14 @@ PMEF `@id`), provenance `generated`; the report lists path, trays and the fill p
 A viewer re-routes one cable and keeps the others where they are by giving each other cable the
 trays it used (report `cables[].trays`). Example: `tests/route/cable-trays-route.json`.
 
+With `cableSettings.routeDrops` the two drops of each routed cable (cable end to tray point and
+back) are routed afterwards on an orthogonal grid (`dropStep`, default 100 mm) around both
+points, past the scene obstacles grown by the cable radius + `dropClearance` (default 50 mm);
+the cable end's own object and the trays are not obstacles. The drop length is then the routed
+length instead of the L1 distance (report `routedDrops`; the points include the drop corners). A
+drop that cannot be routed keeps its L1 length and the cable gets a `warnings` entry. The tray
+choice itself still uses the L1 estimate.
+
 With `cableSettings.traysFromScene` the network is read from the `pmef:CableTrayRun` and
 `pmef:CableTrayFitting` objects of `pmefScene` (RFC-0015, spec 02 §6.8): a run's centreline from
 `path`, else `startPoint`/`endPoint`, else its ports, with `width`, `height` and `fillLevel`; its
@@ -272,8 +280,9 @@ already run (Clinic).
    supports on vertical runs.
 5. **Cables.** Done in stage 5: routing on tray networks with segregation, bend radius and fill
    limit; output as `pmef:CableObject`; trays read from PMEF `CableTrayRun`/`CableTrayFitting`
-   (`traysFromScene`, RFC-0015); cable lengths with bend arcs. Open: drops routed through the
-   voxel graph instead of L1 distances, tray sizing proposals when the fill limit is hit.
+   (`traysFromScene`, RFC-0015); cable lengths with bend arcs; drops routed past obstacles
+   (`routeDrops`). Open: drop costs from the grid during the tray choice, tray sizing proposals
+   when the fill limit is hit.
 6. **Integration.** Done in stage 6: WASM binding `pmef-route-wasm` (CI builds it for
    `wasm32-unknown-unknown`) and P&ID line lists as input (`lineLists`, `dexpi-pmef` shape).
    Open, in the owning repos: the re-routing UI in PlantView (`mvcache-web`) and ProDocAimAi,
