@@ -36,6 +36,11 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ### Fixed
 
+- **0.9.0-rc known issues closed or restated** (ROADMAP backlog). EQUIP-U-005 and PIPE-U-003 are
+  obsolete (`vesselSubtype` has `KO_DRUM`; both IDs now name other, passing conformance tests);
+  the Rust `jsonschema` integration is done; DS-05 was removed; the `pmef-geom` AABB item now names
+  the primitive types that still have no bounds. The 0.9.0-rc table below is left as released.
+
 - **Elbow `CW-201-ELB-001` in `examples/pump-skid-complete.ndjson` swept the wrong way.** Its
   CIRC_TORUS had `axis: [0,1,0]`; by the right-hand rule of spec 04 the arc then ends at
   x = 10890.4 instead of at port P2 (x = 11500). The spec is right, the example was wrong:
