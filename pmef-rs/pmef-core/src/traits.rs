@@ -64,6 +64,7 @@ pub enum PmefEntityType {
     DuctDamper,
     DuctAccessDoor,
     DuctTestPort,
+    GenericDuctComponent,
     // Steel
     SteelSystem,
     SteelMember,
@@ -135,6 +136,7 @@ impl PmefEntityType {
             "pmef:DuctDamper"         => Self::DuctDamper,
             "pmef:DuctAccessDoor"     => Self::DuctAccessDoor,
             "pmef:DuctTestPort"       => Self::DuctTestPort,
+            "pmef:GenericDuctComponent" => Self::GenericDuctComponent,
             "pmef:SteelSystem"           => Self::SteelSystem,
             "pmef:SteelMember"           => Self::SteelMember,
             "pmef:SteelPlate"            => Self::SteelPlate,
@@ -202,6 +204,7 @@ impl PmefEntityType {
             Self::DuctDamper            => "pmef:DuctDamper",
             Self::DuctAccessDoor        => "pmef:DuctAccessDoor",
             Self::DuctTestPort          => "pmef:DuctTestPort",
+            Self::GenericDuctComponent  => "pmef:GenericDuctComponent",
             Self::SteelSystem           => "pmef:SteelSystem",
             Self::SteelMember           => "pmef:SteelMember",
             Self::SteelPlate            => "pmef:SteelPlate",

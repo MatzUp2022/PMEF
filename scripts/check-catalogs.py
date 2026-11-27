@@ -404,13 +404,21 @@ def check_cables():
 
 
 def check_native_types():
-    """NATIVE_TYPE_MAPPING: componentClass is a PMEF class, pmefType a piping type, and no
-    entry is shadowed by an earlier unconditional entry of the same nativeType."""
+    """NATIVE_TYPE_MAPPING: pmefType is a piping or duct component type, componentClass a class
+    of that domain (PipingComponentSpec or GenericDuctComponent, RFC-0014), and no entry is
+    shadowed by an earlier unconditional entry of the same nativeType."""
     props = json.loads((ROOT / "schemas/pmef-property-sets.schema.json").read_text(encoding="utf-8"))
-    classes = set(props["$defs"]["PipingComponentSpec"]["properties"]["componentClass"]["enum"])
-    piping = json.loads((ROOT / "schemas/pmef-piping-component.schema.json").read_text(encoding="utf-8"))
-    types = {d["allOf"][1]["properties"]["@type"]["const"] for d in piping["$defs"].values()
-             if "allOf" in d and len(d["allOf"]) > 1 and "@type" in d["allOf"][1].get("properties", {})}
+    piping_classes = set(props["$defs"]["PipingComponentSpec"]["properties"]["componentClass"]["enum"])
+
+    def component_types(schema):
+        s = json.loads((ROOT / "schemas" / schema).read_text(encoding="utf-8"))
+        return {d["allOf"][1]["properties"]["@type"]["const"] for d in s["$defs"].values()
+                if "allOf" in d and len(d["allOf"]) > 1 and "@type" in d["allOf"][1].get("properties", {})}, s
+
+    piping_types, _ = component_types("pmef-piping-component.schema.json")
+    duct_types, hvac = component_types("pmef-hvac.schema.json")
+    duct_classes = set(hvac["$defs"]["GenericDuctComponent"]["allOf"][1]["properties"]["componentClass"]["enum"])
+    types = piping_types | duct_types
     for f in sorted(CAT.glob("native-types-*.json")):
         generic, ids = set(), set()
         for e in load(f.name)["entries"]:
@@ -420,9 +428,11 @@ def check_native_types():
                 bad(w, "duplicate catalogId")
             ids.add(e["catalogId"])
             if e["pmefType"] not in types:
-                bad(w, f"pmefType {e['pmefType']} is not a piping component type")
+                bad(w, f"pmefType {e['pmefType']} is not a piping or duct component type")
+            classes, where = ((duct_classes, "GenericDuctComponent") if e["pmefType"] in duct_types
+                              else (piping_classes, "PipingComponentSpec"))
             if e.get("componentClass") and e["componentClass"] not in classes:
-                bad(w, f"componentClass {e['componentClass']} is not in PipingComponentSpec")
+                bad(w, f"componentClass {e['componentClass']} is not in {where}")
             if e["nativeType"] in generic:
                 bad(w, f"shadowed by an earlier entry for {e['nativeType']} without SKEY condition")
             if "skeyPrefix" not in e and "skeyContains" not in e:

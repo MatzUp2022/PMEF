@@ -53,7 +53,7 @@ pub use equipment::{
 pub use geometry::{GeometryLayer, GeometryReference, Lod};
 pub use hvac::{
     Duct, DuctAccessDoor, DuctBend, DuctBranch, DuctCrossSection, DuctDamper, DuctNetworkSystem,
-    DuctPort, DuctSegment, DuctShape, DuctTestPort, DuctTransition,
+    DuctPort, DuctSegment, DuctShape, DuctTestPort, DuctTransition, GenericDuctComponent,
 };
 pub use placeholder::{Placeholder, PlaceholderReason};
 pub use plant::{Area, FileHeader, Plant, Unit};

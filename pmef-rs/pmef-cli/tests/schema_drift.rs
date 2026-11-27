@@ -89,6 +89,7 @@ fn registry() -> BTreeMap<&'static str, RoundTrip> {
     m.insert("pmef:DuctDamper", rt::<core::DuctDamper>);
     m.insert("pmef:DuctAccessDoor", rt::<core::DuctAccessDoor>);
     m.insert("pmef:DuctTestPort", rt::<core::DuctTestPort>);
+    m.insert("pmef:GenericDuctComponent", rt::<core::GenericDuctComponent>);
     m.insert("pmef:HasEquivalentIn", rt::<core::HasEquivalentIn>);
     m.insert("pmef:IsDerivedFrom", rt::<core::IsDerivedFrom>);
     m.insert("pmef:IsPartOf", rt::<core::IsPartOf>);

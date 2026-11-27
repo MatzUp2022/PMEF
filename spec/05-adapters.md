@@ -321,6 +321,7 @@ data and geometry. The adapter **MUST NOT** parse AVEVA's binary RVM format (see
 | `pmef:Elbow` | ELBOW elements | PML attributes (ANGL, RADI, …) |
 | `pmef:Valve` | VALV elements | PML tag attributes |
 | Any piping component | Element type + SKEY | `catalogs/native-types-e3d.json` (first match wins); unlisted types → `pmef:GenericPipingComponent` / `SPECIAL` with `nativeType` and a warning ([RFC-0009](rfc/0009-generic-piping-component.md)) |
+| HVAC components | HVAC element type | `catalogs/native-types-e3d-hvac.json`; unlisted types → `pmef:GenericDuctComponent` / `SPECIAL` with `nativeType` ([RFC-0014](rfc/0014-generic-duct-component.md)). The PML adapter does not read HVAC yet; the catalog serves converters (e.g. RVM/attribute-based) and the planned HVAC mapping |
 | `EquipmentObject` | EQUI elements | PML tag + design primitives (BOX, CYLI, CONE, SNOU, DISH, PYRA, RTOR) → `pmef:ParametricGeometry` |
 | `Nozzle` | NOZZ elements | PML coordinates + direction |
 | `pmef:SteelSystem` | STRU → FRMW → SBFR | `systemLevel` `STRUCTURE`/`FRAMEWORK`/`SUBFRAMEWORK`, each `isPartOf` its parent ([RFC-0013](rfc/0013-steel-plates-project-profiles.md)) |
