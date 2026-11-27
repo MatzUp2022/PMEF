@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | `APPROVED` — 2026-12-01, proposed resolutions of the open questions adopted (see *Resolution*) |
+| **Status** | `APPROVED` — 2026-11-27 (TSC, before the end of the discussion period), proposed resolutions of the open questions adopted (see *Resolution*) |
 | **Discussion** | [#6](https://github.com/MatzUp2022/PMEF/issues/6) — opened 2026-11-01, 30-day period until 2026-12-01 |
 | **Target version** | 0.10.0 (minor: new optional fields only) |
 | **Working groups** | WG-Piping, WG-Steel, WG-Equipment, WG-Geometry, WG-Catalogs |
@@ -203,12 +203,12 @@ rename and needs maintainer approval).
 
 ## Open Questions
 
-1. ~~**`$id` paths** — should they move to `/0.10/`?~~ — **resolved (TSC, 2026-12-01):** as
+1. ~~**`$id` paths** — should they move to `/0.10/`?~~ — **resolved (TSC, 2026-11-27):** as
    proposed. *Proposed resolution:* no. Keep `/0.9/` for all 0.x releases and move to a
    major-version namespace (`/1/`) with 1.0.0, together with the decision on the project's home
    (organisation, `pmef.net`). A path per minor version would force every consumer to re-resolve
    references on each additive release. *Decision: TSC.*
-2. ~~**`review.comment` and a link to a markup/BCF issue?**~~ — **resolved (WGs, 2026-12-01):** as
+2. ~~**`review.comment` and a link to a markup/BCF issue?**~~ — **resolved (WGs, 2026-11-27):** as
    proposed; follow-up [RFC-0010](0010-review-comment-issue-ref.md). *Proposed resolution:* out of
    scope for this RFC; a follow-up RFC can add optional `comment` and `issueRef` (URI) — additive,
    no impact on the blocks defined here. *Decision: WG-Piping/WG-Steel.*
@@ -239,10 +239,10 @@ Verified against the repository state:
 Approval needed from: WG-Piping, WG-Steel, WG-Equipment, WG-Geometry, WG-Catalogs; TSC sign-off
 after the 30-day discussion period (GOVERNANCE.md). Decisions needed: open questions 1 and 2.
 
-## Resolution (2026-12-01)
+## Resolution (2026-11-27)
 
-This status takes effect when this change is merged, which happens after the 30-day discussion
-period ends on 2026-12-01 without blocking objections (GOVERNANCE.md).
+Decided by the TSC (bootstrap phase, GOVERNANCE.md) on 2026-11-27, before the end of the 30-day
+discussion period (2026-12-01); no objections had been raised in the review issue.
 
 1. Schema `$id`s keep the `/0.9/` path for all 0.x releases; the move to `/1/` is decided with
    1.0.0 together with the project's home.

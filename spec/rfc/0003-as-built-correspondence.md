@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | `APPROVED` — 2026-12-01, proposed resolution of open question 1 adopted (see *Resolution*) |
+| **Status** | `APPROVED` — 2026-11-27 (TSC, before the end of the discussion period), proposed resolution of open question 1 adopted (see *Resolution*) |
 | **Discussion** | [#8](https://github.com/MatzUp2022/PMEF/issues/8) — opened 2026-11-01, 30-day period until 2026-12-01 |
 | **Target version** | 0.10.0 (one new optional property; no breaking change) |
 | **Depends on** | [RFC-0001](0001-provenance-asbuilt.md) (`review` block), spec 03 §9.5 (matching) |
@@ -103,7 +103,7 @@ their meaning anyway.
 
 ## Open Questions
 
-1. ~~**Delta packages** (spec 03 §8.4) also use `IsRevisionOf`.~~ — **resolved (TSC, 2026-12-01):**
+1. ~~**Delta packages** (spec 03 §8.4) also use `IsRevisionOf`.~~ — **resolved (TSC, 2026-11-27):**
    as proposed; sentence added to spec 03 §8.4. *Proposed resolution:* yes — an `IsRevisionOf` with
    `changeType = AS_BUILT` records a correspondence and never marks content replacement in a delta
    package. On approval, spec 03 §8.4 gains the sentence: "An `IsRevisionOf` with `changeType`
@@ -122,10 +122,10 @@ reject → rerun (`pmef-cli/tests/diff_cli.rs`), example `examples/asbuilt-recog
 Approval needed from: WG-Piping, WG-Steel, WG-Equipment; TSC sign-off after the 30-day
 discussion period. Decision needed: open question 1 (adds one sentence to spec 03 §8.4).
 
-## Resolution (2026-12-01)
+## Resolution (2026-11-27)
 
-This status takes effect when this change is merged, which happens after the 30-day discussion
-period ends on 2026-12-01 without blocking objections (GOVERNANCE.md).
+Decided by the TSC (bootstrap phase, GOVERNANCE.md) on 2026-11-27, before the end of the 30-day
+discussion period (2026-12-01); no objections had been raised in the review issue.
 
 spec 03 §8.4 gains: "An `IsRevisionOf` with `changeType` `AS_BUILT` is an as-built
 correspondence (RFC-0003), not a content revision; it never marks an object of a delta package

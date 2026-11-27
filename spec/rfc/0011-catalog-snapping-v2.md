@@ -2,7 +2,8 @@
 
 | Field | Value |
 |---|---|
-| **Status** | `DRAFT` — reference implementations and test vectors verified 2026-11-27; awaiting RFC issue, WG review and TSC sign-off |
+| **Status** | `DRAFT` — reference implementations and test vectors verified 2026-11-27; awaiting WG review and TSC sign-off |
+| **Discussion** | [#45](https://github.com/MatzUp2022/PMEF/issues/45) — opened 2026-11-27, 30-day period until 2026-12-27 |
 | **Target version** | 0.10.0 (new algorithm identifier; no schema change, no breaking change) |
 | **Depends on** | [RFC-0002](0002-catalog-snapping.md) (`pmef-snap/1`; open question 2) |
 | **Working groups** | WG-Catalogs, WG-Piping, WG-Steel, WG-Geometry |
