@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Status** | `DRAFT` — schema, spec text, Rust model, catalog, example and tests in this repository |
-| **Discussion** | issue opened with the implementing pull request, 30-day period |
+| **Discussion** | [#72](https://github.com/MatzUp2022/PMEF/issues/72), 30-day period 2026-11-27 → 2026-12-27 |
 | **Target version** | 0.10.0 (additive: one optional field, wider meaning of `isPartOf`, four catalog entries) |
 | **Depends on** | spec 02 §4.4, §8.3, §9.11; RFC-0009 (native type catalog) |
 | **Working groups** | WG-Piping, WG-Adapters |

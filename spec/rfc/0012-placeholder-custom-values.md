@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Status** | `DRAFT` — schema, spec text, Rust model, `pmef check` report, example and tests in this repository |
-| **Discussion** | issue opened with the implementing pull request, 30-day period |
+| **Discussion** | [#68](https://github.com/MatzUp2022/PMEF/issues/68), 30-day period 2026-11-27 → 2026-12-27 |
 | **Target version** | 0.10.0 (additive: one base type, one optional array, two enum values, one field) |
 | **Depends on** | spec 02 §2.10 and §11.5, `pmef-base.schema.json`, `pmef-hvac.schema.json` |
 | **Working groups** | WG-HVAC, WG-Adapters |

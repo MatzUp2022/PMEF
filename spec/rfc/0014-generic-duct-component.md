@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Status** | `DRAFT` — schema, spec text, Rust model, native type catalog, example and tests in this repository |
-| **Discussion** | [#55](https://github.com/MatzUp2022/PMEF/issues/55) (finding from the Huldra test case) |
+| **Discussion** | [#70](https://github.com/MatzUp2022/PMEF/issues/70), 30-day period 2026-11-27 → 2026-12-27 |
 | **Target version** | 0.10.0 (additive: one object type, one relaxed requirement, one catalog) |
 | **Depends on** | spec 02 §11; [RFC-0006](0006-hvac-ducts-tray-fittings-catalogs.md), [RFC-0009](0009-generic-piping-component.md), [RFC-0012](0012-placeholder-custom-values.md) |
 | **Working groups** | WG-HVAC, WG-Adapters |
