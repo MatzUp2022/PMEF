@@ -430,6 +430,46 @@
       "expect": "invalid"
     },
     {
+      "id": "EI-U-011",
+      "name": "CableTrayRun with path, ports, nativeType and placeholder — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "ei",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/EI-U-011.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "EI-U-012",
+      "name": "CableTrayRun with a one-point path — rejected",
+      "category": "negative",
+      "level": 2,
+      "domain": "ei",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/EI-U-012.ndjson",
+      "expect": "invalid"
+    },
+    {
+      "id": "EI-U-013",
+      "name": "CableTrayFitting with ports and customAttributes — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "ei",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/EI-U-013.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "EI-U-014",
+      "name": "Cable tray port without coordinate — rejected",
+      "category": "negative",
+      "level": 2,
+      "domain": "ei",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/EI-U-014.ndjson",
+      "expect": "invalid"
+    },
+    {
       "id": "HVAC-U-001",
       "name": "DuctNetworkSystem — valid",
       "category": "unit",
