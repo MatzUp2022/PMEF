@@ -117,6 +117,9 @@ pub fn write_pcf(objects: &[Value]) -> PcfExport {
         let mut t = String::new();
         t.push_str("ISOGEN-FILES ISOGEN.FLS\nUNITS-BORE MM\nUNITS-CO-ORDS MM\nUNITS-WEIGHT KGS\n");
         t.push_str(&format!("PIPELINE-REFERENCE {line_no}\n"));
+        if let Some(spec) = s(line, "pipeClass") {
+            t.push_str(&format!("    PIPING-SPEC {spec}\n"));
+        }
         for id in order {
             let o = by_id[id];
             let kw = pcf_keyword(o).expect("filtered");
@@ -147,6 +150,9 @@ pub fn write_pcf(objects: &[Value]) -> PcfExport {
             }
             if let Some(w) = o.get("componentSpec").and_then(|c| c.get("weight")).and_then(Value::as_f64) {
                 t.push_str(&format!("    WEIGHT {}\n", n(w)));
+            }
+            if let Some(code) = o.get("catalogRef").and_then(|c| s(c, "catalogId")) {
+                t.push_str(&format!("    ITEM-CODE {code}\n"));
             }
             if let Some(tag) = s(o, "tagNumber") {
                 t.push_str(&format!("    COMPONENT-TAG {tag}\n"));
