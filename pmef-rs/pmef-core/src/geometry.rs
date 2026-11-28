@@ -16,6 +16,56 @@ pub struct GeometryReference {
     /// Units, up axis and origin of a `mesh_ref` file (spec 04 §2.3); absent = glTF convention.
     #[serde(skip_serializing_if="Option::is_none")]
     pub mesh_frame: Option<MeshFrame>,
+    /// Installation position and orientation of the object (RFC-0018).
+    #[serde(default, skip_serializing_if="Option::is_none")]
+    pub placement: Option<Placement>,
+    /// Centre of gravity in project coordinates [mm] (RFC-0018).
+    #[serde(default, skip_serializing_if="Option::is_none")]
+    pub center_of_gravity: Option<[f64; 3]>,
+}
+
+/// Local frame of an object in project coordinates (RFC-0018, spec 04 §2.4), as IFC
+/// `IfcAxis2Placement3D`: `origin` = Location, `axis_z` = Axis, `axis_x` = RefDirection.
+#[derive(Debug,Clone,PartialEq,Serialize,Deserialize)]
+#[serde(rename_all="camelCase")]
+pub struct Placement {
+    /// Origin of the local frame [mm].
+    pub origin: [f64; 3],
+    /// Local z axis; absent = project z.
+    #[serde(default, skip_serializing_if="Option::is_none")]
+    pub axis_z: Option<[f64; 3]>,
+    /// Local x axis, perpendicular to `axis_z`; absent = project x.
+    #[serde(default, skip_serializing_if="Option::is_none")]
+    pub axis_x: Option<[f64; 3]>,
+}
+
+impl Placement {
+    /// Placement from a row-major 4x4 matrix (rotation columns = local axes, translation in the
+    /// last column), as CAD tools store an insertion. `None` if the rotation is not orthonormal.
+    pub fn from_matrix(m: &[f64; 16]) -> Option<Self> {
+        let col = |c: usize| [m[c], m[4 + c], m[8 + c]];
+        let (x, y, z) = (col(0), col(1), col(2));
+        let dot = |a: [f64; 3], b: [f64; 3]| a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+        let unit = |a: [f64; 3]| (dot(a, a).sqrt() - 1.0).abs() < 1e-3;
+        if !(unit(x) && unit(y) && unit(z)) || dot(x, y).abs() > 1e-3 || dot(x, z).abs() > 1e-3 {
+            return None;
+        }
+        let r = |a: [f64; 3]| a.map(|v| (v * 1e6).round() / 1e6 + 0.0);
+        Some(Placement {
+            origin: [m[3], m[7], m[11]].map(|v| (v * 1e3).round() / 1e3 + 0.0),
+            axis_z: Some(r(z)),
+            axis_x: Some(r(x)),
+        })
+    }
+
+    /// Local point → project coordinates [mm].
+    pub fn to_project(&self, p: [f64; 3]) -> [f64; 3] {
+        let z = self.axis_z.unwrap_or([0.0, 0.0, 1.0]);
+        let x = self.axis_x.unwrap_or([1.0, 0.0, 0.0]);
+        let y = [z[1] * x[2] - z[2] * x[1], z[2] * x[0] - z[0] * x[2], z[0] * x[1] - z[1] * x[0]];
+        let o = self.origin;
+        [0, 1, 2].map(|i| o[i] + x[i] * p[0] + y[i] * p[1] + z[i] * p[2])
+    }
 }
 
 /// Frame of a referenced mesh file (spec 04 §2.3).

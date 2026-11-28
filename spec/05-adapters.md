@@ -442,8 +442,16 @@ table layout as `Piping.dcf`, one row per part size. `pmef convert <spec>.pspc -
 `scope: "PROJECT"` and catalog id `p3d-spec-<name>`; valve actuators are not entries. The entry id
 is `<spec>:<size record GUID>`, and every placed part in `Piping.dcf` with a `Spec` and a
 `SizeRecordId` gets `catalogRef.catalogId` with the same id. The spec sheet settings
-(`<spec>.pspx`: branch table, part use priorities) are not read. Not mapped yet (no PMEF type): gratings, railings, stairs, steps, ladders,
-anchors and plates of the steel structure.
+(`<spec>.pspx`: branch table, part use priorities) are not read.
+
+**Steel accessories, plates and placement ([RFC-0018](rfc/0018-steel-accessories-object-placement.md)) — since 0.10.0:**
+
+| PMEF | Plant 3D database |
+|------|-------------------|
+| `SteelAccessory` `RAILING` / `STAIR` / `STAIR_TREAD` / `LADDER` / `ANCHOR` | `StructureRailing` (`Length`), `StructureStair` (`Length`, `From Height`, `To Height`), `StructureStep`, `StructureLadder` (`Height`, `Cage`), `StructureAnchor`; `PartSizeLongDesc` → `designation`, `TOS`/`BOS` → elevations, `Weight` → `weight` |
+| `SteelPlate` `PLATE` / `GRATING` | `StructurePlate`, `StructureGrating`; outline from the size text (`L x W x T`) centred on the COG in the placement frame; without a rigid placement the outline lies in the project XY plane and `p3d:outlineFrame: "assumed"` is written |
+| `geometry.placement` | the object's insertion matrix, when it is rigid; otherwise kept as `p3d:placement` |
+| `geometry.centerOfGravity` | `COG X` / `COG Y` / `COG Z` |
 
 ### 8.3 CADMATIC Adapter (`pmef-adapter-cadmatic`)
 

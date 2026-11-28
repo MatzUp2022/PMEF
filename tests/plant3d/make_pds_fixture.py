@@ -2,7 +2,7 @@
 """Writes tests/plant3d/pds-synthetic.dcf: a tiny synthetic Plant 3D project database (CC0).
 
 Same table and column names as a Plant 3D `Piping.dcf`, invented content: one line with a
-pipe, a butt weld, an elbow and a pump nozzle, plus one steel column and a grating.
+pipe, a butt weld, an elbow and a pump nozzle, plus one steel column, a grating, a railing, a caged ladder and an anchor.
 Used by the `pds` tests in pmef-adapter-plant3d. Run from the repository root.
 """
 import os
@@ -24,7 +24,8 @@ for t, b in [
     ("Buttweld", "Fasteners"), ("Equipment", "EngineeringItems"), ("Pump", "Equipment"),
     ("Port", "PnPBase"), ("P3dConnector", "PnPBase"), ("P3dLineGroup", "PnPBase"),
     ("SteelStructure", "PnPBase"), ("StructureMember", "SteelStructure"), ("StructurePlate", "SteelStructure"),
-    ("StructureGrating", "StructurePlate"),
+    ("StructureGrating", "StructurePlate"), ("StructureRailing", "SteelStructure"),
+    ("StructureLadder", "SteelStructure"), ("StructureAnchor", "SteelStructure"),
 ]:
     x("INSERT INTO PnPTables VALUES (?,?)", (t, b))
 
@@ -48,6 +49,13 @@ x('CREATE TABLE "P3dLineGroupPartRelationship"("PnPID" integer,"LineGroup" int,"
 x('CREATE TABLE "StructureMember"("PnPID" integer,"Size" VarChar (255),"Length" float,"Materialcode" VarChar (255),"MaterialStandard" VarChar (255),'
   '"Start X" float,"Start Y" float,"Start Z" float,"End X" float,"End Y" float,"End Z" float,Primary key ("PnPID"))')
 
+x('CREATE TABLE "SteelStructure"("PnPID" integer,"PartSizeLongDesc" VarChar (255),"COG X" float,"COG Y" float,"COG Z" float,'
+  '"Weight" float,"WeightUnit" VarChar (255),"TOS" float,"BOS" float,Primary key ("PnPID"))')
+x('CREATE TABLE "StructurePlate"("PnPID" integer,"Materialcode" VarChar (255),"MaterialStandard" VarChar (255),Primary key ("PnPID"))')
+x('CREATE TABLE "StructureRailing"("PnPID" integer,"Length" float,Primary key ("PnPID"))')
+x('CREATE TABLE "StructureLadder"("PnPID" integer,"Height" float,"Cage" VarChar (255),Primary key ("PnPID"))')
+x('CREATE TABLE "StructureAnchor"("PnPID" integer,"Materialcode" VarChar (255),"MaterialStandard" VarChar (255),Primary key ("PnPID"))')
+
 def base(i, cls):
     x("INSERT INTO PnPBase VALUES (?,?,?)", (i, cls, uuid.UUID(int=i).bytes_le))
 
@@ -60,7 +68,8 @@ x("INSERT INTO PnPDrawings VALUES (4,'steel.dwg','Models\\Area A\\steel.dwg','DW
 # Line, pipe 10 – connector 20 (weld 21) – elbow 30 – connector 40 – pump 50 nozzle 51.
 base(5, "P3dLineGroup"); x("INSERT INTO P3dLineGroup VALUES (5,'L-100','CW')")
 for i, cls in [(10, "Pipe"), (20, "P3dConnector"), (21, "Buttweld"), (30, "Elbow"), (40, "P3dConnector"),
-               (50, "Pump"), (51, "Nozzle"), (60, "StructureMember"), (70, "StructureGrating")]:
+               (50, "Pump"), (51, "Nozzle"), (60, "StructureMember"), (70, "StructureGrating"),
+               (71, "StructureRailing"), (72, "StructureLadder"), (73, "StructureAnchor")]:
     base(i, cls)
 # The pipe and the elbow point at their part sizes in tests/plant3d/spec-synthetic.pspc.
 x("INSERT INTO EngineeringItems VALUES (10,NULL,'Pipe DIN','16HC01',30.0,'kg','TYPE=PIPE',?,?,?,?,?,500,0,0,?)", ("Pipe 219.1x6.3 " * 200, "S1", 200, "mm", "BV", uuid.UUID(int=0x9001).bytes_le))
@@ -75,6 +84,15 @@ x("INSERT INTO Elbow VALUES (30,90,305)")
 x("INSERT INTO Nozzle VALUES (51,'1')")
 x("INSERT INTO Equipment VALUES (50,'P-100')")
 x("INSERT INTO StructureMember VALUES (60,'HEA-200',3000,'S235JR','EN 10025',0,0,0,0,0,3000)")
+# Steel accessories: grating 1200x1000x30 at TOS 600, railing, ladder with cage, anchor.
+x("INSERT INTO SteelStructure VALUES (70,'1200x1000x30',2000,500,585,40,'kg',600,570)")
+x("INSERT INTO StructurePlate VALUES (70,'S235JR','EN 10025')")
+x("INSERT INTO SteelStructure VALUES (71,'1100',2000,1000,1150,30,'kg',1700,600)")
+x("INSERT INTO StructureRailing VALUES (71,2000)")
+x("INSERT INTO SteelStructure VALUES (72,'Ladder 3870 + cage',3227.5,1400,2435,80,'kg',4870,0)")
+x("INSERT INTO StructureLadder VALUES (72,3870,'1')")
+x("INSERT INTO SteelStructure VALUES (73,'300x300x200',0,0,100,NULL,NULL,200,0)")
+x("INSERT INTO StructureAnchor VALUES (73,'S235JR','EN 10025')")
 
 pid = 100
 for part, name, et in [(10, "S2", "BV"), (30, "S2", "FL")]:
@@ -87,7 +105,9 @@ for k, part in enumerate([10, 20, 21, 30, 40]):
     x("INSERT INTO P3dLineGroupPartRelationship VALUES (?,5,?)", (300 + k, part))
 for k, (row, dwg, h, s, cls) in enumerate([(10, 3, 0x1A0, 0, "Pipe"), (20, 3, 0x1A1, 0, "P3dConnector"), (21, 3, 0x1A1, 1, "Buttweld"),
                                           (30, 3, 0x1A2, 0, "Elbow"), (40, 3, 0x1A3, 0, "P3dConnector"), (50, 3, 0x1A4, 0, "Pump"),
-                                          (51, 3, 0x1A4, 1, "Nozzle"), (60, 4, 0x200, 0, "StructureMember"), (70, 4, 0x201, 0, "StructureGrating")]):
+                                          (51, 3, 0x1A4, 1, "Nozzle"), (60, 4, 0x200, 0, "StructureMember"), (70, 4, 0x201, 0, "StructureGrating"),
+                                          (71, 4, 0x202, 0, "StructureRailing"), (72, 4, 0x203, 0, "StructureLadder"),
+                                          (73, 4, 0x204, 0, "StructureAnchor")]):
     x("INSERT INTO PnPDataLinks VALUES (?,?,?,0,?,?,?)", (row, dwg, h, s, cls, 400 + k))
 c.commit()
 x("VACUUM")

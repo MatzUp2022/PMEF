@@ -21,6 +21,7 @@ use serde_json::{json, Map, Value as J};
 
 use crate::equipment::p3d_class_to_pmef;
 use crate::sqlite::{Database, SqliteError, Value};
+use pmef_core::Placement;
 
 /// Data version written to `pmefVersion`.
 const PMEF_VERSION: &str = "0.9.0";
@@ -414,6 +415,10 @@ pub(crate) enum Kind {
     Weld(&'static str),
     Equipment,
     Steel,
+    /// Plate or grating (`StructurePlate`, `StructureGrating`) → `pmef:SteelPlate`.
+    Plate,
+    /// Railing, stair, tread, ladder, anchor → `pmef:SteelAccessory` (RFC-0018).
+    Accessory(&'static str),
     Skip,
 }
 
@@ -432,6 +437,21 @@ pub(crate) fn kind(p: &PdsProject, item: &Item) -> Kind {
     }
     if is("StructureMember") {
         return Kind::Steel;
+    }
+    if is("StructurePlate") {
+        return Kind::Plate;
+    }
+    for (class, t) in [
+        ("StructureRailing", "RAILING"),
+        ("StructureStair", "STAIR"),
+        ("StructureStep", "STAIR_TREAD"),
+        ("StructureLadder", "LADDER"),
+        ("StructureAnchor", "ANCHOR"),
+        ("SteelStructure", "GENERIC"),
+    ] {
+        if is(class) {
+            return Kind::Accessory(t);
+        }
     }
     if is("Buttweld") {
         return Kind::Weld("WELD_BUTT");
@@ -1048,6 +1068,7 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
         }
     }
 
+    let mut notes: Vec<(&str, J)> = Vec::new();
     for i in p.items.values() {
         let k = kind(p, i);
         let isa = line_of_seg(p, i, &seg_of).unwrap_or_else(|| unit_of(i));
@@ -1197,24 +1218,53 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
                 if let Some(t) = i.text("Tag") {
                     o["memberMark"] = json!(t);
                 }
-                let grade = i
-                    .text("Materialcode")
-                    .or(i.text("MaterialCode"))
-                    .or(i.text("Material"));
-                if let Some(g) = grade {
-                    let mut m = json!({"grade": g});
-                    if let Some(st) = i.text("MaterialStandard") {
-                        m["standard"] = json!(st);
-                    }
+                if let Some(m) = steel_material(i) {
                     o["material"] = m;
                 }
                 o
             }
+            Kind::Plate => {
+                let placement = placement_of(i).and_then(|m| Placement::from_matrix(&m));
+                match steel_plate(p, i, placement.as_ref(), obj_id(i), unit_of(i)) {
+                    Some((o, assumed)) => {
+                        if assumed {
+                            notes.push((
+                                "p3d:outlineFrame",
+                                json!("assumed: centred on COG, project axes"),
+                            ));
+                        }
+                        o
+                    }
+                    None => {
+                        *stats.unmapped.entry(i.class.clone()).or_default() += 1;
+                        continue;
+                    }
+                }
+            }
+            Kind::Accessory(t) => steel_accessory(i, t, obj_id(i), unit_of(i)),
         };
         let mut o = o;
         add_native(&mut o, i, i.link.as_ref());
-        if let Some(m) = placement_of(i) {
-            // customAttributes hold scalars: the 16 numbers row-major, space separated.
+        for (k, v) in notes.drain(..) {
+            o["customAttributes"][k] = v;
+        }
+        // Installation frame and centre of gravity (RFC-0018).
+        let placement = placement_of(i);
+        let frame = placement.as_ref().and_then(Placement::from_matrix);
+        let cog = point(i, "COG");
+        if frame.is_some() || cog.is_some() {
+            if !o["geometry"].is_object() {
+                o["geometry"] = json!({"type": "none"});
+            }
+            if let Some(f) = &frame {
+                o["geometry"]["placement"] = serde_json::to_value(f).unwrap_or_default();
+            }
+            if let Some(c) = cog {
+                o["geometry"]["centerOfGravity"] = json!(round3(c, 3));
+            }
+        }
+        if let (Some(m), None) = (placement, &frame) {
+            // Not a rigid frame: kept verbatim, the 16 numbers row-major, space separated.
             let text: Vec<String> = m
                 .iter()
                 .map(|x| ((x * 1e6).round() / 1e6 + 0.0).to_string())
@@ -1509,6 +1559,129 @@ fn nozzle(
 }
 
 /// Native ids, all attributes and the DWG reference.
+/// Steel grade and standard of a structure row.
+fn steel_material(i: &Item) -> Option<J> {
+    let g = i
+        .text("Materialcode")
+        .or(i.text("MaterialCode"))
+        .or(i.text("Material"))?;
+    let mut m = json!({"grade": g});
+    if let Some(st) = i.text("MaterialStandard") {
+        m["standard"] = json!(st);
+    }
+    Some(m)
+}
+
+/// Numbers in a size designation: `1200x1000x30` → [1200, 1000, 30].
+fn size_numbers(s: &str) -> Vec<f64> {
+    s.split(|c: char| !(c.is_ascii_digit() || c == '.'))
+        .filter_map(|t| t.parse().ok())
+        .collect()
+}
+
+/// `StructurePlate`/`StructureGrating` → `pmef:SteelPlate`: a `<length>x<width>x<thickness>`
+/// rectangle centred on the centre of gravity, in the installation frame when the drawing
+/// stores one (else project axes; second value `true`).
+fn steel_plate(
+    p: &PdsProject,
+    i: &Item,
+    frame: Option<&Placement>,
+    id: String,
+    is_part_of: String,
+) -> Option<(J, bool)> {
+    let dims = size_numbers(i.text("PartSizeLongDesc")?);
+    let (&l, &w) = (dims.first()?, dims.get(1)?);
+    let t = dims
+        .get(2)
+        .copied()
+        .or_else(|| Some(i.num("TOS")? - i.num("BOS")?))
+        .filter(|t| *t > 0.0)?;
+    let c = point(i, "COG")?;
+    if l <= 0.0 || w <= 0.0 {
+        return None;
+    }
+    let x = frame.and_then(|f| f.axis_x).unwrap_or([1.0, 0.0, 0.0]);
+    let z = frame.and_then(|f| f.axis_z).unwrap_or([0.0, 0.0, 1.0]);
+    let y = [
+        z[1] * x[2] - z[2] * x[1],
+        z[2] * x[0] - z[0] * x[2],
+        z[0] * x[1] - z[1] * x[0],
+    ];
+    let origin = [0, 1, 2].map(|k| c[k] - x[k] * l / 2.0 - y[k] * w / 2.0 - z[k] * t / 2.0);
+    let grating = p.is_a(&i.class, "StructureGrating");
+    let mut o = json!({"@type": "pmef:SteelPlate", "@id": id, "pmefVersion": PMEF_VERSION, "isPartOf": is_part_of,
+        "plateType": if grating { "GRATING" } else { "PLATE" },
+        "origin": round3(origin, 3), "normal": z, "refDirection": x,
+        "outline": [[0.0, 0.0], [l, 0.0], [l, w], [0.0, w]], "thickness": t});
+    if let Some(m) = steel_material(i) {
+        o["material"] = m;
+    }
+    if let Some(kg) = weight_kg(i) {
+        o["weight"] = json!(kg);
+    }
+    Some((o, frame.is_none()))
+}
+
+/// Railing, stair, tread, ladder or anchor → `pmef:SteelAccessory` (RFC-0018).
+fn steel_accessory(i: &Item, t: &str, id: String, is_part_of: String) -> J {
+    let mut o = json!({"@type": "pmef:SteelAccessory", "@id": id, "pmefVersion": PMEF_VERSION,
+        "isPartOf": is_part_of, "accessoryType": t});
+    if let Some(tag) = i.text("Tag") {
+        o["accessoryMark"] = json!(tag);
+    }
+    if let Some(d) = i.text("PartSizeLongDesc") {
+        o["designation"] = json!(d);
+    }
+    let rise = match (i.num("BOS"), i.num("TOS")) {
+        (Some(b), Some(t)) if t >= b => {
+            o["bottomElevation"] = json!(b);
+            o["topElevation"] = json!(t);
+            Some(t - b).filter(|r| *r > 0.0)
+        }
+        _ => None,
+    };
+    let positive = |v: Option<f64>| v.filter(|v| *v > 0.0);
+    match t {
+        "RAILING" => {
+            if let Some(l) = positive(i.num("Length")) {
+                o["length"] = json!(l);
+            }
+            if let Some(h) = rise {
+                o["height"] = json!(h);
+            }
+        }
+        "STAIR" => {
+            if let Some(l) = positive(i.num("Length")) {
+                o["length"] = json!(l);
+            }
+        }
+        "STAIR_TREAD" => {
+            if let Some(h) = rise {
+                o["height"] = json!(h);
+            }
+        }
+        "LADDER" => {
+            if let Some(h) = positive(i.num("Height")) {
+                o["height"] = json!(h);
+            }
+            if let Some(c) = i.text("Cage") {
+                o["hasCage"] = json!(matches!(
+                    c.to_ascii_lowercase().as_str(),
+                    "1" | "true" | "yes" | "ja"
+                ));
+            }
+        }
+        _ => {}
+    }
+    if let Some(m) = steel_material(i) {
+        o["material"] = m;
+    }
+    if let Some(kg) = weight_kg(i) {
+        o["weight"] = json!(kg);
+    }
+    o
+}
+
 fn add_native(o: &mut J, i: &Item, link: Option<&DwgLink>) {
     let mut ca = Map::new();
     ca.insert("p3d:PnPID".into(), json!(i.id));
@@ -1741,9 +1914,10 @@ mod tests {
             "the line of the joined part"
         );
         assert_eq!(
-            pump["customAttributes"]["p3d:placement"],
-            "1 0 0 1305 0 1 0 800 0 0 1 0 0 0 0 1"
+            pump["geometry"]["placement"],
+            json!({"origin": [1305.0, 800.0, 0.0], "axisZ": [0.0, 0.0, 1.0], "axisX": [1.0, 0.0, 0.0]})
         );
+        assert!(pump["customAttributes"].get("p3d:placement").is_none());
 
         let col = by_type(&objs, "pmef:SteelMember")[0];
         assert_eq!(col["memberType"], "COLUMN");
@@ -1755,7 +1929,32 @@ mod tests {
         assert!(rels
             .iter()
             .any(|r| r["sourceId"] == id(30) && r["targetId"] == id(50)));
-        assert_eq!(stats.unmapped.get("StructureGrating"), Some(&1));
+        // Steel accessories (RFC-0018).
+        let grating = by_type(&objs, "pmef:SteelPlate")[0];
+        assert_eq!(grating["plateType"], "GRATING");
+        assert_eq!(grating["thickness"], json!(30.0));
+        assert_eq!(grating["origin"], json!([1400.0, 0.0, 570.0]));
+        assert_eq!(grating["outline"][2], json!([1200.0, 1000.0]));
+        assert_eq!(
+            grating["geometry"]["centerOfGravity"],
+            json!([2000.0, 500.0, 585.0])
+        );
+        assert!(grating["customAttributes"]["p3d:outlineFrame"].is_string());
+        let acc = by_type(&objs, "pmef:SteelAccessory");
+        let of = |t: &str| *acc.iter().find(|a| a["accessoryType"] == t).unwrap();
+        let railing = of("RAILING");
+        assert_eq!(
+            (railing["length"].clone(), railing["height"].clone()),
+            (json!(2000.0), json!(1100.0))
+        );
+        let ladder = of("LADDER");
+        assert_eq!(ladder["hasCage"], json!(true));
+        assert_eq!(ladder["height"], json!(3870.0));
+        assert_eq!(ladder["topElevation"], json!(4870.0));
+        let anchor = of("ANCHOR");
+        assert_eq!(anchor["designation"], "300x300x200");
+        assert_eq!(anchor["material"]["grade"], "S235JR");
+        assert!(stats.unmapped.is_empty(), "{:?}", stats.unmapped);
         assert_eq!(stats.ports_unplaced, 0);
     }
 

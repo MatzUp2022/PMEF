@@ -26,6 +26,7 @@ Status values (issue template): `DRAFT` → `REVIEW` → `APPROVED` / `REJECTED`
 | [0015](0015-cable-tray-route-ports.md) | Cable tray route, ports and source data | 0.10.0 | `DRAFT` | [#71](https://github.com/MatzUp2022/PMEF/issues/71) | Tray supports and network nodes (WG-E&I) |
 | [0016](0016-pipe-supports-outside-segments.md) | Pipe supports outside piping segments and support assemblies | 0.10.0 | `DRAFT` | [#72](https://github.com/MatzUp2022/PMEF/issues/72) | Support loads per part vs. per assembly (WG-Piping) |
 | [0017](0017-pmefx-shared-mesh-offset.md) | PMEFX shared mesh files with a per-level offset | 0.10.0 | `DRAFT` | — | Manifest feature list; full transforms (WG-Serialisation) |
+| [0018](0018-steel-accessories-object-placement.md) | Steel accessories (railings, stairs, ladders, anchors) and object placement | 0.10.0 | `DRAFT` | — | Stair parts as separate objects (WG-Steel); placement required for symbols (WG-Geometry) |
 
 RFCs 0001–0003 are fully implemented in this repository (schemas, spec text, Rust reference
 implementation, examples, tests in CI); each RFC's *Review Status* section lists the evidence.

@@ -11,6 +11,24 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added — RFC-0018: steel accessories and object placement (DRAFT)
+
+- **`pmef:SteelAccessory`** for railings, stairs, stair treads, ladders and anchors
+  (`accessoryType`, `designation`, `path`, `length`/`width`/`height`, `bottomElevation`/
+  `topElevation`, `stepCount`, `hasCage`, `material`, `weight`, `finish`) and
+  `SteelSystem.accessoryIds`. Spec 02 §7.6, [RFC-0018](spec/rfc/0018-steel-accessories-object-placement.md).
+- **`GeometryReference.placement`** (`Placement`: `origin`, `axisZ`, `axisX`, as IFC
+  `IfcAxis2Placement3D`) and **`GeometryReference.centerOfGravity`** for every object with
+  geometry. Spec 04 §2.4.
+- Plant 3D `Piping.dcf`: railings, stairs, treads, ladders and anchors → `SteelAccessory`;
+  plates and gratings → `SteelPlate` (outline from the size text, centred on the COG);
+  insertion matrix → `geometry.placement`, `COG X/Y/Z` → `geometry.centerOfGravity`. Spec 05 §8.2.
+- Rust: `pmef_core::steel::SteelAccessory`, `pmef_core::geometry::Placement` (`from_matrix`,
+  `to_project`).
+- `scripts/check-geometry.py`: placement axes (unit, perpendicular); accessory elevation order,
+  zero-length legs and rising stair/ladder paths. Negative cases `ACC-*`.
+- Example `examples/steel-access-placement.ndjson`.
+
 ### Added — Plant 3D spec sheets (`.pspc`) → PMEF piping class catalogs
 
 - **`pmef convert <spec>.pspc --to catalog -o <spec>.json`** writes a Plant 3D spec as a

@@ -16,7 +16,7 @@
 //! ├── equipment/     — EquipmentObject subtypes, Nozzle
 //! ├── ei/            — InstrumentObject, PLCObject, CableObject, …
 //! ├── hvac/          — DuctNetworkSystem, duct components (RFC-0006)
-//! ├── steel/         — SteelMember, SteelPlate, SteelNode, SteelConnection
+//! ├── steel/         — SteelMember, SteelPlate, SteelAccessory, SteelNode, SteelConnection
 //! ├── relationships/ — typed relationship objects
 //! └── traits/        — PmefObject, PmefVisitor, Adapter
 //! ```
@@ -50,7 +50,7 @@ pub use equipment::{
     Compressor, EquipmentBasic, Filter, GenericEquipment, HeatExchanger, Nozzle,
     Pump, Reactor, Tank, Turbine, Vessel,
 };
-pub use geometry::{GeometryLayer, GeometryReference, Lod};
+pub use geometry::{GeometryLayer, GeometryReference, Lod, Placement};
 pub use hvac::{
     Duct, DuctAccessDoor, DuctBend, DuctBranch, DuctCrossSection, DuctDamper, DuctNetworkSystem,
     DuctPort, DuctSegment, DuctShape, DuctTestPort, DuctTransition, GenericDuctComponent,
@@ -70,7 +70,7 @@ pub use provenance::{
     ReviewState, ReviewStatus, SnapCandidate, SourceType,
 };
 pub use revision::{ChangeState, RevisionMetadata};
-pub use steel::{SteelConnection, SteelMember, SteelNode, SteelPlate, SteelSystem};
+pub use steel::{SteelAccessory, SteelConnection, SteelMember, SteelNode, SteelPlate, SteelSystem};
 pub use traits::{PmefAdapter, PmefEntity, PmefEntityType, PmefVisitor};
 pub use types::{
     Coordinate3D, Iec81346Designation, PmefId, PmefVersion, RdlUri, UnitVector3D,

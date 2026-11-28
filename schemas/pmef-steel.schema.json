@@ -34,6 +34,7 @@
         "steelGrade":  { "type": "string", "description": "Primary steel grade, e.g. 'S355JR', 'A572 Gr.50'" },
         "memberIds":   { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" } },
         "plateIds":    { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" }, "description": "SteelPlate objects of this system (RFC-0013)" },
+        "accessoryIds": { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" }, "description": "SteelAccessory objects of this system (RFC-0018)" },
         "revision":    { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
         "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
         "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
@@ -171,6 +172,52 @@
       "additionalProperties": false
     },
 
+    "SteelAccessory": {
+      "title": "Steel Accessory",
+      "description": "Railing, stair, stair tread, ladder or anchor (RFC-0018): a catalogued steel item that is not a profile swept along an axis and not a plate. Position from path and/or geometry.placement; sizes as numbers, the source designation verbatim. IFC 4.3: RAILING IfcRailing, STAIR IfcStairFlight, STAIR_TREAD IfcMember (USERDEFINED TREAD), LADDER IfcStair (LADDER), ANCHOR IfcMechanicalFastener (ANCHORBOLT).",
+      "type": "object",
+      "required": ["@type","@id","pmefVersion","isPartOf","accessoryType"],
+      "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],
+      "properties": {
+        "@type":        { "const": "pmef:SteelAccessory" },
+        "@id":          { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
+        "pmefVersion":  { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "isPartOf":     { "$ref": "pmef-base.schema.json#/$defs/PmefId", "description": "SteelSystem (or unit) the accessory belongs to" },
+        "accessoryMark": { "type": "string", "description": "Mark/piece number from structural drawings" },
+        "accessoryType": {
+          "type": "string",
+          "enum": ["RAILING","STAIR","STAIR_TREAD","LADDER","ANCHOR","GENERIC"],
+          "description": "RAILING: handrail/guard rail run; STAIR: stair flight with stringers and treads; STAIR_TREAD: single tread; LADDER: fixed ladder (hasCage for a safety cage); ANCHOR: anchor bolt group or footing anchor; GENERIC: other accessory (nativeType in customAttributes)"
+        },
+        "designation":  { "type": "string", "description": "Size or type designation from the source, verbatim (e.g. '600x270x70', 'Ladder 8100 with cage')" },
+        "path": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "pmef-base.schema.json#/$defs/Coordinate3D" },
+          "description": "System line [mm]: railing top rail, stair or ladder axis from bottom to top"
+        },
+        "length":       { "type": "number", "exclusiveMinimum": 0, "description": "Run length of a railing or horizontal length of a stair [mm]" },
+        "width":        { "type": "number", "exclusiveMinimum": 0, "description": "Clear width of a stair, tread or ladder [mm]" },
+        "height":       { "type": "number", "exclusiveMinimum": 0, "description": "Railing height, ladder height or tread thickness [mm]" },
+        "bottomElevation": { "type": "number", "description": "Lowest point (bottom of steel) [mm]" },
+        "topElevation": { "type": "number", "description": "Highest point (top of steel); MUST NOT be below bottomElevation [mm]" },
+        "stepCount":    { "type": "integer", "minimum": 1, "description": "Number of treads or rungs" },
+        "hasCage":      { "type": "boolean", "description": "Ladder has a safety cage" },
+        "material":     { "$ref": "#/$defs/SteelMember/properties/material" },
+        "weight":       { "type": "number", "description": "Accessory weight [kg]" },
+        "finish":       { "type": "string", "description": "Surface finish / coating, e.g. 'HOT_DIP_GALVANIZED'" },
+        "iec81346":     { "$ref": "pmef-base.schema.json#/$defs/Iec81346Designation" },
+        "rdlType":      { "$ref": "pmef-base.schema.json#/$defs/RdlUri" },
+        "geometry":     { "$ref": "pmef-base.schema.json#/$defs/GeometryReference" },
+        "documents":    { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/DocumentLink" } },
+        "revision":     { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
+        "provenance":   { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
+        "review":       { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
+        "asBuilt":      { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" },
+        "customAttributes": { "type": "object", "additionalProperties": { "type": ["string","number","boolean","null"] } }
+      },
+      "additionalProperties": false
+    },
     "Point2D": {
       "title": "2D point in a local plane",
       "type": "array",
@@ -279,6 +326,7 @@
     { "$ref": "#/$defs/SteelSystem" },
     { "$ref": "#/$defs/SteelMember" },
     { "$ref": "#/$defs/SteelPlate" },
+    { "$ref": "#/$defs/SteelAccessory" },
     { "$ref": "#/$defs/SteelNode" },
     { "$ref": "#/$defs/SteelConnection" }
   ]
