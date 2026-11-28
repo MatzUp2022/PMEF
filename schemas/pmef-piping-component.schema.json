@@ -96,7 +96,8 @@
         "revision": { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
         "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
         "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
-        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" }
+        "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" },
+        "customAttributes": { "type": "object", "additionalProperties": { "type": ["string","number","boolean","null"] }, "description": "Source-tool attributes without a PMEF field, verbatim (e.g. E3D attributes of a SITE, ZONE, BRAN or STRU)" }
       },
       "additionalProperties": false
     },

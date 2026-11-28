@@ -235,6 +235,9 @@ pub struct PipingSegment {
     /// RFC-0001 provenance / review / asBuilt blocks.
     #[serde(flatten, default)]
     pub recognition: crate::provenance::RecognitionMetadata,
+    /// Source-tool attributes without a PMEF field, verbatim.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub custom_attributes: Option<std::collections::HashMap<String, serde_json::Value>>,
 }
 
 // ── Macro for piping component boilerplate ────────────────────────────────
