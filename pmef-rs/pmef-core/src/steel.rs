@@ -137,6 +137,9 @@ pub struct SteelSystem {
     /// SteelPlate objects of this system (RFC-0013).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub plate_ids: Vec<PmefId>,
+    /// SteelAccessory objects of this system (RFC-0019).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub accessory_ids: Vec<PmefId>,
     #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
     /// RFC-0001 provenance / review / asBuilt blocks.
     #[serde(flatten, default)]
@@ -210,9 +213,72 @@ impl SteelPlate {
     }
 }
 
+/// Railing, stair, stair tread, ladder or anchor (RFC-0019).
+#[derive(Debug,Clone,Serialize,Deserialize)]
+#[serde(rename_all="camelCase")]
+pub struct SteelAccessory {
+    #[serde(rename="@type")] pub entity_type: String,
+    #[serde(rename="@id")] pub id: PmefId,
+    pub pmef_version: String,
+    pub is_part_of: PmefId,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub accessory_mark: Option<String>,
+    /// `RAILING`, `STAIR`, `STAIR_TREAD`, `LADDER`, `ANCHOR`, `GENERIC`.
+    pub accessory_type: String,
+    /// Size or type designation from the source, verbatim.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub designation: Option<String>,
+    /// System line [mm]: railing top rail, stair or ladder axis bottom → top.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub path: Vec<Coordinate3D>,
+    #[serde(skip_serializing_if="Option::is_none")] pub length:Option<f64>,
+    #[serde(skip_serializing_if="Option::is_none")] pub width:Option<f64>,
+    #[serde(skip_serializing_if="Option::is_none")] pub height:Option<f64>,
+    #[serde(skip_serializing_if="Option::is_none")] pub bottom_elevation:Option<f64>,
+    #[serde(skip_serializing_if="Option::is_none")] pub top_elevation:Option<f64>,
+    #[serde(skip_serializing_if="Option::is_none")] pub step_count:Option<u32>,
+    #[serde(skip_serializing_if="Option::is_none")] pub has_cage:Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub material: Option<SteelMaterial>,
+    #[serde(skip_serializing_if="Option::is_none")] pub weight:Option<f64>,
+    #[serde(skip_serializing_if="Option::is_none")] pub finish:Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iec81346: Option<crate::types::Iec81346Designation>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rdl_type: Option<crate::types::RdlUri>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub geometry: Option<crate::geometry::GeometryReference>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub documents: Option<Vec<crate::catalog::DocumentLink>>,
+    #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
+    /// RFC-0001 provenance / review / asBuilt blocks.
+    #[serde(flatten, default)]
+    pub recognition: crate::provenance::RecognitionMetadata,
+    #[serde(skip_serializing_if="Option::is_none")] pub custom_attributes:Option<HashMap<String,serde_json::Value>>,
+}
+
+impl SteelAccessory {
+    /// Vertical extent [mm] from the elevations, if both are given.
+    pub fn rise_mm(&self) -> Option<f64> {
+        Some(self.top_elevation? - self.bottom_elevation?)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn accessory_round_trips() {
+        let j = r#"{"@type":"pmef:SteelAccessory","@id":"urn:pmef:obj:t:LAD-1","pmefVersion":"0.10.0","isPartOf":"urn:pmef:obj:t:STR-1","accessoryType":"LADDER","height":3870.0,"bottomElevation":0.0,"topElevation":4870.0,"hasCage":true,"geometry":{"type":"none","placement":{"origin":[3227.5,10400.0,0.0],"axisZ":[0.0,0.0,1.0],"axisX":[0.0,1.0,0.0]},"centerOfGravity":[3227.5,10400.0,2435.0]}}"#;
+        let a: SteelAccessory = serde_json::from_str(j).unwrap();
+        assert_eq!(a.rise_mm(), Some(4870.0));
+        assert_eq!(a.has_cage, Some(true));
+        let p = a.geometry.as_ref().unwrap().placement.as_ref().unwrap();
+        assert_eq!(p.to_project([100.0, 0.0, 0.0]), [3227.5, 10500.0, 0.0]);
+        let back: serde_json::Value = serde_json::to_value(&a).unwrap();
+        assert_eq!(back, serde_json::from_str::<serde_json::Value>(j).unwrap());
+    }
 
     #[test]
     fn grade_only_material_round_trips() {

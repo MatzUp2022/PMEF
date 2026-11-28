@@ -30,7 +30,8 @@ REV = {"revisionId": "r2026-10-31-001", "changeState": "SHARED", "authoringTool"
 RFC_EXAMPLES = {"asbuilt-recognition.ndjson", "pump-skid-auto-routed.ndjson", "hvac-damper-placeholder.ndjson",
                 "piping-valve-placeholder.ndjson", "hvac-generic-components.ndjson",
                 "cable-tray-route.ndjson",
-                "pipe-support-assembly.ndjson", "tool-attributes-e3d.ndjson"}  # 0.10.0 feature examples, used only where named
+                "pipe-support-assembly.ndjson", "tool-attributes-e3d.ndjson",
+                "steel-access-placement.ndjson"}  # 0.10.0 feature examples, used only where named
 
 
 def _load_examples(names: set[str] | None = None) -> list[dict]:
@@ -50,6 +51,7 @@ ASBUILT = _load_examples({"asbuilt-recognition.ndjson"})
 HVACGEN = _load_examples({"hvac-generic-components.ndjson"})
 TRAYROUTE = _load_examples({"cable-tray-route.ndjson"})
 SUPPORTS = _load_examples({"pipe-support-assembly.ndjson"})
+ACCESS = _load_examples({"steel-access-placement.ndjson"})
 
 
 def ex(type_: str, pred=lambda o: True, source: list[dict] | None = None) -> dict:
@@ -243,6 +245,16 @@ UNIT = [
      [without(MEMBER, "profileId")]),
     ("STEEL-U-006", "SteelMember with provenance / review / asBuilt (RFC-0001) — valid", 2, "steel",
      "CL2-01", "valid", [ex("pmef:SteelMember", lambda o: "asBuilt" in o, ASBUILT)]),
+    ("STEEL-U-007", "SteelAccessory railing, stair, ladder and anchor (RFC-0019) — valid", 2, "steel",
+     "CL2-01", "valid", [ex("pmef:SteelAccessory", lambda o, t=t: o["accessoryType"] == t, ACCESS)
+                         for t in ("RAILING", "STAIR", "LADDER", "ANCHOR")]),
+    ("STEEL-U-008", "SteelAccessory with unknown accessoryType — rejected", 2, "steel", "CL1-02", "invalid",
+     [with_(ex("pmef:SteelAccessory", source=ACCESS), ("accessoryType",), "ESCALATOR")]),
+    ("STEEL-U-009", "Object with geometry.placement and centerOfGravity (RFC-0019) — valid", 2, "steel",
+     "CL2-01", "valid", [ex("pmef:SteelAccessory", lambda o: "placement" in o.get("geometry", {}), ACCESS)]),
+    ("STEEL-U-010", "placement without origin — rejected", 2, "steel", "CL1-02", "invalid",
+     [without(ex("pmef:SteelAccessory", lambda o: "placement" in o.get("geometry", {}), ACCESS),
+              "geometry", "placement", "origin")]),
     # Relationships
     ("REL-U-001", "IsPartOf — valid", 2, "relationships", "CL2-01", "valid",
      [rel("pmef:IsPartOf", "IS_PART_OF", "R-1", oid("obj", "P-1"), oid("unit", "U-1"))]),

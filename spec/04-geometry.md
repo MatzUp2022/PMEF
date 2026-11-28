@@ -144,6 +144,33 @@ files converted from plant design review formats, **MUST** state it in `meshFram
 
 The level of detail of the mesh is the existing `lod` field of the `GeometryReference`.
 
+### 2.4 Placement and Centre of Gravity
+
+A `GeometryReference` **MAY** carry the object's installation frame and centre of gravity
+([RFC-0019](rfc/0019-steel-accessories-object-placement.md)):
+
+```jsonc
+"geometry": {
+  "type": "none",
+  "placement": {                       // IFC 4.3 IfcAxis2Placement3D
+    "origin": [12000, 4500, 0],        // Location, project coordinates (mm)
+    "axisZ": [0, 0, 1],                // Axis; default [0, 0, 1]
+    "axisX": [0, 1, 0]                 // RefDirection; default [1, 0, 0]
+  },
+  "centerOfGravity": [12000, 4500, 650]
+}
+```
+
+- `axisZ` and `axisX` **MUST** be unit vectors and **MUST** be perpendicular; local y is
+  `axisZ × axisX`. A source matrix with scale or shear is not a placement; adapters keep it in
+  `customAttributes`.
+- The placement records where and how the object was inserted (CAD insertion point and
+  rotation, E3D `POS`/`ORI`, IFC `ObjectPlacement`). Ports, outlines and the bounding box stay in
+  project coordinates and do not depend on it.
+- `centerOfGravity` is in project coordinates (mm).
+
+`scripts/check-geometry.py` checks the placement axes of every object.
+
 ## 3 Level of Detail System
 
 PMEF defines five LOD levels:

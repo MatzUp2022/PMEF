@@ -192,6 +192,14 @@
         "meshFrame": {
           "$ref": "#/$defs/MeshFrame"
         },
+        "placement": {
+          "$ref": "#/$defs/Placement",
+          "description": "Installation position and orientation of the object (RFC-0019)"
+        },
+        "centerOfGravity": {
+          "$ref": "#/$defs/Coordinate3D",
+          "description": "Centre of gravity in project coordinates [mm] (RFC-0019)"
+        },
         "boundingBox": {
           "type": "object",
           "description": "Axis-aligned bounding box in project coordinates (mm)",
@@ -269,6 +277,27 @@
         "origin": {
           "$ref": "#/$defs/Coordinate3D",
           "description": "Project coordinates [mm] of the mesh origin, added after unit and axis conversion"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Placement": {
+      "title": "Placement",
+      "description": "Local frame of an object in project coordinates (RFC-0019, spec 04 §2.4), as IFC 4.3 IfcAxis2Placement3D: origin = Location, axisZ = Axis, axisX = RefDirection. It records where and how the object is installed (CAD insertion point and rotation); geometry coordinates stay in project coordinates. Absent axes: project axes.",
+      "type": "object",
+      "required": ["origin"],
+      "properties": {
+        "origin": {
+          "$ref": "#/$defs/Coordinate3D",
+          "description": "Origin of the local frame [mm]"
+        },
+        "axisZ": {
+          "$ref": "#/$defs/UnitVector3D",
+          "description": "Local z axis; default [0, 0, 1]"
+        },
+        "axisX": {
+          "$ref": "#/$defs/UnitVector3D",
+          "description": "Local x axis; MUST be perpendicular to axisZ; default [1, 0, 0]"
         }
       },
       "additionalProperties": false

@@ -55,6 +55,7 @@ pub mod equipment;
 pub mod pcf_bridge;
 pub mod idf;
 pub mod pds;
+pub mod spec;
 pub mod sqlite;
 
 pub use equipment::{p3d_class_to_pmef, P3dEquipment, P3dNozzle};

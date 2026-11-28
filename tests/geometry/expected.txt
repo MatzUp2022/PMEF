@@ -1,4 +1,4 @@
-✗ equipment-steel-negative.ndjson (38 issue(s))
+✗ equipment-steel-negative.ndjson (43 issue(s))
      urn:pmef:obj:geomtest:ELB-SENSE: CIRC_TORUS ends at [4700.0, 0.0, 300.0], not at the other port [5300.0, 0.0, 300.0] (axis/startDir sense, spec 04 right-hand rule)
      urn:pmef:obj:geomtest:ELB-NOSTART: CIRC_TORUS ends at [4700.0, 0.0, 300.0], not at the other port [5300.0, 0.0, 300.0] (axis/startDir sense, spec 04 right-hand rule)
      urn:pmef:obj:geomtest:CT-NOLIST.P1: direction is not a unit vector
@@ -22,6 +22,9 @@
      urn:pmef:obj:geomtest:PL-LINE: outline encloses no area
      urn:pmef:obj:geomtest:PL-CLOSED: outline repeats its first point (contours are closed implicitly)
      urn:pmef:obj:geomtest:PL-HOLES: holes (2000000 mm²) are not smaller than the outline (2000000 mm²)
+     urn:pmef:obj:geomtest:ACC-ELEV: topElevation 0.0 is below bottomElevation 3000.0
+     urn:pmef:obj:geomtest:ACC-DOWN: path has a zero-length leg at [0.0, 0.0, 3000.0]
+     urn:pmef:obj:geomtest:ACC-DOWN: ladder path must run from bottom to top
      urn:pmef:obj:geomtest:N-OFF: node is not at an end of member urn:pmef:obj:geomtest:C-1
      urn:pmef:obj:geomtest:CN-APART: members urn:pmef:obj:geomtest:B-LEN and urn:pmef:obj:geomtest:C-FAR are 5000 mm apart (> (h1 + h2) / 2 = 245 mm)
      urn:pmef:obj:geomtest:CT-BEND: port connected to urn:pmef:obj:geomtest:CT-BAD, which is not in connectedTrayIds
@@ -37,3 +40,5 @@
      urn:pmef:geom:geomtest:PRIM-BAD/ring: RECT_TORUS outerRadius 800.0 must exceed innerRadius 900.0
      urn:pmef:geom:geomtest:PRIM-BAD/deep: SPHERICAL_CAP depth 500.0 must be in (0, shellRadius 400.0]
      urn:pmef:geom:geomtest:PRIM-BAD/knuckle0: TORISPHERICAL needs knuckleRadius > 0 (use SPHERICAL_CAP for a cap, spec 04)
+     urn:pmef:obj:geomtest:ACC-FRAME: placement axisZ is not a unit vector (|v| = 2.0000)
+     urn:pmef:obj:geomtest:ACC-FRAME: placement axisX is not perpendicular to axisZ (dot = 1.4142)

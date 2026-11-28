@@ -731,7 +731,27 @@ A `SteelSystem` is `isPartOf` a unit or area, or — for nested structures — o
 level: `STRUCTURE` (top; E3D `STRU`), `FRAMEWORK` (`FRMW`), `SUBFRAMEWORK` (`SBFR`). A
 `FRAMEWORK` or `SUBFRAMEWORK` system **SHOULD** be `isPartOf` a system one level up. Members and
 plates are `isPartOf` the lowest system that contains them and are listed in its `memberIds` /
-`plateIds`.
+`plateIds` / `accessoryIds`.
+
+### 7.6 SteelAccessory
+
+Railings, stairs, stair treads, ladders and anchors
+([RFC-0019](rfc/0019-steel-accessories-object-placement.md)): secondary steel that is neither a
+member nor a plate. Plates and gratings are `SteelPlate` (§7.4).
+
+| Field | Meaning |
+|---|---|
+| `accessoryType` | `RAILING` (IFC `IfcRailing`), `STAIR` (`IfcStair`), `STAIR_TREAD`, `LADDER` (`IfcStair` `LADDER`), `ANCHOR` (`IfcMechanicalFastener` `ANCHORBOLT`), `GENERIC` |
+| `designation` | Size or type text from the source, verbatim |
+| `path` | System line (≥ 2 points, mm): top rail of a railing; axis of a stair or ladder, **MUST** run from bottom to top |
+| `length`, `width`, `height` | Run length, clear width, railing/ladder height or tread thickness (mm) |
+| `bottomElevation`, `topElevation` | Lowest and highest point (mm); `topElevation` **MUST NOT** be below `bottomElevation` |
+| `stepCount`, `hasCage` | Number of treads or rungs; ladder with safety cage |
+| `material`, `weight`, `finish` | As on `SteelMember` |
+
+An accessory is `isPartOf` a `SteelSystem` (or a unit) and listed in its `accessoryIds`.
+`scripts/check-geometry.py` checks the elevation order, that the path has no zero-length legs
+and that a stair or ladder path rises.
 
 ---
 

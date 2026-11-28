@@ -135,6 +135,7 @@ def check(objs):
     for o in objs:
         if o.get("@type") == "pmef:ParametricGeometry":
             issues += check_primitive(o.get("@id"), o.get("primitive") or {})
+        issues += check_placement(o)
     return issues
 
 
@@ -375,6 +376,37 @@ def check_plate(o):
     return issues
 
 
+def check_placement(o):
+    """geometry.placement (RFC-0019): unit axes, axisX perpendicular to axisZ."""
+    pl = (o.get("geometry") or {}).get("placement")
+    if not isinstance(pl, dict):
+        return []
+    oid, issues = o.get("@id"), []
+    z, x = pl.get("axisZ"), pl.get("axisX")
+    for name, v in (("axisZ", z), ("axisX", x)):
+        if v and abs(norm(v) - 1.0) > 1e-3:
+            issues.append(f"{oid}: placement {name} is not a unit vector (|v| = {norm(v):.4f})")
+    if z and x and abs(dot(z, x)) > 1e-3:
+        issues.append(f"{oid}: placement axisX is not perpendicular to axisZ (dot = {dot(z, x):.4f})")
+    return issues
+
+
+def check_accessory(o):
+    """SteelAccessory (RFC-0019): elevations in order, path without zero-length legs, stairs and
+    ladders run bottom → top."""
+    oid, issues = o["@id"], []
+    b, t = o.get("bottomElevation"), o.get("topElevation")
+    if b is not None and t is not None and t < b:
+        issues.append(f"{oid}: topElevation {t} is below bottomElevation {b}")
+    path = o.get("path") or []
+    for a, c in zip(path, path[1:]):
+        if norm(sub(c, a)) <= TOL:
+            issues.append(f"{oid}: path has a zero-length leg at {a}")
+    if o.get("accessoryType") in ("STAIR", "LADDER") and len(path) >= 2 and path[-1][2] < path[0][2]:
+        issues.append(f"{oid}: {o['accessoryType'].lower()} path must run from bottom to top")
+    return issues
+
+
 def seg_dist(p1, q1, p2, q2):
     """Minimum distance between segments p1-q1 and p2-q2 (sampled, sufficient for checks)."""
     best = float("inf")
@@ -392,6 +424,8 @@ def check_steel(objs, by_id):
     for o in objs:
         if o.get("@type") == "pmef:SteelPlate":
             issues += check_plate(o)
+        if o.get("@type") == "pmef:SteelAccessory":
+            issues += check_accessory(o)
         if o.get("@type") != "pmef:SteelMember":
             continue
         oid, s, e = o["@id"], o.get("startPoint"), o.get("endPoint")

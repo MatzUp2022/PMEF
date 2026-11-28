@@ -133,11 +133,13 @@ enum Commands {
     /// Convert between PMEF and other formats.
     Convert {
         /// Input: a PMEF NDJSON file (--to pcf, --to aml), a PCF file / directory of *.pcf, a
-        /// CAEX/AutomationML `.aml` file or a Plant 3D project database `Piping.dcf` (--to pmef).
+        /// CAEX/AutomationML `.aml` file or a Plant 3D project database `Piping.dcf` (--to pmef),
+        /// or a Plant 3D spec sheet `<spec>.pspc` (--to catalog).
         input: PathBuf,
         /// Target format: pcf (PMEF → AutoCAD Plant 3D), aml (PMEF → CAEX XML, spec 03 §4) or
-        /// pmef (PCF, AML or Plant 3D DCF → PMEF).
-        #[arg(long, value_parser = ["pcf", "aml", "pmef"])]
+        /// pmef (PCF, AML or Plant 3D DCF → PMEF) or catalog (Plant 3D spec → PMEF piping class
+        /// catalog JSON).
+        #[arg(long, value_parser = ["pcf", "aml", "pmef", "catalog"])]
         to: String,
         /// Reference PMEF model updated from the PCF (required with --to pmef from PCF).
         #[arg(long)]
@@ -659,6 +661,16 @@ fn cmd_convert(input: PathBuf, to: &str, base: Option<PathBuf>, output: PathBuf)
                 eprintln!("warning: {w}");
             }
             eprintln!("wrote {} PCF file(s) to {}", export.files.len(), output.display());
+        } else if to == "catalog" {
+            // AutoCAD Plant 3D spec sheet (<spec>.pspc) → PIPING_CLASS catalog, scope PROJECT.
+            let data = std::fs::read(&input).with_context(|| format!("Cannot open {}", input.display()))?;
+            let stem = input.file_stem().and_then(|s| s.to_str()).unwrap_or("spec");
+            let (catalog, stats) = pmef_adapter_plant3d::spec::spec_catalog(&data, stem)
+                .with_context(|| format!("Cannot read {}", input.display()))?;
+            std::fs::write(&output, serde_json::to_string_pretty(&catalog)? + "\n")
+                .with_context(|| format!("Cannot write {}", output.display()))?;
+            eprintln!("wrote catalog {} with {} entries ({} part row(s) skipped) to {}",
+                      catalog["catalogId"].as_str().unwrap_or_default(), stats.entries, stats.skipped, output.display());
         } else if to == "aml" {
             let objs = read_values(&input)?;
             std::fs::write(&output, pmef_io::caex::write_caex(&objs))

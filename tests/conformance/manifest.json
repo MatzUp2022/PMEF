@@ -730,6 +730,46 @@
       "expect": "valid"
     },
     {
+      "id": "STEEL-U-007",
+      "name": "SteelAccessory railing, stair, ladder and anchor (RFC-0019) — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "steel",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/STEEL-U-007.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "STEEL-U-008",
+      "name": "SteelAccessory with unknown accessoryType — rejected",
+      "category": "negative",
+      "level": 2,
+      "domain": "steel",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/STEEL-U-008.ndjson",
+      "expect": "invalid"
+    },
+    {
+      "id": "STEEL-U-009",
+      "name": "Object with geometry.placement and centerOfGravity (RFC-0019) — valid",
+      "category": "unit",
+      "level": 2,
+      "domain": "steel",
+      "requirement": "CL2-01",
+      "fixture": "fixtures/unit/STEEL-U-009.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "STEEL-U-010",
+      "name": "placement without origin — rejected",
+      "category": "negative",
+      "level": 2,
+      "domain": "steel",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/STEEL-U-010.ndjson",
+      "expect": "invalid"
+    },
+    {
       "id": "REL-U-001",
       "name": "IsPartOf — valid",
       "category": "unit",
