@@ -11,6 +11,25 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added — PMEFX 1.1: mesh bundles, compressed mesh entries, required features (RFC-0018)
+
+- `lods[].node` selects one root node of a glTF file: one *mesh bundle* holds the levels of
+  many objects (spec 03 §3.5–3.6).
+- With feature `deflateMeshes`, glTF entries may be Deflate-compressed (spec 03 §3.2 rule 4).
+- `manifest.requires` lists the optional features a package uses (`lodOffset`, `lodNode`,
+  `deflateMeshes`); readers reject unknown ones. Packages that list a feature are
+  `pmefxVersion` `"1.1"`; packages without stay `"1.0"`. Schema `pmefx-manifest`.
+- `pmef-io`: `glb::GlbBundle`, `glb::GlbFile`, `LodRef::read_mesh`, `PmefxWriter::add_bundle` /
+  `add_lod_ref` / `set_deflate_meshes` / `generate_bbox_lods_bundled`,
+  `PmefxReader::raw_range`; `verify` checks features, compressed entries and nodes.
+- CLI: `pmef pack --bbox-lods --bundle N --deflate-meshes`.
+- Example `examples/pmefx/pump-skid-bundled/` (10.1 KB instead of 39.1 KB).
+
+### Changed — `lods[].offset` needs `requires: ["lodOffset"]`
+
+- Packages that use `offset` (RFC-0017) must list feature `lodOffset`, so that readers without
+  RFC-0017 support reject them; `pmef verify` reports packages that do not.
+
 ### Added — Plant 3D project database (`Piping.dcf`) → PMEF
 
 - **`pmef convert Piping.dcf --to pmef`** reads the engineering data of an AutoCAD Plant 3D project

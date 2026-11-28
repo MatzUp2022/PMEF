@@ -239,7 +239,11 @@ recommended layout. Rules:
    listed file **MUST** exist.
 4. Entries of type `gltf`, `step` and `usd` **MUST** be stored without compression (ZIP method
    0), so that readers can range-read them over HTTP or memory-map them. Other entries
-   **SHOULD** use Deflate.
+   **SHOULD** use Deflate. Exception: when `manifest.requires` lists `deflateMeshes`
+   (RFC-0018), `gltf` entries **MAY** use Deflate (ZIP method 8). A reader then range-reads
+   the whole compressed entry (offset and compressed size from the central directory) and
+   inflates it. Writers **SHOULD** keep a `gltf` entry stored when readers are expected to read
+   only part of it.
 5. Writers **SHOULD** produce reproducible archives: entries in a deterministic order and a
    fixed entry timestamp, so identical content yields identical bytes.
 
@@ -249,7 +253,7 @@ The `manifest.json` file **MUST** be present at the root of the archive.
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `pmefxVersion` | **MUST** (1.0) | Container version, `"1.0"`. Absent in 0.9 manifests; readers treat its absence as a 0.9 package without object index. |
+| `pmefxVersion` | **MUST** (1.0) | Container version: `"1.0"`, or `"1.1"` when `requires` lists a feature (RFC-0018). Absent in 0.9 manifests; readers treat its absence as a 0.9 package without object index. |
 | `pmefVersion` | **MUST** | PMEF data version of the NDJSON files |
 | `packageId` | **MUST** | `@id` of the main file's `pmef:FileHeader` |
 | `mainFile` | **MUST** | Relative path to the primary NDJSON file |
@@ -261,6 +265,17 @@ The `manifest.json` file **MUST** be present at the root of the archive.
 | `spatialIndex` | MAY | Path of the spatial index (§3.7), recommended `index/octree.json` |
 | `meshOrigin` | MAY | Origin of all mesh assets in project coordinates, `{x, y, z}` [mm] (§3.6). Default `0,0,0`. |
 | `generator` | MAY | `{name, version}` of the writing software |
+| `requires` | **MUST** when a feature is used | Optional container features the package uses (below). Absent or empty = none. |
+
+Optional features (`requires`, RFC-0018). A writer **MUST** list every feature it uses, and a
+reader **MUST** reject a package that lists a feature it does not support, instead of showing
+meshes in the wrong place:
+
+| Feature | Meaning |
+|---|---|
+| `lodOffset` | `lods[].offset` is used (§3.5, RFC-0017) |
+| `lodNode` | `lods[].node` is used: mesh bundles (§3.5, §3.6) |
+| `deflateMeshes` | `gltf` entries may be Deflate-compressed (§3.2 rule 4) |
 
 `sha256` is the lower-case hexadecimal SHA-256 of the uncompressed entry; writers **SHOULD**
 provide it for every file and readers **MUST** report a mismatch.
@@ -334,10 +349,12 @@ Each entry of `lods`:
 | `errorMm` | SHOULD | Largest geometric deviation from the finest available representation [mm] (a Hausdorff-distance estimate is sufficient); drives screen-space-error LOD selection |
 | `sizeBytes` | MAY | Size of the `.glb` |
 | `offset` | MAY | `{x, y, z}` [mm]: the mesh's vertices are relative to `meshOrigin + offset` (§3.6, RFC-0017). Default `0,0,0` |
+| `node` | MAY | Index of a root node of the default scene of `path`: the level is that node's subtree (mesh bundle, §3.6, RFC-0018). Absent = the whole scene |
 
 `lods` **MUST** be ordered coarse to fine, and each level **MUST** occur at most once per
 object. Several entries, of one or of different objects, **MAY** reference the same `path`;
-the file is listed once in `files`. This stores repeated shapes once (RFC-0017). Readers that
+the file is listed once in `files`. This stores repeated shapes once (RFC-0017). With `node`,
+`triangles` and `vertexCount` describe the node's subtree and `sizeBytes` the whole file. Readers that
 find no `errorMm` **SHOULD** fall back to the projected size of the object's bounding sphere.
 
 Example line:
@@ -348,7 +365,8 @@ Example line:
 
 ### 3.6 Mesh Assets
 
-Mesh assets are self-contained glTF 2.0 binaries (one `.glb` per object and level). glTF is
+Mesh assets are self-contained glTF 2.0 binaries: one `.glb` per object and level, or a
+*mesh bundle* that holds the meshes of many objects (below). glTF is
 Y-up and metre-based; PMEF project coordinates are Z-up millimetres (spec 02 §2.7). A project
 point `p` maps to glTF coordinates relative to `o = manifest.meshOrigin` as
 
@@ -363,6 +381,18 @@ position up to the level's `offset`: for an entry with `offset` `d`, use `o + d`
 `o` (RFC-0017). Readers apply no other per-object transform. A mesh **SHOULD** name its root
 node after the object's `@id` and carry it in `extras.pmefId`, so that picking can be mapped
 back to the object.
+
+**Mesh bundles** (RFC-0018, feature `lodNode`). One `.glb` **MAY** hold the levels of many
+objects, one root node of the default scene each. A `lods` entry with `node` selects the
+subtree of that root node, with the node's own transform applied (it carries the
+`KHR_mesh_quantization` dequantisation). The node **MUST** be a root node of the default scene,
+and its subtree **MUST NOT** be shared with another root node. Each root node **SHOULD** be named
+after the `@id` of the object that references it and carry it in `extras.pmefId`; several
+objects **MAY** reference one node (with different `offset`s). Writers group objects that are
+usually loaded together (for example the parts of one pipeline, or one octree node) and
+**SHOULD** keep a bundle small enough for one range read (a few MiB). Bundles save the glTF
+header of each small file, its ZIP headers and its `files` entry in the manifest, and they
+compress better than single objects.
 
 Writers **MAY** store vertex data compactly with the glTF extension `KHR_mesh_quantization`
 (normalised integer positions dequantised by the node transform, integer normals) and list it
@@ -401,9 +431,10 @@ such a variant would keep the manifest and index model unchanged.
 ### 3.9 Conformance
 
 A conformant writer produces archives that satisfy §3.2–§3.7. A conformant reader checks at
-least: manifest schema, the listing rule (§3.2 rule 3), sizes and `sha256`, stored geometry
-entries, the `FileHeader` first line of each NDJSON file, that each `record` points to the
-object with that `@id`, LOD ordering, and the octree rules. The reference implementation is
+least: manifest schema, `requires` (only supported features, each used feature listed), the
+listing rule (§3.2 rule 3), sizes and `sha256`, stored geometry entries (§3.2 rule 4), the
+`FileHeader` first line of each NDJSON file, that each `record` points to the object with that
+`@id`, LOD ordering, that each `node` is a root node of its file, and the octree rules. The reference implementation is
 `pmef_io::pmefx` with the CLI commands `pmef pack`, `pmef unpack` and `pmef verify`.
 
 ---

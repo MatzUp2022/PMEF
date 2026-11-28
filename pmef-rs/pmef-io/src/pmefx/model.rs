@@ -5,8 +5,20 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Container version written by this implementation.
+/// Container version written by this implementation for packages that need no optional
+/// feature.
 pub const PMEFX_VERSION: &str = "1.0";
+/// Container version written when `manifest.requires` lists a feature (RFC-0018).
+pub const PMEFX_VERSION_FEATURES: &str = "1.1";
+
+/// Feature `lodOffset`: `lods[].offset` is used (RFC-0017).
+pub const FEATURE_LOD_OFFSET: &str = "lodOffset";
+/// Feature `lodNode`: `lods[].node` selects one root node of a mesh bundle (RFC-0018).
+pub const FEATURE_LOD_NODE: &str = "lodNode";
+/// Feature `deflateMeshes`: glTF entries may be Deflate-compressed (RFC-0018).
+pub const FEATURE_DEFLATE_MESHES: &str = "deflateMeshes";
+/// All features this implementation reads. Readers reject packages that require others.
+pub const KNOWN_FEATURES: [&str; 3] = [FEATURE_LOD_OFFSET, FEATURE_LOD_NODE, FEATURE_DEFLATE_MESHES];
 
 /// Archive path of the manifest (spec 03 §3.3).
 pub const MANIFEST_PATH: &str = "manifest.json";
@@ -49,6 +61,10 @@ pub struct Manifest {
     /// Software that wrote the package.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub generator: Option<Generator>,
+    /// Optional container features the package uses (RFC-0018): readers **MUST** reject a
+    /// package that lists a feature they do not support. See [`KNOWN_FEATURES`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub requires: Vec<String>,
 }
 
 /// One archive entry listed in the manifest.
@@ -236,9 +252,24 @@ pub struct LodRef {
     /// (the same fitting at many places). Absent = no shift.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub offset: Option<Point3>,
+    /// Root node of the default scene of `path` that holds this level (RFC-0018): lets many
+    /// objects share one bundle file. Absent = the whole scene.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub node: Option<u32>,
 }
 
 impl LodRef {
+    /// Reads this level's triangles in project coordinates from the bytes of its `path`
+    /// (whole scene, or the subtree of `node`), placed with `meshOrigin + offset`.
+    pub fn read_mesh(&self, glb_bytes: &[u8], package_origin: Point3) -> Result<super::glb::GlbMesh, String> {
+        self.read_mesh_from(&super::glb::GlbFile::parse(glb_bytes)?, package_origin)
+    }
+
+    /// [`Self::read_mesh`] from a file parsed once (several levels in one bundle).
+    pub fn read_mesh_from(&self, file: &super::glb::GlbFile<'_>, package_origin: Point3) -> Result<super::glb::GlbMesh, String> {
+        file.mesh(self.node.map(|n| n as usize), self.mesh_origin(package_origin))
+    }
+
     /// Origin to read this level's mesh with ([`super::glb::read_mesh_glb`]):
     /// the package's `meshOrigin` plus the level's `offset`.
     pub fn mesh_origin(&self, package_origin: Point3) -> Point3 {
