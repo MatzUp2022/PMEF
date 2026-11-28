@@ -203,13 +203,9 @@ fn entry(p: &PdsProject, i: &Item, spec: &str) -> Option<J> {
             e.insert("reducingDiameter_mm".into(), json!(b));
         }
     }
-    if let (Some(a), Some(c)) = (
-        ports.first().and_then(|x| dn(x)),
-        ports.get(2).and_then(|x| dn(x)),
-    ) {
-        if (a - c).abs() > 1e-6 {
-            e.insert("branchDiameter_mm".into(), json!(c));
-        }
+    // Equal tees too: snapping resolves a branch only through `branchDiameter_mm`.
+    if let Some(c) = ports.get(2).and_then(|x| dn(x)) {
+        e.insert("branchDiameter_mm".into(), json!(c));
     }
     e.insert(
         "vendorMappings".into(),
@@ -248,7 +244,7 @@ mod tests {
         assert_eq!(
             stats,
             SpecStats {
-                entries: 4,
+                entries: 5,
                 skipped: 0
             }
         );
@@ -273,6 +269,20 @@ mod tests {
 
         let red = by_class(&c, "REDUCER_CONCENTRIC");
         assert_eq!(red["reducingDiameter_mm"], 150.0);
+
+        // An equal tee keeps its branch size: snapping matches branches only through it.
+        let tee = c["entries"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|e| {
+                e["componentClass"]
+                    .as_str()
+                    .unwrap_or("")
+                    .starts_with("TEE")
+            })
+            .expect("tee entry");
+        assert_eq!(tee["branchDiameter_mm"], 200.0);
 
         let fl = by_class(&c, "FLANGE");
         assert_eq!(

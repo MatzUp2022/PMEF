@@ -1,0 +1,57 @@
+{
+  "pmefxVersion": "1.1",
+  "pmefVersion": "0.9.0",
+  "packageId": "urn:pmef:pkg:eaf-2026:pump-skid-ds01",
+  "mainFile": "model/pump-skid-complete.ndjson",
+  "coordinateSystem": "Z-up",
+  "createdAt": "2026-11-25T00:00:00Z",
+  "files": [
+    {
+      "path": "model/pump-skid-complete.ndjson",
+      "type": "ndjson",
+      "sizeBytes": 28232,
+      "sha256": "ba3cf33d1d74ca9c4c6f6a0ed7b013c23ce91f6a6ed627ba066c02e890f68c60",
+      "objects": 35
+    },
+    {
+      "path": "meshes/bbox-00001.glb",
+      "type": "gltf",
+      "sizeBytes": 22924,
+      "sha256": "12cd23e0699c7463f8f9ba3b2e8efa6b2ef7a17b12e467c4f3eb8d6aaf26703c"
+    },
+    {
+      "path": "meshes/bbox-00002.glb",
+      "type": "gltf",
+      "sizeBytes": 1704,
+      "sha256": "643745aadf8866567994e366e1469d7de60f08a2387911e732db3e232c7d9eca"
+    },
+    {
+      "path": "index/objects.ndjson",
+      "type": "index",
+      "sizeBytes": 8190,
+      "sha256": "1c2a02e681f0b11e8eea695c951e3e5e3caa20a2051d49dff3601fe851266170"
+    },
+    {
+      "path": "index/octree.json",
+      "type": "index",
+      "sizeBytes": 787,
+      "sha256": "15d1b14e682db2e2d3e23f7e5cd5bfaa23488aa4d3bbdae5b0f32e1b7e143a71"
+    }
+  ],
+  "meshOrigin": {
+    "x": 10000.0,
+    "y": 5000.0,
+    "z": 3000.0
+  },
+  "objectIndex": "index/objects.ndjson",
+  "spatialIndex": "index/octree.json",
+  "objectCount": 35,
+  "generator": {
+    "name": "pmef-io",
+    "version": "0.9.0"
+  },
+  "requires": [
+    "deflateMeshes",
+    "lodNode"
+  ]
+}

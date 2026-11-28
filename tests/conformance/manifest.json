@@ -731,7 +731,7 @@
     },
     {
       "id": "STEEL-U-007",
-      "name": "SteelAccessory railing, stair, ladder and anchor (RFC-0018) — valid",
+      "name": "SteelAccessory railing, stair, ladder and anchor (RFC-0019) — valid",
       "category": "unit",
       "level": 2,
       "domain": "steel",
@@ -751,7 +751,7 @@
     },
     {
       "id": "STEEL-U-009",
-      "name": "Object with geometry.placement and centerOfGravity (RFC-0018) — valid",
+      "name": "Object with geometry.placement and centerOfGravity (RFC-0019) — valid",
       "category": "unit",
       "level": 2,
       "domain": "steel",

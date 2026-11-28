@@ -736,7 +736,7 @@ plates are `isPartOf` the lowest system that contains them and are listed in its
 ### 7.6 SteelAccessory
 
 Railings, stairs, stair treads, ladders and anchors
-([RFC-0018](rfc/0018-steel-accessories-object-placement.md)): secondary steel that is neither a
+([RFC-0019](rfc/0019-steel-accessories-object-placement.md)): secondary steel that is neither a
 member nor a plate. Plates and gratings are `SteelPlate` (§7.4).
 
 | Field | Meaning |

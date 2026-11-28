@@ -34,7 +34,7 @@
         "steelGrade":  { "type": "string", "description": "Primary steel grade, e.g. 'S355JR', 'A572 Gr.50'" },
         "memberIds":   { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" } },
         "plateIds":    { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" }, "description": "SteelPlate objects of this system (RFC-0013)" },
-        "accessoryIds": { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" }, "description": "SteelAccessory objects of this system (RFC-0018)" },
+        "accessoryIds": { "type": "array", "items": { "$ref": "pmef-base.schema.json#/$defs/PmefId" }, "description": "SteelAccessory objects of this system (RFC-0019)" },
         "revision":    { "$ref": "pmef-base.schema.json#/$defs/RevisionMetadata" },
         "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
         "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
@@ -174,7 +174,7 @@
 
     "SteelAccessory": {
       "title": "Steel Accessory",
-      "description": "Railing, stair, stair tread, ladder or anchor (RFC-0018): a catalogued steel item that is not a profile swept along an axis and not a plate. Position from path and/or geometry.placement; sizes as numbers, the source designation verbatim. IFC 4.3: RAILING IfcRailing, STAIR IfcStairFlight, STAIR_TREAD IfcMember (USERDEFINED TREAD), LADDER IfcStair (LADDER), ANCHOR IfcMechanicalFastener (ANCHORBOLT).",
+      "description": "Railing, stair, stair tread, ladder or anchor (RFC-0019): a catalogued steel item that is not a profile swept along an axis and not a plate. Position from path and/or geometry.placement; sizes as numbers, the source designation verbatim. IFC 4.3: RAILING IfcRailing, STAIR IfcStairFlight, STAIR_TREAD IfcMember (USERDEFINED TREAD), LADDER IfcStair (LADDER), ANCHOR IfcMechanicalFastener (ANCHORBOLT).",
       "type": "object",
       "required": ["@type","@id","pmefVersion","isPartOf","accessoryType"],
       "allOf": [{ "$ref": "pmef-base.schema.json#/$defs/ReviewChangeStateRule" }],

@@ -147,7 +147,7 @@ The level of detail of the mesh is the existing `lod` field of the `GeometryRefe
 ### 2.4 Placement and Centre of Gravity
 
 A `GeometryReference` **MAY** carry the object's installation frame and centre of gravity
-([RFC-0018](rfc/0018-steel-accessories-object-placement.md)):
+([RFC-0019](rfc/0019-steel-accessories-object-placement.md)):
 
 ```jsonc
 "geometry": {

@@ -177,6 +177,10 @@ pub struct PmefxWriter<W: Write + Seek> {
     package_id: Option<String>,
     pmef_version: Option<String>,
     mesh_origin: Option<Point3>,
+    /// Deflate glTF entries (RFC-0018 `deflateMeshes`).
+    deflate_meshes: bool,
+    /// A glTF entry was actually written with Deflate (whatever the setting is now).
+    deflated_written: bool,
 }
 
 impl<W: Write + Seek> PmefxWriter<W> {
@@ -191,7 +195,16 @@ impl<W: Write + Seek> PmefxWriter<W> {
             package_id: None,
             pmef_version: None,
             mesh_origin: None,
+            deflate_meshes: false,
+            deflated_written: false,
         }
+    }
+
+    /// Compresses glTF entries with Deflate from now on (RFC-0018, feature `deflateMeshes`).
+    /// Readers then inflate each mesh entry before use; partial range reads within an entry are
+    /// no longer possible, so this suits small per-object files and bundles.
+    pub fn set_deflate_meshes(&mut self, on: bool) {
+        self.deflate_meshes = on;
     }
 
     /// Sets `manifest.meshOrigin` [mm]. Must be called before any mesh is added.
@@ -222,7 +235,9 @@ impl<W: Write + Seek> PmefxWriter<W> {
         if path == MANIFEST_PATH || !self.paths.insert(path.to_string()) {
             return invalid(format!("duplicate or reserved archive path '{path}'"));
         }
-        let method = if kind.must_be_stored() { CompressionMethod::Stored } else { CompressionMethod::Deflated };
+        let stored = kind.must_be_stored() && !(kind == FileKind::Gltf && self.deflate_meshes);
+        let method = if stored { CompressionMethod::Stored } else { CompressionMethod::Deflated };
+        self.deflated_written |= kind == FileKind::Gltf && !stored;
         let opts = SimpleFileOptions::default()
             .compression_method(method)
             .large_file(bytes.len() as u64 >= u32::MAX as u64);
@@ -328,13 +343,34 @@ impl<W: Write + Seek> PmefxWriter<W> {
     /// (written by [`Self::add_lod`]/[`Self::add_lod_at`] for another object), placed with
     /// its own `offset` (RFC-0017). Repeated shapes are stored once this way.
     pub fn reuse_lod(&mut self, id: &str, lod: Lod, path: &str, stats: LodStats, offset: Option<Point3>) -> Result<(), PmefxError> {
+        self.add_lod_ref(id, lod, path, None, stats, offset)
+    }
+
+    /// Adds a mesh bundle (RFC-0018): one glTF file whose root nodes hold the meshes of several
+    /// objects, built with [`glb::GlbBundle`]. Link objects to its nodes with
+    /// [`Self::add_lod_ref`].
+    pub fn add_bundle(&mut self, path: &str, glb_bytes: &[u8]) -> Result<(), PmefxError> {
+        glb::parse_glb_json(glb_bytes).map_err(|e| PmefxError::Invalid(format!("{path}: {e}")))?;
+        self.write_entry(path, FileKind::Gltf, glb_bytes, None)?;
+        self.gltf_sizes.insert(path.to_string(), glb_bytes.len() as u64);
+        Ok(())
+    }
+
+    /// Adds a level of detail for object `id` that uses a glTF file already in the package:
+    /// the whole file (`node` = `None`) or one root node of a bundle (RFC-0018), placed with its
+    /// own `offset` (RFC-0017).
+    pub fn add_lod_ref(&mut self, id: &str, lod: Lod, path: &str, node: Option<u32>, stats: LodStats, offset: Option<Point3>) -> Result<(), PmefxError> {
         let Some(&size) = self.gltf_sizes.get(path) else {
             return invalid(format!("{id}: {path} is not a glTF file of the package"));
         };
         if self.object_mut(id)?.lods.iter().any(|l| l.lod == lod) {
             return invalid(format!("{id}: duplicate level {}", lod.as_str()));
         }
-        self.push_lod(id, lod, path, stats, offset, size)
+        self.push_lod(id, lod, path, stats, offset, size)?;
+        if let Some(l) = self.object_mut(id)?.lods.iter_mut().find(|l| l.lod == lod) {
+            l.node = node;
+        }
+        Ok(())
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -348,6 +384,7 @@ impl<W: Write + Seek> PmefxWriter<W> {
             error_mm: stats.error_mm,
             size_bytes: Some(size),
             offset: offset.filter(|p| *p != Point3::default()),
+            node: None,
         });
         o.lods.sort_by_key(|l| l.lod);
         Ok(())
@@ -396,6 +433,54 @@ impl<W: Write + Seek> PmefxWriter<W> {
         Ok(todo.len())
     }
 
+    /// Like [`Self::generate_bbox_lods`], but writes the boxes as bundles of at most
+    /// `per_bundle` objects (RFC-0018), in object-index order. Returns the number of boxes.
+    pub fn generate_bbox_lods_bundled(&mut self, per_bundle: usize) -> Result<usize, PmefxError> {
+        let origin = self.mesh_origin();
+        let todo: Vec<(String, BBox)> = self
+            .objects
+            .values()
+            .filter(|o| !o.lods.iter().any(|l| l.lod == Lod::BboxOnly))
+            .filter_map(|o| o.bbox.map(|b| (o.id.clone(), b)))
+            .collect();
+        let stats = LodStats { triangles: Some(glb::BOX_STATS.0), vertex_count: Some(glb::BOX_STATS.1), error_mm: None };
+        for (k, chunk) in todo.chunks(per_bundle.max(1)).enumerate() {
+            let mut path = format!("meshes/bbox-{:05}.glb", k + 1);
+            let mut n = 1;
+            while self.paths.contains(&path) {
+                n += 1;
+                path = format!("meshes/bbox-{:05}-{n}.glb", k + 1);
+            }
+            let mut bundle = glb::GlbBundle::new();
+            let mut nodes = Vec::with_capacity(chunk.len());
+            for (id, bbox) in chunk {
+                nodes.push(bundle.push(&glb::box_glb(id, bbox, origin)).map_err(PmefxError::Invalid)? as u32);
+            }
+            self.add_bundle(&path, &bundle.finish())?;
+            for ((id, _), node) in chunk.iter().zip(nodes) {
+                self.add_lod_ref(id, Lod::BboxOnly, &path, Some(node), stats, None)?;
+            }
+        }
+        Ok(todo.len())
+    }
+
+    /// Optional features the package uses so far (`manifest.requires`, RFC-0018).
+    pub fn required_features(&self) -> Vec<String> {
+        let lods = || self.objects.values().flat_map(|o| o.lods.iter());
+        let mut out = Vec::new();
+        if lods().any(|l| l.offset.is_some()) {
+            out.push(FEATURE_LOD_OFFSET.to_string());
+        }
+        if lods().any(|l| l.node.is_some()) {
+            out.push(FEATURE_LOD_NODE.to_string());
+        }
+        if self.deflated_written {
+            out.push(FEATURE_DEFLATE_MESHES.to_string());
+        }
+        out.sort();
+        out
+    }
+
     /// Writes the object index, spatial index and manifest, and closes the archive.
     pub fn finish(mut self, opts: FinishOptions) -> Result<W, PmefxError> {
         let (Some(main_file), Some(package_id)) = (self.main_file.clone(), self.package_id.clone()) else {
@@ -419,8 +504,10 @@ impl<W: Write + Seek> PmefxWriter<W> {
             }
         }
 
+        let requires = self.required_features();
+        let version = if requires.is_empty() { PMEFX_VERSION } else { PMEFX_VERSION_FEATURES };
         let manifest = Manifest {
-            pmefx_version: Some(PMEFX_VERSION.into()),
+            pmefx_version: Some(version.into()),
             pmef_version: self.pmef_version.clone().unwrap_or_else(|| "0.9.0".into()),
             package_id,
             main_file,
@@ -432,6 +519,7 @@ impl<W: Write + Seek> PmefxWriter<W> {
             spatial_index,
             object_count: Some(object_count),
             generator: opts.generator,
+            requires,
         };
         let bytes = serde_json::to_vec_pretty(&manifest).map_err(|e| PmefxError::Json { path: MANIFEST_PATH.into(), source: e })?;
         self.zip.start_file(MANIFEST_PATH, SimpleFileOptions::default().compression_method(CompressionMethod::Deflated))?;
@@ -470,6 +558,14 @@ impl<R: Read + Seek> PmefxReader<R> {
     pub fn stored_range(&mut self, path: &str) -> Result<Option<(u64, u64)>, PmefxError> {
         let f = self.zip.by_name(path)?;
         Ok((f.compression() == CompressionMethod::Stored).then(|| (f.data_start(), f.size())))
+    }
+
+    /// Raw byte range of an entry inside the archive, for HTTP range reads of compressed
+    /// entries (RFC-0018): `(offset, compressed length, deflated)`. Inflate the bytes with a raw
+    /// Deflate decoder when `deflated` is true.
+    pub fn raw_range(&mut self, path: &str) -> Result<(u64, u64, bool), PmefxError> {
+        let f = self.zip.by_name(path)?;
+        Ok((f.data_start(), f.compressed_size(), f.compression() == CompressionMethod::Deflated))
     }
 
     /// The object index (empty for 0.9 packages without one).
@@ -512,10 +608,22 @@ impl<R: Read + Seek> PmefxReader<R> {
             if v.split('.').next() != Some("1") {
                 issues.push(format!("unsupported pmefxVersion {v}"));
             }
+            if v == PMEFX_VERSION && !m.requires.is_empty() {
+                issues.push(format!("requires needs pmefxVersion {PMEFX_VERSION_FEATURES} or later, got {v}"));
+            }
         }
+        for f in &m.requires {
+            if !KNOWN_FEATURES.contains(&f.as_str()) {
+                issues.push(format!("unsupported required feature {f}"));
+            }
+        }
+        let feature = |f: &str| m.requires.iter().any(|r| r == f);
         if m.coordinate_system != "Z-up" && m.coordinate_system != "Y-up" {
             issues.push(format!("coordinateSystem must be Z-up or Y-up, got {}", m.coordinate_system));
         }
+
+        // Root nodes of each readable glTF file, for `lods[].node` (RFC-0018).
+        let mut gltf_roots: HashMap<String, Vec<usize>> = HashMap::new();
 
         // Files listed ↔ archive entries.
         let mut listed: HashMap<&str, &FileEntry> = HashMap::new();
@@ -541,7 +649,8 @@ impl<R: Read + Seek> PmefxReader<R> {
                     continue;
                 }
             };
-            if f.kind.must_be_stored() && entry.compression() != CompressionMethod::Stored {
+            let deflate_ok = f.kind == FileKind::Gltf && feature(FEATURE_DEFLATE_MESHES) && entry.compression() == CompressionMethod::Deflated;
+            if f.kind.must_be_stored() && entry.compression() != CompressionMethod::Stored && !deflate_ok {
                 issues.push(format!("{} ({:?}) must be stored uncompressed", f.path, f.kind));
             }
             drop(entry);
@@ -556,8 +665,11 @@ impl<R: Read + Seek> PmefxReader<R> {
                         }
                     }
                     if f.kind == FileKind::Gltf {
-                        if let Err(e) = glb::parse_glb_json(&bytes) {
-                            issues.push(format!("{}: {e}", f.path));
+                        match glb::GlbFile::parse(&bytes) {
+                            Ok(g) => {
+                                gltf_roots.insert(f.path.clone(), g.root_nodes());
+                            }
+                            Err(e) => issues.push(format!("{}: {e}", f.path)),
                         }
                     }
                     if f.kind == FileKind::Ndjson {
@@ -627,6 +739,17 @@ impl<R: Read + Seek> PmefxReader<R> {
                 match listed.get(l.path.as_str()) {
                     Some(f) if f.kind == FileKind::Gltf => {}
                     _ => issues.push(format!("{}: lod path {} is not a listed gltf file", o.id, l.path)),
+                }
+                if l.offset.is_some() && !feature(FEATURE_LOD_OFFSET) {
+                    issues.push(format!("{}: lods[].offset needs \"{FEATURE_LOD_OFFSET}\" in requires", o.id));
+                }
+                if let Some(n) = l.node {
+                    if !feature(FEATURE_LOD_NODE) {
+                        issues.push(format!("{}: lods[].node needs \"{FEATURE_LOD_NODE}\" in requires", o.id));
+                    }
+                    if gltf_roots.get(&l.path).is_some_and(|r| !r.contains(&(n as usize))) {
+                        issues.push(format!("{}: node {n} is not a root node of {}", o.id, l.path));
+                    }
                 }
             }
             if let Some(b) = &o.brep {

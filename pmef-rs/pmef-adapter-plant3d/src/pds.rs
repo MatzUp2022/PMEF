@@ -417,7 +417,7 @@ pub(crate) enum Kind {
     Steel,
     /// Plate or grating (`StructurePlate`, `StructureGrating`) → `pmef:SteelPlate`.
     Plate,
-    /// Railing, stair, tread, ladder, anchor → `pmef:SteelAccessory` (RFC-0018).
+    /// Railing, stair, tread, ladder, anchor → `pmef:SteelAccessory` (RFC-0019).
     Accessory(&'static str),
     Skip,
 }
@@ -1248,7 +1248,7 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
         for (k, v) in notes.drain(..) {
             o["customAttributes"][k] = v;
         }
-        // Installation frame and centre of gravity (RFC-0018).
+        // Installation frame and centre of gravity (RFC-0019).
         let placement = placement_of(i);
         let frame = placement.as_ref().and_then(Placement::from_matrix);
         let cog = point(i, "COG");
@@ -1622,7 +1622,7 @@ fn steel_plate(
     Some((o, frame.is_none()))
 }
 
-/// Railing, stair, tread, ladder or anchor → `pmef:SteelAccessory` (RFC-0018).
+/// Railing, stair, tread, ladder or anchor → `pmef:SteelAccessory` (RFC-0019).
 fn steel_accessory(i: &Item, t: &str, id: String, is_part_of: String) -> J {
     let mut o = json!({"@type": "pmef:SteelAccessory", "@id": id, "pmefVersion": PMEF_VERSION,
         "isPartOf": is_part_of, "accessoryType": t});
@@ -1929,7 +1929,7 @@ mod tests {
         assert!(rels
             .iter()
             .any(|r| r["sourceId"] == id(30) && r["targetId"] == id(50)));
-        // Steel accessories (RFC-0018).
+        // Steel accessories (RFC-0019).
         let grating = by_type(&objs, "pmef:SteelPlate")[0];
         assert_eq!(grating["plateType"], "GRATING");
         assert_eq!(grating["thickness"], json!(30.0));

@@ -377,7 +377,7 @@ def check_plate(o):
 
 
 def check_placement(o):
-    """geometry.placement (RFC-0018): unit axes, axisX perpendicular to axisZ."""
+    """geometry.placement (RFC-0019): unit axes, axisX perpendicular to axisZ."""
     pl = (o.get("geometry") or {}).get("placement")
     if not isinstance(pl, dict):
         return []
@@ -392,7 +392,7 @@ def check_placement(o):
 
 
 def check_accessory(o):
-    """SteelAccessory (RFC-0018): elevations in order, path without zero-length legs, stairs and
+    """SteelAccessory (RFC-0019): elevations in order, path without zero-length legs, stairs and
     ladders run bottom → top."""
     oid, issues = o["@id"], []
     b, t = o.get("bottomElevation"), o.get("topElevation")

@@ -444,7 +444,7 @@ is `<spec>:<size record GUID>`, and every placed part in `Piping.dcf` with a `Sp
 `SizeRecordId` gets `catalogRef.catalogId` with the same id. The spec sheet settings
 (`<spec>.pspx`: branch table, part use priorities) are not read.
 
-**Steel accessories, plates and placement ([RFC-0018](rfc/0018-steel-accessories-object-placement.md)) — since 0.10.0:**
+**Steel accessories, plates and placement — since 0.10.0** ([RFC-0019](rfc/0019-steel-accessories-object-placement.md)):
 
 | PMEF | Plant 3D database |
 |------|-------------------|

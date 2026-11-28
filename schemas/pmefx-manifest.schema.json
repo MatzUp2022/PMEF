@@ -12,7 +12,7 @@
         "pmefxVersion": {
           "type": "string",
           "pattern": "^1\\.[0-9]+$",
-          "description": "Container version. Writers of this specification MUST write \"1.0\". Absent in 0.9 manifests, which have no object index."
+          "description": "Container version. Writers MUST write \"1.0\" when requires is empty and \"1.1\" when it lists a feature (RFC-0018). Absent in 0.9 manifests, which have no object index."
         },
         "pmefVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
         "packageId": { "$ref": "pmef-base.schema.json#/$defs/PmefId" },
@@ -27,6 +27,12 @@
         "objectIndex": { "$ref": "#/$defs/ArchivePath" },
         "spatialIndex": { "$ref": "#/$defs/ArchivePath" },
         "objectCount": { "type": "integer", "minimum": 0 },
+        "requires": {
+          "type": "array",
+          "description": "RFC-0018: optional container features the package uses. Readers MUST reject a package that lists a feature they do not support. lodOffset = lods[].offset (RFC-0017), lodNode = lods[].node, deflateMeshes = Deflate-compressed glTF entries.",
+          "items": { "enum": ["lodOffset", "lodNode", "deflateMeshes"] },
+          "uniqueItems": true
+        },
         "generator": {
           "type": "object",
           "required": ["name", "version"],
@@ -107,6 +113,11 @@
               "offset": {
                 "$ref": "#/$defs/Point3",
                 "description": "RFC-0017: the mesh's vertices are relative to meshOrigin + offset [mm]; several objects may reference one mesh file with different offsets. Absent = 0,0,0."
+              },
+              "node": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "RFC-0018: index of a root node of the default scene of path; the level is that node's subtree (mesh bundle). Absent = the whole scene."
               }
             },
             "additionalProperties": false

@@ -18,3 +18,15 @@ cp /tmp/skid/index/* ../examples/pmefx/pump-skid-complete/index/
 
 The test `committed_example_matches_writer_and_schema` (`pmef-io/tests/pmefx.rs`) fails if these
 files drift from the writer or the schema.
+
+`pump-skid-bundled/` is the same package with the box levels written as mesh bundles of 16
+objects and Deflate-compressed glTF entries (PMEFX 1.1, RFC-0018): two glTF files instead of 17,
+and an archive of 10.1 KB instead of 39.1 KB. Regenerate it the same way with
+
+```bash
+cargo run -p pmef-cli -- pack ../examples/pump-skid-complete.ndjson -o /tmp/skidb.pmefx \
+  --bbox-lods --bundle 16 --deflate-meshes --created-at 2026-11-25T00:00:00Z
+```
+
+and copy into `../examples/pmefx/pump-skid-bundled/`; the test
+`committed_bundled_example_matches_writer_and_schema` checks it.

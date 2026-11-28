@@ -11,12 +11,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
-### Added — RFC-0018: steel accessories and object placement (DRAFT)
+### Added — RFC-0019: steel accessories and object placement (DRAFT)
 
 - **`pmef:SteelAccessory`** for railings, stairs, stair treads, ladders and anchors
   (`accessoryType`, `designation`, `path`, `length`/`width`/`height`, `bottomElevation`/
   `topElevation`, `stepCount`, `hasCage`, `material`, `weight`, `finish`) and
-  `SteelSystem.accessoryIds`. Spec 02 §7.6, [RFC-0018](spec/rfc/0018-steel-accessories-object-placement.md).
+  `SteelSystem.accessoryIds`. Spec 02 §7.6, [RFC-0019](spec/rfc/0019-steel-accessories-object-placement.md).
 - **`GeometryReference.placement`** (`Placement`: `origin`, `axisZ`, `axisX`, as IFC
   `IfcAxis2Placement3D`) and **`GeometryReference.centerOfGravity`** for every object with
   geometry. Spec 04 §2.4.
@@ -41,6 +41,25 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   placed part that has a spec and a size record, so a part resolves to its spec entry.
 - Synthetic spec `tests/plant3d/spec-synthetic.pspc` (`make_spec_fixture.py`); the synthetic
   `pds-synthetic.dcf` now carries size records for its pipe and elbow.
+
+### Added — PMEFX 1.1: mesh bundles, compressed mesh entries, required features (RFC-0018)
+
+- `lods[].node` selects one root node of a glTF file: one *mesh bundle* holds the levels of
+  many objects (spec 03 §3.5–3.6).
+- With feature `deflateMeshes`, glTF entries may be Deflate-compressed (spec 03 §3.2 rule 4).
+- `manifest.requires` lists the optional features a package uses (`lodOffset`, `lodNode`,
+  `deflateMeshes`); readers reject unknown ones. Packages that list a feature are
+  `pmefxVersion` `"1.1"`; packages without stay `"1.0"`. Schema `pmefx-manifest`.
+- `pmef-io`: `glb::GlbBundle`, `glb::GlbFile`, `LodRef::read_mesh`, `PmefxWriter::add_bundle` /
+  `add_lod_ref` / `set_deflate_meshes` / `generate_bbox_lods_bundled`,
+  `PmefxReader::raw_range`; `verify` checks features, compressed entries and nodes.
+- CLI: `pmef pack --bbox-lods --bundle N --deflate-meshes`.
+- Example `examples/pmefx/pump-skid-bundled/` (10.1 KB instead of 39.1 KB).
+
+### Changed — `lods[].offset` needs `requires: ["lodOffset"]`
+
+- Packages that use `offset` (RFC-0017) must list feature `lodOffset`, so that readers without
+  RFC-0017 support reject them; `pmef verify` reports packages that do not.
 
 ### Added — Plant 3D project database (`Piping.dcf`) → PMEF
 

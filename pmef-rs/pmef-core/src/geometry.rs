@@ -16,15 +16,15 @@ pub struct GeometryReference {
     /// Units, up axis and origin of a `mesh_ref` file (spec 04 §2.3); absent = glTF convention.
     #[serde(skip_serializing_if="Option::is_none")]
     pub mesh_frame: Option<MeshFrame>,
-    /// Installation position and orientation of the object (RFC-0018).
+    /// Installation position and orientation of the object (RFC-0019).
     #[serde(default, skip_serializing_if="Option::is_none")]
     pub placement: Option<Placement>,
-    /// Centre of gravity in project coordinates [mm] (RFC-0018).
+    /// Centre of gravity in project coordinates [mm] (RFC-0019).
     #[serde(default, skip_serializing_if="Option::is_none")]
     pub center_of_gravity: Option<[f64; 3]>,
 }
 
-/// Local frame of an object in project coordinates (RFC-0018, spec 04 §2.4), as IFC
+/// Local frame of an object in project coordinates (RFC-0019, spec 04 §2.4), as IFC
 /// `IfcAxis2Placement3D`: `origin` = Location, `axis_z` = Axis, `axis_x` = RefDirection.
 #[derive(Debug,Clone,PartialEq,Serialize,Deserialize)]
 #[serde(rename_all="camelCase")]

@@ -9,7 +9,7 @@
 //!   pmef index <file.ndjson> [--key tag-number|line-number]
 //!   pmef check <file.ndjson> [--json]
 //!   pmef topology <file.ndjson> [--allow-external]
-//!   pmef pack <main.ndjson> [more.ndjson…] -o <out.pmefx> [--bbox-lods] [--lod ID=LEVEL=FILE.glb] [--brep ID=FILE.stp]
+//!   pmef pack <main.ndjson> [more.ndjson…] -o <out.pmefx> [--bbox-lods [--bundle N]] [--deflate-meshes] [--lod ID=LEVEL=FILE.glb] [--brep ID=FILE.stp]
 //!   pmef unpack <file.pmefx> -o <dir>
 //!   pmef verify <file.pmefx> [--json]
 
@@ -179,6 +179,12 @@ enum Commands {
         /// Generate a BBOX_ONLY box mesh for every object with a bounding box.
         #[arg(long)]
         bbox_lods: bool,
+        /// With --bbox-lods: write the boxes as mesh bundles of up to N objects (RFC-0018).
+        #[arg(long, value_name = "N")]
+        bundle: Option<usize>,
+        /// Compress glTF entries with Deflate (RFC-0018, feature deflateMeshes).
+        #[arg(long)]
+        deflate_meshes: bool,
         /// Mesh level of detail: <@id>=<LEVEL>=<file.glb>, LEVEL e.g. LOD1_COARSE (repeatable).
         #[arg(long = "lod", value_name = "ID=LEVEL=FILE")]
         lods: Vec<String>,
@@ -325,8 +331,9 @@ async fn main() -> Result<()> {
         }
         Commands::Check { file, json, output } => cmd_check(file, json, output),
         Commands::Route { problem, output, report, plant } => cmd_route(problem, output, report, plant),
-        Commands::Pack { files, output, bbox_lods, lods, breps, extra, mesh_origin, created_at, no_octree } => {
-            cmd_pack(files, output, bbox_lods, lods, breps, extra, &mesh_origin, created_at, no_octree)
+        Commands::Pack { files, output, bbox_lods, bundle, deflate_meshes, lods, breps, extra, mesh_origin, created_at, no_octree } => {
+            let mesh = PackMeshOptions { bbox_lods, bundle, deflate_meshes };
+            cmd_pack(files, output, mesh, lods, breps, extra, &mesh_origin, created_at, no_octree)
         }
         Commands::Unpack { file, output } => cmd_unpack(file, output),
         Commands::Verify { file, json } => cmd_verify(file, json),
@@ -1098,8 +1105,15 @@ fn file_name(p: &std::path::Path) -> Result<String> {
 }
 
 #[allow(clippy::too_many_arguments)]
+/// Mesh options of `pmef pack`.
+struct PackMeshOptions {
+    bbox_lods: bool,
+    bundle: Option<usize>,
+    deflate_meshes: bool,
+}
+
 fn cmd_pack(
-    files: Vec<PathBuf>, output: PathBuf, bbox_lods: bool, lods: Vec<String>, breps: Vec<String>,
+    files: Vec<PathBuf>, output: PathBuf, mesh: PackMeshOptions, lods: Vec<String>, breps: Vec<String>,
     extra: Vec<String>, mesh_origin: &str, created_at: Option<String>, no_octree: bool,
 ) -> Result<()> {
     use pmef_io::pmefx::{FileKind, FinishOptions, Lod, LodStats, PmefxWriter, Point3};
@@ -1126,6 +1140,7 @@ fn cmd_pack(
     if let Some(o) = origin {
         w.set_mesh_origin(o)?;
     }
+    w.set_deflate_meshes(mesh.deflate_meshes);
     for spec in &lods {
         let mut it = spec.splitn(3, '=');
         let (Some(id), Some(level), Some(path)) = (it.next(), it.next(), it.next()) else {
@@ -1157,7 +1172,11 @@ fn cmd_pack(
         let p = PathBuf::from(path);
         w.add_file(&format!("{dir}/{}", file_name(&p)?), kind, &std::fs::read(&p).with_context(|| format!("reading {path}"))?)?;
     }
-    let generated = if bbox_lods { w.generate_bbox_lods()? } else { 0 };
+    let generated = match (mesh.bbox_lods, mesh.bundle) {
+        (false, _) => 0,
+        (true, Some(n)) if n > 0 => w.generate_bbox_lods_bundled(n)?,
+        (true, _) => w.generate_bbox_lods()?,
+    };
     let objects = w.objects().count();
     let defaults = FinishOptions::default();
     w.finish(FinishOptions {

@@ -137,7 +137,7 @@ pub struct SteelSystem {
     /// SteelPlate objects of this system (RFC-0013).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub plate_ids: Vec<PmefId>,
-    /// SteelAccessory objects of this system (RFC-0018).
+    /// SteelAccessory objects of this system (RFC-0019).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub accessory_ids: Vec<PmefId>,
     #[serde(skip_serializing_if="Option::is_none")] pub revision:Option<RevisionMetadata>,
@@ -213,7 +213,7 @@ impl SteelPlate {
     }
 }
 
-/// Railing, stair, stair tread, ladder or anchor (RFC-0018).
+/// Railing, stair, stair tread, ladder or anchor (RFC-0019).
 #[derive(Debug,Clone,Serialize,Deserialize)]
 #[serde(rename_all="camelCase")]
 pub struct SteelAccessory {
