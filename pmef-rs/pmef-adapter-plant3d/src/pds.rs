@@ -269,6 +269,16 @@ impl PdsProject {
                     .push((name.to_owned(), port));
             }
         }
+        // A part is its own first port: `EngineeringItems` carries PortName, NominalDiameter and
+        // EndType of it; `PartPort` lists the further ports.
+        for item in p.items.values() {
+            if let Some(name) = item.text("PortName") {
+                let ports = p.ports.entry(item.id).or_default();
+                if !ports.iter().any(|(n, _)| n == name) {
+                    ports.push((name.to_owned(), item.id));
+                }
+            }
+        }
         for v in p.ports.values_mut() {
             v.sort();
         }
@@ -646,6 +656,15 @@ fn round3(v: [f64; 3], digits: i32) -> [f64; 3] {
     })
 }
 
+/// Coordinate of a PMEF port object.
+fn coord(port: &J) -> Option<[f64; 3]> {
+    let c = port.get("coordinate")?.as_array()?;
+    match c.as_slice() {
+        [x, y, z] => Some([x.as_f64()?, y.as_f64()?, z.as_f64()?]),
+        _ => None,
+    }
+}
+
 /// A placed port.
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct Placed {
@@ -758,6 +777,36 @@ fn place_ports(p: &PdsProject, geom: &GeometryIndex) -> HashMap<(i64, String), P
                     direction: oriented(c, pg.centroid),
                 },
             );
+        }
+    }
+
+    // The centre of the drawn body is off-axis for parts with operators or supports (a
+    // hand lever makes both faces of a wafer valve point the same way). With two or more
+    // placed ports the ports themselves give the inside of the part.
+    for (&part, ports) in &p.ports {
+        let keys: Vec<(i64, String)> = ports
+            .iter()
+            .map(|(n, _)| (part, n.clone()))
+            .filter(|k| placed.contains_key(k))
+            .collect();
+        if keys.len() < 2 {
+            continue;
+        }
+        let mut mid = [0.0; 3];
+        for k in &keys {
+            let pt = placed[k].point;
+            for (m, x) in mid.iter_mut().zip(pt) {
+                *m += x / keys.len() as f64;
+            }
+        }
+        for k in &keys {
+            let pl = placed.get_mut(k).expect("placed port");
+            let out = sub(pl.point, mid);
+            if let Some(d) = pl.direction.as_mut() {
+                if dot(*d, out) < 0.0 {
+                    *d = d.map(|x| -x);
+                }
+            }
         }
     }
     placed
@@ -891,6 +940,26 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
         out.push(json!({"@type": "pmef:PipingSegment", "@id": seg_of(line), "isPartOf": line_id(line), "segmentNumber": 1, "components": members}));
     }
 
+    // Sub-parts of a connector (welds, gaskets, bolt sets) → the connector.
+    let mut connector_of: HashMap<i64, i64> = HashMap::new();
+    let by_key: HashMap<&DwgKey, i64> = p
+        .items
+        .values()
+        .filter_map(|i| {
+            i.link
+                .as_ref()
+                .filter(|l| l.sub_index == 0)
+                .map(|l| (&l.key, i.id))
+        })
+        .collect();
+    for i in p.items.values() {
+        if let Some(l) = i.link.as_ref().filter(|l| l.sub_index > 0) {
+            if let Some(&host) = by_key.get(&l.key) {
+                connector_of.insert(i.id, host);
+            }
+        }
+    }
+
     // Connections resolved through connectors: part ↔ part.
     let is_connector = |id: i64| {
         p.items
@@ -913,7 +982,24 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
             (true, true) => {}
         }
     }
-    for parts in via.values() {
+    // A flanged joint with a gasket: part ↔ gasket ↔ part (the gasket fills the gap).
+    let mut gasket_of: HashMap<i64, i64> = HashMap::new();
+    for (&sub, &host) in &connector_of {
+        if p.items
+            .get(&sub)
+            .is_some_and(|i| p.is_a(&i.class, "Gasket"))
+        {
+            gasket_of.entry(host).or_insert(sub);
+        }
+    }
+    let mut gasket_ports: HashMap<i64, [(i64, String); 2]> = HashMap::new();
+    for (k, parts) in &via {
+        if let (Some(&g), [a, b]) = (gasket_of.get(k), parts.as_slice()) {
+            pairs.push((a.clone(), (g, "P1".to_owned())));
+            pairs.push(((g, "P2".to_owned()), b.clone()));
+            gasket_ports.insert(g, [a.clone(), b.clone()]);
+            continue;
+        }
         for (k, a) in parts.iter().enumerate() {
             for b in &parts[k + 1..] {
                 pairs.push((a.clone(), b.clone()));
@@ -925,26 +1011,6 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
         peer.insert(a.clone(), b.0);
         peer.insert(b.clone(), a.0);
     }
-    // Sub-parts of a connector (welds, gaskets, bolt sets) → the connector.
-    let mut connector_of: HashMap<i64, i64> = HashMap::new();
-    let by_key: HashMap<&DwgKey, i64> = p
-        .items
-        .values()
-        .filter_map(|i| {
-            i.link
-                .as_ref()
-                .filter(|l| l.sub_index == 0)
-                .map(|l| (&l.key, i.id))
-        })
-        .collect();
-    for i in p.items.values() {
-        if let Some(l) = i.link.as_ref().filter(|l| l.sub_index > 0) {
-            if let Some(&host) = by_key.get(&l.key) {
-                connector_of.insert(i.id, host);
-            }
-        }
-    }
-
     let connector_point = |cid: i64| -> Option<[f64; 3]> {
         let l = p.items.get(&cid)?.link.as_ref()?;
         geom.get(&l.key).map(|g| g.centroid)
@@ -982,11 +1048,21 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
                 }
                 type_fields(&mut o, ty, i, p);
                 add_end_types(&mut o, p, i);
-                let mut ports = component_ports(p, i, &placed, &peer, &obj_id, &mut stats);
+                let mut ports = match gasket_ports.get(&i.id) {
+                    Some(ends) => gasket_ports_json(p, ends, &placed, &obj_id, &mut stats),
+                    None => component_ports(p, i, &placed, &peer, &obj_id, &mut stats),
+                };
                 if ports.is_empty() {
                     if let Some(at) = connector_of.get(&i.id).and_then(|&c| connector_point(c)) {
                         ports.push(json!({"portId": "P1", "coordinate": round3(at, 3)}));
                         stats.ports_placed += 1;
+                    }
+                }
+                // The cut length includes the socket or thread engagement; PMEF
+                // `pipeLength` is the port-to-port length. `p3d:CutLength` keeps the cut.
+                if let (true, [a, b]) = (ty == "pmef:Pipe", ports.as_slice()) {
+                    if let (Some(a), Some(b)) = (coord(a), coord(b)) {
+                        o["pipeLength"] = json!((dist(a, b) * 10.0).round() / 10.0);
                     }
                 }
                 if !ports.is_empty() {
@@ -1072,9 +1148,9 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
                 let size = i.text("Size").unwrap_or("UNKNOWN");
                 let mut o = json!({"@type": "pmef:SteelMember", "@id": obj_id(i), "pmefVersion": PMEF_VERSION, "isPartOf": unit_of(i),
                     "memberType": member, "profileId": profile_id(size), "startPoint": round3(s, 3), "endPoint": round3(e, 3)});
-                if let Some(l) = i.num("Length") {
-                    o["length"] = json!(l);
-                }
+                // The database length is the cut length (with end cuts); PMEF `length` is the
+                // system line length. The cut length stays in `p3d:Length`.
+                o["length"] = json!((len * 1000.0).round() / 1000.0);
                 if let Some(t) = i.text("Tag") {
                     o["memberMark"] = json!(t);
                 }
@@ -1298,6 +1374,33 @@ fn component_ports(
         }
         stats.ports_placed += 1;
         out.push(port);
+    }
+    out
+}
+
+/// Ports of a gasket: on the faces of the two joined parts, pointing back at them.
+fn gasket_ports_json(
+    p: &PdsProject,
+    ends: &[(i64, String); 2],
+    placed: &HashMap<(i64, String), Placed>,
+    obj_id: &dyn Fn(&Item) -> String,
+    stats: &mut PdsStats,
+) -> Vec<J> {
+    let mut out = Vec::new();
+    for (k, (part, port)) in ends.iter().enumerate() {
+        let Some(pl) = placed.get(&(*part, port.clone())) else {
+            stats.ports_unplaced += 1;
+            continue;
+        };
+        let mut j = json!({"portId": format!("P{}", k + 1), "coordinate": round3(pl.point, 3)});
+        if let Some(d) = pl.direction {
+            j["direction"] = json!(round3(d.map(|x| -x), 6));
+        }
+        if let Some(i) = p.items.get(part) {
+            j["connectedTo"] = json!(obj_id(i));
+        }
+        stats.ports_placed += 1;
+        out.push(j);
     }
     out
 }
