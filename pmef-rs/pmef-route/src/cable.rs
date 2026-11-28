@@ -114,6 +114,9 @@ pub struct CableSettings {
     /// Clearance between a dropped cable and obstacles [mm].
     #[serde(default = "d_drop_clearance")]
     pub drop_clearance: f64,
+    /// Standard tray widths for sizing proposals [mm] (IEC 61537 series by default).
+    #[serde(default = "d_tray_widths")]
+    pub tray_widths: Vec<f64>,
     /// Read the tray network from the `pmef:CableTrayRun`/`pmef:CableTrayFitting` objects of
     /// `pmefScene` (RFC-0015 centreline and ports). Entries of `trays` with the same `id`
     /// replace a scene tray. See [`trays_from_pmef`].
@@ -129,6 +132,9 @@ fn d_fill() -> f64 {
 }
 fn d_drop() -> f64 {
     5000.0
+}
+fn d_tray_widths() -> Vec<f64> {
+    vec![50.0, 100.0, 150.0, 200.0, 300.0, 400.0, 500.0, 600.0, 800.0, 1000.0, 1200.0]
 }
 fn d_drop_candidates() -> usize {
     6
@@ -150,6 +156,7 @@ impl Default for CableSettings {
             drop_factor: d_drop_factor(),
             route_drops: false,
             drop_candidates: d_drop_candidates(),
+            tray_widths: d_tray_widths(),
             drop_step: d_drop_step(),
             drop_clearance: d_drop_clearance(),
             trays_from_scene: false,
@@ -352,6 +359,25 @@ pub struct TrayFill {
     /// [% of width × height]
     pub fill: f64,
     pub cables: Vec<String>,
+    /// Sizing proposal when cables could not be routed for lack of space (see
+    /// [`route_cables_with`]); absent when the tray is large enough.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sizing: Option<TraySizing>,
+}
+
+/// Width a tray needs to take the cables that failed for lack of space.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TraySizing {
+    /// Fill with those cables at the current size [%].
+    pub fill_with_rejected: f64,
+    /// Width at the current height that keeps `maxFill` [mm].
+    pub required_width: f64,
+    /// Smallest width of `trayWidths` ≥ `requiredWidth`; absent when none is large enough.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub proposed_width: Option<f64>,
+    /// The cables that failed and would run on this tray.
+    pub rejected_cables: Vec<String>,
 }
 
 /// Circular arc of a two-port bend: from `p1` (port direction `d1`, pointing out of the
@@ -512,13 +538,58 @@ pub fn route_cables_with(problem: &RouteProblem, drop: Option<&DropRouter>) -> (
         }
         out[ci] = Some(r);
     }
+    // Sizing: route every failed cable again without the fill limit (segregation, bend radius
+    // and the cable's own trays still apply) and add its area to the trays it would use. Trays
+    // that then exceed `maxFill` get a width proposal; the routing result is not changed.
+    let mut extra: Vec<f64> = vec![0.0; trays.len()];
+    let mut rejected: Vec<Vec<String>> = vec![Vec::new(); trays.len()];
+    for (ci, r) in out.iter().enumerate() {
+        if r.as_ref().is_some_and(|r| r.ok) {
+            continue;
+        }
+        let c = &problem.cables[ci];
+        let allowed: Vec<bool> = trays
+            .iter()
+            .map(|t| (t.classes.is_empty() || t.classes.contains(&c.class)) && (c.trays.is_empty() || c.trays.contains(&t.id)))
+            .collect();
+        let r = route_cable(c, trays, &allowed, &set, drop);
+        if !r.ok {
+            continue;
+        }
+        let area = std::f64::consts::PI * c.diameter * c.diameter / 4.0;
+        for t in &r.trays {
+            let i = trays.iter().position(|x| &x.id == t).unwrap();
+            extra[i] += area;
+            rejected[i].push(c.id.clone());
+        }
+    }
+    let round1 = |x: f64| (x * 10.0).round() / 10.0;
     let fill = trays
         .iter()
         .enumerate()
-        .map(|(i, t)| TrayFill {
-            id: t.id.clone(),
-            fill: (used[i] / (t.width * t.height) * 1000.0).round() / 10.0,
-            cables: on[i].clone(),
+        .map(|(i, t)| {
+            let total = used[i] + extra[i];
+            let limit = set.max_fill / 100.0 * t.width * t.height;
+            let sizing = (extra[i] > 0.0 && total > limit + 1e-9).then(|| {
+                let required = total / (set.max_fill / 100.0 * t.height);
+                TraySizing {
+                    fill_with_rejected: round1(total / (t.width * t.height) * 100.0),
+                    required_width: round1(required),
+                    proposed_width: set
+                        .tray_widths
+                        .iter()
+                        .copied()
+                        .filter(|w| *w + 1e-9 >= required)
+                        .min_by(f64::total_cmp),
+                    rejected_cables: rejected[i].clone(),
+                }
+            });
+            TrayFill {
+                id: t.id.clone(),
+                fill: (used[i] / (t.width * t.height) * 1000.0).round() / 10.0,
+                cables: on[i].clone(),
+                sizing,
+            }
         })
         .collect();
     (out.into_iter().map(Option::unwrap).collect(), fill)
