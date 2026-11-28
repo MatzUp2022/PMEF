@@ -30,7 +30,7 @@ REV = {"revisionId": "r2026-10-31-001", "changeState": "SHARED", "authoringTool"
 RFC_EXAMPLES = {"asbuilt-recognition.ndjson", "pump-skid-auto-routed.ndjson", "hvac-damper-placeholder.ndjson",
                 "piping-valve-placeholder.ndjson", "hvac-generic-components.ndjson",
                 "cable-tray-route.ndjson",
-                "pipe-support-assembly.ndjson"}  # 0.10.0 feature examples, used only where named
+                "pipe-support-assembly.ndjson", "tool-attributes-e3d.ndjson"}  # 0.10.0 feature examples, used only where named
 
 
 def _load_examples(names: set[str] | None = None) -> list[dict]:
