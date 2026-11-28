@@ -31,7 +31,7 @@ RFC_EXAMPLES = {"asbuilt-recognition.ndjson", "pump-skid-auto-routed.ndjson", "h
                 "piping-valve-placeholder.ndjson", "hvac-generic-components.ndjson",
                 "cable-tray-route.ndjson",
                 "pipe-support-assembly.ndjson", "tool-attributes-e3d.ndjson",
-                "steel-access-placement.ndjson"}  # 0.10.0 feature examples, used only where named
+                "steel-access-placement.ndjson", "equipment-partial-data.ndjson"}  # 0.10.0 feature examples, used only where named
 
 
 def _load_examples(names: set[str] | None = None) -> list[dict]:
@@ -52,6 +52,7 @@ HVACGEN = _load_examples({"hvac-generic-components.ndjson"})
 TRAYROUTE = _load_examples({"cable-tray-route.ndjson"})
 SUPPORTS = _load_examples({"pipe-support-assembly.ndjson"})
 ACCESS = _load_examples({"steel-access-placement.ndjson"})
+EQPARTIAL = _load_examples({"equipment-partial-data.ndjson"})
 
 
 def ex(type_: str, pred=lambda o: True, source: list[dict] | None = None) -> dict:
@@ -177,6 +178,13 @@ UNIT = [
      [ex("pmef:Compressor", lambda o: "meshFrame" in json.dumps(o))]),
     ("EQUIP-U-014", "mesh_ref with unknown fragment selector — rejected", 2, "equipment", "CL1-02", "invalid",
      [with_(ex("pmef:Compressor"), ("geometry", "ref"), "meshes/K-101-vendor.glb#mesh=3")]),
+    ("EQUIP-U-015", "Pump, Vessel and HeatExchanger without key property set — valid (RFC-0020)", 1, "equipment",
+     "CL1-07", "valid", [ex(t, lambda o: not any(k in o for k in ("pumpSpec", "vesselDesign", "hxSpec")), EQPARTIAL)
+                         for t in ("pmef:Pump", "pmef:Vessel", "pmef:HeatExchanger")]),
+    ("EQUIP-U-016", "Pump with empty pumpSpec — rejected (RFC-0020)", 1, "equipment", "CL1-02", "invalid",
+     [with_(ex("pmef:Pump", lambda o: "pumpSpec" not in o, EQPARTIAL), ("pumpSpec",), {})]),
+    ("EQUIP-U-017", "Pump with preliminary pumpSpec values in placeholders — valid (RFC-0020)", 1, "equipment",
+     "CL1-07", "valid", [ex("pmef:Pump", lambda o: "placeholders" in o, EQPARTIAL)]),
     # E&I
     ("EI-U-001", "InstrumentObject — valid", 2, "ei", "CL2-01", "valid", [INSTR]),
     ("EI-U-002", "InstrumentLoop — valid", 2, "ei", "CL2-01", "valid", [ex("pmef:InstrumentLoop")]),

@@ -360,6 +360,36 @@
       "expect": "invalid"
     },
     {
+      "id": "EQUIP-U-015",
+      "name": "Pump, Vessel and HeatExchanger without key property set — valid (RFC-0020)",
+      "category": "unit",
+      "level": 1,
+      "domain": "equipment",
+      "requirement": "CL1-07",
+      "fixture": "fixtures/unit/EQUIP-U-015.ndjson",
+      "expect": "valid"
+    },
+    {
+      "id": "EQUIP-U-016",
+      "name": "Pump with empty pumpSpec — rejected (RFC-0020)",
+      "category": "negative",
+      "level": 1,
+      "domain": "equipment",
+      "requirement": "CL1-02",
+      "fixture": "fixtures/unit/EQUIP-U-016.ndjson",
+      "expect": "invalid"
+    },
+    {
+      "id": "EQUIP-U-017",
+      "name": "Pump with preliminary pumpSpec values in placeholders — valid (RFC-0020)",
+      "category": "unit",
+      "level": 1,
+      "domain": "equipment",
+      "requirement": "CL1-07",
+      "fixture": "fixtures/unit/EQUIP-U-017.ndjson",
+      "expect": "valid"
+    },
+    {
       "id": "EI-U-001",
       "name": "InstrumentObject — valid",
       "category": "unit",
