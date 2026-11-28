@@ -1024,6 +1024,23 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
         geom.get(&l.key).map(|g| g.centroid)
     };
 
+    // Id a port refers to: a nozzle is written inside its equipment, so it stands for that.
+    let target_id = |other: &Item| -> String {
+        if p.is_a(&other.class, "Nozzle") {
+            if let Some(host) = connector_of.get(&other.id).and_then(|h| p.items.get(h)) {
+                return obj_id(host);
+            }
+        }
+        obj_id(other)
+    };
+    // Piping network a nozzle connects to: the line of the part joined to it.
+    let line_ref = |other: &Item| -> Option<String> {
+        p.line_of
+            .get(&other.id)
+            .and_then(|l| p.items.get(l))
+            .map(line_id)
+    };
+
     let mut nozzles_of: BTreeMap<i64, Vec<&Item>> = BTreeMap::new();
     for i in p.items.values().filter(|i| p.is_a(&i.class, "Nozzle")) {
         if let Some(&host) = connector_of.get(&i.id) {
@@ -1057,8 +1074,8 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
                 type_fields(&mut o, ty, i, p);
                 add_end_types(&mut o, p, i);
                 let mut ports = match gasket_ports.get(&i.id) {
-                    Some(ends) => gasket_ports_json(p, ends, &placed, &obj_id, &mut stats),
-                    None => component_ports(p, i, &placed, &peer, &obj_id, &mut stats),
+                    Some(ends) => gasket_ports_json(p, ends, &placed, &target_id, &mut stats),
+                    None => component_ports(p, i, &placed, &peer, &target_id, &mut stats),
                 };
                 if ports.is_empty() {
                     if let Some(at) = connector_of.get(&i.id).and_then(|&c| connector_point(c)) {
@@ -1140,7 +1157,7 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
                 }
                 let mut nozzles = Vec::new();
                 for n in nozzles_of.get(&i.id).into_iter().flatten() {
-                    if let Some(nz) = nozzle(p, n, &placed, &peer, &obj_id, &mut stats) {
+                    if let Some(nz) = nozzle(p, n, &placed, &peer, &line_ref, &mut stats) {
                         nozzles.push(nz);
                     }
                 }
@@ -1443,7 +1460,7 @@ fn nozzle(
     n: &Item,
     placed: &HashMap<(i64, String), Placed>,
     peer: &HashMap<(i64, String), i64>,
-    obj_id: &dyn Fn(&Item) -> String,
+    line_ref: &dyn Fn(&Item) -> Option<String>,
     stats: &mut PdsStats,
 ) -> Option<J> {
     let (name, row) = p.ports.get(&n.id).and_then(|v| v.first())?;
@@ -1470,8 +1487,12 @@ fn nozzle(
     if let Some(dn) = dn {
         z["nominalDiameter"] = json!(dn);
     }
-    if let Some(other) = peer.get(&(n.id, name.clone())).and_then(|o| p.items.get(o)) {
-        z["connectedLineId"] = json!(obj_id(other));
+    if let Some(line) = peer
+        .get(&(n.id, name.clone()))
+        .and_then(|o| p.items.get(o))
+        .and_then(line_ref)
+    {
+        z["connectedLineId"] = json!(line);
     }
     stats.ports_placed += 1;
     Some(z)
@@ -1690,6 +1711,11 @@ mod tests {
         assert_eq!(elbow["radiusMm"], 305.0);
         assert_eq!(elbow["componentSpec"]["skey"], "BEBW");
         assert_eq!(elbow["ports"][1]["direction"], json!([0.0, 1.0, 0.0]));
+        assert_eq!(
+            elbow["ports"][1]["connectedTo"],
+            id(50),
+            "a nozzle stands for its equipment"
+        );
 
         let weld = by_type(&objs, "pmef:Weld")[0];
         assert_eq!(weld["connects"], json!([id(10), id(30)]));
@@ -1700,7 +1726,10 @@ mod tests {
         let nz = &pump["nozzles"][0];
         assert_eq!(nz["coordinate"], json!([1305.0, 305.0, 0.0]));
         assert_eq!(nz["direction"], json!([0.0, -1.0, 0.0]));
-        assert_eq!(nz["connectedLineId"], id(30));
+        assert_eq!(
+            nz["connectedLineId"], line["@id"],
+            "the line of the joined part"
+        );
         assert_eq!(
             pump["customAttributes"]["p3d:placement"],
             "1 0 0 1305 0 1 0 800 0 0 1 0 0 0 0 1"
