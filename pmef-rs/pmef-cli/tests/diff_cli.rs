@@ -249,6 +249,32 @@ fn pcf_round_trip_of_benchmark_is_lossless_and_detects_tool_edits() {
 }
 
 #[test]
+fn pcf_export_keeps_lines_that_share_a_line_number() {
+    // Two piping systems with the same lineNumber (E3D: one PIPE per zone) must not overwrite
+    // each other's PCF file; the round trip then still finds every component.
+    let dir = std::env::temp_dir().join(format!("pmef-pcf-dup-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let src = std::fs::read_to_string(root().join("examples/pump-skid-complete.ndjson")).unwrap();
+    let mut numbers = src.lines().filter(|l| l.contains("\"@type\":\"pmef:PipingNetworkSystem\""))
+        .filter_map(|l| serde_json::from_str::<serde_json::Value>(l).ok())
+        .filter_map(|v| v["lineNumber"].as_str().map(str::to_owned));
+    let (first, second) = (numbers.next().unwrap(), numbers.next().unwrap());
+    let input = dir.join("dup.ndjson");
+    std::fs::write(&input, src.replace(&format!("\"lineNumber\":\"{second}\""), &format!("\"lineNumber\":\"{first}\""))).unwrap();
+    let pcf = dir.join("pcf");
+    let (code, _, err) = pmef(&["convert", input.to_str().unwrap(), "--to", "pcf", "-o", pcf.to_str().unwrap()]);
+    assert_eq!(code, 0, "{err}");
+    assert!(err.contains("wrote 2 PCF file(s)"), "{err}");
+    assert_eq!(std::fs::read_dir(&pcf).unwrap().count(), 2, "both lines need their own file");
+    let back = dir.join("back.ndjson");
+    let (code, _, err) = pmef(&["convert", pcf.to_str().unwrap(), "--to", "pmef", "--base", input.to_str().unwrap(),
+                                "-o", back.to_str().unwrap()]);
+    assert_eq!(code, 0, "{err}");
+    assert!(err.contains("updated 14, created 0, deleted 0"), "{err}");
+    std::fs::remove_dir_all(dir).ok();
+}
+
+#[test]
 fn convert_to_pmef_requires_base() {
     let (code, _, err) = pmef(&["convert", "tests/diff", "--to", "pmef", "-o", "/dev/null"]);
     assert_ne!(code, 0);

@@ -221,15 +221,27 @@ fn update_from_pcf(obj: &mut Value, comp: &PcfComponent, units: PcfUnits) {
 pub fn apply_pcf(reference: &[Value], pcfs: &[String]) -> (Vec<Value>, PcfImportStats) {
     let mut objs: Vec<Value> = reference.to_vec();
     let mut stats = PcfImportStats::default();
+    // Several piping systems may share a line number (one E3D PIPE per zone); their PCF files are
+    // then read together against all of them, so no file deletes the other files' components.
+    let mut groups: Vec<(String, Vec<(PcfUnits, PcfComponent)>)> = Vec::new();
     for pcf in pcfs {
         let (units, line_no, comps) = parse_pcf(pcf);
-        let Some(line) = objs.iter().find(|o| s(o, "@type") == Some("pmef:PipingNetworkSystem") && s(o, "lineNumber") == Some(line_no.as_str())).cloned() else {
+        let at = match groups.iter().position(|(l, _)| *l == line_no) {
+            Some(k) => k,
+            None => { groups.push((line_no, Vec::new())); groups.len() - 1 }
+        };
+        groups[at].1.extend(comps.into_iter().map(|c| (units, c)));
+    }
+    for (line_no, comps) in groups {
+        let line_ids: Vec<String> = objs.iter()
+            .filter(|o| s(o, "@type") == Some("pmef:PipingNetworkSystem") && s(o, "lineNumber") == Some(line_no.as_str()))
+            .filter_map(|o| s(o, "@id").map(str::to_owned)).collect();
+        let Some(line_id) = line_ids.iter().min().cloned() else {
             stats.unknown_lines.push(line_no);
             continue;
         };
-        let line_id = s(&line, "@id").unwrap_or("").to_owned();
         let segs: Vec<String> = objs.iter()
-            .filter(|o| s(o, "@type") == Some("pmef:PipingSegment") && s(o, "isPartOf") == Some(line_id.as_str()))
+            .filter(|o| s(o, "@type") == Some("pmef:PipingSegment") && s(o, "isPartOf").is_some_and(|p| line_ids.iter().any(|l| l == p)))
             .filter_map(|o| s(o, "@id").map(str::to_owned)).collect();
         let Some(first_seg) = segs.iter().min().cloned() else { continue };
         let in_line = |o: &Value| pcf_keyword(o).is_some() && s(o, "isPartOf").is_some_and(|p| segs.iter().any(|x| x == p));
@@ -239,7 +251,8 @@ pub fn apply_pcf(reference: &[Value], pcfs: &[String]) -> (Vec<Value>, PcfImport
 
         let mut seen = BTreeSet::new();
         let mut created: Vec<Value> = Vec::new();
-        for (i, comp) in comps.iter().enumerate() {
+        for (i, (units, comp)) in comps.iter().enumerate() {
+            let units = *units;
             match comp.attr(UCI).filter(|u| before.contains(*u)) {
                 Some(uci) => {
                     let uci = uci.to_owned();
