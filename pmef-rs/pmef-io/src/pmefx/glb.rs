@@ -858,6 +858,12 @@ impl GlbBundle {
         if d["buffers"].as_array().is_some_and(|b| b.len() > 1) {
             return Err("a bundle part may only use the BIN chunk".into());
         }
+        // Materials are copied as they are; texture, image and sampler indices would dangle.
+        for k in ["textures", "images", "samplers", "skins", "animations", "cameras"] {
+            if d[k].as_array().is_some_and(|a| !a.is_empty()) {
+                return Err(format!("bundle parts with {k} are not supported"));
+            }
+        }
         if d["extensionsRequired"].as_array().is_some_and(|a| !a.is_empty()) {
             self.quantized = true;
         }

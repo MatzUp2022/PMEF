@@ -179,6 +179,8 @@ pub struct PmefxWriter<W: Write + Seek> {
     mesh_origin: Option<Point3>,
     /// Deflate glTF entries (RFC-0018 `deflateMeshes`).
     deflate_meshes: bool,
+    /// A glTF entry was actually written with Deflate (whatever the setting is now).
+    deflated_written: bool,
 }
 
 impl<W: Write + Seek> PmefxWriter<W> {
@@ -194,6 +196,7 @@ impl<W: Write + Seek> PmefxWriter<W> {
             pmef_version: None,
             mesh_origin: None,
             deflate_meshes: false,
+            deflated_written: false,
         }
     }
 
@@ -234,6 +237,7 @@ impl<W: Write + Seek> PmefxWriter<W> {
         }
         let stored = kind.must_be_stored() && !(kind == FileKind::Gltf && self.deflate_meshes);
         let method = if stored { CompressionMethod::Stored } else { CompressionMethod::Deflated };
+        self.deflated_written |= kind == FileKind::Gltf && !stored;
         let opts = SimpleFileOptions::default()
             .compression_method(method)
             .large_file(bytes.len() as u64 >= u32::MAX as u64);
@@ -470,15 +474,11 @@ impl<W: Write + Seek> PmefxWriter<W> {
         if lods().any(|l| l.node.is_some()) {
             out.push(FEATURE_LOD_NODE.to_string());
         }
-        if self.deflated_meshes() {
+        if self.deflated_written {
             out.push(FEATURE_DEFLATE_MESHES.to_string());
         }
         out.sort();
         out
-    }
-
-    fn deflated_meshes(&self) -> bool {
-        self.deflate_meshes && self.files.iter().any(|f| f.kind == FileKind::Gltf)
     }
 
     /// Writes the object index, spatial index and manifest, and closes the archive.

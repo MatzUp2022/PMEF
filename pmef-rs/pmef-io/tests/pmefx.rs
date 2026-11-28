@@ -751,6 +751,8 @@ fn bundled_package() -> (Vec<u8>, Vec<(&'static str, glb::GlbMesh)>) {
         w.add_lod_ref(id, Lod::Lod3Fine, "meshes/bundle-1.glb", Some(node), stats, None).unwrap();
     }
     assert!(w.add_lod_ref(parts[0].0, Lod::Lod2Medium, "meshes/missing.glb", Some(0), LodStats::default(), None).is_err());
+    // Switching Deflate off afterwards still declares the compressed bundle.
+    w.set_deflate_meshes(false);
     (w.finish(FinishOptions::default()).unwrap().into_inner(), parts)
 }
 
@@ -797,6 +799,19 @@ fn bundled_and_deflated_meshes_round_trip() {
     let all = file.mesh(None, origin).unwrap();
     assert_eq!(all.triangle_count(), parts.iter().map(|(_, m)| m.triangle_count()).sum::<usize>());
     assert!(file.mesh(Some(99), origin).is_err());
+}
+
+#[test]
+fn bundles_reject_textured_parts() {
+    let id = "urn:pmef:obj:p:t";
+    let plain = glb::mesh_glb(id, &tube([0.0; 3], 10.0, 100.0, 8), Point3::default());
+    let textured = rewrap(&plain, |d| {
+        d["images"] = json!([{"uri": "tex.png"}]);
+        d["textures"] = json!([{"source": 0}]);
+    });
+    let mut b = glb::GlbBundle::new();
+    assert!(b.push(&textured).unwrap_err().contains("textures"));
+    assert_eq!(b.push(&plain).unwrap(), 0);
 }
 
 #[test]
