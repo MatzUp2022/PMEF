@@ -1225,6 +1225,14 @@ fn routed_drop_lengths_decide_the_tray() {
     assert_eq!(c.routed_drops, 2);
     // Both drops are straight up: 3500 mm each.
     assert!((c.drop_mm - 7000.0).abs() < 1e-6, "{}", c.drop_mm);
+    // Only the nearest candidate (T-NEAR) is routed up front; T-FAR keeps its L1 cost, wins,
+    // and its drops are routed once the path uses them.
+    let mut one = p(true);
+    one.cable_settings.as_mut().unwrap().drop_candidates = 1;
+    let c = &pmef_route::run(one, None, &read).unwrap().cables[0];
+    assert!(c.ok && c.warnings.is_empty(), "{:?}", c);
+    assert_eq!(c.trays, ["urn:pmef:obj:t:T-FAR"]);
+    assert_eq!(c.routed_drops, 2);
 }
 
 #[test]
@@ -1284,4 +1292,102 @@ fn full_trays_get_a_width_proposal() {
     // Everything fits: no proposal.
     let (_, fill) = pmef_route::cable::route_cables(&p(1, json!([100])));
     assert!(fill[0].sizing.is_none());
+}
+
+#[test]
+fn gaps_in_the_tray_network_are_joined_within_tolerance() {
+    // B ends 180 mm beside A's centreline (300 mm trays: 150 + 150 + 30 mm gap); C is 2 m off.
+    let p = |tol: f64| -> RouteProblem {
+        serde_json::from_value(json!({
+            "project": "t", "revisionId": "r2026-11-28-001", "parent": "urn:pmef:unit:t:U1",
+            "trays": [
+                {"id": "urn:pmef:obj:t:A", "points": [[0, 0, 3000], [10000, 0, 3000]], "width": 300, "height": 100},
+                {"id": "urn:pmef:obj:t:B", "points": [[5000, 180, 3000], [5000, 8000, 3000]], "width": 300, "height": 100},
+                {"id": "urn:pmef:obj:t:C", "points": [[0, 2000, 6000], [3000, 2000, 6000]], "width": 300, "height": 100}
+            ],
+            "cableSettings": {"trayJoinTolerance": tol, "maxDrop": 500},
+            "cables": [{"id": "C-1", "class": "power", "cableType": "POWER_LV", "diameter": 20, "minBendRadius": 100,
+                        "from": {"point": [500, 0, 2800]}, "to": {"point": [5000, 7800, 2800]}}]
+        }))
+        .unwrap()
+    };
+    let read = |f: &str| Err(format!("no {f}"));
+    let none = pmef_route::run(p(0.0), None, &read).unwrap();
+    assert!(!none.cables[0].ok);
+    assert_eq!(none.tray_joins, 0);
+    let out = pmef_route::run(p(50.0), None, &read).unwrap();
+    // B's free end at y = 180 joins A; B's other end, A's ends and C stay free.
+    assert_eq!(out.tray_joins, 1);
+    let c = &out.cables[0];
+    assert!(c.ok, "{:?}", c);
+    assert!(c.trays.iter().any(|t| t.ends_with("#join1")));
+    // The connector is never the cable's main tray.
+    assert!(!out.objects[0]["cableTrayId"].as_str().unwrap().contains('#'));
+    // Path: along A to x = 5000, across the 180 mm gap, along B.
+    assert!(c.points.contains(&[5000.0, 0.0, 3000.0]), "{:?}", c.points);
+    assert!((c.length_mm - (200.0 + 4500.0 + 180.0 + 7620.0 + 200.0)).abs() < 1.0, "{}", c.length_mm);
+}
+
+#[test]
+fn scene_trays_without_height_take_the_default_height() {
+    let run = json!({"@type": "pmef:CableTrayRun", "@id": "urn:pmef:obj:t:CT-1", "isPartOf": "urn:pmef:unit:t:U1",
+                     "trayMark": "CT-1", "width": 300, "startPoint": [0, 0, 3000], "endPoint": [5000, 0, 3000]});
+    let objs = vec![run];
+    let (t, s, n) = pmef_route::cable::trays_from_pmef_with(&objs, &Default::default(), None);
+    assert!(t.is_empty() && s.len() == 1 && n == 0);
+    let (t, s, n) = pmef_route::cable::trays_from_pmef_with(&objs, &Default::default(), Some(100.0));
+    assert_eq!((t.len(), s.len(), n), (1, 0, 1));
+    assert_eq!(t[0].height, 100.0);
+}
+
+#[test]
+fn tray_ends_exactly_on_another_centreline_are_joined() {
+    // B starts on A's centreline (a T-junction without a shared vertex).
+    let p: RouteProblem = serde_json::from_value(json!({
+        "project": "t", "revisionId": "r2026-11-28-001", "parent": "urn:pmef:unit:t:U1",
+        "trays": [
+            {"id": "urn:pmef:obj:t:A", "points": [[0, 0, 3000], [10000, 0, 3000]], "width": 300, "height": 100},
+            {"id": "urn:pmef:obj:t:B", "points": [[5000, 0, 3000], [5000, 8000, 3000]], "width": 300, "height": 100}
+        ],
+        "cableSettings": {"trayJoinTolerance": 50, "maxDrop": 500},
+        "cables": [{"id": "C-1", "class": "power", "cableType": "POWER_LV", "diameter": 20, "minBendRadius": 100,
+                    "from": {"point": [500, 0, 2800]}, "to": {"point": [5000, 7800, 2800]}}]
+    }))
+    .unwrap();
+    let out = pmef_route::run(p, None, &|f: &str| Err(format!("no {f}"))).unwrap();
+    assert!(out.cables[0].ok, "{:?}", out.cables[0]);
+    assert!(out.cables[0].trays.iter().all(|t| !t.contains('#')), "no connector needed");
+}
+
+#[test]
+fn lazy_drops_rerun_the_tray_search_with_their_routed_cost() {
+    // T-B is nearest by L1 (2.5 m) but behind a 1.8 m wall; T-C is 4 m by L1 but cut off by a
+    // wall the drop grid cannot pass. With one routed candidate per end, T-C keeps its L1
+    // lower bound and wins first; once its drops turn out blocked, the search runs again and
+    // takes T-B.
+    let mk = |n: usize| -> RouteProblem {
+        serde_json::from_value(json!({
+            "project": "t", "revisionId": "r2026-11-28-001", "parent": "urn:pmef:unit:t:U1",
+            "obstacles": [
+                {"id": "urn:pmef:obj:t:WALL-B", "aabb": {"min": [-2000, 600, -3000], "max": [12000, 800, 1800]}},
+                {"id": "urn:pmef:obj:t:WALL-C", "aabb": {"min": [-2000, -2400, -3000], "max": [12000, -2200, 4000]}}
+            ],
+            "trays": [
+                {"id": "urn:pmef:obj:t:T-B", "points": [[-1000, 1500, 1000], [11000, 1500, 1000]], "width": 300, "height": 100},
+                {"id": "urn:pmef:obj:t:T-C", "points": [[-1000, -3000, 1000], [11000, -3000, 1000]], "width": 300, "height": 100}
+            ],
+            "cableSettings": {"routeDrops": true, "dropFactor": 1, "dropCandidates": n},
+            "cables": [{"id": "C-1", "class": "power", "cableType": "POWER_LV", "diameter": 20, "minBendRadius": 0,
+                        "from": {"point": [0, 0, 0]}, "to": {"point": [10000, 0, 0]}}]
+        }))
+        .unwrap()
+    };
+    let read = |f: &str| Err(format!("no {f}"));
+    let all = pmef_route::run(mk(2), None, &read).unwrap().cables.remove(0);
+    let one = pmef_route::run(mk(1), None, &read).unwrap().cables.remove(0);
+    assert!(all.ok && one.ok, "{:?} {:?}", all, one);
+    assert!(one.warnings.is_empty(), "{:?}", one.warnings);
+    assert_eq!(all.trays, ["urn:pmef:obj:t:T-B"]);
+    assert_eq!(one.trays, all.trays);
+    assert!((one.length_mm - all.length_mm).abs() < 1e-6, "{} vs {}", one.length_mm, all.length_mm);
 }

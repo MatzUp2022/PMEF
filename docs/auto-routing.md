@@ -136,6 +136,16 @@ PMEF `@id`), provenance `generated`; the report lists path, trays and the fill p
 A viewer re-routes one cable and keeps the others where they are by giving each other cable the
 trays it used (report `cables[].trays`). Example: `tests/route/cable-trays-route.json`.
 
+Networks read from as-built or recognised models are often not closed: in the Huldra test case
+(E3D trays modelled as pipe branches, 2 606 runs on HO-ELEC) the branches do not share end
+points, and only 465 of 4 405 runs carry a height. `cableSettings.trayJoinTolerance` joins every
+free tray end to the nearest point on another tray whose centreline is within (both half
+widths plus tolerance), with a two-point connector `<@id>#join<k>` (never `cableTrayId`);
+`defaultTrayHeight` gives scene trays without height a stand-in. The report counts both
+(`trayJoins`, `trayHeightAssumed`). Huldra HO-ELEC, 30 cables between electrical equipment 10–60
+m apart: 1/30 routed without joins, 8/30 with 300 mm, 27/30 with 1 000 mm; 3.3 s to load the
+scene, about 30 ms per cable (L1 drops), about 0.4 s per cable with `routeDrops`.
+
 When cables cannot be routed, each of them is routed again without the fill limit (segregation,
 bend radius and the cable's own trays still apply). Trays that would then exceed `maxFill` get
 `trayFill[].sizing`: `fillWithRejected` [%], `requiredWidth` at the current height and

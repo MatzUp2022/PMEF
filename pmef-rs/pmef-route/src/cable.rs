@@ -104,8 +104,9 @@ pub struct CableSettings {
     /// their orthogonal distance (see `drop.rs`).
     #[serde(default)]
     pub route_drops: bool,
-    /// With `routeDrops`: drop candidates per cable end (nearest by L1) that are routed through
-    /// the scene during the tray choice.
+    /// With `routeDrops`: drop candidates per cable end that are routed through the scene during
+    /// the tray choice (nearest by L1 first, blocked ones skipped until this many succeed);
+    /// farther ones keep their L1 cost and are routed only if the path uses them.
     #[serde(default = "d_drop_candidates")]
     pub drop_candidates: usize,
     /// Grid spacing of the drop search [mm].
@@ -117,6 +118,15 @@ pub struct CableSettings {
     /// Standard tray widths for sizing proposals [mm] (IEC 61537 series by default).
     #[serde(default = "d_tray_widths")]
     pub tray_widths: Vec<f64>,
+    /// Stand-in height [mm] for scene trays without `height` (e.g. listed in `placeholders`);
+    /// without it such trays are skipped.
+    #[serde(default)]
+    pub default_tray_height: Option<f64>,
+    /// Join free tray ends to a nearby tray: an end within (both half widths +
+    /// `trayJoinTolerance`) of another tray's centreline is connected to the nearest point on it
+    /// (as-built and recognised networks often have small gaps). 0 = only coincident points.
+    #[serde(default)]
+    pub tray_join_tolerance: f64,
     /// Read the tray network from the `pmef:CableTrayRun`/`pmef:CableTrayFitting` objects of
     /// `pmefScene` (RFC-0015 centreline and ports). Entries of `trays` with the same `id`
     /// replace a scene tray. See [`trays_from_pmef`].
@@ -160,6 +170,8 @@ impl Default for CableSettings {
             drop_step: d_drop_step(),
             drop_clearance: d_drop_clearance(),
             trays_from_scene: false,
+            default_tray_height: None,
+            tray_join_tolerance: 0.0,
             tray_classes: Default::default(),
         }
     }
@@ -188,7 +200,27 @@ pub fn trays_from_pmef(
     objs: &[serde_json::Value],
     classes: &std::collections::BTreeMap<String, Vec<String>>,
 ) -> (Vec<TraySpec>, Vec<SkippedTray>) {
+    let (t, s, _) = trays_from_pmef_with(objs, classes, None);
+    (t, s)
+}
+
+/// [`trays_from_pmef`] with a stand-in height for runs and fittings that give none
+/// (`cableSettings.defaultTrayHeight`); the third value counts the trays that got it.
+pub fn trays_from_pmef_with(
+    objs: &[serde_json::Value],
+    classes: &std::collections::BTreeMap<String, Vec<String>>,
+    default_height: Option<f64>,
+) -> (Vec<TraySpec>, Vec<SkippedTray>, usize) {
     use serde_json::Value;
+    let assumed = std::cell::Cell::new(0usize);
+    let with_default = |h: Option<f64>| -> Option<f64> {
+        h.or_else(|| {
+            default_height.map(|d| {
+                assumed.set(assumed.get() + 1);
+                d
+            })
+        })
+    };
     let p3 = |v: &Value| -> Option<P3> {
         let a = v.as_array()?;
         (a.len() == 3).then_some(())?;
@@ -227,7 +259,7 @@ pub fn trays_from_pmef(
         } else {
             ports
         };
-        let (w, h) = (num(&o["width"]), num(&o["height"]));
+        let (w, h) = (num(&o["width"]), with_default(num(&o["height"])));
         let reason = if points.len() < 2 {
             Some("no centreline (path, startPoint/endPoint or two ports)")
         } else if w.is_none() || h.is_none() {
@@ -280,7 +312,7 @@ pub fn trays_from_pmef(
         let bend = radius(&f["bendRadius"]).unwrap_or_else(d_tray_bend);
         let fill = f["fillLevel"].as_f64().unwrap_or(0.0);
         let mk = |tid: String, pts: Vec<P3>, ps: &[&Value]| -> Result<TraySpec, SkippedTray> {
-            match (size(ps, "width", 0), size(ps, "height", 1)) {
+            match (size(ps, "width", 0), with_default(size(ps, "height", 1))) {
                 (Some(width), Some(height)) => Ok(TraySpec {
                     classes: classes_for(f, &id),
                     id: tid,
@@ -313,7 +345,7 @@ pub fn trays_from_pmef(
             }
         }
     }
-    (trays, skipped)
+    (trays, skipped, assumed.get())
 }
 
 /// Outcome of one cable.
@@ -436,6 +468,115 @@ fn dir(a: P3, b: P3) -> P3 {
 }
 
 /// Closest point of segment a–b to p, and its parameter in [0, 1].
+/// Join free tray ends to nearby trays (`cableSettings.trayJoinTolerance`).
+///
+/// A free end (an end point no other tray shares, within 1 mm) whose distance to another
+/// tray's centreline is at most (own width + other width) / 2 + `tolerance` is joined to the
+/// nearest point on that centreline: the point is inserted into the other tray's polyline and
+/// a two-point connector tray `<@id>#join<k>` (size, classes and bend radius of the end's tray;
+/// never named as `cableTrayId`) is added. Returns the number of joins.
+pub fn join_trays(trays: &mut Vec<TraySpec>, tolerance: f64) -> usize {
+    if tolerance <= 0.0 || trays.is_empty() {
+        return 0;
+    }
+    let key = |p: P3| [p[0].round() as i64, p[1].round() as i64, p[2].round() as i64];
+    let mut deg: std::collections::HashMap<[i64; 3], usize> = std::collections::HashMap::new();
+    for t in trays.iter() {
+        for p in &t.points {
+            *deg.entry(key(*p)).or_default() += 1;
+        }
+    }
+    // Segment index on a coarse grid.
+    let reach = trays.iter().map(|t| t.width).fold(0.0, f64::max) + tolerance;
+    let cell = (2.0 * reach).max(500.0);
+    let ci = |v: f64| (v / cell).floor() as i64;
+    let mut grid: std::collections::HashMap<[i64; 3], Vec<(usize, usize)>> = std::collections::HashMap::new();
+    for (ti, t) in trays.iter().enumerate() {
+        for (si, w) in t.points.windows(2).enumerate() {
+            let lo = [0, 1, 2].map(|k| ci(w[0][k].min(w[1][k])));
+            let hi = [0, 1, 2].map(|k| ci(w[0][k].max(w[1][k])));
+            for x in lo[0]..=hi[0] {
+                for y in lo[1]..=hi[1] {
+                    for z in lo[2]..=hi[2] {
+                        grid.entry([x, y, z]).or_default().push((ti, si));
+                    }
+                }
+            }
+        }
+    }
+    // (end's tray, end point, other tray, segment, point on it)
+    let mut joins: Vec<(usize, P3, usize, usize, P3)> = Vec::new();
+    for (ti, t) in trays.iter().enumerate() {
+        if t.points.len() < 2 {
+            continue;
+        }
+        for p in [t.points[0], *t.points.last().unwrap()] {
+            if deg.get(&key(p)).copied().unwrap_or(0) > 1 {
+                continue;
+            }
+            let c = [0, 1, 2].map(|k| ci(p[k]));
+            let mut best: Option<(f64, usize, usize, P3)> = None;
+            for dx in -1..=1 {
+                for dy in -1..=1 {
+                    for dz in -1..=1 {
+                        for &(oj, si) in grid.get(&[c[0] + dx, c[1] + dy, c[2] + dz]).into_iter().flatten() {
+                            if oj == ti {
+                                continue;
+                            }
+                            let o = &trays[oj];
+                            let (q, _) = project(p, o.points[si], o.points[si + 1]);
+                            let d = dist(p, q);
+                            if d <= (t.width + o.width) / 2.0 + tolerance && best.map_or(true, |b| d < b.0) {
+                                best = Some((d, oj, si, q));
+                            }
+                        }
+                    }
+                }
+            }
+            if let Some((_, oj, si, q)) = best {
+                // Also an end exactly on the other centreline (T-junction): the point is
+                // inserted there, without a connector.
+                joins.push((ti, p, oj, si, q));
+            }
+        }
+    }
+    // Insert the join points (per segment, in order along it) and add the connectors.
+    let mut by_seg: std::collections::BTreeMap<(usize, usize), Vec<P3>> = std::collections::BTreeMap::new();
+    for j in &joins {
+        by_seg.entry((j.2, j.3)).or_default().push(j.4);
+    }
+    for ((oj, si), mut qs) in by_seg.into_iter().rev() {
+        let a = trays[oj].points[si];
+        qs.sort_by(|x, y| dist(a, *x).total_cmp(&dist(a, *y)));
+        let b = trays[oj].points[si + 1];
+        qs.retain(|q| dist(*q, a) > 1e-3 && dist(*q, b) > 1e-3);
+        qs.dedup_by(|x, y| dist(*x, *y) <= 1e-3);
+        let pts = &mut trays[oj].points;
+        for (k, q) in qs.into_iter().enumerate() {
+            pts.insert(si + 1 + k, q);
+        }
+    }
+    let n = joins.len();
+    for (k, (ti, p, _, _, q)) in joins.into_iter().enumerate() {
+        if dist(p, q) <= 1e-3 {
+            continue;
+        }
+        let t = &trays[ti];
+        let conn = TraySpec {
+            id: format!("{}#join{}", t.id, k + 1),
+            points: vec![p, q],
+            width: t.width,
+            height: t.height,
+            bend_radius: t.bend_radius,
+            classes: t.classes.clone(),
+            fill: t.fill,
+            fitting: true,
+        };
+        trays.push(conn);
+    }
+    n
+}
+
 fn project(p: P3, a: P3, b: P3) -> (P3, f64) {
     let ab = [0, 1, 2].map(|i| b[i] - a[i]);
     let l2: f64 = ab.iter().map(|x| x * x).sum();
@@ -448,19 +589,38 @@ fn project(p: P3, a: P3, b: P3) -> (P3, f64) {
 }
 
 /// Graph of one cable: nodes (points), edges (from, to, length, tray index or drop).
+#[derive(Default)]
 struct Graph {
     pts: Vec<P3>,
     adj: Vec<Vec<(usize, f64, Option<usize>)>>,
+    /// Points by 1 µm cell, so that `node` does not scan all points.
+    index: std::collections::HashMap<[i64; 3], Vec<usize>>,
 }
 
 impl Graph {
+    /// The node at `p` (an existing one within 0.001 mm, the lowest index if several).
     fn node(&mut self, p: P3) -> usize {
-        if let Some(i) = self.pts.iter().position(|q| dist(*q, p) < 1e-3) {
+        let c = p.map(|v| (v * 1000.0).floor() as i64);
+        let mut found: Option<usize> = None;
+        for dx in -1..=1 {
+            for dy in -1..=1 {
+                for dz in -1..=1 {
+                    for &i in self.index.get(&[c[0] + dx, c[1] + dy, c[2] + dz]).into_iter().flatten() {
+                        if dist(self.pts[i], p) < 1e-3 && found.map_or(true, |f| i < f) {
+                            found = Some(i);
+                        }
+                    }
+                }
+            }
+        }
+        if let Some(i) = found {
             return i;
         }
         self.pts.push(p);
         self.adj.push(Vec::new());
-        self.pts.len() - 1
+        let i = self.pts.len() - 1;
+        self.index.entry(c).or_default().push(i);
+        i
     }
 
     fn edge(&mut self, a: usize, b: usize, len: f64, tray: Option<usize>) {
@@ -617,10 +777,7 @@ fn route_cable(
         drop_legs: [false; 2],
         spec: Some(c.clone()),
     };
-    let mut g = Graph {
-        pts: Vec::new(),
-        adj: Vec::new(),
-    };
+    let mut g = Graph::default();
     let start = g.node(c.from.point);
     let goal = g.node(c.to.point);
     // Split every allowed tray segment at its vertices and at the drop points of this cable.
@@ -657,6 +814,7 @@ fn route_cable(
     // Drop edges: routed through the scene when a router is given, else the L1 distance.
     // Routed polylines run from the end node to the tray node.
     let mut polys: std::collections::HashMap<(usize, usize), Vec<P3>> = std::collections::HashMap::new();
+    let mut lazy: std::collections::HashMap<(usize, usize), (P3, P3)> = std::collections::HashMap::new();
     for (k, (node, end)) in [(start, c.from.point), (goal, c.to.point)].into_iter().enumerate() {
         let list = &mut cand[k];
         list.sort_by(|a, b| a.0.total_cmp(&b.0));
@@ -667,7 +825,15 @@ fn route_cable(
         let mut routed = 0;
         let mut last_err = None;
         if let Some(rt) = router {
-            for &(_, q, qn) in list.iter().take(set.drop_candidates.max(1)) {
+            // Route candidates nearest first until `dropCandidates` of them succeed; blocked
+            // ones are dropped.
+            let n = set.drop_candidates.max(1);
+            let mut tried = 0;
+            for &(_, q, qn) in list.iter() {
+                if routed == n {
+                    break;
+                }
+                tried += 1;
                 match rt(c, end, q) {
                     Ok(poly) => {
                         let l: f64 = poly.windows(2).map(|w| dist(w[0], w[1])).sum();
@@ -676,6 +842,14 @@ fn route_cable(
                         routed += 1;
                     }
                     Err(e) => last_err = Some(e),
+                }
+            }
+            // Farther candidates keep their L1 cost (a lower bound) so that the network stays
+            // reachable; one of them is routed only if the path uses it.
+            if routed > 0 {
+                for &(d, q, qn) in list.iter().skip(tried) {
+                    g.edge(node, qn, d * set.drop_factor, None);
+                    lazy.insert((node, qn), (end, q));
                 }
             }
         }
@@ -696,58 +870,114 @@ fn route_cable(
         dot > 1.0 - 1e-6 || c.min_bend_radius <= r + 1e-9
     };
     // State = (node, predecessor node); predecessor gives the incoming direction and tray.
-    let mut best: std::collections::HashMap<(usize, usize), (f64, (usize, usize))> =
-        std::collections::HashMap::new();
-    let mut heap = BinaryHeap::new();
-    let mut states: Vec<(usize, usize)> = vec![(start, usize::MAX)];
-    best.insert((start, usize::MAX), (0.0, (usize::MAX, usize::MAX)));
-    heap.push(Open(0.0, 0));
-    let mut found = None;
-    while let Some(Open(cost, si)) = heap.pop() {
-        let (n, prev) = states[si];
-        if best.get(&(n, prev)).is_some_and(|b| b.0 < cost - 1e-9) {
-            continue;
-        }
-        if n == goal {
-            found = Some((n, prev));
-            break;
-        }
-        let incoming = (prev != usize::MAX).then(|| {
-            let tray = g.adj[prev].iter().find(|e| e.0 == n).and_then(|e| e.2);
-            (dir(g.pts[prev], g.pts[n]), tray)
-        });
-        for &(m, len, tray) in &g.adj[n] {
-            if m == prev {
+    let search = |g: &Graph| -> Option<Vec<usize>> {
+        let mut best: std::collections::HashMap<(usize, usize), (f64, (usize, usize))> =
+            std::collections::HashMap::new();
+        let mut heap = BinaryHeap::new();
+        let mut states: Vec<(usize, usize)> = vec![(start, usize::MAX)];
+        best.insert((start, usize::MAX), (0.0, (usize::MAX, usize::MAX)));
+        heap.push(Open(0.0, 0));
+        let mut found = None;
+        while let Some(Open(cost, si)) = heap.pop() {
+            let (n, prev) = states[si];
+            if best.get(&(n, prev)).is_some_and(|b| b.0 < cost - 1e-9) {
                 continue;
             }
-            if let (Some((d1, Some(t1))), Some(t2)) = (incoming, tray) {
-                let r = trays[t1].bend_radius.min(trays[t2].bend_radius);
-                if !bend_ok(d1, dir(g.pts[n], g.pts[m]), r) {
+            if n == goal {
+                found = Some((n, prev));
+                break;
+            }
+            let incoming = (prev != usize::MAX).then(|| {
+                let tray = g.adj[prev].iter().find(|e| e.0 == n).and_then(|e| e.2);
+                (dir(g.pts[prev], g.pts[n]), tray)
+            });
+            for &(m, len, tray) in &g.adj[n] {
+                if m == prev {
                     continue;
                 }
+                if let (Some((d1, Some(t1))), Some(t2)) = (incoming, tray) {
+                    let r = trays[t1].bend_radius.min(trays[t2].bend_radius);
+                    if !bend_ok(d1, dir(g.pts[n], g.pts[m]), r) {
+                        continue;
+                    }
+                }
+                let nc = cost + len;
+                let k = (m, n);
+                if best.get(&k).is_some_and(|b| b.0 <= nc + 1e-9) {
+                    continue;
+                }
+                best.insert(k, (nc, (n, prev)));
+                states.push(k);
+                heap.push(Open(nc, states.len() - 1));
             }
-            let nc = cost + len;
-            let k = (m, n);
-            if best.get(&k).is_some_and(|b| b.0 <= nc + 1e-9) {
+        }
+        let mut s = found?;
+        let mut nodes = vec![s.0];
+        while s.1 != usize::MAX {
+            let p = best[&s].1;
+            nodes.push(p.0);
+            s = p;
+        }
+        nodes.reverse();
+        Some(nodes)
+    };
+    // Drops beyond `dropCandidates` that the path uses are routed, their edges get the routed
+    // cost (or are removed when blocked), and the search runs again until the path uses no
+    // unresolved drop. If removing blocked drops leaves no path, they come back with their L1
+    // cost and a warning, as for an end without any routable candidate.
+    let mut blocked: std::collections::HashMap<(usize, usize), (String, f64)> = std::collections::HashMap::new();
+    let mut restored = false;
+    let nodes = loop {
+        let Some(nodes) = search(&g) else {
+            if !restored && !blocked.is_empty() {
+                for (&(a, b), (_, cost)) in &blocked {
+                    g.edge(a, b, *cost, None);
+                }
+                restored = true;
                 continue;
             }
-            best.insert(k, (nc, (n, prev)));
-            states.push(k);
-            heap.push(Open(nc, states.len() - 1));
+            res.error =
+                Some("no path through the tray network (segregation, fill or bend radius)".into());
+            return res;
+        };
+        let mut changed = false;
+        if let Some(rt) = router {
+            for w in nodes.windows(2) {
+                let k = if lazy.contains_key(&(w[0], w[1])) { (w[0], w[1]) } else { (w[1], w[0]) };
+                if let Some((end, q)) = lazy.remove(&k) {
+                    match rt(c, end, q) {
+                        Ok(poly) => {
+                            let l: f64 = poly.windows(2).map(|s| dist(s[0], s[1])).sum();
+                            for (a, b) in [(k.0, k.1), (k.1, k.0)] {
+                                for e in g.adj[a].iter_mut().filter(|e| e.0 == b && e.2.is_none()) {
+                                    e.1 = l * set.drop_factor;
+                                }
+                            }
+                            polys.insert(k, poly);
+                            changed = true;
+                        }
+                        Err(e) => {
+                            let cost = g.adj[k.0].iter().find(|x| x.0 == k.1 && x.2.is_none()).map_or(0.0, |x| x.1);
+                            for (a, b) in [(k.0, k.1), (k.1, k.0)] {
+                                g.adj[a].retain(|x| !(x.0 == b && x.2.is_none()));
+                            }
+                            blocked.insert(k, (e, cost));
+                            changed = true;
+                        }
+                    }
+                }
+            }
+        }
+        if !changed {
+            break nodes;
+        }
+    };
+    for w in nodes.windows(2) {
+        if let Some((e, _)) = blocked.get(&(w[0], w[1])).or_else(|| blocked.get(&(w[1], w[0]))) {
+            let which = if w[0] == start || w[1] == start { "from" } else { "to" };
+            res.warnings.push(format!("{which} drop kept as L1 distance: {e}"));
         }
     }
-    let Some(mut s) = found else {
-        res.error =
-            Some("no path through the tray network (segregation, fill or bend radius)".into());
-        return res;
-    };
-    let mut nodes = vec![s.0];
-    while s.1 != usize::MAX {
-        let p = best[&s].1;
-        nodes.push(p.0);
-        s = p;
-    }
-    nodes.reverse();
     let mut per_tray: Vec<(usize, f64)> = Vec::new();
     // Corners on tray runs are taken at the centreline bend radius (tray bend radius + half
     // the width): each corner shortens the path by 2 R tan(θ/2) − R θ. Scene fittings already
