@@ -1226,3 +1226,28 @@ fn routed_drop_lengths_decide_the_tray() {
     // Both drops are straight up: 3500 mm each.
     assert!((c.drop_mm - 7000.0).abs() < 1e-6, "{}", c.drop_mm);
 }
+
+#[test]
+fn cable_end_on_a_tray_keeps_the_tray_segment() {
+    // The "from" end lies on tray A; its drop candidate onto B is the end of A's own segment.
+    for route_drops in [false, true] {
+        let p: RouteProblem = serde_json::from_value(json!({
+            "project": "t", "revisionId": "r2026-11-28-001", "parent": "urn:pmef:unit:t:U1",
+            "trays": [
+                {"id": "urn:pmef:obj:t:A", "points": [[0, 0, 0], [1000, 1000, 0]], "width": 300, "height": 100, "bendRadius": 0},
+                {"id": "urn:pmef:obj:t:B", "points": [[1000, 1000, 0], [1000, 2000, 0]], "width": 300, "height": 100, "bendRadius": 0}
+            ],
+            "cableSettings": {"routeDrops": route_drops},
+            "cables": [{"id": "C-1", "class": "power", "cableType": "POWER_LV", "diameter": 20, "minBendRadius": 0,
+                        "from": {"point": [0, 0, 0]}, "to": {"point": [1000, 2000, 1000]}}]
+        }))
+        .unwrap();
+        let out = pmef_route::run(p, None, &|f: &str| Err(format!("no {f}"))).unwrap();
+        let c = &out.cables[0];
+        assert!(c.ok, "{:?}", c);
+        // The path starts with A's diagonal, not with an orthogonal drop to [1000, 1000, 0].
+        assert_eq!(c.points[0], [0.0, 0.0, 0.0]);
+        assert_eq!(c.points[1], [1000.0, 1000.0, 0.0], "routeDrops={route_drops}: {:?}", c.points);
+        assert!(c.trays.contains(&"urn:pmef:obj:t:A".to_string()));
+    }
+}

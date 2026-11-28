@@ -590,6 +590,9 @@ fn route_cable(
         let list = &mut cand[k];
         list.sort_by(|a, b| a.0.total_cmp(&b.0));
         list.dedup_by_key(|x| x.2);
+        // A tray edge already joins the end and this tray point (cable end on a tray): no
+        // parallel drop edge, so that every path edge is unambiguous.
+        list.retain(|x| x.2 != node && !g.adj[node].iter().any(|e| e.0 == x.2));
         let mut routed = 0;
         let mut last_err = None;
         if let Some(rt) = router {
@@ -737,7 +740,10 @@ fn route_cable(
     }
     res.points = vec![g.pts[nodes[0]]];
     for w in nodes.windows(2) {
-        match drop_poly(w[0], w[1]) {
+        // Only a drop leg expands to its routed polyline: a tray edge between the same two
+        // nodes (cable end on a tray) keeps its straight segment.
+        let is_drop = edge_tray(w[0], w[1]).is_none();
+        match drop_poly(w[0], w[1]).filter(|_| is_drop) {
             Some(p) => {
                 res.routed_drops += 1;
                 res.points.extend_from_slice(&p[1..]);
