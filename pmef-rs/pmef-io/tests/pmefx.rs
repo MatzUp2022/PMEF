@@ -125,7 +125,18 @@ fn manifest_index_and_octree_match_the_schema() {
 fn committed_example_matches_writer_and_schema() {
     // examples/pmefx/ holds the manifest and index of `pmef pack examples/pump-skid-complete.ndjson
     // --bbox-lods --created-at 2026-11-25T00:00:00Z` (see examples/pmefx/README.md).
-    let dir = root().join("examples/pmefx/pump-skid-complete");
+    check_committed_example("pump-skid-complete", None);
+}
+
+#[test]
+fn committed_bundled_example_matches_writer_and_schema() {
+    // Same with `--bundle 16 --deflate-meshes` (RFC-0018).
+    check_committed_example("pump-skid-bundled", Some(16));
+}
+
+/// `bundle` = `Some(n)`: bundled bbox levels of n objects, Deflate-compressed.
+fn check_committed_example(name: &str, bundle: Option<usize>) {
+    let dir = root().join("examples/pmefx").join(name);
     let manifest: Value = serde_json::from_slice(&std::fs::read(dir.join("manifest.json")).unwrap()).unwrap();
     assert_valid(&validator("Manifest"), &manifest, "example manifest");
     let typed: Manifest = serde_json::from_value(manifest.clone()).unwrap();
@@ -144,7 +155,15 @@ fn committed_example_matches_writer_and_schema() {
     let c = w.extent().unwrap().center();
     w.set_mesh_origin(Point3 { x: (c.x / 1000.0).round() * 1000.0, y: (c.y / 1000.0).round() * 1000.0, z: (c.z / 1000.0).round() * 1000.0 })
         .unwrap();
-    w.generate_bbox_lods().unwrap();
+    match bundle {
+        Some(n) => {
+            w.set_deflate_meshes(true);
+            w.generate_bbox_lods_bundled(n).unwrap();
+        }
+        None => {
+            w.generate_bbox_lods().unwrap();
+        }
+    }
     let opts = FinishOptions { created_at: "2026-11-25T00:00:00Z".into(), ..FinishOptions::default() };
     let mut r = reader(&w.finish(opts).unwrap().into_inner());
     let mut fresh: Value = serde_json::from_slice(&r.read_file(MANIFEST_PATH).unwrap()).unwrap();
@@ -696,4 +715,139 @@ fn glb_reader_rejects_unknown_required_extensions() {
     let bytes = glb::mesh_glb("urn:pmef:obj:p:t", &mesh, Point3::default());
     let out = rewrap(&bytes, |doc| doc["extensionsRequired"] = json!(["KHR_draco_mesh_compression"]));
     assert!(glb::read_mesh_glb(&out, Point3::default()).is_err());
+}
+
+/// A bundle of three objects (two quantized tubes, one float tetrahedron), Deflate-compressed
+/// (RFC-0018). Returns the archive and the per-object source meshes.
+fn bundled_package() -> (Vec<u8>, Vec<(&'static str, glb::GlbMesh)>) {
+    let origin = Point3 { x: 10_000.0, y: 0.0, z: 0.0 };
+    let parts: Vec<(&str, glb::GlbMesh)> = vec![
+        ("urn:pmef:obj:eaf-2026:CW-201-PIPE-001", tube([9_000.0, 0.0, 1_000.0], 100.0, 2_195.2, 24)),
+        ("urn:pmef:obj:eaf-2026:CW-201-PIPE-002", tube([12_000.0, 0.0, 1_000.0], 100.0, 1_500.0, 24)),
+        (
+            "urn:pmef:obj:eaf-2026:P-201A",
+            glb::GlbMesh {
+                positions: vec![[0.0, 0.0, 0.0], [100.0, 0.0, 0.0], [0.0, 100.0, 0.0], [0.0, 0.0, 100.0]],
+                normals: vec![],
+                indices: vec![0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3],
+                color: Some([0.8, 0.1, 0.1, 1.0]),
+            },
+        ),
+    ];
+    let mut bundle = glb::GlbBundle::new();
+    let mut nodes = Vec::new();
+    for (i, (id, m)) in parts.iter().enumerate() {
+        let bytes = if i < 2 { glb::mesh_glb_quantized(id, m, origin, 0.5).bytes } else { glb::mesh_glb(id, m, origin) };
+        nodes.push(bundle.push(&bytes).unwrap() as u32);
+    }
+    assert_eq!(bundle.len(), 3);
+    let mut w = PmefxWriter::new(Cursor::new(Vec::new()));
+    w.add_ndjson("model/main.ndjson", &example("pump-skid-complete.ndjson")).unwrap();
+    w.set_mesh_origin(origin).unwrap();
+    w.set_deflate_meshes(true);
+    w.add_bundle("meshes/bundle-1.glb", &bundle.finish()).unwrap();
+    for ((id, _), node) in parts.iter().zip(nodes) {
+        let stats = LodStats { triangles: Some(4), vertex_count: None, error_mm: Some(0.5) };
+        w.add_lod_ref(id, Lod::Lod3Fine, "meshes/bundle-1.glb", Some(node), stats, None).unwrap();
+    }
+    assert!(w.add_lod_ref(parts[0].0, Lod::Lod2Medium, "meshes/missing.glb", Some(0), LodStats::default(), None).is_err());
+    (w.finish(FinishOptions::default()).unwrap().into_inner(), parts)
+}
+
+#[test]
+fn bundled_and_deflated_meshes_round_trip() {
+    let (archive, parts) = bundled_package();
+    let mut r = reader(&archive);
+    assert_eq!(r.verify(), Vec::<String>::new());
+    let m = r.manifest().clone();
+    assert_eq!(m.pmefx_version.as_deref(), Some(PMEFX_VERSION_FEATURES));
+    assert_eq!(m.requires, vec![FEATURE_DEFLATE_MESHES.to_string(), FEATURE_LOD_NODE.to_string()]);
+    let manifest: Value = serde_json::from_slice(&r.read_file(MANIFEST_PATH).unwrap()).unwrap();
+    assert_valid(&validator("Manifest"), &manifest, "manifest.json");
+    assert_eq!(m.files.iter().filter(|f| f.kind == FileKind::Gltf).count(), 1, "one bundle file");
+
+    // The bundle is compressed: no stored range, a raw Deflate range instead.
+    assert_eq!(r.stored_range("meshes/bundle-1.glb").unwrap(), None);
+    let (_, clen, deflated) = r.raw_range("meshes/bundle-1.glb").unwrap();
+    let bytes = r.read_file("meshes/bundle-1.glb").unwrap();
+    assert!(deflated && clen < bytes.len() as u64);
+
+    let file = glb::GlbFile::parse(&bytes).unwrap();
+    assert_eq!(file.root_nodes().len(), 3);
+    let origin = m.mesh_origin.unwrap_or_default();
+    let index = r.object_index().unwrap();
+    let entry_v = validator("ObjectEntry");
+    for (id, src) in &parts {
+        let o = index.iter().find(|o| o.id == *id).unwrap();
+        let v = serde_json::to_value(o).unwrap();
+        assert_valid(&entry_v, &v, "object index line");
+        let back: ObjectEntry = serde_json::from_value(v).unwrap();
+        assert_eq!(&back, o, "serde round trip");
+        let l = &o.lods[0];
+        assert_eq!(file.node_id(l.node.unwrap() as usize), Some(*id));
+        let mesh = l.read_mesh_from(&file, origin).unwrap();
+        assert_eq!(mesh, l.read_mesh(&bytes, origin).unwrap());
+        assert_eq!(mesh.triangle_count(), src.triangle_count(), "{id}: only its own node");
+        assert_eq!(mesh.color, src.color, "{id}: its own material");
+        let lo = |m: &glb::GlbMesh| m.positions.iter().fold([f64::MAX; 3], |a, p| [0, 1, 2].map(|k| a[k].min(p[k])));
+        let (a, b) = (lo(&mesh), lo(src));
+        assert!((0..3).all(|k| (a[k] - b[k]).abs() < 0.5 + 1e-3), "{id}: {a:?} vs {b:?}");
+    }
+    // The whole scene still reads as all three meshes.
+    let all = file.mesh(None, origin).unwrap();
+    assert_eq!(all.triangle_count(), parts.iter().map(|(_, m)| m.triangle_count()).sum::<usize>());
+    assert!(file.mesh(Some(99), origin).is_err());
+}
+
+#[test]
+fn verify_enforces_required_features() {
+    let (good, _) = bundled_package();
+    let with_manifest = |edit: &dyn Fn(&mut Manifest)| {
+        let mut m = reader(&good).manifest().clone();
+        edit(&mut m);
+        let bytes = serde_json::to_vec(&m).unwrap();
+        reader(&rewrite(&good, |name, _| (name == MANIFEST_PATH).then(|| (bytes.clone(), zip::CompressionMethod::Deflated))))
+            .verify()
+    };
+    let has = |issues: &[String], s: &str| issues.iter().any(|i| i.contains(s));
+
+    let issues = with_manifest(&|m| m.requires.push("meshoptCompression".into()));
+    assert!(has(&issues, "unsupported required feature meshoptCompression"), "{issues:?}");
+    let issues = with_manifest(&|m| m.pmefx_version = Some("1.0".into()));
+    assert!(has(&issues, "requires needs pmefxVersion 1.1"), "{issues:?}");
+    let issues = with_manifest(&|m| m.requires.retain(|f| f != FEATURE_DEFLATE_MESHES));
+    assert!(has(&issues, "must be stored uncompressed"), "{issues:?}");
+    let issues = with_manifest(&|m| m.requires.retain(|f| f != FEATURE_LOD_NODE));
+    assert!(has(&issues, "lods[].node needs"), "{issues:?}");
+
+    // A node that is not a root of the bundle.
+    let bad = rewrite(&good, |name, data| {
+        (name == OBJECT_INDEX_PATH).then(|| {
+            let text = String::from_utf8(data).unwrap().replacen("\"node\":0", "\"node\":7", 1);
+            (text.into_bytes(), zip::CompressionMethod::Deflated)
+        })
+    });
+    let issues = reader(&bad).verify();
+    assert!(has(&issues, "node 7 is not a root node of meshes/bundle-1.glb"), "{issues:?}");
+}
+
+#[test]
+fn bundled_bbox_lods_need_fewer_files() {
+    let mut w = PmefxWriter::new(Cursor::new(Vec::new()));
+    w.add_ndjson("model/main.ndjson", &example("pump-skid-complete.ndjson")).unwrap();
+    let boxes = w.generate_bbox_lods_bundled(16).unwrap();
+    let mut r = reader(&w.finish(FinishOptions::default()).unwrap().into_inner());
+    assert_eq!(r.verify(), Vec::<String>::new());
+    let gltf = r.manifest().files.iter().filter(|f| f.kind == FileKind::Gltf).count();
+    assert_eq!(gltf, boxes.div_ceil(16));
+    let index = r.object_index().unwrap();
+    let origin = r.manifest().mesh_origin.unwrap_or_default();
+    for o in index.iter().filter(|o| !o.lods.is_empty()) {
+        let l = &o.lods[0];
+        let m = l.read_mesh(&r.read_file(&l.path).unwrap(), origin).unwrap();
+        assert_eq!(m.triangle_count(), 12, "{}", o.id);
+        let b = o.bbox.unwrap();
+        let lo = m.positions.iter().fold([f64::MAX; 3], |a, p| [0, 1, 2].map(|k| a[k].min(p[k])));
+        assert!((lo[0] - b.x_min).abs() < 1e-2 && (lo[2] - b.z_min).abs() < 1e-2, "{}", o.id);
+    }
 }

@@ -641,44 +641,71 @@ impl Glb<'_> {
 /// `KHR_mesh_quantization` integer positions/normals, unsigned integer indices. Other required
 /// extensions are rejected.
 pub fn read_mesh_glb(bytes: &[u8], origin: Point3) -> Result<GlbMesh, String> {
-    let doc = parse_glb_json(bytes)?;
-    let json_len = u32::from_le_bytes([bytes[12], bytes[13], bytes[14], bytes[15]]) as usize;
-    let bin_start = 20 + json_len;
-    let bin: &[u8] =
-        if bin_start + 8 <= bytes.len() && &bytes[bin_start + 4..bin_start + 8] == b"BIN\0" {
-            let len = u32::from_le_bytes([
-                bytes[bin_start],
-                bytes[bin_start + 1],
-                bytes[bin_start + 2],
-                bytes[bin_start + 3],
-            ]) as usize;
-            bytes
-                .get(bin_start + 8..bin_start + 8 + len)
-                .ok_or("BIN chunk truncated")?
+    GlbFile::parse(bytes)?.mesh(None, origin)
+}
+
+/// A parsed `.glb`: parse once, then read the whole scene or single root nodes. Used for mesh
+/// bundles (RFC-0018), where many objects reference nodes of one file.
+pub struct GlbFile<'a> {
+    g: Glb<'a>,
+}
+
+impl<'a> GlbFile<'a> {
+    /// Checks the container and the required extensions.
+    pub fn parse(bytes: &'a [u8]) -> Result<Self, String> {
+        let doc = parse_glb_json(bytes)?;
+        let json_len = u32::from_le_bytes([bytes[12], bytes[13], bytes[14], bytes[15]]) as usize;
+        let bin_start = 20 + json_len;
+        let bin: &[u8] = if bin_start + 8 <= bytes.len() && &bytes[bin_start + 4..bin_start + 8] == b"BIN\0" {
+            let len = u32::from_le_bytes([bytes[bin_start], bytes[bin_start + 1], bytes[bin_start + 2], bytes[bin_start + 3]])
+                as usize;
+            bytes.get(bin_start + 8..bin_start + 8 + len).ok_or("BIN chunk truncated")?
         } else {
             &[]
         };
-    if let Some(req) = doc["extensionsRequired"].as_array() {
-        if let Some(e) = req.iter().find(|e| e.as_str() != Some("KHR_mesh_quantization")) {
-            return Err(format!("unsupported required glTF extension {e}"));
+        if let Some(req) = doc["extensionsRequired"].as_array() {
+            if let Some(e) = req.iter().find(|e| e.as_str() != Some("KHR_mesh_quantization")) {
+                return Err(format!("unsupported required glTF extension {e}"));
+            }
         }
+        Ok(Self { g: Glb { doc, bin } })
     }
-    let g = Glb { doc, bin };
+
+    /// Root nodes of the default scene.
+    pub fn root_nodes(&self) -> Vec<usize> {
+        let scene = self.g.doc["scene"].as_u64().unwrap_or(0) as usize;
+        self.g.doc["scenes"][scene]["nodes"]
+            .as_array()
+            .map(|a| a.iter().filter_map(|n| n.as_u64()).map(|n| n as usize).collect())
+            .unwrap_or_default()
+    }
+
+    /// `extras.pmefId` (else `name`) of node `n`.
+    pub fn node_id(&self, n: usize) -> Option<&str> {
+        let node = &self.g.doc["nodes"][n];
+        node["extras"]["pmefId"].as_str().or_else(|| node["name"].as_str())
+    }
+
+    /// Triangles in project coordinates: of the whole default scene (`node` = `None`), or of
+    /// the subtree of one root node of the default scene (`lods[].node`, RFC-0018).
+    pub fn mesh(&self, node: Option<usize>, origin: Point3) -> Result<GlbMesh, String> {
+        let roots = self.root_nodes();
+        let start = match node {
+            None => roots,
+            Some(n) if roots.contains(&n) => vec![n],
+            Some(n) => return Err(format!("node {n} is not a root node of the default scene")),
+        };
+        read_nodes(&self.g, start, origin)
+    }
+}
+
+fn read_nodes(g: &Glb<'_>, start: Vec<usize>, origin: Point3) -> Result<GlbMesh, String> {
     let mut out = GlbMesh::default();
-    let scene = g.doc["scene"].as_u64().unwrap_or(0) as usize;
-    let mut stack: Vec<(usize, Mat4)> = g.doc["scenes"][scene]["nodes"]
-        .as_array()
-        .map(|a| {
-            a.iter()
-                .filter_map(|n| n.as_u64())
-                .map(|n| (n as usize, IDENTITY))
-                .collect()
-        })
-        .unwrap_or_default();
+    let mut stack: Vec<(usize, Mat4)> = start.into_iter().map(|n| (n, IDENTITY)).collect();
     let mut depth_guard = 0usize;
     while let Some((n, parent)) = stack.pop() {
         depth_guard += 1;
-        if depth_guard > 100_000 {
+        if depth_guard > 1_000_000 {
             return Err("node graph too large or cyclic".into());
         }
         let node = &g.doc["nodes"][n];
@@ -779,4 +806,174 @@ pub fn read_mesh_glb(bytes: &[u8], origin: Point3) -> Result<GlbMesh, String> {
         }
     }
     Ok(out)
+}
+
+/// Builds one mesh bundle (RFC-0018) from self-contained `.glb` files, such as those written
+/// by [`mesh_glb`], [`mesh_glb_quantized`] or [`box_glb`]. Each part becomes one root node of
+/// the bundle's default scene; [`push`](Self::push) returns that node's index, the value of
+/// `lods[].node`. Node transforms (used by `KHR_mesh_quantization`) are kept, identical
+/// materials are stored once.
+#[derive(Debug, Default)]
+pub struct GlbBundle {
+    nodes: Vec<serde_json::Value>,
+    meshes: Vec<serde_json::Value>,
+    accessors: Vec<serde_json::Value>,
+    views: Vec<serde_json::Value>,
+    materials: Vec<serde_json::Value>,
+    material_index: std::collections::HashMap<String, usize>,
+    roots: Vec<usize>,
+    bin: Vec<u8>,
+    quantized: bool,
+}
+
+impl GlbBundle {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Number of parts pushed so far.
+    pub fn len(&self) -> usize {
+        self.roots.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.roots.is_empty()
+    }
+
+    /// Bytes the bundle would have now (approximately; for size limits).
+    pub fn approx_size(&self) -> usize {
+        self.bin.len() + 400 * self.roots.len() + 200
+    }
+
+    #[allow(clippy::manual_is_multiple_of)] // MSRV 1.75
+    /// Adds a part whose default scene has exactly one root node. Returns the root node's
+    /// index in the bundle.
+    pub fn push(&mut self, glb: &[u8]) -> Result<usize, String> {
+        let f = GlbFile::parse(glb)?;
+        let d = &f.g.doc;
+        let roots = f.root_nodes();
+        let [root] = roots[..] else {
+            return Err(format!("a bundle part needs exactly one root node, found {}", roots.len()));
+        };
+        if d["buffers"].as_array().is_some_and(|b| b.len() > 1) {
+            return Err("a bundle part may only use the BIN chunk".into());
+        }
+        if d["extensionsRequired"].as_array().is_some_and(|a| !a.is_empty()) {
+            self.quantized = true;
+        }
+        let arr = |k: &str| d[k].as_array().cloned().unwrap_or_default();
+        while self.bin.len() % 4 != 0 {
+            self.bin.push(0);
+        }
+        let bin_base = self.bin.len() as u64;
+        self.bin.extend_from_slice(f.g.bin);
+        let view_base = self.views.len() as u64;
+        for mut v in arr("bufferViews") {
+            v["buffer"] = 0.into();
+            v["byteOffset"] = (v["byteOffset"].as_u64().unwrap_or(0) + bin_base).into();
+            self.views.push(v);
+        }
+        let acc_base = self.accessors.len() as u64;
+        for mut a in arr("accessors") {
+            if let Some(bv) = a["bufferView"].as_u64() {
+                a["bufferView"] = (bv + view_base).into();
+            }
+            if a.get("sparse").is_some() {
+                return Err("sparse accessors are not supported in bundles".into());
+            }
+            self.accessors.push(a);
+        }
+        let mut mat_map = Vec::new();
+        for m in arr("materials") {
+            let key = m.to_string();
+            let i = *self.material_index.entry(key).or_insert_with(|| {
+                self.materials.push(m.clone());
+                self.materials.len() - 1
+            });
+            mat_map.push(i as u64);
+        }
+        let mesh_base = self.meshes.len() as u64;
+        for mut m in arr("meshes") {
+            for p in m["primitives"].as_array_mut().into_iter().flatten() {
+                if let Some(attrs) = p["attributes"].as_object_mut() {
+                    for v in attrs.values_mut() {
+                        if let Some(a) = v.as_u64() {
+                            *v = (a + acc_base).into();
+                        }
+                    }
+                }
+                if let Some(i) = p["indices"].as_u64() {
+                    p["indices"] = (i + acc_base).into();
+                }
+                if let Some(mi) = p["material"].as_u64() {
+                    p["material"] = (*mat_map.get(mi as usize).ok_or("material index out of range")?).into();
+                }
+            }
+            self.meshes.push(m);
+        }
+        let node_base = self.nodes.len() as u64;
+        for mut n in arr("nodes") {
+            if let Some(m) = n["mesh"].as_u64() {
+                n["mesh"] = (m + mesh_base).into();
+            }
+            if let Some(c) = n["children"].as_array_mut() {
+                for v in c.iter_mut() {
+                    if let Some(i) = v.as_u64() {
+                        *v = (i + node_base).into();
+                    }
+                }
+            }
+            self.nodes.push(n);
+        }
+        let idx = node_base as usize + root;
+        self.roots.push(idx);
+        Ok(idx)
+    }
+
+    /// The bundle as `.glb` bytes.
+    pub fn finish(self) -> Vec<u8> {
+        let mut doc = json!({
+            "asset": {"version": "2.0", "generator": "pmef-io pmefx bundle"},
+            "scene": 0,
+            "scenes": [{"nodes": self.roots}],
+            "nodes": self.nodes,
+            "meshes": self.meshes,
+            "accessors": self.accessors,
+            "bufferViews": self.views,
+            "buffers": [{"byteLength": self.bin.len()}],
+        });
+        if !self.materials.is_empty() {
+            doc["materials"] = self.materials.into();
+        }
+        if self.quantized {
+            doc["extensionsUsed"] = json!(["KHR_mesh_quantization"]);
+            doc["extensionsRequired"] = json!(["KHR_mesh_quantization"]);
+        }
+        container(&doc, &self.bin)
+    }
+}
+
+/// glb container around a JSON document and a BIN chunk.
+#[allow(clippy::manual_is_multiple_of)] // MSRV 1.75
+fn container(doc: &serde_json::Value, bin: &[u8]) -> Vec<u8> {
+    let mut json_bytes = serde_json::to_vec(doc).expect("glTF JSON serialises");
+    while json_bytes.len() % 4 != 0 {
+        json_bytes.push(b' ');
+    }
+    let mut bin = bin.to_vec();
+    while bin.len() % 4 != 0 {
+        bin.push(0);
+    }
+    let total = 12 + 8 + json_bytes.len() + 8 + bin.len();
+    let mut out = Vec::with_capacity(total);
+    out.extend_from_slice(b"glTF");
+    out.extend_from_slice(&2u32.to_le_bytes());
+    out.extend_from_slice(&(total as u32).to_le_bytes());
+    out.extend_from_slice(&(json_bytes.len() as u32).to_le_bytes());
+    out.extend_from_slice(b"JSON");
+    out.extend_from_slice(&json_bytes);
+    out.extend_from_slice(&(bin.len() as u32).to_le_bytes());
+    out.extend_from_slice(b"BIN\0");
+    out.extend_from_slice(&bin);
+    out
 }

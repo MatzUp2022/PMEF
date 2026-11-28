@@ -53,5 +53,6 @@ field and draws a shared mesh at its shape-local position, which is wrong. Write
 ## Open Questions
 
 - Should the manifest list required features (for example `"requires": ["lodOffset"]`) so
-  that 1.0 readers reject such packages instead of misplacing meshes?
+  that 1.0 readers reject such packages instead of misplacing meshes? Answered by
+  [RFC-0018](0018-pmefx-mesh-bundles-deflate.md): yes, feature `lodOffset`.
 - Full transforms (rotation, mirroring) for mapped items, e.g. IFC `IfcMappedItem`.
