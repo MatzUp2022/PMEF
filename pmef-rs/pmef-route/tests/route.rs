@@ -1251,3 +1251,37 @@ fn cable_end_on_a_tray_keeps_the_tray_segment() {
         assert!(c.trays.contains(&"urn:pmef:obj:t:A".to_string()));
     }
 }
+
+#[test]
+fn full_trays_get_a_width_proposal() {
+    // 100 × 60 tray, maxFill 40 %: 2400 mm² for three 40 mm cables (1256.6 mm² each).
+    let p = |n: usize, widths: serde_json::Value| -> RouteProblem {
+        let cables: Vec<_> = (0..n)
+            .map(|i| json!({"id": format!("C-{i}"), "class": "power", "cableType": "POWER_LV", "diameter": 40,
+                            "minBendRadius": 0, "from": {"point": [0, -200, 0]}, "to": {"point": [5000, -200, 0]}}))
+            .collect();
+        serde_json::from_value(json!({
+            "project": "t", "revisionId": "r2026-11-28-001", "parent": "urn:pmef:unit:t:U1",
+            "trays": [{"id": "urn:pmef:obj:t:CT-1", "points": [[0, 0, 0], [5000, 0, 0]], "width": 100, "height": 60}],
+            "cableSettings": {"maxFill": 40, "trayWidths": widths},
+            "cables": cables
+        }))
+        .unwrap()
+    };
+    let (c, fill) = pmef_route::cable::route_cables(&p(3, json!([100, 150, 200, 300])));
+    assert_eq!(c.iter().filter(|c| c.ok).count(), 1);
+    let s = fill[0].sizing.as_ref().expect("sizing proposal");
+    let total = 3.0 * std::f64::consts::PI * 400.0;
+    assert!((s.required_width - (total / (0.4 * 60.0) * 10.0).round() / 10.0).abs() < 1e-9, "{}", s.required_width);
+    assert_eq!(s.proposed_width, Some(200.0));
+    assert_eq!(s.rejected_cables.len(), 2);
+    assert!(s.fill_with_rejected > 60.0);
+    // Fill itself still counts only the routed cable.
+    assert!((fill[0].fill - 20.9).abs() < 0.05, "{}", fill[0].fill);
+    // No standard width large enough: required width only.
+    let (_, fill) = pmef_route::cable::route_cables(&p(3, json!([100, 150])));
+    assert_eq!(fill[0].sizing.as_ref().unwrap().proposed_width, None);
+    // Everything fits: no proposal.
+    let (_, fill) = pmef_route::cable::route_cables(&p(1, json!([100])));
+    assert!(fill[0].sizing.is_none());
+}
