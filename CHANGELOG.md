@@ -16,8 +16,9 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 - **`pmef convert --to pcf`** wrote one file per piping system named after its line number, so a
   second system with the same number (one E3D PIPE per zone) overwrote the first file. Further files
   are now `<line>_2.pcf`, `<line>_3.pcf`, …
-- **`apply_pcf`** (PCF → PMEF with `--base`) reads all files of one line number together against all
-  systems with that number. Before, each file was matched to the first system only and deleted the
+- **`apply_pcf`** (PCF → PMEF with `--base`) reads all files of one line number together against the
+  systems with that number that the files contain (by `UNIQUE-COMPONENT-IDENTIFIER`); a system whose
+  file was not supplied keeps its components. Before, each file was matched to the first system only and deleted the
   components of the others, which came back as new objects without their `@id`. Huldra test case:
   HE-PIPE round trip from 999 created / 1,008 deleted to 0 / 0.
 

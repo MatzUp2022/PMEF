@@ -255,12 +255,21 @@ fn pcf_export_keeps_lines_that_share_a_line_number() {
     let dir = std::env::temp_dir().join(format!("pmef-pcf-dup-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let src = std::fs::read_to_string(root().join("examples/pump-skid-complete.ndjson")).unwrap();
-    let mut numbers = src.lines().filter(|l| l.contains("\"@type\":\"pmef:PipingNetworkSystem\""))
-        .filter_map(|l| serde_json::from_str::<serde_json::Value>(l).ok())
-        .filter_map(|v| v["lineNumber"].as_str().map(str::to_owned));
-    let (first, second) = (numbers.next().unwrap(), numbers.next().unwrap());
+    // give the second piping system the first system's line number
+    let mut first: Option<String> = None;
+    let mut renamed = 0;
+    let lines: Vec<String> = src.lines().map(|l| {
+        let Ok(mut v) = serde_json::from_str::<serde_json::Value>(l) else { return l.to_owned() };
+        if v["@type"] != "pmef:PipingNetworkSystem" { return l.to_owned() }
+        match &first {
+            None => { first = v["lineNumber"].as_str().map(str::to_owned); l.to_owned() }
+            Some(f) if renamed == 0 => { v["lineNumber"] = serde_json::Value::String(f.clone()); renamed += 1; v.to_string() }
+            Some(_) => l.to_owned(),
+        }
+    }).collect();
+    assert_eq!(renamed, 1);
     let input = dir.join("dup.ndjson");
-    std::fs::write(&input, src.replace(&format!("\"lineNumber\":\"{second}\""), &format!("\"lineNumber\":\"{first}\""))).unwrap();
+    std::fs::write(&input, lines.join("\n") + "\n").unwrap();
     let pcf = dir.join("pcf");
     let (code, _, err) = pmef(&["convert", input.to_str().unwrap(), "--to", "pcf", "-o", pcf.to_str().unwrap()]);
     assert_eq!(code, 0, "{err}");
@@ -271,6 +280,15 @@ fn pcf_export_keeps_lines_that_share_a_line_number() {
                                 "-o", back.to_str().unwrap()]);
     assert_eq!(code, 0, "{err}");
     assert!(err.contains("updated 14, created 0, deleted 0"), "{err}");
+    // importing only one of the two files must leave the other system untouched
+    let one = dir.join("one");
+    std::fs::create_dir_all(&one).unwrap();
+    let first_file = std::fs::read_dir(&pcf).unwrap().filter_map(Result::ok).map(|e| e.path()).min().unwrap();
+    std::fs::copy(&first_file, one.join(first_file.file_name().unwrap())).unwrap();
+    let (code, _, err) = pmef(&["convert", one.to_str().unwrap(), "--to", "pmef", "--base", input.to_str().unwrap(),
+                                "-o", back.to_str().unwrap()]);
+    assert_eq!(code, 0, "{err}");
+    assert!(err.contains("created 0, deleted 0"), "{err}");
     std::fs::remove_dir_all(dir).ok();
 }
 
