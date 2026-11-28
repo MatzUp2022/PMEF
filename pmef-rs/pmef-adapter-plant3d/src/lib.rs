@@ -54,6 +54,8 @@
 pub mod equipment;
 pub mod pcf_bridge;
 pub mod idf;
+pub mod pds;
+pub mod sqlite;
 
 pub use equipment::{p3d_class_to_pmef, P3dEquipment, P3dNozzle};
 pub use idf::{idf_bore_to_mm, idf_coord_to_mm, parse_idf, IdfFile};

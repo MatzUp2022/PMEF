@@ -408,6 +408,35 @@ carries no native Plant 3D object identifier for `pmef:HasEquivalentIn`. The sui
 include Plant 3D itself: the steps *through* the tool (PCF import, PCF export, preservation of
 `UNIQUE-COMPONENT-IDENTIFIER`) must be confirmed once with a Plant 3D installation.
 
+**Project database (`Piping.dcf`) — since 0.10.0:**
+
+A Plant 3D project stores the engineering data of all 3D model drawings in the SQLite file
+`Piping.dcf` in the project folder. `pmef convert Piping.dcf --to pmef -o OUT.ndjson` (library:
+`pmef_adapter_plant3d::pds`) reads it without the Plant SDK or a Plant 3D installation; the
+SQLite reader is part of the adapter, so the conversion also runs in WebAssembly.
+
+| PMEF Entity | Plant 3D database |
+|-------------|-------------------|
+| `PipingNetworkSystem` + one `PipingSegment` | line groups and their part membership; `pipeClass` = the spec most parts use |
+| `pmef:Pipe`, `Elbow`, `Tee`, `Reducer`, `Flange`, `Valve`, `Olet`, `Gasket`, `PipeSupport` | the piping part classes; bolt sets, instruments, blinds and other parts as `GenericPipingComponent` |
+| `pmef:Weld` with `connects` | butt, socket and tap welds of a connector, joined parts from the connection graph |
+| `EquipmentObject` + `nozzles` | equipment classes and the nozzles drawn by the same object |
+| `pmef:SteelMember` | structure members (start/end point, size → `profileId`, e.g. `HEA-200` → `EN:HEA200`) |
+| `pmef:IsConnectedTo` | the connection graph, resolved through connectors to part-to-part connections |
+
+Every object carries all of its database columns as `customAttributes` (`p3d:<column>`), its native
+ids (`p3d:PnPID`, `p3d:PnPGuid`, `p3d:DwgHandle`) and `provenance` with `sourceType: cad-import`
+and `sourceRef: plant3d-project:///<drawing>#handle=<hex>`. `@id`s are built from the row GUID,
+so they stay stable across exports.
+
+The database holds no port coordinates. A caller that reads the DWG geometry (PlantView reads
+the proxy graphics of the Plant 3D objects) passes port candidates per DWG object
+(`GeometryIndex`); the adapter places each port at its connector, at the coincident candidate of
+a directly joined part, or by elimination, and takes the direction from the candidate axis.
+Without geometry the ports are left out and the topology remains in `IsConnectedTo` and
+`Weld.connects`. Not mapped yet (no PMEF type): gratings, railings, stairs, steps, ladders,
+anchors and plates of the steel structure.
+
 ### 8.3 CADMATIC Adapter (`pmef-adapter-cadmatic`)
 
 **Approach:** CADMATIC REST Web API (Swagger-documented).
