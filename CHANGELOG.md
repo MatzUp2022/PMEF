@@ -22,6 +22,14 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 - **Performance**: graph node lookup through a hash index instead of a linear scan; Huldra
   HO-ELEC (5 800 trays incl. joins) about 30 ms per cable instead of 360 ms.
 
+### Fixed — `customAttributes` on hierarchy, system and segment objects
+
+- Spec 02 §10.1 gives every object `customAttributes`; the schemas of `pmef:Unit`, `pmef:Area`,
+  `pmef:PipingSegment`, `pmef:SteelSystem` and `pmef:DuctSegment` did not allow it. They do now
+  (optional, string/number/boolean/null values, as on the other objects), so a converter can keep
+  source attributes of an E3D SITE, ZONE, BRAN or STRU. Matching `custom_attributes` in the
+  `pmef-core` types; example `examples/tool-attributes-e3d.ndjson`.
+
 ### Added — tray sizing proposals (`pmef-route`)
 
 - When cables fail, they are routed again without the fill limit; trays that would exceed

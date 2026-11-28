@@ -88,6 +88,9 @@ pub struct Unit {
     /// Human-readable unit name, e.g. 'Cooling Water Unit'.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unit_name: Option<String>,
+    /// Source-tool attributes without a PMEF field, verbatim.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub custom_attributes: Option<std::collections::HashMap<String, serde_json::Value>>,
 }
 
 #[derive(Debug,Clone,Serialize,Deserialize)]
@@ -106,4 +109,7 @@ pub struct Area {
     /// RFC-0001 provenance / review / asBuilt blocks.
     #[serde(flatten, default)]
     pub recognition: crate::provenance::RecognitionMetadata,
+    /// Source-tool attributes without a PMEF field, verbatim.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub custom_attributes: Option<std::collections::HashMap<String, serde_json::Value>>,
 }

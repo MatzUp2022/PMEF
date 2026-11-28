@@ -936,7 +936,11 @@ follows:
 
 Every PMEF physical and functional object has an optional
 `customAttributes` field that accepts a JSON object with string,
-number, boolean, or null values:
+number, boolean, or null values. This includes the hierarchy, system
+and segment objects (`Unit`, `Area`, `PipingNetworkSystem`,
+`PipingSegment`, `SteelSystem`, `DuctNetworkSystem`, `DuctSegment`),
+which carry the attributes of grouping elements in the source tool
+(e.g. E3D SITE, ZONE, BRAN, STRU):
 
 ```jsonc
 "customAttributes": {
