@@ -54,6 +54,10 @@ pub struct PartGeometry {
     pub centroid: [f64; 3],
     /// Possible port locations.
     pub candidates: Vec<PortCandidate>,
+    /// Placement of the object (row-major 4x4, translation in the last column) when the
+    /// drawing stores one. Kept as `p3d:placement`; a support without ports gets its
+    /// location as port `P1`.
+    pub placement: Option<[f64; 16]>,
 }
 
 /// Port candidates per DWG object.
@@ -1011,6 +1015,10 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
         peer.insert(a.clone(), b.0);
         peer.insert(b.clone(), a.0);
     }
+    let placement_of = |i: &Item| -> Option<[f64; 16]> {
+        geom.get(&i.link.as_ref().filter(|l| l.sub_index == 0)?.key)?
+            .placement
+    };
     let connector_point = |cid: i64| -> Option<[f64; 3]> {
         let l = p.items.get(&cid)?.link.as_ref()?;
         geom.get(&l.key).map(|g| g.centroid)
@@ -1063,6 +1071,14 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
                 if let (true, [a, b]) = (ty == "pmef:Pipe", ports.as_slice()) {
                     if let (Some(a), Some(b)) = (coord(a), coord(b)) {
                         o["pipeLength"] = json!((dist(a, b) * 10.0).round() / 10.0);
+                    }
+                }
+                if ports.is_empty() && ty == "pmef:PipeSupport" {
+                    if let Some(m) = placement_of(i) {
+                        ports.push(
+                            json!({"portId": "P1", "coordinate": round3([m[3], m[7], m[11]], 3)}),
+                        );
+                        stats.ports_placed += 1;
                     }
                 }
                 if !ports.is_empty() {
@@ -1170,6 +1186,9 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
         };
         let mut o = o;
         add_native(&mut o, i, i.link.as_ref());
+        if let Some(m) = placement_of(i) {
+            o["customAttributes"]["p3d:placement"] = json!(m.map(|x| (x * 1e6).round() / 1e6));
+        }
         *stats
             .objects
             .entry(o["@type"].as_str().unwrap_or_default().to_owned())
@@ -1535,6 +1554,7 @@ mod tests {
                     ring([0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
                     ring([1000.0, 0.0, 0.0], [-1.0, 0.0, 0.0]),
                 ],
+                placement: None,
             },
         );
         g.insert(
@@ -1542,6 +1562,7 @@ mod tests {
             PartGeometry {
                 centroid: [1000.0, 0.0, 0.0],
                 candidates: vec![],
+                placement: None,
             },
         );
         g.insert(
@@ -1552,6 +1573,7 @@ mod tests {
                     ring([1000.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
                     ring([1305.0, 305.0, 0.0], [0.0, 1.0, 0.0]),
                 ],
+                placement: None,
             },
         );
         g.insert(
@@ -1559,6 +1581,7 @@ mod tests {
             PartGeometry {
                 centroid: [1305.0, 305.0, 0.0],
                 candidates: vec![],
+                placement: None,
             },
         );
         g.insert(
@@ -1566,6 +1589,10 @@ mod tests {
             PartGeometry {
                 centroid: [1305.0, 800.0, 0.0],
                 candidates: vec![ring([1305.0, 305.0, 0.0], [0.0, 1.0, 0.0])],
+                placement: Some([
+                    1.0, 0.0, 0.0, 1305.0, 0.0, 1.0, 0.0, 800.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+                    1.0,
+                ]),
             },
         );
         g
@@ -1669,6 +1696,8 @@ mod tests {
         assert_eq!(nz["coordinate"], json!([1305.0, 305.0, 0.0]));
         assert_eq!(nz["direction"], json!([0.0, -1.0, 0.0]));
         assert_eq!(nz["connectedLineId"], id(30));
+        assert_eq!(pump["customAttributes"]["p3d:placement"][3], 1305.0);
+        assert_eq!(pump["customAttributes"]["p3d:placement"][7], 800.0);
 
         let col = by_type(&objs, "pmef:SteelMember")[0];
         assert_eq!(col["memberType"], "COLUMN");
