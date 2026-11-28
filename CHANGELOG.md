@@ -26,6 +26,9 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   grid past the scene obstacles (cable radius + `dropClearance`, grid `dropStep`); the drop length
   is the routed length instead of the L1 distance. Unroutable drops keep L1 and add a cable
   `warnings` entry; report field `routedDrops`.
+- The routed drop length is also the drop cost in the tray choice: per cable end the
+  `dropCandidates` (default 6) nearest tray points are routed, so a near tray behind a wall loses
+  against a farther free one (`cable::route_cables_with`, `DropRouter`).
 
 ### Changed — cable lengths with bend arcs (`pmef-route`)
 

@@ -1197,3 +1197,32 @@ fn drops_are_routed_around_scene_obstacles() {
     assert_eq!(c.routed_drops, 1);
     assert!(c.warnings[0].starts_with("from drop kept as L1 distance"), "{:?}", c.warnings);
 }
+
+#[test]
+fn routed_drop_lengths_decide_the_tray() {
+    // T-NEAR is 2 m from each cable end by L1, but behind a wall; T-FAR is 3.5 m away and free.
+    let p = |route_drops: bool| -> RouteProblem {
+        serde_json::from_value(json!({
+            "project": "t", "revisionId": "r2026-11-28-001", "parent": "urn:pmef:unit:t:U1",
+            "obstacles": [{"id": "urn:pmef:obj:t:WALL", "aabb": {"min": [-2000, -600, -3000], "max": [12000, -400, 3000]}}],
+            "trays": [
+                {"id": "urn:pmef:obj:t:T-NEAR", "points": [[-1000, 0, 1000], [11000, 0, 1000]], "width": 300, "height": 100},
+                {"id": "urn:pmef:obj:t:T-FAR", "points": [[-1000, -1000, 3500], [11000, -1000, 3500]], "width": 300, "height": 100}
+            ],
+            "cableSettings": {"routeDrops": route_drops, "dropFactor": 1},
+            "cables": [{"id": "C-1", "class": "power", "cableType": "POWER_LV", "diameter": 20, "minBendRadius": 150,
+                        "from": {"point": [0, -1000, 0]}, "to": {"point": [10000, -1000, 0]}}]
+        }))
+        .unwrap()
+    };
+    let read = |f: &str| Err(format!("no {f}"));
+    let l1 = pmef_route::run(p(false), None, &read).unwrap();
+    assert_eq!(l1.cables[0].trays, ["urn:pmef:obj:t:T-NEAR"]);
+    let routed = pmef_route::run(p(true), None, &read).unwrap();
+    let c = &routed.cables[0];
+    assert!(c.ok && c.warnings.is_empty(), "{:?}", c);
+    assert_eq!(c.trays, ["urn:pmef:obj:t:T-FAR"]);
+    assert_eq!(c.routed_drops, 2);
+    // Both drops are straight up: 3500 mm each.
+    assert!((c.drop_mm - 7000.0).abs() < 1e-6, "{}", c.drop_mm);
+}
