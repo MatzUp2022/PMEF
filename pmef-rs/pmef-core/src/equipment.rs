@@ -172,7 +172,9 @@ pub struct Pump {
     pub pmef_version: String,
     pub is_part_of: PmefId,
     pub equipment_basic: EquipmentBasic,
-    pub pump_spec: PumpSpec,
+    /// Absent = no data known (RFC-0020); never serialised as an empty object.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pump_spec: Option<PumpSpec>,
     #[serde(default)]
     pub nozzles: Vec<Nozzle>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -192,6 +194,9 @@ pub struct Pump {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// Stand-in fields to be replaced in a later revision (RFC-0012, RFC-0020).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub placeholders: Vec<crate::placeholder::Placeholder>,
     /// Reference to a piping spec catalog entry, standard profile or equipment datasheet.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub catalog_ref: Option<crate::catalog::CatalogReference>,
@@ -271,7 +276,9 @@ pub struct Vessel {
     pub pmef_version: String,
     pub is_part_of: PmefId,
     pub equipment_basic: EquipmentBasic,
-    pub vessel_design: VesselDesign,
+    /// Absent = no data known (RFC-0020); never serialised as an empty object.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vessel_design: Option<VesselDesign>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vessel_subtype: Option<String>,
     #[serde(default)]
@@ -289,6 +296,9 @@ pub struct Vessel {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// Stand-in fields to be replaced in a later revision (RFC-0012, RFC-0020).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub placeholders: Vec<crate::placeholder::Placeholder>,
     /// URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub is_derived_from: Option<String>,
@@ -390,7 +400,9 @@ pub struct HeatExchanger {
     pub pmef_version: String,
     pub is_part_of: PmefId,
     pub equipment_basic: EquipmentBasic,
-    pub hx_spec: HeatExchangerSpec,
+    /// Absent = no data known (RFC-0020); never serialised as an empty object.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hx_spec: Option<HeatExchangerSpec>,
     #[serde(default)]
     pub nozzles: Vec<Nozzle>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -404,6 +416,9 @@ pub struct HeatExchanger {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// Stand-in fields to be replaced in a later revision (RFC-0012, RFC-0020).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub placeholders: Vec<crate::placeholder::Placeholder>,
     /// URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub is_derived_from: Option<String>,
@@ -470,7 +485,9 @@ pub struct Compressor {
     pub pmef_version: String,
     pub is_part_of: PmefId,
     pub equipment_basic: EquipmentBasic,
-    pub compressor_spec: CompressorSpec,
+    /// Absent = no data known (RFC-0020); never serialised as an empty object.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub compressor_spec: Option<CompressorSpec>,
     #[serde(default)]
     pub nozzles: Vec<Nozzle>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -484,6 +501,9 @@ pub struct Compressor {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// Stand-in fields to be replaced in a later revision (RFC-0012, RFC-0020).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub placeholders: Vec<crate::placeholder::Placeholder>,
     /// URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub is_derived_from: Option<String>,
@@ -529,6 +549,9 @@ pub struct GenericEquipment {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// Stand-in fields to be replaced in a later revision (RFC-0012, RFC-0020).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub placeholders: Vec<crate::placeholder::Placeholder>,
     /// URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub is_derived_from: Option<String>,
@@ -558,7 +581,9 @@ pub struct Reactor {
     pub pmef_version: String,
     pub is_part_of: PmefId,
     pub equipment_basic: EquipmentBasic,
-    pub vessel_design: VesselDesign,
+    /// Absent = no data known (RFC-0020); never serialised as an empty object.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vessel_design: Option<VesselDesign>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reactor_type: Option<String>,
     #[serde(default)]
@@ -574,6 +599,9 @@ pub struct Reactor {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// Stand-in fields to be replaced in a later revision (RFC-0012, RFC-0020).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub placeholders: Vec<crate::placeholder::Placeholder>,
     /// URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub is_derived_from: Option<String>,
@@ -632,6 +660,9 @@ pub struct Tank {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// Stand-in fields to be replaced in a later revision (RFC-0012, RFC-0020).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub placeholders: Vec<crate::placeholder::Placeholder>,
     /// URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub is_derived_from: Option<String>,
@@ -701,6 +732,9 @@ pub struct Filter {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// Stand-in fields to be replaced in a later revision (RFC-0012, RFC-0020).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub placeholders: Vec<crate::placeholder::Placeholder>,
     /// URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub is_derived_from: Option<String>,
@@ -753,6 +787,9 @@ pub struct Turbine {
     pub recognition: crate::provenance::RecognitionMetadata,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_attributes: Option<HashMap<String, serde_json::Value>>,
+    /// Stand-in fields to be replaced in a later revision (RFC-0012, RFC-0020).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub placeholders: Vec<crate::placeholder::Placeholder>,
     /// URI of the DEXPI/P&ID FunctionalObject (tag) this equipment realises
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub is_derived_from: Option<String>,
@@ -777,4 +814,35 @@ pub struct Turbine {
     /// [%]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub isentropic_efficiency: Option<f64>,
+}
+
+#[cfg(test)]
+mod rfc0020_tests {
+    use super::*;
+
+    #[test]
+    fn absent_spec_round_trips_without_empty_object() {
+        let j = r#"{"@type":"pmef:Pump","@id":"urn:pmef:obj:t:P-1","pmefVersion":"0.10.0",
+            "isPartOf":"urn:pmef:unit:t:U-1",
+            "equipmentBasic":{"tagNumber":"P-1","equipmentClass":"CENTRIFUGAL_PUMP"}}"#;
+        let p: Pump = serde_json::from_str(j).unwrap();
+        assert!(p.pump_spec.is_none());
+        let back = serde_json::to_value(&p).unwrap();
+        assert!(back.get("pumpSpec").is_none(), "absent spec must not become {{}}");
+        assert!(back.get("placeholders").is_none());
+    }
+
+    #[test]
+    fn placeholders_on_equipment_round_trip() {
+        let j = r#"{"@type":"pmef:Vessel","@id":"urn:pmef:obj:t:V-1","pmefVersion":"0.10.0",
+            "isPartOf":"urn:pmef:unit:t:U-1",
+            "equipmentBasic":{"tagNumber":"V-1","equipmentClass":"PRESSURE_VESSEL"},
+            "vesselDesign":{"volume":4.0},
+            "placeholders":[{"path":"/vesselDesign/volume","reason":"TO_BE_CONFIRMED"}]}"#;
+        let v: Vessel = serde_json::from_str(j).unwrap();
+        assert_eq!(v.placeholders.len(), 1);
+        let back = serde_json::to_value(&v).unwrap();
+        assert_eq!(back["placeholders"][0]["path"], "/vesselDesign/volume");
+        assert_eq!(back["vesselDesign"]["volume"], 4.0);
+    }
 }

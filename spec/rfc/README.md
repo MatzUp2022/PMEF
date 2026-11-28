@@ -28,6 +28,7 @@ Status values (issue template): `DRAFT` → `REVIEW` → `APPROVED` / `REJECTED`
 | [0017](0017-pmefx-shared-mesh-offset.md) | PMEFX shared mesh files with a per-level offset | 0.10.0 | `DRAFT` | — | Full transforms (WG-Serialisation); feature list answered by 0018 |
 | [0018](0018-pmefx-mesh-bundles-deflate.md) | PMEFX 1.1: mesh bundles, compressed mesh entries, required features | 0.10.0 | `DRAFT` | — | Mesh compression extension; bundle groups in the index (WG-Serialisation) |
 | [0019](0019-steel-accessories-object-placement.md) | Steel accessories (railings, stairs, ladders, anchors) and object placement | 0.10.0 | `DRAFT` | — | Stair parts as separate objects (WG-Steel); placement required for symbols (WG-Geometry) |
+| [0020](0020-optional-equipment-specs.md) | Optional equipment property sets, placeholders on equipment | 0.10.0 | `DRAFT` | [#104](https://github.com/MatzUp2022/PMEF/issues/104) | `pmef check` info for equipment without data; P&ID enrichment rule (WG-Equipment) |
 
 RFCs 0001–0003 are fully implemented in this repository (schemas, spec text, Rust reference
 implementation, examples, tests in CI); each RFC's *Review Status* section lists the evidence.

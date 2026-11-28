@@ -11,6 +11,19 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Changed — RFC-0020: optional equipment property sets (DRAFT)
+
+- `pumpSpec`, `vesselDesign` (Vessel, Column, Reactor), `hxSpec` and `compressorSpec` are no
+  longer required; absent means "no design data known". Empty sets (`{}`) are rejected
+  (`minProperties: 1`). Spec 02 §5.3, [RFC-0020](spec/rfc/0020-optional-equipment-specs.md),
+  issue #92.
+- `placeholders` on all equipment objects (`EquipmentObject`), e.g. `/pumpSpec/designFlow`
+  `TO_BE_CONFIRMED`. Spec 02 §2.10.
+- Rust: `pmef_core::equipment` key property sets are `Option<…>`; equipment structs carry
+  `placeholders`. Plant 3D adapter no longer writes empty specs.
+- Example `examples/equipment-partial-data.ndjson`; conformance cases `EQ-U-*` for absent,
+  empty and placeholder-marked sets.
+
 ### Added — RFC-0019: steel accessories and object placement (DRAFT)
 
 - **`pmef:SteelAccessory`** for railings, stairs, stair treads, ladders and anchors

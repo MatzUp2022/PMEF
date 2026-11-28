@@ -45,6 +45,12 @@
         "provenance": { "$ref": "pmef-base.schema.json#/$defs/Provenance" },
         "review":     { "$ref": "pmef-base.schema.json#/$defs/ReviewStatus" },
         "asBuilt":    { "$ref": "pmef-base.schema.json#/$defs/AsBuilt" },
+        "placeholders": {
+          "type": "array",
+          "description": "Fields of this object that hold stand-in values to be replaced in a later revision (RFC-0012, RFC-0020), e.g. /pumpSpec/designFlow",
+          "items": { "$ref": "pmef-base.schema.json#/$defs/Placeholder" },
+          "minItems": 1
+        },
         "customAttributes": {
           "type": "object",
           "additionalProperties": { "type": ["string","number","boolean","null"] }
@@ -82,10 +88,9 @@
         {
           "properties": {
             "@type":       { "const": "pmef:Vessel" },
-            "vesselDesign":{ "$ref": "pmef-property-sets.schema.json#/$defs/VesselDesign" },
+            "vesselDesign":{ "allOf": [{ "$ref": "pmef-property-sets.schema.json#/$defs/VesselDesign" }], "minProperties": 1, "description": "Omit when no data is known (RFC-0020); an empty object is invalid" },
             "vesselSubtype":{ "type": "string", "enum": ["DRUM","SEPARATOR","SCRUBBER","ACCUMULATOR","SURGE_DRUM","FLASH_DRUM","KO_DRUM","SLUG_CATCHER","GENERIC"] }
-          },
-          "required": ["vesselDesign"]
+          }
         }
       ]
     },
@@ -122,10 +127,9 @@
         {
           "properties": {
             "@type":    { "const": "pmef:Pump" },
-            "pumpSpec": { "$ref": "pmef-property-sets.schema.json#/$defs/PumpSpec" },
+            "pumpSpec": { "allOf": [{ "$ref": "pmef-property-sets.schema.json#/$defs/PumpSpec" }], "minProperties": 1, "description": "Omit when no data is known (RFC-0020); an empty object is invalid" },
             "motorId":  { "type": "string", "description": "PMEF ID of the associated Motor equipment object" }
-          },
-          "required": ["pumpSpec"]
+          }
         }
       ]
     },
@@ -137,11 +141,10 @@
         {
           "properties": {
             "@type":          { "const": "pmef:Compressor" },
-            "compressorSpec": { "$ref": "pmef-property-sets.schema.json#/$defs/CompressorSpec" },
+            "compressorSpec": { "allOf": [{ "$ref": "pmef-property-sets.schema.json#/$defs/CompressorSpec" }], "minProperties": 1, "description": "Omit when no data is known (RFC-0020); an empty object is invalid" },
             "motorId":        { "type": "string" },
             "auxSystemIds":   { "type": "array", "items": { "type": "string" }, "description": "IDs of lube oil, seal gas, cooling systems" }
-          },
-          "required": ["compressorSpec"]
+          }
         }
       ]
     },
@@ -153,9 +156,8 @@
         {
           "properties": {
             "@type":        { "const": "pmef:HeatExchanger" },
-            "hxSpec":       { "$ref": "pmef-property-sets.schema.json#/$defs/HeatExchangerSpec" }
-          },
-          "required": ["hxSpec"]
+            "hxSpec":       { "allOf": [{ "$ref": "pmef-property-sets.schema.json#/$defs/HeatExchangerSpec" }], "minProperties": 1, "description": "Omit when no data is known (RFC-0020); an empty object is invalid" }
+          }
         }
       ]
     },
@@ -167,7 +169,7 @@
         {
           "properties": {
             "@type":       { "const": "pmef:Column" },
-            "vesselDesign":{ "$ref": "pmef-property-sets.schema.json#/$defs/VesselDesign" },
+            "vesselDesign":{ "allOf": [{ "$ref": "pmef-property-sets.schema.json#/$defs/VesselDesign" }], "minProperties": 1, "description": "Omit when no data is known (RFC-0020); an empty object is invalid" },
             "columnType":  { "type": "string", "enum": ["DISTILLATION","ABSORPTION","STRIPPING","EXTRACTION","SCRUBBER","QUENCH"] },
             "numberOfTrays":  { "type": "integer" },
             "trayType":       { "type": "string", "enum": ["SIEVE","VALVE","BUBBLE_CAP","STRUCTURED_PACKING","RANDOM_PACKING"] },
@@ -176,8 +178,7 @@
             "topTemperature":    { "type": "number", "description": "[K]" },
             "bottomTemperature": { "type": "number", "description": "[K]" },
             "numberOfBeds": { "type": "integer" }
-          },
-          "required": ["vesselDesign"]
+          }
         }
       ]
     },
@@ -189,15 +190,14 @@
         {
           "properties": {
             "@type":       { "const": "pmef:Reactor" },
-            "vesselDesign":{ "$ref": "pmef-property-sets.schema.json#/$defs/VesselDesign" },
+            "vesselDesign":{ "allOf": [{ "$ref": "pmef-property-sets.schema.json#/$defs/VesselDesign" }], "minProperties": 1, "description": "Omit when no data is known (RFC-0020); an empty object is invalid" },
             "reactorType": { "type": "string", "enum": ["CSTR","PFR","FIXED_BED","FLUIDIZED_BED","TRICKLE_BED","BATCH","SEMI_BATCH","TUBULAR","ELECTRIC_ARC_FURNACE","BLAST_FURNACE","CONVERTER"] },
             "catalystType":    { "type": "string" },
             "reactionType":    { "type": "string", "description": "e.g. 'Exothermic catalytic', 'Electrochemical smelting'" },
             "heatRemovalType": { "type": "string", "enum": ["COOLING_COIL","COOLING_JACKET","QUENCH","ADIABATIC","EXTERNAL_HX"] },
             "installedPower":  { "type": "number", "description": "[kW] for electrically heated reactors (e.g. EAF)" },
             "powerSupplyVoltage": { "type": "number", "description": "[V] for EAF / electrochemical reactors" }
-          },
-          "required": ["vesselDesign"]
+          }
         }
       ]
     },

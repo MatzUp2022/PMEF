@@ -1177,15 +1177,8 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
                     basic["manufacturer"] = json!(m);
                 }
                 let mut o = json!({"@type": ty, "@id": obj_id(i), "pmefVersion": PMEF_VERSION, "isPartOf": unit_of(i), "equipmentBasic": basic});
-                // The database has no design data; the typed specs stay empty.
-                if let Some(spec) = match ty {
-                    "pmef:Pump" => Some("pumpSpec"),
-                    "pmef:Vessel" => Some("vesselDesign"),
-                    "pmef:HeatExchanger" => Some("hxSpec"),
-                    _ => None,
-                } {
-                    o[spec] = json!({});
-                }
+                // The database has no design data: the typed spec (pumpSpec, vesselDesign,
+                // hxSpec) is omitted, which means "unknown" (RFC-0020); never write `{}`.
                 let mut nozzles = Vec::new();
                 for n in nozzles_of.get(&i.id).into_iter().flatten() {
                     if let Some(nz) = nozzle(p, n, &placed, &peer, &line_ref, &mut stats) {

@@ -346,7 +346,9 @@ and **SHOULD** be listed with `path` `/componentSpec/componentClass` (`SOURCE_MI
 `NOT_IN_ENUM` with the real type in `note` when it is outside the list). Existing data without
 the entry stays valid. Since RFC-0015 cable tray runs and fittings (`CableTrayRun`,
 `CableTrayFitting`) carry `placeholders` too, typically for a `height` that the source does not
-give (§6.8). Other domains follow the same pattern when they need it.
+give (§6.8), and since RFC-0020 all equipment objects (`EquipmentObject`, §5.3), typically for
+design values in `pumpSpec`, `vesselDesign`, `hxSpec` or `compressorSpec` that are not yet
+confirmed. Other domains follow the same pattern when they need it.
 
 ## 3 Plant Hierarchy
 
@@ -518,6 +520,17 @@ Piping. It is embedded as an array on each `EquipmentObject`.
 | `pmef:Filter` | inline (filtration rating, ΔP) | — |
 | `pmef:Turbine` | inline (pressures, temperatures) | API 611, API 612 |
 | `pmef:GenericEquipment` | `EquipmentBasic` only | Fallback type |
+
+**Key property sets are optional** ([RFC-0020](rfc/0020-optional-equipment-specs.md)). Since
+0.10.0 `pumpSpec`, `vesselDesign`, `hxSpec` and `compressorSpec` are not required. An absent
+property set means *no design data known* — the usual case for objects converted from a 3D model
+without process data or produced by recognition. An exporter **MUST NOT** write an empty object
+(`"pumpSpec": {}`); the schemas reject it (`minProperties: 1`), so "unknown" has exactly one
+spelling. A consumer **MUST NOT** read an absent set as "not applicable". Values that are known
+only approximately or still to be confirmed are written and listed in `placeholders` (§2.10),
+e.g. `{"path": "/pumpSpec/designFlow", "reason": "TO_BE_CONFIRMED", "expectedFrom": "pump datasheet"}`;
+the real value arrives as a new revision of the same `@id`. Data from a linked P&ID or datasheet
+(matched via `isDerivedFrom` or the tag) fills the set in that revision.
 
 **Reserved volumes** ([RFC-0013](rfc/0013-steel-plates-project-profiles.md)). Volumes that are not
 process equipment but take part in clash checks are `pmef:GenericEquipment` with
