@@ -634,8 +634,17 @@ fn cmd_convert(input: PathBuf, to: &str, base: Option<PathBuf>, output: PathBuf)
             let objs = read_values(&input)?;
             let export = write_pcf(&objs);
             std::fs::create_dir_all(&output).with_context(|| format!("Cannot create {}", output.display()))?;
+            // Several piping systems may share a line number (e.g. one E3D PIPE per zone): each gets
+            // its own file instead of overwriting the previous one (`<line>.pcf`, `<line>_2.pcf`, ...).
+            let mut used = std::collections::HashSet::new();
             for (line, text) in &export.files {
-                let name: String = line.chars().map(|c| if c.is_alphanumeric() || matches!(c, '-' | '_') { c } else { '_' }).collect();
+                let base: String = line.chars().map(|c| if c.is_alphanumeric() || matches!(c, '-' | '_') { c } else { '_' }).collect();
+                let mut name = base.clone();
+                let mut k = 1;
+                while !used.insert(name.to_lowercase()) {
+                    k += 1;
+                    name = format!("{base}_{k}");
+                }
                 let path = output.join(format!("{name}.pcf"));
                 std::fs::write(&path, text).with_context(|| format!("Cannot write {}", path.display()))?;
             }

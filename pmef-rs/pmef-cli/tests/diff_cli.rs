@@ -249,6 +249,50 @@ fn pcf_round_trip_of_benchmark_is_lossless_and_detects_tool_edits() {
 }
 
 #[test]
+fn pcf_export_keeps_lines_that_share_a_line_number() {
+    // Two piping systems with the same lineNumber (E3D: one PIPE per zone) must not overwrite
+    // each other's PCF file; the round trip then still finds every component.
+    let dir = std::env::temp_dir().join(format!("pmef-pcf-dup-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let src = std::fs::read_to_string(root().join("examples/pump-skid-complete.ndjson")).unwrap();
+    // give the second piping system the first system's line number
+    let mut first: Option<String> = None;
+    let mut renamed = 0;
+    let lines: Vec<String> = src.lines().map(|l| {
+        let Ok(mut v) = serde_json::from_str::<serde_json::Value>(l) else { return l.to_owned() };
+        if v["@type"] != "pmef:PipingNetworkSystem" { return l.to_owned() }
+        match &first {
+            None => { first = v["lineNumber"].as_str().map(str::to_owned); l.to_owned() }
+            Some(f) if renamed == 0 => { v["lineNumber"] = serde_json::Value::String(f.clone()); renamed += 1; v.to_string() }
+            Some(_) => l.to_owned(),
+        }
+    }).collect();
+    assert_eq!(renamed, 1);
+    let input = dir.join("dup.ndjson");
+    std::fs::write(&input, lines.join("\n") + "\n").unwrap();
+    let pcf = dir.join("pcf");
+    let (code, _, err) = pmef(&["convert", input.to_str().unwrap(), "--to", "pcf", "-o", pcf.to_str().unwrap()]);
+    assert_eq!(code, 0, "{err}");
+    assert!(err.contains("wrote 2 PCF file(s)"), "{err}");
+    assert_eq!(std::fs::read_dir(&pcf).unwrap().count(), 2, "both lines need their own file");
+    let back = dir.join("back.ndjson");
+    let (code, _, err) = pmef(&["convert", pcf.to_str().unwrap(), "--to", "pmef", "--base", input.to_str().unwrap(),
+                                "-o", back.to_str().unwrap()]);
+    assert_eq!(code, 0, "{err}");
+    assert!(err.contains("updated 14, created 0, deleted 0"), "{err}");
+    // importing only one of the two files must leave the other system untouched
+    let one = dir.join("one");
+    std::fs::create_dir_all(&one).unwrap();
+    let first_file = std::fs::read_dir(&pcf).unwrap().filter_map(Result::ok).map(|e| e.path()).min().unwrap();
+    std::fs::copy(&first_file, one.join(first_file.file_name().unwrap())).unwrap();
+    let (code, _, err) = pmef(&["convert", one.to_str().unwrap(), "--to", "pmef", "--base", input.to_str().unwrap(),
+                                "-o", back.to_str().unwrap()]);
+    assert_eq!(code, 0, "{err}");
+    assert!(err.contains("created 0, deleted 0"), "{err}");
+    std::fs::remove_dir_all(dir).ok();
+}
+
+#[test]
 fn convert_to_pmef_requires_base() {
     let (code, _, err) = pmef(&["convert", "tests/diff", "--to", "pmef", "-o", "/dev/null"]);
     assert_ne!(code, 0);
