@@ -1187,7 +1187,12 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
         let mut o = o;
         add_native(&mut o, i, i.link.as_ref());
         if let Some(m) = placement_of(i) {
-            o["customAttributes"]["p3d:placement"] = json!(m.map(|x| (x * 1e6).round() / 1e6));
+            // customAttributes hold scalars: the 16 numbers row-major, space separated.
+            let text: Vec<String> = m
+                .iter()
+                .map(|x| ((x * 1e6).round() / 1e6 + 0.0).to_string())
+                .collect();
+            o["customAttributes"]["p3d:placement"] = json!(text.join(" "));
         }
         *stats
             .objects
@@ -1696,8 +1701,10 @@ mod tests {
         assert_eq!(nz["coordinate"], json!([1305.0, 305.0, 0.0]));
         assert_eq!(nz["direction"], json!([0.0, -1.0, 0.0]));
         assert_eq!(nz["connectedLineId"], id(30));
-        assert_eq!(pump["customAttributes"]["p3d:placement"][3], 1305.0);
-        assert_eq!(pump["customAttributes"]["p3d:placement"][7], 800.0);
+        assert_eq!(
+            pump["customAttributes"]["p3d:placement"],
+            "1 0 0 1305 0 1 0 800 0 0 1 0 0 0 0 1"
+        );
 
         let col = by_type(&objs, "pmef:SteelMember")[0];
         assert_eq!(col["memberType"], "COLUMN");
