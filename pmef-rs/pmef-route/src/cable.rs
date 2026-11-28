@@ -104,6 +104,10 @@ pub struct CableSettings {
     /// their orthogonal distance (see `drop.rs`).
     #[serde(default)]
     pub route_drops: bool,
+    /// With `routeDrops`: drop candidates per cable end (nearest by L1) that are routed through
+    /// the scene during the tray choice.
+    #[serde(default = "d_drop_candidates")]
+    pub drop_candidates: usize,
     /// Grid spacing of the drop search [mm].
     #[serde(default = "d_drop_step")]
     pub drop_step: f64,
@@ -126,6 +130,9 @@ fn d_fill() -> f64 {
 fn d_drop() -> f64 {
     5000.0
 }
+fn d_drop_candidates() -> usize {
+    6
+}
 fn d_drop_step() -> f64 {
     100.0
 }
@@ -142,6 +149,7 @@ impl Default for CableSettings {
             max_drop: d_drop(),
             drop_factor: d_drop_factor(),
             route_drops: false,
+            drop_candidates: d_drop_candidates(),
             drop_step: d_drop_step(),
             drop_clearance: d_drop_clearance(),
             trays_from_scene: false,
@@ -452,7 +460,19 @@ impl PartialOrd for Open {
 }
 
 /// Route all cables of the problem (largest diameter first) and report the tray fill.
+/// Routes a drop from a cable end to a tray point past the scene (`drop.rs`): the corner
+/// points from the end to the tray point.
+pub type DropRouter<'a> = dyn Fn(&CableSpec, P3, P3) -> Result<Vec<P3>, String> + 'a;
+
 pub fn route_cables(problem: &RouteProblem) -> (Vec<RoutedCable>, Vec<TrayFill>) {
+    route_cables_with(problem, None)
+}
+
+/// [`route_cables`] with drops routed during the tray choice: each end's nearest
+/// `dropCandidates` drops are routed with `drop`, and their routed length (× `dropFactor`)
+/// is the drop cost. When none of an end's candidates can be routed, its drops keep the L1
+/// distance and the cable gets a warning.
+pub fn route_cables_with(problem: &RouteProblem, drop: Option<&DropRouter>) -> (Vec<RoutedCable>, Vec<TrayFill>) {
     let set = problem.cable_settings.clone().unwrap_or_default();
     let trays = &problem.trays;
     // Area in use per tray [mm²], and the cables on it.
@@ -482,7 +502,7 @@ pub fn route_cables(problem: &RouteProblem) -> (Vec<RoutedCable>, Vec<TrayFill>)
                     && used[i] + area <= set.max_fill / 100.0 * t.width * t.height + 1e-9
             })
             .collect();
-        let r = route_cable(c, trays, &allowed, &set);
+        let r = route_cable(c, trays, &allowed, &set, drop);
         if r.ok {
             for t in &r.trays {
                 let i = trays.iter().position(|x| &x.id == t).unwrap();
@@ -509,6 +529,7 @@ fn route_cable(
     trays: &[TraySpec],
     allowed: &[bool],
     set: &CableSettings,
+    router: Option<&DropRouter>,
 ) -> RoutedCable {
     let mut res = RoutedCable {
         id: c.id.clone(),
@@ -533,15 +554,17 @@ fn route_cable(
     let goal = g.node(c.to.point);
     // Split every allowed tray segment at its vertices and at the drop points of this cable.
     let mut drops = 0;
+    // Drop candidates per end: (L1 distance, tray point, its node).
+    let mut cand: [Vec<(f64, P3, usize)>; 2] = [Vec::new(), Vec::new()];
     for (ti, t) in trays.iter().enumerate().filter(|(i, _)| allowed[*i]) {
         for w in t.points.windows(2) {
             let mut cuts: Vec<(f64, P3)> = vec![(0.0, w[0]), (1.0, w[1])];
-            for (end, node) in [(c.from.point, start), (c.to.point, goal)] {
+            for (k, end) in [c.from.point, c.to.point].into_iter().enumerate() {
                 let (q, s) = project(end, w[0], w[1]);
                 let d = l1(end, q);
                 if d <= set.max_drop {
                     let qn = g.node(q);
-                    g.edge(node, qn, d * set.drop_factor, None);
+                    cand[k].push((d, q, qn));
                     cuts.push((s, q));
                     drops += 1;
                 }
@@ -559,6 +582,38 @@ fn route_cable(
             c.class, set.max_drop
         ));
         return res;
+    }
+    // Drop edges: routed through the scene when a router is given, else the L1 distance.
+    // Routed polylines run from the end node to the tray node.
+    let mut polys: std::collections::HashMap<(usize, usize), Vec<P3>> = std::collections::HashMap::new();
+    for (k, (node, end)) in [(start, c.from.point), (goal, c.to.point)].into_iter().enumerate() {
+        let list = &mut cand[k];
+        list.sort_by(|a, b| a.0.total_cmp(&b.0));
+        list.dedup_by_key(|x| x.2);
+        let mut routed = 0;
+        let mut last_err = None;
+        if let Some(rt) = router {
+            for &(_, q, qn) in list.iter().take(set.drop_candidates.max(1)) {
+                match rt(c, end, q) {
+                    Ok(poly) => {
+                        let l: f64 = poly.windows(2).map(|w| dist(w[0], w[1])).sum();
+                        g.edge(node, qn, l * set.drop_factor, None);
+                        polys.insert((node, qn), poly);
+                        routed += 1;
+                    }
+                    Err(e) => last_err = Some(e),
+                }
+            }
+        }
+        if routed == 0 {
+            for &(d, _, qn) in list.iter() {
+                g.edge(node, qn, d * set.drop_factor, None);
+            }
+            if let (Some(e), false) = (last_err, list.is_empty()) {
+                let which = if k == 0 { "from" } else { "to" };
+                res.warnings.push(format!("{which} drop kept as L1 distance: {e}"));
+            }
+        }
     }
 
     // Dijkstra over (node, incoming edge direction): bends need the tray radius.
@@ -645,6 +700,13 @@ fn route_cable(
         corner[i] = 2.0 * r * half - r * theta;
     }
     res.bend_correction_mm = corner.iter().sum();
+    // Routed drop between two path nodes, oriented along the path.
+    let drop_poly = |a: usize, b: usize| -> Option<Vec<P3>> {
+        if let Some(p) = polys.get(&(a, b)) {
+            return Some(p.clone());
+        }
+        polys.get(&(b, a)).map(|p| p.iter().rev().copied().collect())
+    };
     for (i, w) in nodes.windows(2).enumerate() {
         let e = g.adj[w[0]].iter().find(|e| e.0 == w[1]).unwrap();
         match e.2 {
@@ -658,7 +720,9 @@ fn route_cable(
                 }
             }
             None => {
-                let l = l1(g.pts[w[0]], g.pts[w[1]]);
+                let l = drop_poly(w[0], w[1])
+                    .map(|p| p.windows(2).map(|s| dist(s[0], s[1])).sum())
+                    .unwrap_or_else(|| l1(g.pts[w[0]], g.pts[w[1]]));
                 res.length_mm += l;
                 res.drop_mm += l;
             }
@@ -671,7 +735,16 @@ fn route_cable(
             edge_tray(nodes[nodes.len() - 2], nodes[nodes.len() - 1]).is_none(),
         ];
     }
-    res.points = nodes.iter().map(|n| g.pts[*n]).collect();
+    res.points = vec![g.pts[nodes[0]]];
+    for w in nodes.windows(2) {
+        match drop_poly(w[0], w[1]) {
+            Some(p) => {
+                res.routed_drops += 1;
+                res.points.extend_from_slice(&p[1..]);
+            }
+            None => res.points.push(g.pts[w[1]]),
+        }
+    }
     res.trays = per_tray.iter().map(|(t, _)| trays[*t].id.clone()).collect();
     // The run carrying the longest part (fittings are never `cableTrayId`, spec 02 §6.7).
     res.main_tray = per_tray

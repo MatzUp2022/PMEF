@@ -100,12 +100,9 @@ pub fn run_cached(
             }
         }
     }
-    let (mut cables, tray_fill) = if problem.cables.is_empty() {
+    let (cables, tray_fill) = if problem.cables.is_empty() {
         (Vec::new(), Vec::new())
-    } else {
-        route_cables(&problem)
-    };
-    if let Some(set) = problem.cable_settings.as_ref().filter(|s| s.route_drops) {
+    } else if let Some(set) = problem.cable_settings.as_ref().filter(|s| s.route_drops) {
         let ds = crate::drop::DropSettings {
             step: set.drop_step,
             margin: problem.grid.margin.min(2000.0),
@@ -113,8 +110,17 @@ pub fn run_cached(
             bend_penalty: problem.settings.bend_penalty,
             max_expansions: problem.settings.max_expansions,
         };
-        crate::drop::route_drops(&mut cables, &problem.trays, &scene, &ds);
-    }
+        let tray_ids: Vec<String> =
+            problem.trays.iter().map(|t| t.id.split('#').next().unwrap_or(&t.id).to_string()).collect();
+        let router = |c: &crate::cable::CableSpec, end: crate::geom::P3, q: crate::geom::P3| {
+            let mut skip: Vec<&str> = tray_ids.iter().map(String::as_str).collect();
+            skip.extend([&c.from.id, &c.to.id].into_iter().flatten().map(String::as_str));
+            crate::drop::route_drop(&scene, end, q, c.diameter / 2.0, &skip, &ds)
+        };
+        crate::cable::route_cables_with(&problem, Some(&router))
+    } else {
+        route_cables(&problem)
+    };
     let mut objects = Vec::new();
     if let Some(plant) = plant {
         objects.push(json!({

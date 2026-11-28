@@ -1,13 +1,13 @@
 //! Cable drops through the obstacle grid (`cableSettings.routeDrops`).
 //!
-//! The tray search (`cable.rs`) costs a drop by its orthogonal (L1) distance. With
-//! `routeDrops` each drop of a routed cable — cable end to the tray point and tray point to
-//! the other end — is routed afterwards on an orthogonal grid around both points, past the
-//! scene obstacles grown by the cable radius + `dropClearance`. The cable end's own object
-//! (`from.id`/`to.id`) and the trays are not obstacles; nodes within one grid step of either
-//! end stay free. A drop that cannot be routed keeps its L1 length and adds a warning.
+//! Without `routeDrops` the tray search (`cable.rs`) costs a drop by its orthogonal (L1)
+//! distance. With `routeDrops` the nearest `dropCandidates` drops of each cable end are
+//! routed during the tray choice on an orthogonal grid around the end and the tray point,
+//! past the scene obstacles grown by the cable radius + `dropClearance`; the routed length is
+//! the drop cost. The cable end's own object (`from.id`/`to.id`) and the trays are not
+//! obstacles; nodes within one grid step of either end stay free. When no candidate of an end
+//! can be routed, its drops keep the L1 distance and the cable gets a warning.
 
-use crate::cable::{RoutedCable, TraySpec};
 use crate::geom::{Aabb, P3};
 use crate::grid::Grid;
 use crate::problem::ObstacleKind;
@@ -161,43 +161,3 @@ pub fn route_drop(
     Ok(poly)
 }
 
-fn len(poly: &[P3]) -> f64 {
-    poly.windows(2)
-        .map(|w| (0..3).map(|i| (w[1][i] - w[0][i]).powi(2)).sum::<f64>().sqrt())
-        .sum()
-}
-
-/// Route the drops of every routed cable through the scene; lengths and points are updated.
-pub fn route_drops(cables: &mut [RoutedCable], trays: &[TraySpec], scene: &Scene, set: &DropSettings) {
-    let tray_ids: Vec<&str> = trays.iter().map(|t| t.id.split('#').next().unwrap_or(&t.id)).collect();
-    for c in cables.iter_mut().filter(|c| c.ok) {
-        let Some(spec) = c.spec.clone() else { continue };
-        let r = spec.diameter / 2.0;
-        let mut skip: Vec<&str> = tray_ids.clone();
-        let ids: Vec<String> = [&spec.from.id, &spec.to.id].iter().filter_map(|x| x.as_ref().cloned()).collect();
-        skip.extend(ids.iter().map(String::as_str));
-        let n = c.points.len();
-        // (index of the drop's first point, which end). The "to" drop at the end of `points`
-        // first, so that inserting its corners does not move the "from" drop at index 0.
-        for (i, which, leg) in [(n.saturating_sub(2), "to", c.drop_legs[1]), (0usize, "from", c.drop_legs[0])] {
-            if !leg || n < 2 {
-                continue;
-            }
-            let (a, b) = (c.points[i], c.points[i + 1]);
-            let l1: f64 = (0..3).map(|k| (a[k] - b[k]).abs()).sum();
-            match route_drop(scene, a, b, r, &skip, set) {
-                Ok(poly) => {
-                    let l = len(&poly);
-                    c.length_mm += l - l1;
-                    c.drop_mm += l - l1;
-                    c.routed_drops += 1;
-                    let mut pts = c.points[..i].to_vec();
-                    pts.extend(poly);
-                    pts.extend_from_slice(&c.points[i + 2..]);
-                    c.points = pts;
-                }
-                Err(e) => c.warnings.push(format!("{which} drop kept as L1 distance: {e}")),
-            }
-        }
-    }
-}
