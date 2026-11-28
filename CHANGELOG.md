@@ -11,6 +11,18 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added — Plant 3D project database (`Piping.dcf`) → PMEF
+
+- **`pmef convert Piping.dcf --to pmef`** reads the engineering data of an AutoCAD Plant 3D project
+  (lines, piping parts, welds, equipment with nozzles, steel members, connection graph) into PMEF
+  with GUID-based `@id`s, all database columns as `customAttributes` (`p3d:*`) and a provenance
+  reference to the DWG object. Spec 05 §8.2.
+- `pmef-adapter-plant3d::pds`: `PdsProject::read`, `to_pmef` with an optional `GeometryIndex`
+  (port candidates per DWG object) that places the ports through the connection graph.
+- `pmef-adapter-plant3d::sqlite`: read-only SQLite reader in pure Rust (no new dependency, runs in
+  WebAssembly).
+- Synthetic test database `tests/plant3d/pds-synthetic.dcf` and its generator `make_pds_fixture.py`.
+
 ### Added — cable routing on real tray networks (`pmef-route`, Huldra test case)
 
 - `cableSettings.trayJoinTolerance`: free tray ends within (both half widths + tolerance) of

@@ -132,11 +132,11 @@ enum Commands {
 
     /// Convert between PMEF and other formats.
     Convert {
-        /// Input: a PMEF NDJSON file (--to pcf, --to aml), a PCF file / directory of *.pcf or a
-        /// CAEX/AutomationML `.aml` file (--to pmef).
+        /// Input: a PMEF NDJSON file (--to pcf, --to aml), a PCF file / directory of *.pcf, a
+        /// CAEX/AutomationML `.aml` file or a Plant 3D project database `Piping.dcf` (--to pmef).
         input: PathBuf,
         /// Target format: pcf (PMEF → AutoCAD Plant 3D), aml (PMEF → CAEX XML, spec 03 §4) or
-        /// pmef (PCF or AML → PMEF).
+        /// pmef (PCF, AML or Plant 3D DCF → PMEF).
         #[arg(long, value_parser = ["pcf", "aml", "pmef"])]
         to: String,
         /// Reference PMEF model updated from the PCF (required with --to pmef from PCF).
@@ -657,6 +657,25 @@ fn cmd_convert(input: PathBuf, to: &str, base: Option<PathBuf>, output: PathBuf)
             std::fs::write(&output, pmef_io::caex::write_caex(&objs))
                 .with_context(|| format!("Cannot write {}", output.display()))?;
             eprintln!("wrote {} object(s) as CAEX to {}", objs.len(), output.display());
+        } else if input.extension().is_some_and(|x| x.eq_ignore_ascii_case("dcf")) {
+            // AutoCAD Plant 3D project database (Piping.dcf). Without the DWG geometry the ports
+            // have no coordinates; the topology is kept as IsConnectedTo relations.
+            use pmef_adapter_plant3d::pds::{to_pmef, GeometryIndex, PdsOptions, PdsProject};
+            let data = std::fs::read(&input).with_context(|| format!("Cannot open {}", input.display()))?;
+            let project = PdsProject::read(&data).with_context(|| format!("Cannot read {}", input.display()))?;
+            let opts = PdsOptions { project_code: project.project_code() };
+            let (objs, stats) = to_pmef(&project, &opts, &GeometryIndex::new());
+            let mut text = String::new();
+            for o in &objs {
+                text.push_str(&serde_json::to_string(o)?);
+                text.push('\n');
+            }
+            std::fs::write(&output, text).with_context(|| format!("Cannot write {}", output.display()))?;
+            for (class, n) in &stats.unmapped {
+                eprintln!("warning: {n} {class} object(s) have no PMEF type (skipped)");
+            }
+            eprintln!("wrote {} object(s), {} connection(s); {} port(s) without coordinates (no DWG geometry)",
+                      objs.len(), stats.connections, stats.ports_unplaced);
         } else if input.extension().is_some_and(|x| x.eq_ignore_ascii_case("aml")) {
             let xml = std::fs::read_to_string(&input).with_context(|| format!("Cannot open {}", input.display()))?;
             let objs = pmef_io::caex::read_caex(&xml)?;
