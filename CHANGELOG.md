@@ -11,6 +11,19 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added — Plant 3D spec sheets (`.pspc`) → PMEF piping class catalogs
+
+- **`pmef convert <spec>.pspc --to catalog -o <spec>.json`** writes a Plant 3D spec as a
+  `PIPING_CLASS` catalog with `scope: "PROJECT"` (catalog id `p3d-spec-<name>`): one entry per part
+  size with class, SKEY, standard, DN, OD, wall thickness, schedule, rating, material, facing, end
+  types of the ports, mass, bend angle/radius, reducing and branch size, and the Plant 3D geometry
+  parameters. Spec 05 §8.2.
+- `pmef-adapter-plant3d::spec`: `spec_catalog`, `entry_id`. Entry ids are
+  `<spec>:<size record GUID>`; the `pds` conversion now writes the same id as `catalogRef` on every
+  placed part that has a spec and a size record, so a part resolves to its spec entry.
+- Synthetic spec `tests/plant3d/spec-synthetic.pspc` (`make_spec_fixture.py`); the synthetic
+  `pds-synthetic.dcf` now carries size records for its pipe and elbow.
+
 ### Added — Plant 3D project database (`Piping.dcf`) → PMEF
 
 - **`pmef convert Piping.dcf --to pmef`** reads the engineering data of an AutoCAD Plant 3D project

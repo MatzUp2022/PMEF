@@ -89,14 +89,14 @@ pub struct Item {
 }
 
 impl Item {
-    fn text(&self, column: &str) -> Option<&str> {
+    pub(crate) fn text(&self, column: &str) -> Option<&str> {
         self.props
             .get(column)
             .and_then(Value::as_str)
             .map(str::trim)
             .filter(|s| !s.is_empty())
     }
-    fn num(&self, column: &str) -> Option<f64> {
+    pub(crate) fn num(&self, column: &str) -> Option<f64> {
         self.props.get(column).and_then(Value::as_f64)
     }
 }
@@ -376,7 +376,7 @@ impl PdsProject {
 }
 
 /// .NET GUID byte order → canonical string.
-fn guid_string(b: &[u8]) -> Option<String> {
+pub(crate) fn guid_string(b: &[u8]) -> Option<String> {
     if b.len() != 16 {
         return None;
     }
@@ -409,7 +409,7 @@ pub struct PdsStats {
 }
 
 /// Kind of PMEF object for a Plant 3D class.
-enum Kind {
+pub(crate) enum Kind {
     Component(&'static str, &'static str),
     Weld(&'static str),
     Equipment,
@@ -417,7 +417,7 @@ enum Kind {
     Skip,
 }
 
-fn kind(p: &PdsProject, item: &Item) -> Kind {
+pub(crate) fn kind(p: &PdsProject, item: &Item) -> Kind {
     let c = item.class.as_str();
     let is = |a: &str| p.is_a(c, a);
     let iso = item
@@ -531,7 +531,7 @@ fn valve_class(desc: &str) -> &'static str {
 }
 
 /// Plant 3D end type → PMEF end type.
-fn end_type(s: &str) -> Option<&'static str> {
+pub(crate) fn end_type(s: &str) -> Option<&'static str> {
     let u = s.to_ascii_uppercase();
     Some(match u.as_str() {
         "BV" | "BW" => "BW",
@@ -545,7 +545,7 @@ fn end_type(s: &str) -> Option<&'static str> {
 }
 
 /// Nominal size → DN [mm].
-fn nominal_dn(size: f64, unit: Option<&str>) -> f64 {
+pub(crate) fn nominal_dn(size: f64, unit: Option<&str>) -> f64 {
     if !unit.is_some_and(|u| u.eq_ignore_ascii_case("in")) {
         return size;
     }
@@ -1071,6 +1071,16 @@ pub fn to_pmef(p: &PdsProject, opts: &PdsOptions, geom: &GeometryIndex) -> (Vec<
                 if let Some(t) = i.text("Tag") {
                     o["tagNumber"] = json!(t);
                 }
+                // The part size in its spec sheet (`Spec Sheets/<spec>.pspc`, see `spec`).
+                if let (Some(spec), Some(size)) = (
+                    i.text("Spec"),
+                    i.props
+                        .get("SizeRecordId")
+                        .and_then(Value::as_blob)
+                        .and_then(guid_string),
+                ) {
+                    o["catalogRef"] = json!({"catalogId": crate::spec::entry_id(spec, &size)});
+                }
                 type_fields(&mut o, ty, i, p);
                 add_end_types(&mut o, p, i);
                 let mut ports = match gasket_ports.get(&i.id) {
@@ -1301,7 +1311,7 @@ fn point(i: &Item, prefix: &str) -> Option<[f64; 3]> {
     ])
 }
 
-fn weight_kg(i: &Item) -> Option<f64> {
+pub(crate) fn weight_kg(i: &Item) -> Option<f64> {
     let w = i.num("Weight")?;
     let lb = i
         .text("WeightUnit")
@@ -1309,7 +1319,7 @@ fn weight_kg(i: &Item) -> Option<f64> {
     Some(if lb { w * 0.453_592_37 } else { w })
 }
 
-fn component_spec(i: &Item, class: &str) -> J {
+pub(crate) fn component_spec(i: &Item, class: &str) -> J {
     let mut s = json!({"componentClass": class});
     let iso = i.text("ContentIsoSymbolDefinition").unwrap_or_default();
     if let Some(sk) = iso

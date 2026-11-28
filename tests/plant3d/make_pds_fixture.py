@@ -33,7 +33,7 @@ x('CREATE TABLE "PnPProject"("PnPID" integer,"Project_Name" VarChar (255),"Proje
 x('CREATE TABLE "PnPDrawings"("PnPID" integer,"Dwg Name" VarChar (255),"PnPRelativePath" VarChar (255),"PnPType" VarChar (255),Primary key ("PnPID"))')
 x('CREATE TABLE "PnPDataLinks"("RowId" int,"DwgId" int,"DwgHandleLow" int,"DwgHandleHigh" int,"DwgSubIndex" int,"RowClassName" VarChar (255),"PnPID" integer,Primary key ("PnPID"))')
 x('CREATE TABLE "EngineeringItems"("PnPID" integer,"Tag" VarChar (255),"PartFamilyLongDesc" VarChar (255),"Spec" VarChar (255),'
-  '"Weight" float,"WeightUnit" VarChar (255),"ContentIsoSymbolDefinition" VarChar (255),"PartSizeLongDesc" VarChar (4000),"PortName" VarChar (255),"NominalDiameter" float,"NominalUnit" VarChar (255),"EndType" VarChar (255),"Position X" float,"Position Y" float,"Position Z" float,Primary key ("PnPID"))')
+  '"Weight" float,"WeightUnit" VarChar (255),"ContentIsoSymbolDefinition" VarChar (255),"PartSizeLongDesc" VarChar (4000),"PortName" VarChar (255),"NominalDiameter" float,"NominalUnit" VarChar (255),"EndType" VarChar (255),"Position X" float,"Position Y" float,"Position Z" float,"SizeRecordId" GUID,Primary key ("PnPID"))')
 x('CREATE TABLE "PipeRunComponent"("PnPID" integer,"LineNumberTag" VarChar (255),"Shop_Field" VarChar (255),Primary key ("PnPID"))')
 x('CREATE TABLE "Pipe"("PnPID" integer,"Length" float,"CutLength" float,Primary key ("PnPID"))')
 x('CREATE TABLE "Elbow"("PnPID" integer,"PathAngle" float,"CurveRadius" float,Primary key ("PnPID"))')
@@ -62,11 +62,12 @@ base(5, "P3dLineGroup"); x("INSERT INTO P3dLineGroup VALUES (5,'L-100','CW')")
 for i, cls in [(10, "Pipe"), (20, "P3dConnector"), (21, "Buttweld"), (30, "Elbow"), (40, "P3dConnector"),
                (50, "Pump"), (51, "Nozzle"), (60, "StructureMember"), (70, "StructureGrating")]:
     base(i, cls)
-x("INSERT INTO EngineeringItems VALUES (10,NULL,'Pipe DIN','16HC01',30.0,'kg','TYPE=PIPE',?,?,?,?,?,500,0,0)", ("Pipe 219.1x6.3 " * 200, "S1", 200, "mm", "BV"))
-x("INSERT INTO EngineeringItems VALUES (21,NULL,'Butt weld','16HC01',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)")
-x("INSERT INTO EngineeringItems VALUES (30,NULL,'Bend 90','16HC01',8.5,'kg','SKEY=BEBW,TYPE=BEND',NULL,'S1',8,'in','BV',1305,0,0)")
-x("INSERT INTO EngineeringItems VALUES (50,NULL,'Centrifugal pump',NULL,250,'kg',NULL,NULL,NULL,NULL,NULL,NULL,1305,800,0)")
-x("INSERT INTO EngineeringItems VALUES (51,NULL,'Nozzle',NULL,NULL,NULL,NULL,NULL,'N1',200,'mm','FL',1305,305,0)")
+# The pipe and the elbow point at their part sizes in tests/plant3d/spec-synthetic.pspc.
+x("INSERT INTO EngineeringItems VALUES (10,NULL,'Pipe DIN','16HC01',30.0,'kg','TYPE=PIPE',?,?,?,?,?,500,0,0,?)", ("Pipe 219.1x6.3 " * 200, "S1", 200, "mm", "BV", uuid.UUID(int=0x9001).bytes_le))
+x("INSERT INTO EngineeringItems VALUES (21,NULL,'Butt weld','16HC01',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)")
+x("INSERT INTO EngineeringItems VALUES (30,NULL,'Bend 90','16HC01',8.5,'kg','SKEY=BEBW,TYPE=BEND',NULL,'S1',8,'in','BV',1305,0,0,?)", (uuid.UUID(int=0x9002).bytes_le,))
+x("INSERT INTO EngineeringItems VALUES (50,NULL,'Centrifugal pump',NULL,250,'kg',NULL,NULL,NULL,NULL,NULL,NULL,1305,800,0,NULL)")
+x("INSERT INTO EngineeringItems VALUES (51,NULL,'Nozzle',NULL,NULL,NULL,NULL,NULL,'N1',200,'mm','FL',1305,305,0,NULL)")
 x("INSERT INTO PipeRunComponent VALUES (10,'L-100','SHOP')")
 x("INSERT INTO PipeRunComponent VALUES (30,'L-100','SHOP')")
 x("INSERT INTO Pipe VALUES (10,1000,1000)")

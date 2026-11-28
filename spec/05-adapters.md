@@ -434,7 +434,15 @@ the proxy graphics of the Plant 3D objects) passes port candidates per DWG objec
 (`GeometryIndex`); the adapter places each port at its connector, at the coincident candidate of
 a directly joined part, or by elimination, and takes the direction from the candidate axis.
 Without geometry the ports are left out and the topology remains in `IsConnectedTo` and
-`Weld.connects`. Not mapped yet (no PMEF type): gratings, railings, stairs, steps, ladders,
+`Weld.connects`.
+
+**Spec sheets (`Spec Sheets/<spec>.pspc`) — since 0.10.0:** a spec is a SQLite file with the same
+table layout as `Piping.dcf`, one row per part size. `pmef convert <spec>.pspc --to catalog`
+(library: `pmef_adapter_plant3d::spec`) writes it as a `PIPING_CLASS` catalog with
+`scope: "PROJECT"` and catalog id `p3d-spec-<name>`; valve actuators are not entries. The entry id
+is `<spec>:<size record GUID>`, and every placed part in `Piping.dcf` with a `Spec` and a
+`SizeRecordId` gets `catalogRef.catalogId` with the same id. The spec sheet settings
+(`<spec>.pspx`: branch table, part use priorities) are not read. Not mapped yet (no PMEF type): gratings, railings, stairs, steps, ladders,
 anchors and plates of the steel structure.
 
 ### 8.3 CADMATIC Adapter (`pmef-adapter-cadmatic`)
