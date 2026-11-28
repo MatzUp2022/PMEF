@@ -533,10 +533,10 @@ pub fn join_trays(trays: &mut Vec<TraySpec>, tolerance: f64) -> usize {
                     }
                 }
             }
-            if let Some((d, oj, si, q)) = best {
-                if d > 1e-3 || key(q) != key(p) {
-                    joins.push((ti, p, oj, si, q));
-                }
+            if let Some((_, oj, si, q)) = best {
+                // Also an end exactly on the other centreline (T-junction): the point is
+                // inserted there, without a connector.
+                joins.push((ti, p, oj, si, q));
             }
         }
     }
@@ -558,6 +558,9 @@ pub fn join_trays(trays: &mut Vec<TraySpec>, tolerance: f64) -> usize {
     }
     let n = joins.len();
     for (k, (ti, p, _, _, q)) in joins.into_iter().enumerate() {
+        if dist(p, q) <= 1e-3 {
+            continue;
+        }
         let t = &trays[ti];
         let conn = TraySpec {
             id: format!("{}#join{}", t.id, k + 1),
@@ -867,73 +870,112 @@ fn route_cable(
         dot > 1.0 - 1e-6 || c.min_bend_radius <= r + 1e-9
     };
     // State = (node, predecessor node); predecessor gives the incoming direction and tray.
-    let mut best: std::collections::HashMap<(usize, usize), (f64, (usize, usize))> =
-        std::collections::HashMap::new();
-    let mut heap = BinaryHeap::new();
-    let mut states: Vec<(usize, usize)> = vec![(start, usize::MAX)];
-    best.insert((start, usize::MAX), (0.0, (usize::MAX, usize::MAX)));
-    heap.push(Open(0.0, 0));
-    let mut found = None;
-    while let Some(Open(cost, si)) = heap.pop() {
-        let (n, prev) = states[si];
-        if best.get(&(n, prev)).is_some_and(|b| b.0 < cost - 1e-9) {
-            continue;
-        }
-        if n == goal {
-            found = Some((n, prev));
-            break;
-        }
-        let incoming = (prev != usize::MAX).then(|| {
-            let tray = g.adj[prev].iter().find(|e| e.0 == n).and_then(|e| e.2);
-            (dir(g.pts[prev], g.pts[n]), tray)
-        });
-        for &(m, len, tray) in &g.adj[n] {
-            if m == prev {
+    let search = |g: &Graph| -> Option<Vec<usize>> {
+        let mut best: std::collections::HashMap<(usize, usize), (f64, (usize, usize))> =
+            std::collections::HashMap::new();
+        let mut heap = BinaryHeap::new();
+        let mut states: Vec<(usize, usize)> = vec![(start, usize::MAX)];
+        best.insert((start, usize::MAX), (0.0, (usize::MAX, usize::MAX)));
+        heap.push(Open(0.0, 0));
+        let mut found = None;
+        while let Some(Open(cost, si)) = heap.pop() {
+            let (n, prev) = states[si];
+            if best.get(&(n, prev)).is_some_and(|b| b.0 < cost - 1e-9) {
                 continue;
             }
-            if let (Some((d1, Some(t1))), Some(t2)) = (incoming, tray) {
-                let r = trays[t1].bend_radius.min(trays[t2].bend_radius);
-                if !bend_ok(d1, dir(g.pts[n], g.pts[m]), r) {
+            if n == goal {
+                found = Some((n, prev));
+                break;
+            }
+            let incoming = (prev != usize::MAX).then(|| {
+                let tray = g.adj[prev].iter().find(|e| e.0 == n).and_then(|e| e.2);
+                (dir(g.pts[prev], g.pts[n]), tray)
+            });
+            for &(m, len, tray) in &g.adj[n] {
+                if m == prev {
                     continue;
                 }
+                if let (Some((d1, Some(t1))), Some(t2)) = (incoming, tray) {
+                    let r = trays[t1].bend_radius.min(trays[t2].bend_radius);
+                    if !bend_ok(d1, dir(g.pts[n], g.pts[m]), r) {
+                        continue;
+                    }
+                }
+                let nc = cost + len;
+                let k = (m, n);
+                if best.get(&k).is_some_and(|b| b.0 <= nc + 1e-9) {
+                    continue;
+                }
+                best.insert(k, (nc, (n, prev)));
+                states.push(k);
+                heap.push(Open(nc, states.len() - 1));
             }
-            let nc = cost + len;
-            let k = (m, n);
-            if best.get(&k).is_some_and(|b| b.0 <= nc + 1e-9) {
+        }
+        let mut s = found?;
+        let mut nodes = vec![s.0];
+        while s.1 != usize::MAX {
+            let p = best[&s].1;
+            nodes.push(p.0);
+            s = p;
+        }
+        nodes.reverse();
+        Some(nodes)
+    };
+    // Drops beyond `dropCandidates` that the path uses are routed, their edges get the routed
+    // cost (or are removed when blocked), and the search runs again until the path uses no
+    // unresolved drop. If removing blocked drops leaves no path, they come back with their L1
+    // cost and a warning, as for an end without any routable candidate.
+    let mut blocked: std::collections::HashMap<(usize, usize), (String, f64)> = std::collections::HashMap::new();
+    let mut restored = false;
+    let nodes = loop {
+        let Some(nodes) = search(&g) else {
+            if !restored && !blocked.is_empty() {
+                for (&(a, b), (_, cost)) in &blocked {
+                    g.edge(a, b, *cost, None);
+                }
+                restored = true;
                 continue;
             }
-            best.insert(k, (nc, (n, prev)));
-            states.push(k);
-            heap.push(Open(nc, states.len() - 1));
-        }
-    }
-    let Some(mut s) = found else {
-        res.error =
-            Some("no path through the tray network (segregation, fill or bend radius)".into());
-        return res;
-    };
-    let mut nodes = vec![s.0];
-    while s.1 != usize::MAX {
-        let p = best[&s].1;
-        nodes.push(p.0);
-        s = p;
-    }
-    nodes.reverse();
-    // Drops beyond `dropCandidates` that the path uses are routed now.
-    if let Some(rt) = router {
-        for w in nodes.windows(2) {
-            let k = if lazy.contains_key(&(w[0], w[1])) { (w[0], w[1]) } else { (w[1], w[0]) };
-            if let Some(&(end, q)) = lazy.get(&k) {
-                match rt(c, end, q) {
-                    Ok(poly) => {
-                        polys.insert(k, poly);
-                    }
-                    Err(e) => {
-                        let which = if k.0 == start { "from" } else { "to" };
-                        res.warnings.push(format!("{which} drop kept as L1 distance: {e}"));
+            res.error =
+                Some("no path through the tray network (segregation, fill or bend radius)".into());
+            return res;
+        };
+        let mut changed = false;
+        if let Some(rt) = router {
+            for w in nodes.windows(2) {
+                let k = if lazy.contains_key(&(w[0], w[1])) { (w[0], w[1]) } else { (w[1], w[0]) };
+                if let Some((end, q)) = lazy.remove(&k) {
+                    match rt(c, end, q) {
+                        Ok(poly) => {
+                            let l: f64 = poly.windows(2).map(|s| dist(s[0], s[1])).sum();
+                            for (a, b) in [(k.0, k.1), (k.1, k.0)] {
+                                for e in g.adj[a].iter_mut().filter(|e| e.0 == b && e.2.is_none()) {
+                                    e.1 = l * set.drop_factor;
+                                }
+                            }
+                            polys.insert(k, poly);
+                            changed = true;
+                        }
+                        Err(e) => {
+                            let cost = g.adj[k.0].iter().find(|x| x.0 == k.1 && x.2.is_none()).map_or(0.0, |x| x.1);
+                            for (a, b) in [(k.0, k.1), (k.1, k.0)] {
+                                g.adj[a].retain(|x| !(x.0 == b && x.2.is_none()));
+                            }
+                            blocked.insert(k, (e, cost));
+                            changed = true;
+                        }
                     }
                 }
             }
+        }
+        if !changed {
+            break nodes;
+        }
+    };
+    for w in nodes.windows(2) {
+        if let Some((e, _)) = blocked.get(&(w[0], w[1])).or_else(|| blocked.get(&(w[1], w[0]))) {
+            let which = if w[0] == start || w[1] == start { "from" } else { "to" };
+            res.warnings.push(format!("{which} drop kept as L1 distance: {e}"));
         }
     }
     let mut per_tray: Vec<(usize, f64)> = Vec::new();
