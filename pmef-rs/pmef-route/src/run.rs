@@ -2,7 +2,7 @@
 //! cables, PMEF output and report. Files are read through a [`Reader`], so the run needs no
 //! file system.
 
-use crate::cable::{route_cables, trays_from_pmef, RoutedCable, SkippedTray, TrayFill};
+use crate::cable::{route_cables, trays_from_pmef_with, RoutedCable, SkippedTray, TrayFill};
 use crate::line_list::{expand, SkippedLine};
 use crate::pmef_out::{cables_to_pmef, to_pmef};
 use crate::problem::RouteSpec;
@@ -28,6 +28,10 @@ pub struct RunOutput {
     /// could not be used.
     pub scene_trays: Vec<String>,
     pub skipped_trays: Vec<SkippedTray>,
+    /// Scene trays that got `cableSettings.defaultTrayHeight`, and free tray ends joined to a
+    /// nearby tray (`trayJoinTolerance`).
+    pub tray_height_assumed: usize,
+    pub tray_joins: usize,
     /// The problem had cables or line lists: the report is an object, not the route array.
     extended: bool,
 }
@@ -56,6 +60,7 @@ impl RunOutput {
                 "routes": self.routes, "cables": self.cables, "trayFill": self.tray_fill,
                 "skippedLines": self.skipped_lines, "lineListRoutes": self.line_list_routes,
                 "sceneTrays": self.scene_trays, "skippedTrays": self.skipped_trays,
+                "trayHeightAssumed": self.tray_height_assumed, "trayJoins": self.tray_joins,
             })
         } else {
             json!(self.routes)
@@ -86,13 +91,15 @@ pub fn run_cached(
     let line_list_routes = problem.routes[explicit..].to_vec();
     let routes = route_all(&problem, &scene);
     let (mut scene_trays, mut skipped_trays) = (Vec::new(), Vec::new());
+    let mut tray_height_assumed = 0;
     if let Some(set) = problem.cable_settings.clone().filter(|s| s.trays_from_scene) {
         let mut objs = Vec::new();
         for f in &problem.pmef_scene {
             objs.extend(cache.ndjson(f, read)?.iter().cloned());
         }
-        let (trays, skipped) = trays_from_pmef(&objs, &set.tray_classes);
+        let (trays, skipped, assumed) = trays_from_pmef_with(&objs, &set.tray_classes, set.default_tray_height);
         skipped_trays = skipped;
+        tray_height_assumed = assumed;
         for t in trays {
             if !problem.trays.iter().any(|x| x.id == t.id) {
                 scene_trays.push(t.id.clone());
@@ -100,6 +107,10 @@ pub fn run_cached(
             }
         }
     }
+    let tray_joins = match problem.cable_settings.as_ref().map(|s| s.tray_join_tolerance) {
+        Some(t) if t > 0.0 => crate::cable::join_trays(&mut problem.trays, t),
+        _ => 0,
+    };
     let (cables, tray_fill) = if problem.cables.is_empty() {
         (Vec::new(), Vec::new())
     } else if let Some(set) = problem.cable_settings.as_ref().filter(|s| s.route_drops) {
@@ -142,6 +153,8 @@ pub fn run_cached(
         line_list_routes,
         scene_trays,
         skipped_trays,
+        tray_height_assumed,
+        tray_joins,
         extended: !problem.cables.is_empty() || !problem.line_lists.is_empty(),
     })
 }
