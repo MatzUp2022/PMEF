@@ -136,6 +136,12 @@ PMEF `@id`), provenance `generated`; the report lists path, trays and the fill p
 A viewer re-routes one cable and keeps the others where they are by giving each other cable the
 trays it used (report `cables[].trays`). Example: `tests/route/cable-trays-route.json`.
 
+When cables cannot be routed, each of them is routed again without the fill limit (segregation,
+bend radius and the cable's own trays still apply). Trays that would then exceed `maxFill` get
+`trayFill[].sizing`: `fillWithRejected` [%], `requiredWidth` at the current height and
+`proposedWidth`, the smallest of `cableSettings.trayWidths` (default IEC 61537 series 50 … 1200
+mm) that is large enough, with the `rejectedCables`. The routing result itself is not changed.
+
 With `cableSettings.routeDrops` the drops between cable ends and trays are routed during the
 tray choice: for each cable end the `dropCandidates` (default 6) nearest tray points by L1
 distance are routed on an orthogonal grid (`dropStep`, default 100 mm) around the end and the
@@ -283,8 +289,8 @@ already run (Clinic).
 5. **Cables.** Done in stage 5: routing on tray networks with segregation, bend radius and fill
    limit; output as `pmef:CableObject`; trays read from PMEF `CableTrayRun`/`CableTrayFitting`
    (`traysFromScene`, RFC-0015); cable lengths with bend arcs; drops routed past obstacles
-   (`routeDrops`, with routed drop costs in the tray choice). Open: tray sizing proposals when
-   the fill limit is hit.
+   (`routeDrops`, with routed drop costs in the tray choice); tray sizing proposals when the
+   fill limit is hit (`trayFill[].sizing`).
 6. **Integration.** Done in stage 6: WASM binding `pmef-route-wasm` (CI builds it for
    `wasm32-unknown-unknown`) and P&ID line lists as input (`lineLists`, `dexpi-pmef` shape).
    Open, in the owning repos: the re-routing UI in PlantView (`mvcache-web`) and ProDocAimAi,

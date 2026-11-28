@@ -23,6 +23,12 @@ Adheres to [Semantic Versioning](https://semver.org/) and [Keep a Changelog](htt
   WebAssembly).
 - Synthetic test database `tests/plant3d/pds-synthetic.dcf` and its generator `make_pds_fixture.py`.
 
+### Added — tray sizing proposals (`pmef-route`)
+
+- When cables fail, they are routed again without the fill limit; trays that would exceed
+  `maxFill` get `trayFill[].sizing` (`fillWithRejected`, `requiredWidth`, `proposedWidth` from
+  `cableSettings.trayWidths`, default 50 … 1200 mm, `rejectedCables`). Routing results unchanged.
+
 ### Fixed — PCF bridge with lines that share a line number
 
 - **`pmef convert --to pcf`** wrote one file per piping system named after its line number, so a
